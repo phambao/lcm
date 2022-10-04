@@ -1,0 +1,1 @@
+from .lead_list import LeadDetail
