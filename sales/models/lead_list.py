@@ -86,7 +86,9 @@ class LeadDetail(BaseModel):
 
 
 class PartnerTypeInLead(models.Model):
-    # Model for relationship between lead, partner and contact type of partner in lead
+    """
+        Model for relationship between lead, partner and contact type of partner in lead
+    """
     class Meta:
         db_table = 'partner_type_in_lead'
 
