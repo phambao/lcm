@@ -1,1 +1,1 @@
-from .lead_list import LeadDetail, LeadPartner, PhoneCategory, PhoneContact
+from .lead_list import LeadDetail, LeadPartner, PhoneCategory, PhoneContact, PartnerTypeInLead, Activities

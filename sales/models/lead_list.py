@@ -84,5 +84,64 @@ class LeadDetail(BaseModel):
     source = models.CharField(max_length=128, blank=True)
     tags = models.CharField(max_length=128, blank=True)
 
-    # Contact information of partner
-    partner = models.ManyToManyField(LeadPartner)
+
+class PartnerTypeInLead(models.Model):
+    # Model for relationship between lead, partner and contact type of partner in lead
+    class Meta:
+        db_table = 'partner_type_in_lead'
+
+    class PartnerType(models.TextChoices):
+        OWNER = 'owner', 'Owner'
+        MANAGER = 'manager', 'Manager'
+        EMPLOYEE = 'employee', 'Employee'
+
+    partner = models.ForeignKey(
+        LeadPartner, on_delete=models.CASCADE, related_name='partner_type')
+    partner_type = models.CharField(
+        max_length=16, choices=PartnerType.choices, default=PartnerType.OWNER)
+    lead = models.ForeignKey(
+        LeadDetail, on_delete=models.CASCADE, related_name='partner_type')
+
+
+class Activities(BaseModel):
+
+    class Meta:
+        db_table = 'activities'
+
+    class Status(models.TextChoices):
+        NONE = 'none', 'None'
+        UPCOMING = 'upcoming', 'Upcoming'
+        COMPLETED = 'completed', 'Completed'
+        IN_PROGRESS = 'in_progress', 'In Progress'
+        IN_COMPLETE = 'in_complete', 'In Complete'
+        PAST_DUE = 'past_due', 'Past Due'
+        UNCONFIRMED = 'unconfirmed', 'Unconfirmed'
+
+    class Tags(models.TextChoices):
+        UNASSIGNED = 'unassigned', 'Unassigned'
+        DESIGN_BUILD = 'design_build', 'Design Build'
+        BUILD_ONLY = 'build_only', 'Build Only'
+        ART_TURF = 'art_turf', 'Art Turf'
+        PAVER_INSTALL = 'paver_install', 'Paver Install'
+        BIG_JOB = 'big_job', 'Big Job'
+
+    class Phases(models.TextChoices):
+        PHASE_1 = 'phase_1', 'Phase 1 Learning'
+        JOB_LEARNING = 'job_learning', 'Job Learning'
+        PRE_CONSTRUCTION = 'pre_construction', 'Pre-Construction'
+        UNASSIGNED = 'unassigned', 'Unassigned'
+
+    title = models.CharField(max_length=128)
+    is_completed = models.BooleanField(default=False)
+    phase = models.CharField(
+        max_length=128, choices=Phases.choices, default=Phases.UNASSIGNED)
+    tag = models.CharField(
+        max_length=128, choices=Tags.choices, default=Tags.UNASSIGNED)
+    status = models.CharField(
+        max_length=128, choices=Status.choices, default=Status.NONE)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    assigned_to = models.CharField(
+        max_length=128, blank=True)  # TODO: Change to user
+    lead = models.ForeignKey(
+        LeadDetail, on_delete=models.CASCADE, related_name='activities')
