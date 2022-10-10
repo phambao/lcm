@@ -1,3 +1,4 @@
+from re import L
 from django.db import models
 
 from api.models import BaseModel
@@ -147,3 +148,31 @@ class Activities(BaseModel):
         max_length=128, blank=True)  # TODO: Change to user
     lead = models.ForeignKey(
         LeadDetail, on_delete=models.CASCADE, related_name='activities')
+
+
+class Proposals(BaseModel):
+    class Meta:
+        db_table = 'proposal'
+    
+    class Status(models.TextChoices):
+        STATUS_1 = 'status_1', 'Status 1'
+        STATUS_2 = 'status_2', 'Status 2'
+    
+    proposal_name = models.CharField(max_length=64)
+    estimate_number = models.CharField(max_length=32)
+    status = models.CharField(
+        max_length=16, choices=Status.choices, default=Status.STATUS_1)
+    owner_price = models.DecimalField(max_digits=9, decimal_places=2, default=0, blank=True)
+    file = models.FileField(upload_to='proposal', blank=True)
+    lead = models.ForeignKey(
+        LeadDetail, on_delete=models.CASCADE, related_name='proposals')
+
+
+class Photos(BaseModel):
+    class Meta:
+        db_table = 'photos'
+        
+    name_photo = models.CharField(max_length=64)
+    photo = models.ImageField(upload_to='photo')
+    lead = models.ForeignKey(
+        LeadDetail, on_delete=models.CASCADE, related_name='photos')
