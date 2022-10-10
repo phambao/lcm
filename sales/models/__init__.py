@@ -1,1 +1,2 @@
-from .lead_list import LeadDetail, LeadPartner, PhoneCategory, PhoneContact, PartnerTypeInLead, Activities, Proposals, Photos
+from .lead_list import LeadDetail, Activities, ContactType, Contact,\
+    PhoneOfContact, Activities, Proposals, Photos

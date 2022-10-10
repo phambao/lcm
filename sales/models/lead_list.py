@@ -1,52 +1,8 @@
 from re import L
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from api.models import BaseModel
-
-
-class LeadPartner(BaseModel):
-
-    class Meta:
-        db_table = 'lead_partner'
-
-    class Gender(models.TextChoices):
-        MALE = 'male', 'Male'
-        FEMALE = 'female', 'Female'
-        OTHER = 'other', 'Other'
-
-    first_name = models.CharField(max_length=128)
-    last_name = models.CharField(max_length=128)
-    gender = models.CharField(
-        max_length=6, choices=Gender.choices, default=Gender.MALE)
-    email = models.EmailField(max_length=128)
-    street = models.CharField(max_length=64)
-    city = models.CharField(max_length=32)
-    state = models.CharField(max_length=32)
-    country = models.CharField(max_length=32)
-    zip_code = models.CharField(max_length=32)
-    image = models.ImageField(upload_to='partner_image')
-
-
-class PhoneCategory(models.Model):
-
-    class Meta:
-        db_table = 'phone_categories'
-
-    name = models.CharField(max_length=16, unique=True)
-
-
-class PhoneContact(models.Model):
-
-    class Meta:
-        db_table = 'phone_contact'
-
-    phone = models.CharField(max_length=20, unique=True)
-    phone_category = models.ForeignKey(
-        PhoneCategory, on_delete=models.CASCADE, related_name='+')
-    text_massage_received = models.BooleanField(default=False)
-    mobile_phone_service_provider = models.CharField(max_length=32)
-    partner = models.ForeignKey(
-        LeadPartner, on_delete=models.CASCADE, related_name='partner_phones')
 
 
 class LeadDetail(BaseModel):
@@ -86,24 +42,64 @@ class LeadDetail(BaseModel):
     tags = models.CharField(max_length=128, blank=True)
 
 
-class PartnerTypeInLead(models.Model):
-    """
-        Model for relationship between lead, partner and contact type of partner in lead
-    """
+class Contact(models.Model):
+    """Contact information"""
+
     class Meta:
-        db_table = 'partner_type_in_lead'
+        db_table = 'contact'
 
-    class PartnerType(models.TextChoices):
-        OWNER = 'owner', 'Owner'
-        MANAGER = 'manager', 'Manager'
-        EMPLOYEE = 'employee', 'Employee'
+    class Gender(models.TextChoices):
+        MALE = 'male', _('Male')
+        FEMALE = 'female', _('Female')
+        OTHER = 'other', _('Other')
 
-    partner = models.ForeignKey(
-        LeadPartner, on_delete=models.CASCADE, related_name='partner_type')
-    partner_type = models.CharField(
-        max_length=16, choices=PartnerType.choices, default=PartnerType.OWNER)
-    lead = models.ForeignKey(
-        LeadDetail, on_delete=models.CASCADE, related_name='partner_type')
+    first_name = models.CharField(max_length=128)
+    last_name = models.CharField(max_length=128)
+    gender = models.CharField(
+        max_length=6, choices=Gender.choices, default=Gender.MALE)
+    email = models.EmailField(max_length=128)
+    street = models.CharField(max_length=64)
+    city = models.CharField(max_length=32)
+    state = models.CharField(max_length=32)
+    country = models.CharField(max_length=32)
+    zip_code = models.CharField(max_length=32, blank=True)
+    image = models.ImageField(upload_to='contact_image', blank=True, null=True)
+    lead = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='contacts',
+                             blank=True, null=True)
+
+
+class PhoneOfContact(models.Model):
+    """List phone of contact"""
+
+    class Meta:
+        db_table = 'phone_of_contact'
+
+    class PhoneType(models.TextChoices):
+        MOBILE = 'mobile', _('Mobile')
+        CELL = 'cell', _('Cell')
+        LANDLINE = 'landline', _('Landline')
+        OTHER = 'other', _('Other')
+
+    phone_number = models.CharField(max_length=20, unique=True)
+    phone_type = models.CharField(
+        max_length=8, choices=PhoneType.choices, default=PhoneType.MOBILE)
+    text_massage_received = models.BooleanField(default=True)
+    mobile_phone_service_provider = models.CharField(max_length=32, blank=True, null=True)
+    contact = models.ForeignKey(
+        Contact, on_delete=models.CASCADE, related_name='phone_contact')
+
+
+class ContactType(models.Model):
+    class Meta:
+        db_table = 'contact_permission'
+        unique_together = ['name', 'contact', 'lead']
+
+    name = models.CharField(max_length=32, blank=True)  # TODO: not null, not blank
+    contact = models.ForeignKey(
+        Contact, on_delete=models.CASCADE, related_name='contact_type', blank=True,
+        null=True)  # TODO: not null, not blank
+    lead = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='contact_partner_type',
+                             blank=True, null=True)
 
 
 class Activities(BaseModel):
