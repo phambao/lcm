@@ -14,7 +14,7 @@ urlpatterns = [
     # For sales
     path('leads/', lead_list.LeadDetailsViewSet.as_view({'get': 'list', 'post': 'create'})),
     path('leads/<int:pk>/', lead_list.LeadDetailViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'})),
-    # path('activities/', lead_list.ActivitiesList.as_view()),
+    path('leads-params/', lead_list.LeadDetailList.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
