@@ -29,9 +29,12 @@ class LeadDetailsViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
 
-class ActivitiesList(generics.ListCreateAPIView):
-    queryset = Activities.objects.all()
-    serializer_class = lead_list.ActivitiesSerializer
+class LeadDetailList(generics.ListCreateAPIView):
+    """
+    Used for get params
+    """
+    queryset = LeadDetail.objects.all()
+    serializer_class = lead_list.LeadDetailCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
