@@ -19,6 +19,11 @@ urlpatterns = [
     # Activities
     path('leads/<int:pk_lead>/activities/', lead_list.LeadActivitiesViewSet.as_view()),
     path('leads/<int:pk_lead>/activities/<int:pk>/', lead_list.LeadActivitiesDetailViewSet.as_view()),
+    # Contacts
+    path('contacts/', lead_list.ContactsViewSet.as_view()),
+    path('contacts/<int:pk>/', lead_list.ContactsDetailViewSet.as_view()),
+    path('contacts/<int:pk_contact>/phone_contacts/', lead_list.PhoneOfContactsViewSet.as_view()),
+    path('contacts/<int:pk_contact>/phone_contacts/<int:pk>/', lead_list.PhoneOfContactsDetailViewSet.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

@@ -64,8 +64,9 @@ class Contact(models.Model):
     country = models.CharField(max_length=32)
     zip_code = models.CharField(max_length=32, blank=True)
     image = models.ImageField(upload_to='contact_image', blank=True, null=True)
-    lead = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='contacts',
-                             blank=True, null=True)
+    # lead = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='contacts',
+    #                          blank=True, null=True)
+    lead = models.ManyToManyField(LeadDetail)
 
 
 class PhoneOfContact(models.Model):

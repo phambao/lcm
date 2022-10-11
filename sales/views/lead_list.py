@@ -107,3 +107,27 @@ class LeadActivitiesDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
     queryset = Activities.objects.all()
     serializer_class = lead_list.ActivitiesSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class ContactsViewSet(generics.ListCreateAPIView):
+    queryset = Contact.objects.all()
+    serializer_class = lead_list.ContactsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ContactsDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Contact.objects.all()
+    serializer_class = lead_list.ContactsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class PhoneOfContactsViewSet(generics.ListCreateAPIView):
+    queryset = PhoneOfContact.objects.all()
+    serializer_class = lead_list.PhoneContactsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+
+class PhoneOfContactsDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
+    queryset = PhoneOfContact.objects.all()
+    serializer_class = lead_list.PhoneContactsSerializer
+    permission_classes = [permissions.IsAuthenticated]
