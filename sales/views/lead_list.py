@@ -36,11 +36,11 @@ class LeadDetailsViewSet(viewsets.ViewSet):
         if contacts:
             for contact in contacts:
                 contact_type = pop(contact, 'contact_type', '')
-                phones = pop(contact, 'phone_contact', [])
+                phones = pop(contact, 'phone_contacts', [])
                 ct = Contact.objects.create(lead=ld, **contact)
-                if contact_type:
-                    ContactType.objects.create(
-                        contact=ct, lead=ld, name=contact_type[0].get('name'))
+                # if contact_type:
+                #     ContactType.objects.create(
+                #         contact=ct, lead=ld, name=contact_type[0].get('name'))
                 PhoneOfContact.objects.bulk_create(
                     [PhoneOfContact(contact=ct, **phone) for phone in phones])
         serializer = lead_list.LeadDetailCreateSerializer(ld)
