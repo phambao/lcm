@@ -172,8 +172,7 @@ class Proposals(BaseModel):
 class Photos(BaseModel):
     class Meta:
         db_table = 'photos'
-        
-    name_photo = models.CharField(max_length=64)
+
     photo = models.ImageField(upload_to='photo')
     lead = models.ForeignKey(
-        LeadDetail, on_delete=models.CASCADE, related_name='photos')
+        LeadDetail, on_delete=models.CASCADE, related_name='photos', null=True)

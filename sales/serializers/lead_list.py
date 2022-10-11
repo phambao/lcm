@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.response import Response
@@ -64,4 +65,10 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = lead_list.LeadDetail
+        fields = '__all__'
+
+
+class PhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.Photos
         fields = '__all__'
