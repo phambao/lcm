@@ -27,7 +27,8 @@ class LeadDetailsViewSet(viewsets.ViewSet):
         activities = pop(data, 'activities', [])
         contacts = pop(data, 'contacts', [])
 
-        ld = LeadDetail.objects.create(user_create=request.user, user_update=request.user, **data)
+        ld = LeadDetail.objects.create(
+            user_create=request.user, user_update=request.user, **data)
         if activities:
             Activities.objects.bulk_create([Activities(lead=ld, user_create=request.user,
                                                        user_update=request.user, **activity)
@@ -38,8 +39,10 @@ class LeadDetailsViewSet(viewsets.ViewSet):
                 phones = pop(contact, 'phone_contact', [])
                 ct = Contact.objects.create(lead=ld, **contact)
                 if contact_type:
-                    ContactType.objects.create(contact=ct, lead=ld, name=contact_type[0].get('name'))
-                PhoneOfContact.objects.bulk_create([PhoneOfContact(contact=ct, **phone) for phone in phones])
+                    ContactType.objects.create(
+                        contact=ct, lead=ld, name=contact_type[0].get('name'))
+                PhoneOfContact.objects.bulk_create(
+                    [PhoneOfContact(contact=ct, **phone) for phone in phones])
         serializer = lead_list.LeadDetailCreateSerializer(ld)
         return Response(serializer.data)
 
@@ -82,3 +85,25 @@ class LeadDetailViewSet(viewsets.ViewSet):
         ld = get_object_or_404(queryset, pk=pk)
         ld.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class LeadActivitiesViewSet(generics.ListCreateAPIView):
+    """
+    Used for get params
+    """
+    queryset = Activities.objects.all()
+    serializer_class = lead_list.ActivitiesSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        get_object_or_404(LeadDetail.objects.all(), pk=self.kwargs['pk_lead'])
+        return Activities.objects.filter(lead_id=self.kwargs['pk_lead'])
+
+
+class LeadActivitiesDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Used for get params
+    """
+    queryset = Activities.objects.all()
+    serializer_class = lead_list.ActivitiesSerializer
+    permission_classes = [permissions.IsAuthenticated]
