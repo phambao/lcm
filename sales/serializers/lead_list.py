@@ -14,11 +14,11 @@ class PhoneContactsSerializer(serializers.ModelSerializer):
 class ContactTypesSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.ContactType
-        fields = ('name', )
+        fields = ('id', 'contact_type_name', )
 
 
 class ContactsSerializer(serializers.ModelSerializer):
-    phone_contact = PhoneContactsSerializer(
+    phone_contacts = PhoneContactsSerializer(
         'contact', many=True, allow_null=True)
     contact_type = ContactTypesSerializer(
         'contact', many=True, allow_null=True)
@@ -36,12 +36,12 @@ class ActivitiesSerializer(serializers.ModelSerializer):
                         'user_create': {'required': False},
                         'user_update': {'required': False}}
 
-    def validate(self):
+    def validate(self, validated_data):
         pk_lead = self.context['request'].__dict__[
             'parser_context']['kwargs']['pk_lead']
-        if not lead_list.LeadDetail.objects.exists(pk=pk_lead):
+        if not lead_list.LeadDetail.objects.filter(pk=pk_lead).exists():
             raise serializers.ValidationError('Lead not found')
-        return self.validated_data
+        return validated_data
 
     def create(self, validated_data):
         pk_lead = self.context['request'].__dict__[

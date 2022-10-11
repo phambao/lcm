@@ -84,17 +84,22 @@ class PhoneOfContact(models.Model):
     phone_type = models.CharField(
         max_length=8, choices=PhoneType.choices, default=PhoneType.MOBILE)
     text_massage_received = models.BooleanField(default=True)
-    mobile_phone_service_provider = models.CharField(max_length=32, blank=True, null=True)
+    mobile_phone_service_provider = models.CharField('Mobile Phone Service Provider', max_length=32, blank=True, null=True)
     contact = models.ForeignKey(
-        Contact, on_delete=models.CASCADE, related_name='phone_contact')
+        Contact, on_delete=models.CASCADE, related_name='phone_contacts')
+
+
+class ContactTypeName(models.Model):
+    name = models.CharField(max_length=128)
 
 
 class ContactType(models.Model):
     class Meta:
-        db_table = 'contact_permission'
-        unique_together = ['name', 'contact', 'lead']
+        db_table = 'contact_type'
+        unique_together = ['contact_type_name', 'contact', 'lead']
 
-    name = models.CharField(max_length=32, blank=True)  # TODO: not null, not blank
+    contact_type_name = models.ForeignKey(ContactTypeName, on_delete=models.CASCADE,
+                                          related_name="contact_info", null=True)
     contact = models.ForeignKey(
         Contact, on_delete=models.CASCADE, related_name='contact_type', blank=True,
         null=True)  # TODO: not null, not blank
