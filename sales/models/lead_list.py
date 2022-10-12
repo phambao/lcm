@@ -66,6 +66,7 @@ class Contact(models.Model):
     image = models.ImageField(upload_to='contact_image', blank=True, null=True)
     lead = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='contacts',
                              blank=True, null=True)
+    # lead = models.ManyToManyField(LeadDetail)
 
 
 class PhoneOfContact(models.Model):

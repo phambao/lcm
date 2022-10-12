@@ -9,7 +9,21 @@ from ..models import lead_list
 class PhoneContactsSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.PhoneOfContact
-        fields = '__all__'
+        fields = ('id', 'phone_number', 'phone_type',
+                  'text_massage_received', 'mobile_phone_service_provider')
+
+    def validate(self, validated_data):
+        pk_contact = self.context['request'].__dict__[
+            'parser_context']['kwargs']['pk']
+        if not lead_list.Contact.objects.filter(pk=pk_contact).exists():
+            raise serializers.ValidationError('Contact not found')
+        return validated_data
+
+    def create(self, validated_data):
+        pk_contact = self.context['request'].__dict__[
+            'parser_context']['kwargs']['pk']
+        phones = lead_list.PhoneOfContact.objects.create(contact_id=pk_contact, **validated_data)
+        return phones
 
 
 class ContactTypesSerializer(serializers.ModelSerializer):
@@ -26,7 +40,9 @@ class ContactsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = lead_list.Contact
-        fields = '__all__'
+        fields = ('id', 'first_name', 'last_name', 'gender',
+                  'email', 'phone_contacts', 'contact_type',
+                  'street', 'city', 'state', 'zip_code', 'country')
 
 
 class ActivitiesSerializer(serializers.ModelSerializer):
@@ -59,16 +75,19 @@ class LeadDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.Photos
+        fields = '__all__'
+
+
 class LeadDetailCreateSerializer(serializers.ModelSerializer):
     activities = ActivitiesSerializer('lead', many=True, allow_null=True)
     contacts = ContactsSerializer('lead', many=True, allow_null=True)
+    photos = PhotoSerializer('lead', many=True, allow_null=True)
 
     class Meta:
         model = lead_list.LeadDetail
         fields = '__all__'
 
 
-class PhotoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = lead_list.Photos
-        fields = '__all__'
