@@ -1,4 +1,4 @@
-from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, ContactType
+from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, ContactType, Photos
 from ..serializers import lead_list
 
 from rest_framework import generics, permissions
@@ -26,6 +26,7 @@ class LeadDetailsViewSet(viewsets.ViewSet):
         data = request.data
         activities = pop(data, 'activities', [])
         contacts = pop(data, 'contacts', [])
+        photos = pop(data, 'photos', [])
 
         ld = LeadDetail.objects.create(
             user_create=request.user, user_update=request.user, **data)
@@ -43,6 +44,10 @@ class LeadDetailsViewSet(viewsets.ViewSet):
                 #         contact=ct, lead=ld, name=contact_type[0].get('name'))
                 PhoneOfContact.objects.bulk_create(
                     [PhoneOfContact(contact=ct, **phone) for phone in phones])
+        if photos:
+            photo_id = [photo.get('id') for photo in photos]
+            Photos.objects.filter(pk__in=photo_id).update(lead=ld)
+
         serializer = lead_list.LeadDetailCreateSerializer(ld)
         return Response(serializer.data)
 

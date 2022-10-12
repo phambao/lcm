@@ -75,16 +75,19 @@ class LeadDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.Photos
+        fields = '__all__'
+
+
 class LeadDetailCreateSerializer(serializers.ModelSerializer):
     activities = ActivitiesSerializer('lead', many=True, allow_null=True)
     contacts = ContactsSerializer('lead', many=True, allow_null=True)
+    photos = PhotoSerializer('lead', many=True, allow_null=True)
 
     class Meta:
         model = lead_list.LeadDetail
         fields = '__all__'
 
 
-class PhotoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = lead_list.Photos
-        fields = '__all__'
