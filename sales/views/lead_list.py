@@ -98,6 +98,9 @@ class LeadDetailViewSet(viewsets.ViewSet):
                                                        user_update=user_update, **activity)
                                             for activity in activities])
         ld = LeadDetail.objects.filter(pk=pk)
+
+        # Need to update contacts
+        contacts = data.pop('contacts')
         ld.update(user_update=user_update, **data)
         serializer = lead_list.LeadDetailCreateSerializer(ld[0])
         return Response(serializer.data)
