@@ -23,17 +23,26 @@ class LeadDetailsViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request):
+        user_create = user_update = request.user
         data = request.data
         activities = pop(data, 'activities', [])
         contacts = pop(data, 'contacts', [])
         photos = pop(data, 'photos', [])
+        for field in ['user_update', 'user_create']:
+            if field in data:
+                data.pop(field)
 
         ld = LeadDetail.objects.create(
-            user_create=request.user, user_update=request.user, **data)
+            user_create=user_create, user_update=user_update, **data)
         if activities:
-            Activities.objects.bulk_create([Activities(lead=ld, user_create=request.user,
-                                                       user_update=request.user, **activity)
-                                            for activity in activities])
+            acts = []
+            for activity in activities:
+                for field in ['user_update', 'user_create']:
+                    if field in activity:
+                        activity.pop(field)
+                acts.append(Activities(
+                    user_create=user_create, user_update=user_update, lead=ld, **activity))
+            Activities.objects.bulk_create(acts)
         if contacts:
             for contact in contacts:
                 contact_type = pop(contact, 'contact_type', '')
@@ -72,16 +81,16 @@ class LeadDetailViewSet(viewsets.ViewSet):
     def update(self, request, pk=None):
         data = request.data
         activities = pop(data, 'activities', [])
-
+        user_update = pop(data, 'user_update', request.user)
         queryset = LeadDetail.objects.all()
         ld = get_object_or_404(queryset, pk=pk)
         ld.activities.all().delete()
         if activities:
             Activities.objects.bulk_create([Activities(lead=ld,
-                                                       user_update=request.user, **activity)
+                                                       user_update=user_update, **activity)
                                             for activity in activities])
         ld = LeadDetail.objects.filter(pk=pk)
-        ld.update(user_update=request.user, **data)
+        ld.update(user_update=user_update, **data)
         serializer = lead_list.LeadDetailCreateSerializer(ld[0])
         return Response(serializer.data)
 
@@ -112,6 +121,14 @@ class LeadActivitiesDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
     queryset = Activities.objects.all()
     serializer_class = lead_list.ActivitiesSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, *args, **kwargs):
+        data = request.data
+        user_update = pop(data, 'user_update', request.user)
+        instance = self.get_object()
+        instance.user_update = user_update
+        instance.save()
+        return super().put(request, *args, **kwargs)
 
 
 class ContactsViewSet(generics.ListCreateAPIView):
