@@ -9,4 +9,4 @@ from ..models import catalog
 class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = catalog.Material
-        fields = ('id', 'name', 'parent', 'children')
+        fields = ('id', 'type', 'name', 'parent', 'sequence')
