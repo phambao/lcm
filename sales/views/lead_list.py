@@ -90,18 +90,19 @@ class LeadDetailViewSet(viewsets.ViewSet):
         data = request.data
         activities = pop(data, 'activities', [])
         user_update = pop(data, 'user_update', request.user)
+        user_create = pop(data, 'user_create', request.user)
+        photos = pop(data, 'photos', request.user)
+        contacts = pop(data, 'contacts', request.user)
+
         queryset = LeadDetail.objects.all()
         ld = get_object_or_404(queryset, pk=pk)
         ld.activities.all().delete()
         if activities:
-            Activities.objects.bulk_create([Activities(lead=ld,
-                                                       user_update=user_update, **activity)
+            Activities.objects.bulk_create([Activities(lead=ld, **activity)
                                             for activity in activities])
         ld = LeadDetail.objects.filter(pk=pk)
 
-        # Need to update contacts
-        contacts = data.pop('contacts')
-        ld.update(user_update=user_update, **data)
+        ld.update(**data)
         serializer = lead_list.LeadDetailCreateSerializer(ld[0])
         return Response(serializer.data)
 

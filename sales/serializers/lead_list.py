@@ -89,3 +89,5 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.LeadDetail
         fields = '__all__'
+
+
