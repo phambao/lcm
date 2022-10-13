@@ -17,8 +17,7 @@ class FileUploadView(views.APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
-        ids = request.data.get('ids').split(',')
-        queryset = Photos.objects.filter(id__in=ids)
+        queryset = Photos.objects.all()
         serializer = PhotoSerializer(queryset, many=True)
         return Response(serializer.data)
     
