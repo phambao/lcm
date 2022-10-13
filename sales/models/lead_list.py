@@ -63,9 +63,8 @@ class Contact(models.Model):
     country = models.CharField(max_length=32)
     zip_code = models.CharField(max_length=32, blank=True)
     image = models.ImageField(upload_to='contact_image', blank=True, null=True)
-    lead = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='contacts',
-                             blank=True, null=True)
-    # lead = models.ManyToManyField(LeadDetail)
+    leads = models.ManyToManyField(LeadDetail, related_name='contacts',
+                                   blank=True)
 
 
 class PhoneOfContact(models.Model):
@@ -80,7 +79,7 @@ class PhoneOfContact(models.Model):
         LANDLINE = 'landline', _('Landline')
         OTHER = 'other', _('Other')
 
-    phone_number = models.CharField(max_length=20, unique=True)
+    phone_number = models.CharField(max_length=20)
     phone_type = models.CharField(
         max_length=8, choices=PhoneType.choices, default=PhoneType.MOBILE)
     text_massage_received = models.BooleanField(default=True)
