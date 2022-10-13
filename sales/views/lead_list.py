@@ -16,6 +16,7 @@ def pop(data, key, type):
 
 
 class LeadDetailsViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request):
         queryset = LeadDetail.objects.all()
@@ -47,7 +48,13 @@ class LeadDetailsViewSet(viewsets.ViewSet):
             for contact in contacts:
                 contact_type = pop(contact, 'contact_type', '')
                 phones = pop(contact, 'phone_contacts', [])
-                ct = Contact.objects.create(lead=ld, **contact)
+                contact_id = contact.get('id', None)
+                if contact_id:
+                    # If contact has exist in database
+                    ct = Contact.objects.get(id=contact_id)
+                else:
+                    ct = Contact.objects.create(**contact)
+                ld.contacts.add(ct)
                 # if contact_type:
                 #     ContactType.objects.create(
                 #         contact=ct, lead=ld, name=contact_type[0].get('name'))
@@ -71,6 +78,7 @@ class LeadDetailList(generics.ListCreateAPIView):
 
 
 class LeadDetailViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
 
     def retrieve(self, request, pk=None):
         queryset = LeadDetail.objects.all()
@@ -147,7 +155,11 @@ class PhoneOfContactsViewSet(generics.ListCreateAPIView):
     queryset = PhoneOfContact.objects.all()
     serializer_class = lead_list.PhoneContactsSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
+    def get_queryset(self):
+        get_object_or_404(Contact.objects.all(), pk=self.kwargs['pk_contact'])
+        return PhoneOfContact.objects.filter(contact_id=self.kwargs['pk_contact'])
+
 
 class PhoneOfContactsDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
     queryset = PhoneOfContact.objects.all()
