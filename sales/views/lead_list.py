@@ -143,6 +143,33 @@ class LeadActivitiesDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
         return super().put(request, *args, **kwargs)
 
 
+class LeadPhotosViewSet(generics.ListCreateAPIView):
+    """
+    Used for get params
+    """
+    queryset = Photos.objects.all()
+    serializer_class = lead_list.PhotoSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        get_object_or_404(LeadDetail.objects.all(), pk=self.kwargs['pk_lead'])
+        return Photos.objects.filter(lead_id=self.kwargs['pk_lead'])        
+
+
+class LeadPhotosDetailViewSet(generics.RetrieveDestroyAPIView):
+    """
+    Used for get params
+    """
+    queryset = Photos.objects.all()
+    serializer_class = lead_list.PhotoSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+        
+        
 class ContactsViewSet(generics.ListCreateAPIView):
     queryset = Contact.objects.all()
     serializer_class = lead_list.ContactsSerializer
