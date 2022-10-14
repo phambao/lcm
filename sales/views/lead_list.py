@@ -7,8 +7,8 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
 
-
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
+
 
 def pop(data, key, type):
     try:
@@ -185,6 +185,25 @@ class PhoneOfContactsViewSet(generics.ListCreateAPIView):
     queryset = PhoneOfContact.objects.all()
     serializer_class = lead_list.PhoneContactsSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class LeadContactsViewSet(generics.ListCreateAPIView):
+
+    queryset = Contact.objects.all()
+    serializer_class = lead_list.ContactsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        get_object_or_404(LeadDetail.objects.all(), pk=self.kwargs['pk_lead'])
+        return Contact.objects.filter(leads__id=self.kwargs['pk_lead'])
+
+
+class LeadContactDetailsViewSet(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = lead_list.ContactsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return LeadDetail.objects.get(pk=self.kwargs['pk_lead']).contacts.all()
 
     def get_queryset(self):
         get_object_or_404(Contact.objects.all(), pk=self.kwargs['pk_contact'])
