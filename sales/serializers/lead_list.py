@@ -1,10 +1,12 @@
+import re
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.response import Response
 
 from ..models import lead_list
-
+from django.core.files.base import ContentFile
+import uuid
 
 class PhoneContactsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -90,8 +92,19 @@ class PhotoSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         pk_lead = self.context['request'].__dict__[
             'parser_context']['kwargs']['pk_lead']
-        photo = lead_list.Photos.objects.create(lead_id=pk_lead, **validated_data)
+        file = self.context['request'].FILES.get('photo')
+        file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+        content_file = ContentFile(file.read(), name=file_name)
+        photo = lead_list.Photos.objects.create(
+            photo=content_file, lead_id=pk_lead)
         return photo
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['photo'] = r'(?<=/media/).+?(?=/)'.replace(r'(?<=/media/).+?(?=/)', instance.photo.url)
+        print(data)
+        return data
+
 
 class LeadDetailCreateSerializer(serializers.ModelSerializer):
     activities = ActivitiesSerializer('lead', many=True, allow_null=True)
@@ -101,5 +114,3 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.LeadDetail
         fields = '__all__'
-
-

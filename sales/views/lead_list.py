@@ -7,6 +7,9 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
 
+
+PASS_FIELDS = ['user_create', 'user_update', 'lead']
+
 def pop(data, key, type):
     try:
         return data.pop(key)
@@ -29,18 +32,14 @@ class LeadDetailsViewSet(viewsets.ViewSet):
         activities = pop(data, 'activities', [])
         contacts = pop(data, 'contacts', [])
         photos = pop(data, 'photos', [])
-        for field in ['user_update', 'user_create']:
-            if field in data:
-                data.pop(field)
+        [data.pop(field) for field in PASS_FIELDS if field in data]
 
         ld = LeadDetail.objects.create(
             user_create=user_create, user_update=user_update, **data)
         if activities:
             acts = []
             for activity in activities:
-                for field in ['user_update', 'user_create']:
-                    if field in activity:
-                        activity.pop(field)
+                [activity.pop(field) for field in PASS_FIELDS if field in activity]
                 acts.append(Activities(
                     user_create=user_create, user_update=user_update, lead=ld, **activity))
             Activities.objects.bulk_create(acts)
@@ -154,7 +153,7 @@ class LeadPhotosViewSet(generics.ListCreateAPIView):
     def get_queryset(self):
         get_object_or_404(LeadDetail.objects.all(), pk=self.kwargs['pk_lead'])
         return Photos.objects.filter(lead_id=self.kwargs['pk_lead'])        
-
+    
 
 class LeadPhotosDetailViewSet(generics.RetrieveDestroyAPIView):
     """
@@ -168,8 +167,8 @@ class LeadPhotosDetailViewSet(generics.RetrieveDestroyAPIView):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-        
-        
+
+
 class ContactsViewSet(generics.ListCreateAPIView):
     queryset = Contact.objects.all()
     serializer_class = lead_list.ContactsSerializer
