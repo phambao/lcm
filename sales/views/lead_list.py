@@ -135,9 +135,9 @@ class LeadActivitiesDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
 
     def put(self, request, *args, **kwargs):
         data = request.data
-        user_update = pop(data, 'user_update', request.user)
+        [data.pop(field) for field in PASS_FIELDS if field in data]
         instance = self.get_object()
-        instance.user_update = user_update
+        instance.user_update = request.user
         instance.save()
         return super().put(request, *args, **kwargs)
 
