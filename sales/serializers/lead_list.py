@@ -78,8 +78,20 @@ class LeadDetailSerializer(serializers.ModelSerializer):
 class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.Photos
-        fields = '__all__'
+        fields = ('id', 'photo')
 
+    def validate(self, validated_data):
+        pk_lead = self.context['request'].__dict__[
+            'parser_context']['kwargs']['pk_lead']
+        if not lead_list.LeadDetail.objects.filter(pk=pk_lead).exists():
+            raise serializers.ValidationError('Lead not found')
+        return validated_data
+    
+    def create(self, validated_data):
+        pk_lead = self.context['request'].__dict__[
+            'parser_context']['kwargs']['pk_lead']
+        photo = lead_list.Photos.objects.create(lead_id=pk_lead, **validated_data)
+        return photo
 
 class LeadDetailCreateSerializer(serializers.ModelSerializer):
     activities = ActivitiesSerializer('lead', many=True, allow_null=True)
