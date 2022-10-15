@@ -186,6 +186,10 @@ class PhoneOfContactsViewSet(generics.ListCreateAPIView):
     serializer_class = lead_list.PhoneContactsSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        get_object_or_404(Contact.objects.all(), pk=self.kwargs['pk_contact'])
+        return PhoneOfContact.objects.filter(contact_id=self.kwargs['pk_contact'])
+
 
 class LeadContactsViewSet(generics.ListCreateAPIView):
 
@@ -204,10 +208,6 @@ class LeadContactDetailsViewSet(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return LeadDetail.objects.get(pk=self.kwargs['pk_lead']).contacts.all()
-
-    def get_queryset(self):
-        get_object_or_404(Contact.objects.all(), pk=self.kwargs['pk_contact'])
-        return PhoneOfContact.objects.filter(contact_id=self.kwargs['pk_contact'])
 
 
 class PhoneOfContactsDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
