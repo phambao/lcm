@@ -32,6 +32,9 @@ urlpatterns = [
     # Photos
     path('leads/<int:pk_lead>/photos/', lead_list.LeadPhotosViewSet.as_view()),
     path('leads/<int:pk_lead>/photos/<int:pk>/', lead_list.LeadPhotosDetailViewSet.as_view()),
+    # Contact Type Name
+    path('contact-types/', lead_list.ContactTypeNameGenericView.as_view()),
+    path('contact-types/<int:pk>/', lead_list.ContactTypeNameDetailGenericView.as_view()),
 
     path('catalog/materials/', catalog.MaterialList.as_view()),
     path('catalog/materials/<int:pk>/', catalog.MaterialDetail.as_view()),

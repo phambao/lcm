@@ -89,7 +89,7 @@ class PhoneOfContact(models.Model):
 
 
 class ContactTypeName(models.Model):
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128, unique=True)
 
 
 class ContactType(models.Model):
