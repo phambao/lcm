@@ -4,21 +4,26 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.response import Response
 
+from api.serializers.base import SerializerMixin
 from ..models import lead_list
 from django.core.files.base import ContentFile
 import uuid
 
-class PhoneContactsSerializer(serializers.ModelSerializer):
+
+class PhoneContactsSerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
         model = lead_list.PhoneOfContact
         fields = ('id', 'phone_number', 'phone_type',
                   'text_massage_received', 'mobile_phone_service_provider')
 
     def validate(self, validated_data):
-        pk_contact = self.context['request'].__dict__[
-            'parser_context']['kwargs']['pk']
-        if not lead_list.Contact.objects.filter(pk=pk_contact).exists():
-            raise serializers.ValidationError('Contact not found')
+        kwargs = self.get_params()
+        if self.is_param_exist('pk_lead'):
+            if not lead_list.LeadDetail.objects.filter(pk=kwargs['pk_lead']).exists():
+                raise serializers.ValidationError('Lead not found')
+        if self.is_param_exist('pk'):
+            if not lead_list.Contact.objects.filter(pk=kwargs['pk']).exists():
+                raise serializers.ValidationError('Contact not found')
         return validated_data
 
     def create(self, validated_data):
@@ -28,23 +33,76 @@ class PhoneContactsSerializer(serializers.ModelSerializer):
         return phones
 
 
+class ContactTypeNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.ContactTypeName
+        fields = '__all__'
+
+
 class ContactTypesSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = lead_list.ContactType
         fields = ('id', 'contact_type_name', )
 
 
-class ContactsSerializer(serializers.ModelSerializer):
+class ContactTypeNameCustomSerializer(serializers.Serializer):
+    name = serializers.CharField()
+
+
+class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
     phone_contacts = PhoneContactsSerializer(
         'contact', many=True, allow_null=True)
-    contact_type = ContactTypesSerializer(
-        'contact', many=True, allow_null=True)
+    contact_types = ContactTypeNameCustomSerializer(many=True, allow_null=True)
+    lead_id = serializers.IntegerField(allow_null=True, required=False)
 
     class Meta:
         model = lead_list.Contact
-        fields = ('id', 'first_name', 'last_name', 'gender',
-                  'email', 'phone_contacts', 'contact_type',
+        fields = ('id', 'first_name', 'last_name', 'gender', 'lead_id',
+                  'email', 'phone_contacts', 'contact_types',
                   'street', 'city', 'state', 'zip_code', 'country')
+
+    def create(self, validated_data):
+        if self.is_param_exist('pk_lead'):
+            phone_contacts = validated_data.pop('phone_contacts')
+            contact_types = validated_data.pop('contact_types')
+            ct = lead_list.Contact.objects.create(**validated_data)
+            ld = lead_list.LeadDetail.objects.get(pk=self.get_params()['pk_lead'])
+            ct.leads.add(ld)
+            for contact_type in contact_types:
+                ctn = lead_list.ContactTypeName.objects.get(name=contact_type['name'])
+                lead_list.ContactType.objects.create(contact=ct, lead=ld, contact_type_name=ctn)
+            return ct
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if self.is_param_exist('pk_lead'):
+            phone_contacts = validated_data.pop('phone_contacts')
+            contact_types = validated_data.pop('contact_types')
+            lead_id = validated_data.pop('lead_id')
+            instance = lead_list.Contact.objects.filter(pk=self.get_params()['pk'])
+            instance.update(**validated_data)
+            instance = instance.first()
+            if not lead_id:
+                instance.leads.remove(lead_list.LeadDetail.objects.get(pk=self.get_params()['pk_lead']))
+
+            instance.contact_type.all().delete()
+            if contact_types:
+                instance.contact_type.all().delete()
+                for contact_type in contact_types:
+                    ctn = lead_list.ContactTypeName.objects.get(name=contact_type['name'])
+                    lead = lead_list.LeadDetail.objects.get(pk=self.get_params()['pk_lead'])
+                    lead_list.ContactType.objects.create(contact=instance, lead=lead, contact_type_name=ctn)
+
+            return instance
+        return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        contact_type = instance.contact_type.all().select_related('contact_type_name')
+        data['contact_types'] = [{'id': ct.contact_type_name.id, 'name': ct.contact_type_name.name}
+                                 for ct in contact_type]
+        return data
 
 
 class ActivitiesSerializer(serializers.ModelSerializer):

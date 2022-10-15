@@ -1,4 +1,4 @@
-from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, ContactType, Photos
+from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, ContactType, Photos, ContactTypeName
 from ..serializers import lead_list
 
 from rest_framework import generics, permissions
@@ -7,8 +7,8 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
 
-
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
+
 
 def pop(data, key, type):
     try:
@@ -45,7 +45,7 @@ class LeadDetailsViewSet(viewsets.ViewSet):
             Activities.objects.bulk_create(acts)
         if contacts:
             for contact in contacts:
-                contact_type = pop(contact, 'contact_type', '')
+                contact_types = pop(contact, 'contact_types', [])
                 phones = pop(contact, 'phone_contacts', [])
                 contact_id = contact.get('id', None)
                 if contact_id:
@@ -54,9 +54,9 @@ class LeadDetailsViewSet(viewsets.ViewSet):
                 else:
                     ct = Contact.objects.create(**contact)
                 ld.contacts.add(ct)
-                # if contact_type:
-                #     ContactType.objects.create(
-                #         contact=ct, lead=ld, name=contact_type[0].get('name'))
+                for contact_type in contact_types:
+                    ctn = ContactTypeName.objects.get(name=contact_type['name'])
+                    ContactType.objects.create(contact=ct, lead=ld, contact_type_name=ctn)
                 PhoneOfContact.objects.bulk_create(
                     [PhoneOfContact(contact=ct, **phone) for phone in phones])
         if photos:
@@ -191,7 +191,38 @@ class PhoneOfContactsViewSet(generics.ListCreateAPIView):
         return PhoneOfContact.objects.filter(contact_id=self.kwargs['pk_contact'])
 
 
+class LeadContactsViewSet(generics.ListCreateAPIView):
+
+    queryset = Contact.objects.all()
+    serializer_class = lead_list.ContactsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        get_object_or_404(LeadDetail.objects.all(), pk=self.kwargs['pk_lead'])
+        return Contact.objects.filter(leads__id=self.kwargs['pk_lead'])
+
+
+class LeadContactDetailsViewSet(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = lead_list.ContactsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return LeadDetail.objects.get(pk=self.kwargs['pk_lead']).contacts.all()
+
+
 class PhoneOfContactsDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
     queryset = PhoneOfContact.objects.all()
     serializer_class = lead_list.PhoneContactsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ContactTypeNameGenericView(generics.ListCreateAPIView):
+    queryset = ContactTypeName.objects.all()
+    serializer_class = lead_list.ContactTypeNameSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ContactTypeNameDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ContactTypeName.objects.all()
+    serializer_class = lead_list.ContactTypeNameSerializer
     permission_classes = [permissions.IsAuthenticated]

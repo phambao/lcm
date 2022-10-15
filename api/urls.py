@@ -23,6 +23,8 @@ urlpatterns = [
     path('leads/<int:pk_lead>/activities/', lead_list.LeadActivitiesViewSet.as_view()),
     path('leads/<int:pk_lead>/activities/<int:pk>/', lead_list.LeadActivitiesDetailViewSet.as_view()),
     # Contacts
+    path('leads/<int:pk_lead>/contacts/', lead_list.LeadContactsViewSet.as_view()),
+    path('leads/<int:pk_lead>/contacts/<int:pk>/', lead_list.LeadContactDetailsViewSet.as_view()),
     path('contacts/', lead_list.ContactsViewSet.as_view()),
     path('contacts/<int:pk>/', lead_list.ContactsDetailViewSet.as_view()),
     path('contacts/<int:pk_contact>/phone_contacts/', lead_list.PhoneOfContactsViewSet.as_view()),
@@ -30,7 +32,10 @@ urlpatterns = [
     # Photos
     path('leads/<int:pk_lead>/photos/', lead_list.LeadPhotosViewSet.as_view()),
     path('leads/<int:pk_lead>/photos/<int:pk>/', lead_list.LeadPhotosDetailViewSet.as_view()),
-    
+    # Contact Type Name
+    path('contact-types/', lead_list.ContactTypeNameGenericView.as_view()),
+    path('contact-types/<int:pk>/', lead_list.ContactTypeNameDetailGenericView.as_view()),
+
     path('catalog/materials/', catalog.MaterialList.as_view()),
     path('catalog/materials/<int:pk>/', catalog.MaterialDetail.as_view()),
 ]
