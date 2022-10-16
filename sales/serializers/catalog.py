@@ -10,3 +10,9 @@ class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = catalog.Material
         fields = ('id', 'type', 'name', 'parent', 'sequence', 'cost_table')
+
+
+class CostTableModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = catalog.CostTable
+        fields = ('id', 'name', 'data')
