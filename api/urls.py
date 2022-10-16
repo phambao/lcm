@@ -38,4 +38,6 @@ urlpatterns = [
 
     path('catalog/materials/', catalog.MaterialList.as_view()),
     path('catalog/materials/<int:pk>/', catalog.MaterialDetail.as_view()),
+    path('catalog/cost-tables/', catalog.CostTableList.as_view()),
+    path('catalog/cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
 ]
