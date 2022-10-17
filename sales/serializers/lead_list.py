@@ -75,33 +75,44 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
             return ct
         return super().create(validated_data)
 
+    def update_contact_type(self, instance, contact_types):
+        instance.contact_type.all().delete()
+        if contact_types:
+            for contact_type in contact_types:
+                ctn = lead_list.ContactTypeName.objects.get(name=contact_type['name'])
+                lead = lead_list.LeadDetail.objects.get(pk=self.get_params()['pk_lead'])
+                lead_list.ContactType.objects.create(contact=instance, lead=lead, contact_type_name=ctn)
+
     def update(self, instance, validated_data):
+        phone_contacts = validated_data.pop('phone_contacts')
+        contact_types = validated_data.pop('contact_types')
+        lead_id = validated_data.pop('lead_id')
+        instance = lead_list.Contact.objects.filter(pk=self.get_params()['pk'])
+        instance.update(**validated_data)
+        instance = instance.first()
         if self.is_param_exist('pk_lead'):
-            phone_contacts = validated_data.pop('phone_contacts')
-            contact_types = validated_data.pop('contact_types')
-            lead_id = validated_data.pop('lead_id')
-            instance = lead_list.Contact.objects.filter(pk=self.get_params()['pk'])
-            instance.update(**validated_data)
-            instance = instance.first()
             if not lead_id:
                 instance.leads.remove(lead_list.LeadDetail.objects.get(pk=self.get_params()['pk_lead']))
-
-            instance.contact_type.all().delete()
-            if contact_types:
-                instance.contact_type.all().delete()
-                for contact_type in contact_types:
-                    ctn = lead_list.ContactTypeName.objects.get(name=contact_type['name'])
-                    lead = lead_list.LeadDetail.objects.get(pk=self.get_params()['pk_lead'])
-                    lead_list.ContactType.objects.create(contact=instance, lead=lead, contact_type_name=ctn)
-
+            self.update_contact_type(instance, contact_types)
             return instance
+
+        # Contact global does not update contact type
+        if lead_id:
+            instance.leads.add(lead_list.LeadDetail.objects.get(pk=lead_id))
+
+        instance.phone_contacts.all().delete()
+        if phone_contacts:
+            lead_list.PhoneOfContact.objects.bulk_create(
+                [lead_list.PhoneOfContact(contact=instance, **pct) for pct in phone_contacts]
+            )
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        contact_type = instance.contact_type.all().select_related('contact_type_name')
-        data['contact_types'] = [{'id': ct.contact_type_name.id, 'name': ct.contact_type_name.name}
-                                 for ct in contact_type]
+        if self.is_param_exist('pk_lead'):  # check from url leads/<int:pk_lead>/contacts/<int:pk>/
+            contact_type = instance.contact_type.filter(lead_id=self.get_params()['pk_lead']).select_related('contact_type_name')
+            data['contact_types'] = [{'id': ct.contact_type_name.id, 'name': ct.contact_type_name.name}
+                                     for ct in contact_type if ct.contact_type_name]
         return data
 
 
