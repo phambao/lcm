@@ -63,7 +63,8 @@ class LeadDetailsViewSet(viewsets.ViewSet):
             photo_id = [photo.get('id') for photo in photos]
             Photos.objects.filter(pk__in=photo_id).update(lead=ld)
 
-        serializer = lead_list.LeadDetailCreateSerializer(ld)
+        serializer = lead_list.LeadDetailCreateSerializer(ld, context={'request': request,
+                                                                       'pk_lead': ld.pk})
         return Response(serializer.data)
 
 
@@ -82,7 +83,8 @@ class LeadDetailViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk=None):
         queryset = LeadDetail.objects.all()
         ld = get_object_or_404(queryset, pk=pk)
-        serializer = lead_list.LeadDetailCreateSerializer(ld)
+        serializer = lead_list.LeadDetailCreateSerializer(ld, context={'request': request,
+                                                                       'pk_lead': pk})
         return Response(serializer.data)
 
     def update(self, request, pk=None):
@@ -102,7 +104,8 @@ class LeadDetailViewSet(viewsets.ViewSet):
         ld = LeadDetail.objects.filter(pk=pk)
 
         ld.update(**data)
-        serializer = lead_list.LeadDetailCreateSerializer(ld[0])
+        serializer = lead_list.LeadDetailCreateSerializer(ld[0], context={'request': request,
+                                                                          'pk_lead': pk})
         return Response(serializer.data)
 
     def destroy(self, request, pk=None):
