@@ -4,6 +4,7 @@ from knox import views as knox_views
 
 from api.views.upload_file import FileUploadView
 from sales.views import lead_list, catalog
+from base.views import country_state_city
 from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = [
@@ -40,4 +41,9 @@ urlpatterns = [
     path('catalog/materials/<int:pk>/', catalog.MaterialDetail.as_view()),
     path('catalog/cost-tables/', catalog.CostTableList.as_view()),
     path('catalog/cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
+    
+    # For country, state, city
+    path('countries/', country_state_city.CountryList.as_view()),
+    path('countries/<int:pk_country>/states/', country_state_city.CountryStateList.as_view()),
+    path('countries/<int:pk_country>/states/<int:pk_state>/cities/', country_state_city.CountryStateCityList.as_view()),
 ]
