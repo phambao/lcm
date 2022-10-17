@@ -109,8 +109,9 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if self.is_param_exist('pk_lead'):  # check from url leads/<int:pk_lead>/contacts/<int:pk>/
-            contact_type = instance.contact_type.filter(lead_id=self.get_params()['pk_lead']).select_related('contact_type_name')
+        pk_lead = self.get_params()['pk_lead'] if self.is_param_exist('pk_lead') else self.context.get('pk_lead')
+        if pk_lead:  # check from url leads/<int:pk_lead>/contacts/<int:pk>/
+            contact_type = instance.contact_type.filter(lead_id=pk_lead).select_related('contact_type_name')
             data['contact_types'] = [{'id': ct.contact_type_name.id, 'name': ct.contact_type_name.name}
                                      for ct in contact_type if ct.contact_type_name]
         return data
@@ -175,7 +176,7 @@ class PhotoSerializer(serializers.ModelSerializer):
         return data
 
 
-class LeadDetailCreateSerializer(serializers.ModelSerializer):
+class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
     activities = ActivitiesSerializer('lead', many=True, allow_null=True)
     contacts = ContactsSerializer('leads', many=True, allow_null=True)
     photos = PhotoSerializer('lead', many=True, allow_null=True)
