@@ -8,6 +8,7 @@ class LeadDetail(BaseModel):
 
     class Meta:
         db_table = 'lead_detail'
+        ordering = ['-modified_date']
 
     # General
     class Status(models.TextChoices):
@@ -110,6 +111,7 @@ class Activities(BaseModel):
 
     class Meta:
         db_table = 'activities'
+        ordering = ['-modified_date']
 
     class Status(models.TextChoices):
         NONE = 'none', 'None'
@@ -153,6 +155,7 @@ class Activities(BaseModel):
 class Proposals(BaseModel):
     class Meta:
         db_table = 'proposal'
+        ordering = ['-modified_date']
     
     class Status(models.TextChoices):
         STATUS_1 = 'status_1', 'Status 1'
@@ -171,6 +174,7 @@ class Proposals(BaseModel):
 class Photos(BaseModel):
     class Meta:
         db_table = 'photos'
+        ordering = ['-modified_date']
 
     photo = models.ImageField(upload_to='photo')
     lead = models.ForeignKey(

@@ -18,6 +18,7 @@ class Material(BaseModel):
 
     class Meta:
         db_table = 'material'
+        ordering = ['-modified_date']
 
     sequence = models.IntegerField(default=0)
     name = models.CharField(max_length=128)
