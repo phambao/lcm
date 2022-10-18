@@ -41,9 +41,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'knox',
+    'base.apps.BaseConfig',
     'api.apps.ApiConfig',
     'sales.apps.SalesConfig',
-    'base.apps.BaseConfig',
 ]
 
 MIDDLEWARE = [
