@@ -1,11 +1,9 @@
-from django.urls import path
-from api.views.auth import SignInAPI, SignUpAPI, MainUser, UserList
+from django.urls import path, include
 from knox import views as knox_views
 
+from api.views.auth import SignInAPI, SignUpAPI, MainUser, UserList
 from api.views.upload_file import FileUploadView
 from sales.views import lead_list, catalog
-from base.views import country_state_city
-from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = [
     # For authenticate
@@ -43,7 +41,5 @@ urlpatterns = [
     path('catalog/cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
     
     # For country, state, city
-    path('countries/', country_state_city.CountryList.as_view()),
-    path('countries/<int:pk_country>/states/', country_state_city.CountryStateList.as_view()),
-    path('countries/<int:pk_country>/states/<int:pk_state>/cities/', country_state_city.CountryStateCityList.as_view()),
+    path('location/', include('base.urls'))
 ]

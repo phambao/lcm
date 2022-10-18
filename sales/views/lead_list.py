@@ -116,10 +116,6 @@ class LeadDetailViewSet(viewsets.ViewSet):
 
 
 class LeadActivitiesViewSet(generics.ListCreateAPIView):
-    """
-    Used for get params
-    """
-    queryset = Activities.objects.all()
     serializer_class = lead_list.ActivitiesSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -146,10 +142,6 @@ class LeadActivitiesDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
 
 
 class LeadPhotosViewSet(generics.ListCreateAPIView):
-    """
-    Used for get params
-    """
-    queryset = Photos.objects.all()
     serializer_class = lead_list.PhotoSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -185,7 +177,6 @@ class ContactsDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
 
 
 class PhoneOfContactsViewSet(generics.ListCreateAPIView):
-    queryset = PhoneOfContact.objects.all()
     serializer_class = lead_list.PhoneContactsSerializer
     permission_classes = [permissions.IsAuthenticated]
 
