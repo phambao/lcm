@@ -12,7 +12,6 @@ class CountryList(generics.ListAPIView):
 
 
 class CountryStateList(generics.ListAPIView):
-    queryset = State.objects.all()
     serializer_class = country_state_city.StateSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = None
@@ -22,7 +21,6 @@ class CountryStateList(generics.ListAPIView):
 
 
 class CountryStateCityList(generics.ListAPIView):
-    queryset = City.objects.all()
     serializer_class = country_state_city.CitySerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = None
