@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'django_filters',
     'knox',
     'api.apps.ApiConfig',
-    'sales.apps.SalesConfig'
+    'sales.apps.SalesConfig',
+    'base.apps.BaseConfig',
 ]
 
 MIDDLEWARE = [
