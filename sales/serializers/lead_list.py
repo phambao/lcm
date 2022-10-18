@@ -1,13 +1,15 @@
-import re
-from django.conf import settings
-from django.contrib.auth import get_user_model
+import uuid
+
+from django.core.files.base import ContentFile
 from rest_framework import serializers
-from rest_framework.response import Response
 
 from api.serializers.base import SerializerMixin
 from ..models import lead_list
-from django.core.files.base import ContentFile
-import uuid
+
+
+class IDAndNameSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
 
 
 class PhoneContactsSerializer(serializers.ModelSerializer, SerializerMixin):
@@ -51,6 +53,9 @@ class ContactTypeNameCustomSerializer(serializers.Serializer):
 
 
 class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
+    city = IDAndNameSerializer(allow_null=True)
+    state = IDAndNameSerializer(allow_null=True)
+    country = IDAndNameSerializer(allow_null=True)
     phone_contacts = PhoneContactsSerializer(
         'contact', many=True, allow_null=True)
     contact_types = ContactTypeNameCustomSerializer(many=True, allow_null=True)
@@ -66,7 +71,11 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         if self.is_param_exist('pk_lead'):
             phone_contacts = validated_data.pop('phone_contacts')
             contact_types = validated_data.pop('contact_types')
-            ct = lead_list.Contact.objects.create(**validated_data)
+            state = validated_data.pop('state')
+            city = validated_data.pop('city')
+            country = validated_data.pop('country')
+            ct = lead_list.Contact.objects.create(country_id=country.get('id'), state_id=state.get('id'),
+                                                  city_id=city.get('id'), **validated_data)
             ld = lead_list.LeadDetail.objects.get(pk=self.get_params()['pk_lead'])
             ct.leads.add(ld)
             for contact_type in contact_types:
@@ -87,8 +96,13 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         phone_contacts = validated_data.pop('phone_contacts')
         contact_types = validated_data.pop('contact_types')
         lead_id = validated_data.pop('lead_id')
+        state = validated_data.pop('state')
+        city = validated_data.pop('city')
+        country = validated_data.pop('country')
+
         instance = lead_list.Contact.objects.filter(pk=self.get_params()['pk'])
-        instance.update(**validated_data)
+        instance.update(country_id=country.get('id'), state_id=state.get('id'),
+                        city_id=city.get('id'), **validated_data)
         instance = instance.first()
         if self.is_param_exist('pk_lead'):
             if not lead_id:
@@ -141,6 +155,9 @@ class ActivitiesSerializer(serializers.ModelSerializer):
 
 
 class LeadDetailSerializer(serializers.ModelSerializer):
+    city = IDAndNameSerializer(allow_null=True)
+    state = IDAndNameSerializer(allow_null=True)
+    country = IDAndNameSerializer(allow_null=True)
 
     class Meta:
         model = lead_list.LeadDetail
@@ -179,6 +196,9 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
     activities = ActivitiesSerializer('lead', many=True, allow_null=True)
     contacts = ContactsSerializer('leads', many=True, allow_null=True)
     photos = PhotoSerializer('lead', many=True, allow_null=True)
+    city = IDAndNameSerializer(allow_null=True)
+    state = IDAndNameSerializer(allow_null=True)
+    country = IDAndNameSerializer(allow_null=True)
 
     class Meta:
         model = lead_list.LeadDetail

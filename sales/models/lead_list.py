@@ -23,8 +23,12 @@ class LeadDetail(BaseModel):
     # Lead information
     lead_title = models.CharField(max_length=128)
     street_address = models.CharField(max_length=128)
-    city = models.CharField(max_length=128)
-    state = models.CharField(max_length=128)
+    country = models.ForeignKey('base.Country', on_delete=models.SET_NULL,
+                                related_name='lead_countries', null=True, blank=True)
+    city = models.ForeignKey('base.City', on_delete=models.SET_NULL,
+                             related_name='lead_cities', null=True, blank=True)
+    state = models.ForeignKey('base.State', on_delete=models.SET_NULL,
+                              related_name='lead_states', null=True, blank=True)
     zip_code = models.CharField(max_length=6)
     status = models.CharField(
         max_length=16, choices=Status.choices, default=Status.OPEN)
@@ -59,9 +63,12 @@ class Contact(models.Model):
         max_length=6, choices=Gender.choices, default=Gender.MALE)
     email = models.EmailField(max_length=128)
     street = models.CharField(max_length=64)
-    city = models.CharField(max_length=32)
-    state = models.CharField(max_length=32)
-    country = models.CharField(max_length=32)
+    city = models.ForeignKey('base.City', on_delete=models.SET_NULL,
+                             related_name='contact_cities', null=True, blank=True)
+    state = models.ForeignKey('base.State', on_delete=models.SET_NULL,
+                              related_name='contact_states', null=True, blank=True)
+    country = models.ForeignKey('base.Country', on_delete=models.SET_NULL,
+                                related_name='contact_countries', null=True, blank=True)
     zip_code = models.CharField(max_length=32, blank=True)
     image = models.ImageField(upload_to='contact_image', blank=True, null=True)
     leads = models.ManyToManyField(LeadDetail, related_name='contacts',

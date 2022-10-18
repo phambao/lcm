@@ -1,5 +1,6 @@
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, ContactType, Photos, ContactTypeName
 from ..serializers import lead_list
+from base.models.country_state_city import Country, State, City
 
 from rest_framework import generics, permissions
 from rest_framework import viewsets, status
@@ -32,10 +33,15 @@ class LeadDetailsViewSet(viewsets.ViewSet):
         activities = pop(data, 'activities', [])
         contacts = pop(data, 'contacts', [])
         photos = pop(data, 'photos', [])
+        lead_state = pop(data, 'state', {})
+        lead_city = pop(data, 'city', {})
+        lead_country = pop(data, 'country', {})
+
         [data.pop(field) for field in PASS_FIELDS if field in data]
 
-        ld = LeadDetail.objects.create(
-            user_create=user_create, user_update=user_update, **data)
+        ld = LeadDetail.objects.create(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
+                                       user_create=user_create, user_update=user_update,
+                                       country_id=lead_country.get('id'), **data)
         if activities:
             acts = []
             for activity in activities:
@@ -48,11 +54,15 @@ class LeadDetailsViewSet(viewsets.ViewSet):
                 contact_types = pop(contact, 'contact_types', [])
                 phones = pop(contact, 'phone_contacts', [])
                 contact_id = contact.get('id', None)
+                ct_state = pop(contact, 'state', {})
+                ct_city = pop(contact, 'city', {})
+                ct_country = pop(contact, 'country', {})
                 if contact_id:
                     # If contact has exist in database
                     ct = Contact.objects.get(id=contact_id)
                 else:
-                    ct = Contact.objects.create(**contact)
+                    ct = Contact.objects.create(country_id=ct_country.get('id'), state_id=ct_state.get('id'),
+                                                city_id=ct_city.get('id'), **contact)
                 ld.contacts.add(ct)
                 for contact_type in contact_types:
                     ctn = ContactTypeName.objects.get(name=contact_type['name'])
@@ -94,6 +104,9 @@ class LeadDetailViewSet(viewsets.ViewSet):
         user_create = pop(data, 'user_create', request.user)
         photos = pop(data, 'photos', request.user)
         contacts = pop(data, 'contacts', request.user)
+        lead_state = pop(data, 'state', {})
+        lead_city = pop(data, 'city', {})
+        lead_country = pop(data, 'country', {})
 
         queryset = LeadDetail.objects.all()
         ld = get_object_or_404(queryset, pk=pk)
@@ -103,7 +116,8 @@ class LeadDetailViewSet(viewsets.ViewSet):
                                             for activity in activities])
         ld = LeadDetail.objects.filter(pk=pk)
 
-        ld.update(**data)
+        ld.update(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
+                  country_id=lead_country.get('id'), **data)
         serializer = lead_list.LeadDetailCreateSerializer(ld[0], context={'request': request,
                                                                           'pk_lead': pk})
         return Response(serializer.data)
