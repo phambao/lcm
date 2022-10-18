@@ -172,7 +172,6 @@ class PhotoSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['photo'] = r'(?<=/media/).+?(?=/)'.replace(r'(?<=/media/).+?(?=/)', instance.photo.url)
-        print(data)
         return data
 
 
