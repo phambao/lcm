@@ -34,6 +34,9 @@ urlpatterns = [
     # Contact Type Name
     path('contact-types/', lead_list.ContactTypeNameGenericView.as_view()),
     path('contact-types/<int:pk>/', lead_list.ContactTypeNameDetailGenericView.as_view()),
+    # Project type
+    path('project-types/', lead_list.ProjectTypeGenericView.as_view()),
+    path('project-types/<int:pk>/', lead_list.ProjectTypeDetailGenericView.as_view()),
 
     path('catalog/materials/', catalog.MaterialList.as_view()),
     path('catalog/materials/<int:pk>/', catalog.MaterialDetail.as_view()),

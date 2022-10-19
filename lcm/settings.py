@@ -136,6 +136,9 @@ REST_KNOX = {
     'TOKEN_TTL': None,
 }
 
+# https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-DATABASE-ATOMIC_REQUESTS
+ATOMIC_REQUESTS = True
+
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 

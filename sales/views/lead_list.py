@@ -1,4 +1,5 @@
-from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, ContactType, Photos, ContactTypeName
+from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, ContactType, Photos, ContactTypeName, \
+    ProjectType
 from ..serializers import lead_list
 from base.utils import pop
 
@@ -6,6 +7,7 @@ from rest_framework import generics, permissions
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
 
 
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
@@ -25,6 +27,8 @@ class LeadDetailsViewSet(viewsets.ViewSet):
         activities = pop(data, 'activities', [])
         contacts = pop(data, 'contacts', [])
         photos = pop(data, 'photos', [])
+        project_types = pop(data, 'project_types', [])
+        salesperson = pop(data, 'salesperson', [])
         lead_state = pop(data, 'state', {})
         lead_city = pop(data, 'city', {})
         lead_country = pop(data, 'country', {})
@@ -34,6 +38,18 @@ class LeadDetailsViewSet(viewsets.ViewSet):
         ld = LeadDetail.objects.create(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
                                        user_create=user_create, user_update=user_update,
                                        country_id=lead_country.get('id'), **data)
+        if project_types:
+            pts = []
+            for project_type in project_types:
+                pts.append(ProjectType.objects.get(id=project_type.get('id')))
+            ld.project_types.add(*pts)
+
+        if salesperson:
+            sps = []
+            for sp in salesperson:
+                sps.append(get_user_model().objects.get(id=sp.get('id')))
+            ld.salesperson.add(*sps)
+
         if activities:
             acts = []
             for activity in activities:
@@ -41,6 +57,7 @@ class LeadDetailsViewSet(viewsets.ViewSet):
                 acts.append(Activities(
                     user_create=user_create, user_update=user_update, lead=ld, **activity))
             Activities.objects.bulk_create(acts)
+
         if contacts:
             for contact in contacts:
                 contact_types = pop(contact, 'contact_types', [])
@@ -61,6 +78,7 @@ class LeadDetailsViewSet(viewsets.ViewSet):
                     ContactType.objects.create(contact=ct, lead=ld, contact_type_name=ctn)
                 PhoneOfContact.objects.bulk_create(
                     [PhoneOfContact(contact=ct, **phone) for phone in phones])
+
         if photos:
             photo_id = [photo.get('id') for photo in photos]
             Photos.objects.filter(pk__in=photo_id).update(lead=ld)
@@ -101,6 +119,8 @@ class LeadDetailViewSet(viewsets.ViewSet):
     def update(self, request, pk=None):
         data = request.data
         activities = pop(data, 'activities', [])
+        project_types = pop(data, 'project_types', [])
+        salesperson = pop(data, 'salesperson', [])
         user_update = pop(data, 'user_update', request.user)
         user_create = pop(data, 'user_create', request.user)
         photos = pop(data, 'photos', request.user)
@@ -119,8 +139,24 @@ class LeadDetailViewSet(viewsets.ViewSet):
 
         ld.update(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
                   country_id=lead_country.get('id'), **data)
-        serializer = lead_list.LeadDetailCreateSerializer(ld[0], context={'request': request,
-                                                                          'pk_lead': pk})
+        ld = ld.first()
+
+        ld.project_types.clear()
+        if project_types:
+            pts = []
+            for project_type in project_types:
+                pts.append(ProjectType.objects.get(pk=project_type.get('id')))
+            ld.project_types.add(*pts)
+
+        ld.salesperson.clear()
+        if salesperson:
+            sps = []
+            for sp in salesperson:
+                sps.append(get_user_model().objects.get(id=sp.get('id')))
+            ld.salesperson.add(*sps)
+
+        serializer = lead_list.LeadDetailCreateSerializer(ld, context={'request': request,
+                                                                       'pk_lead': pk})
         return Response(serializer.data)
 
     def destroy(self, request, pk=None):
@@ -234,4 +270,16 @@ class ContactTypeNameGenericView(generics.ListCreateAPIView):
 class ContactTypeNameDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ContactTypeName.objects.all()
     serializer_class = lead_list.ContactTypeNameSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ProjectTypeGenericView(generics.ListCreateAPIView):
+    queryset = ProjectType.objects.all()
+    serializer_class = lead_list.ProjectTypeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ProjectTypeDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ProjectType.objects.all()
+    serializer_class = lead_list.ProjectTypeSerializer
     permission_classes = [permissions.IsAuthenticated]
