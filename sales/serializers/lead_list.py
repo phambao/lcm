@@ -4,6 +4,7 @@ from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 from api.serializers.base import SerializerMixin
+from api.serializers.auth import UserSerializer
 from ..models import lead_list
 
 
@@ -104,6 +105,13 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         instance.update(country_id=country.get('id'), state_id=state.get('id'),
                         city_id=city.get('id'), **validated_data)
         instance = instance.first()
+
+        instance.phone_contacts.all().delete()
+        if phone_contacts:
+            lead_list.PhoneOfContact.objects.bulk_create(
+                [lead_list.PhoneOfContact(contact=instance, **pct) for pct in phone_contacts]
+            )
+
         if self.is_param_exist('pk_lead'):
             if not lead_id:
                 instance.leads.remove(lead_list.LeadDetail.objects.get(pk=self.get_params()['pk_lead']))
@@ -114,11 +122,6 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         if lead_id:
             instance.leads.add(lead_list.LeadDetail.objects.get(pk=lead_id))
 
-        instance.phone_contacts.all().delete()
-        if phone_contacts:
-            lead_list.PhoneOfContact.objects.bulk_create(
-                [lead_list.PhoneOfContact(contact=instance, **pct) for pct in phone_contacts]
-            )
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
@@ -158,6 +161,8 @@ class LeadDetailSerializer(serializers.ModelSerializer):
     city = IDAndNameSerializer(allow_null=True)
     state = IDAndNameSerializer(allow_null=True)
     country = IDAndNameSerializer(allow_null=True)
+    project_types = IDAndNameSerializer(many=True, allow_null=True)
+    salesperson = UserSerializer(many=True, allow_null=True)
 
     class Meta:
         model = lead_list.LeadDetail
@@ -199,7 +204,15 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
     city = IDAndNameSerializer(allow_null=True)
     state = IDAndNameSerializer(allow_null=True)
     country = IDAndNameSerializer(allow_null=True)
+    project_types = IDAndNameSerializer(many=True, allow_null=True)
+    salesperson = UserSerializer(many=True, allow_null=True)
 
     class Meta:
         model = lead_list.LeadDetail
+        fields = '__all__'
+
+
+class ProjectTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.ProjectType
         fields = '__all__'
