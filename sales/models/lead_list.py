@@ -1,7 +1,12 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.contrib.auth import get_user_model
 
 from api.models import BaseModel
+
+
+class ProjectType(models.Model):
+    name = models.CharField(max_length=64)
 
 
 class LeadDetail(BaseModel):
@@ -41,7 +46,8 @@ class LeadDetail(BaseModel):
     estimate_revenue_to = models.DecimalField(
         max_digits=9, decimal_places=2, default=0, blank=True)
     projected_sale_date = models.DateTimeField()
-    # project_type = models
+    project_types = models.ManyToManyField(ProjectType, related_name='leads', blank=True)
+    salesperson = models.ManyToManyField(get_user_model(), related_name='lead_persons', blank=True)
     source = models.CharField(max_length=128, blank=True)
     tags = models.CharField(max_length=128, blank=True)
 
