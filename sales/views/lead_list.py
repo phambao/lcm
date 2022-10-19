@@ -6,6 +6,7 @@ from rest_framework import generics, permissions
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django_filters import rest_framework as filters
 
 
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
@@ -129,10 +130,25 @@ class LeadDetailViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class ActivitiesFilter(filters.FilterSet):
+    status = filters.MultipleChoiceFilter(choices=Activities.Status.choices)
+    tag = filters.MultipleChoiceFilter(choices=Activities.Tags.choices)
+    phase = filters.MultipleChoiceFilter(choices=Activities.Phases.choices)
+    assigned_to = filters.CharFilter(field_name='assigned_to', lookup_expr='icontains')
+    start_date = filters.DateFilter(field_name='start_date', lookup_expr='gte')
+    end_date = filters.DateFilter(field_name='end_date', lookup_expr='lte')
+    
+    class Meta:
+        model = Activities
+        fields = ('status', 'tag', 'phase', 'assigned_to', 'start_date', 'end_date')
+
+
 class LeadActivitiesViewSet(generics.ListCreateAPIView):
     serializer_class = lead_list.ActivitiesSerializer
     permission_classes = [permissions.IsAuthenticated]
-
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = ActivitiesFilter
+    
     def get_queryset(self):
         get_object_or_404(LeadDetail.objects.all(), pk=self.kwargs['pk_lead'])
         return Activities.objects.filter(lead_id=self.kwargs['pk_lead'])
