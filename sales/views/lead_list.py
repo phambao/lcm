@@ -6,6 +6,8 @@ from rest_framework import generics, permissions
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django_filters import rest_framework as filters
+from ..filters.lead_list import ActivitiesFilter
 from django.contrib.auth import get_user_model
 
 
@@ -167,7 +169,9 @@ class LeadDetailViewSet(viewsets.ViewSet):
 class LeadActivitiesViewSet(generics.ListCreateAPIView):
     serializer_class = lead_list.ActivitiesSerializer
     permission_classes = [permissions.IsAuthenticated]
-
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = ActivitiesFilter
+    
     def get_queryset(self):
         get_object_or_404(LeadDetail.objects.all(), pk=self.kwargs['pk_lead'])
         return Activities.objects.filter(lead_id=self.kwargs['pk_lead'])
