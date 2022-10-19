@@ -1,6 +1,6 @@
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, ContactType, Photos, ContactTypeName
 from ..serializers import lead_list
-from base.models.country_state_city import Country, State, City
+from base.utils import pop
 
 from rest_framework import generics, permissions
 from rest_framework import viewsets, status
@@ -9,14 +9,6 @@ from django.shortcuts import get_object_or_404
 
 
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
-
-
-def pop(data, key, type):
-    try:
-        return data.pop(key)
-    except KeyError:
-        pass
-    return type
 
 
 class LeadDetailsViewSet(viewsets.ViewSet):
@@ -85,6 +77,15 @@ class LeadDetailList(generics.ListCreateAPIView):
     queryset = LeadDetail.objects.all()
     serializer_class = lead_list.LeadDetailCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_context(self):
+        data = super(LeadDetailList, self).get_serializer_context()
+        print(self.get_queryset().count())
+        if self.get_queryset().count() == 1:
+            data['pk_lead'] = self.get_queryset().first().id
+            data['request']['parser_context']['kwargs']['pk_lead'] = self.get_queryset().first().id
+        print(data)
+        return data
 
 
 class LeadDetailViewSet(viewsets.ViewSet):
