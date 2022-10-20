@@ -7,7 +7,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
-from ..filters.lead_list import ActivitiesFilter
+from ..filters.lead_list import ContactsFilter, ActivitiesFilter
 from django.contrib.auth import get_user_model
 
 
@@ -221,6 +221,8 @@ class ContactsViewSet(generics.ListCreateAPIView):
     queryset = Contact.objects.all()
     serializer_class = lead_list.ContactsSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = ContactsFilter
 
 
 class ContactsDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
@@ -243,6 +245,8 @@ class LeadContactsViewSet(generics.ListCreateAPIView):
     queryset = Contact.objects.all()
     serializer_class = lead_list.ContactsSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = ContactsFilter
 
     def get_queryset(self):
         get_object_or_404(LeadDetail.objects.all(), pk=self.kwargs['pk_lead'])
