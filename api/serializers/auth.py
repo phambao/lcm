@@ -12,11 +12,16 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'email', 'username', 'last_name', 'first_name')
 
+    def to_representation(self, instance):
+        data = super(UserSerializer, self).to_representation(instance)
+        data['name'] = data['first_name'] + ' ' + data['last_name']
+        return data
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'password')
+        fields = ('id', 'email', 'username', 'password', 'first_name', 'last_name')
         extra_kwargs = {'password': {'write_only': True}, 'email': {'required': True}}
 
     def validate(self, data):
@@ -27,9 +32,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        user = User.objects.create_user(username=validated_data['email'],
+        user = User.objects.create_user(username=validated_data['username'],
                                         email=validated_data['email'],
                                         password=validated_data['password'])
+        user.last_name = validated_data['last_name']
+        user.first_name = validated_data['first_name']
         return user
 
 
