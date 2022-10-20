@@ -1,5 +1,19 @@
 from django_filters import rest_framework as filters
-from ..models.lead_list import Contact, Activities
+from ..models.lead_list import Contact, Activities, LeadDetail
+
+
+class LeadDetailFilter(filters.FilterSet):
+    lead_title = filters.CharFilter(field_name='lead_title', lookup_expr='icontains')
+    salesperson = filters.CharFilter(field_name='salesperson__email', lookup_expr='icontains')
+    status = filters.MultipleChoiceFilter(choices=LeadDetail.Status.choices)
+    proposal_status = filters.MultipleChoiceFilter(choices=LeadDetail.ProposalStatus.choices)
+    city = filters.CharFilter(field_name="city__name", lookup_expr='icontains')
+    state = filters.CharFilter(field_name="state__name", lookup_expr='icontains')
+    country = filters.CharFilter(field_name="country__name", lookup_expr='icontains')
+
+    class Meta:
+        model = LeadDetail
+        fields = ('lead_title', 'salesperson', 'status', 'proposal_status', 'city', 'state', 'country')
 
 
 class ContactsFilter(filters.FilterSet):
