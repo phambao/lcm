@@ -133,6 +133,7 @@ class LeadDetailViewSet(viewsets.ViewSet):
         ld = get_object_or_404(queryset, pk=pk)
         ld.activities.all().delete()
         if activities:
+            [activity.pop(field) for activity in activities for field in PASS_FIELDS if field in activity]
             Activities.objects.bulk_create([Activities(lead=ld, **activity)
                                             for activity in activities])
         ld = LeadDetail.objects.filter(pk=pk)
