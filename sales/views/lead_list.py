@@ -27,6 +27,11 @@ class LeadDetailGeneric(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = lead_list.LeadDetailCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_serializer_context(self):
+        data = super().get_serializer_context()
+        data['pk_lead'] = self.kwargs.get('pk')
+        return data
+
 
 class LeadActivitiesViewSet(generics.ListCreateAPIView):
     serializer_class = lead_list.ActivitiesSerializer
