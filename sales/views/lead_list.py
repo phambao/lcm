@@ -3,12 +3,11 @@ from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, 
 from ..serializers import lead_list
 
 from rest_framework import generics, permissions
-from rest_framework import status
+from rest_framework import status, filters as rf_filters
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
-from ..filters.lead_list import ContactsFilter, ActivitiesFilter
-
+from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter
 
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
 
@@ -20,6 +19,9 @@ class LeadDetailList(generics.ListCreateAPIView):
     queryset = LeadDetail.objects.all()
     serializer_class = lead_list.LeadDetailCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = LeadDetailFilter
+    search_fields = ['lead_title', 'street_address', 'notes']
 
 
 class LeadDetailGeneric(generics.RetrieveUpdateDestroyAPIView):
