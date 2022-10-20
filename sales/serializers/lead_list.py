@@ -1,5 +1,6 @@
 import uuid
 
+from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
@@ -11,7 +12,7 @@ from base.utils import pop
 
 class IDAndNameSerializer(serializers.Serializer):
     id = serializers.IntegerField()
-    name = serializers.CharField()
+    name = serializers.CharField(required=False)
 
 
 class PhoneContactsSerializer(serializers.ModelSerializer, SerializerMixin):
@@ -25,9 +26,9 @@ class PhoneContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         if self.is_param_exist('pk_lead'):
             if not lead_list.LeadDetail.objects.filter(pk=kwargs['pk_lead']).exists():
                 raise serializers.ValidationError('Lead not found')
-        if self.is_param_exist('pk'):
-            if not lead_list.Contact.objects.filter(pk=kwargs['pk']).exists():
-                raise serializers.ValidationError('Contact not found')
+        # if self.is_param_exist('pk'):
+        #     if not lead_list.Contact.objects.filter(pk=kwargs['pk']).exists():
+        #         raise serializers.ValidationError('Contact not found')
         return validated_data
 
     def create(self, validated_data):
@@ -59,7 +60,7 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
     state = IDAndNameSerializer(allow_null=True)
     country = IDAndNameSerializer(allow_null=True)
     phone_contacts = PhoneContactsSerializer(
-        'contact', many=True, allow_null=True)
+        'contact', many=True, allow_null=True, required=False)
     contact_types = ContactTypeNameCustomSerializer(many=True, allow_null=True)
     lead_id = serializers.IntegerField(allow_null=True, required=False)
 
@@ -147,10 +148,13 @@ class ActivitiesSerializer(serializers.ModelSerializer):
                         'user_update': {'required': False}}
 
     def validate(self, validated_data):
-        pk_lead = self.context['request'].__dict__[
-            'parser_context']['kwargs']['pk_lead']
-        if not lead_list.LeadDetail.objects.filter(pk=pk_lead).exists():
-            raise serializers.ValidationError('Lead not found')
+        try:
+            pk_lead = self.context['request'].__dict__[
+                'parser_context']['kwargs']['pk_lead']
+            if not lead_list.LeadDetail.objects.filter(pk=pk_lead).exists():
+                raise serializers.ValidationError('Lead not found')
+        except KeyError:
+            pass
         return validated_data
 
     def create(self, validated_data):
@@ -205,14 +209,14 @@ PASS_FIELDS = ['user_create', 'user_update', 'lead']
 
 
 class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
-    activities = ActivitiesSerializer('lead', many=True, allow_null=True)
-    contacts = ContactsSerializer('leads', many=True, allow_null=True)
-    photos = PhotoSerializer('lead', many=True, allow_null=True)
-    city = IDAndNameSerializer(allow_null=True)
-    state = IDAndNameSerializer(allow_null=True)
-    country = IDAndNameSerializer(allow_null=True)
-    project_types = IDAndNameSerializer(many=True, allow_null=True)
-    salesperson = UserSerializer(many=True, allow_null=True)
+    activities = ActivitiesSerializer('lead', many=True, allow_null=True, required=False)
+    contacts = ContactsSerializer('leads', many=True, allow_null=True, required=False)
+    photos = PhotoSerializer('lead', many=True, allow_null=True, required=False)
+    city = IDAndNameSerializer(allow_null=True, required=False)
+    state = IDAndNameSerializer(allow_null=True, required=False)
+    country = IDAndNameSerializer(allow_null=True, required=False)
+    project_types = IDAndNameSerializer(many=True, allow_null=True, required=False)
+    salesperson = UserSerializer(many=True, allow_null=True, required=False)
 
     class Meta:
         model = lead_list.LeadDetail
@@ -225,6 +229,8 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         activities = pop(data, 'activities', [])
         contacts = pop(data, 'contacts', [])
         photos = pop(data, 'photos', [])
+        project_types = pop(data, 'project_types', [])
+        salesperson = pop(data, 'salesperson', [])
         lead_state = pop(data, 'state', {})
         lead_city = pop(data, 'city', {})
         lead_country = pop(data, 'country', {})
@@ -234,6 +240,18 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         ld = lead_list.LeadDetail.objects.create(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
                                                  user_create=user_create, user_update=user_update,
                                                  country_id=lead_country.get('id'), **data)
+        if project_types:
+            pts = []
+            for project_type in project_types:
+                pts.append(lead_list.ProjectType.objects.get(id=project_type.get('id')))
+            ld.project_types.add(*pts)
+
+        if salesperson:
+            sps = []
+            for sp in salesperson:
+                sps.append(get_user_model().objects.get(id=sp.get('id')))
+            ld.salesperson.add(*sps)
+
         if activities:
             acts = []
             for activity in activities:
@@ -265,6 +283,46 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
             photo_id = [photo.get('id') for photo in photos]
             lead_list.Photos.objects.filter(pk__in=photo_id).update(lead=ld)
         return ld
+
+    def update(self, instance, data):
+        activities = pop(data, 'activities', [])
+        project_types = pop(data, 'project_types', [])
+        salesperson = pop(data, 'salesperson', [])
+        user_update = pop(data, 'user_update', None)
+        user_create = pop(data, 'user_create', None)
+        photos = pop(data, 'photos', [])
+        contacts = pop(data, 'contacts', [])
+        lead_state = pop(data, 'state', {})
+        lead_city = pop(data, 'city', {})
+        lead_country = pop(data, 'country', {})
+
+        ld = instance
+        ld.activities.all().delete()
+        if activities:
+            [activity.pop(field) for activity in activities for field in PASS_FIELDS if field in activity]
+            lead_list.Activities.objects.bulk_create([lead_list.Activities(lead=ld, **activity)
+                                            for activity in activities])
+        ld = lead_list.LeadDetail.objects.filter(pk=instance.pk)
+
+        ld.update(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
+                  country_id=lead_country.get('id'), **data)
+        ld = ld.first()
+
+        ld.project_types.clear()
+        if project_types:
+            pts = []
+            for project_type in project_types:
+                pts.append(lead_list.ProjectType.objects.get(pk=project_type.get('id')))
+            ld.project_types.add(*pts)
+
+        ld.salesperson.clear()
+        if salesperson:
+            sps = []
+            for sp in salesperson:
+                sps.append(get_user_model().objects.get(id=sp.get('id')))
+            ld.salesperson.add(*sps)
+
+        return instance
 
 
 class ProjectTypeSerializer(serializers.ModelSerializer):
