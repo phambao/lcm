@@ -85,6 +85,10 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
             for contact_type in contact_types:
                 ctn = lead_list.ContactTypeName.objects.get(name=contact_type['name'])
                 lead_list.ContactType.objects.create(contact=ct, lead=ld, contact_type_name=ctn)
+            if phone_contacts:
+                lead_list.PhoneOfContact.objects.bulk_create(
+                    [lead_list.PhoneOfContact(contact=ct, **pct) for pct in phone_contacts]
+                )
             return ct
         return super().create(validated_data)
 
