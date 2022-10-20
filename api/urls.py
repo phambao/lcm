@@ -9,7 +9,7 @@ urlpatterns = [
     # For authenticate
     path('register', SignUpAPI.as_view()),
     path('login', SignInAPI.as_view()),
-    path(r'logoutall/', knox_views.LogoutAllView.as_view(), name='knox_logoutall'),
+    path('logoutall/', knox_views.LogoutAllView.as_view(), name='knox_logoutall'),
     path('user', MainUser.as_view()),
     path('users', UserList.as_view()),
 
