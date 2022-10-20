@@ -14,10 +14,11 @@ urlpatterns = [
     path('users', UserList.as_view()),
 
     # For sales
-    path('leads/', lead_list.LeadDetailsViewSet.as_view({'get': 'list', 'post': 'create'})),
+    path('leads/', lead_list.LeadDetailList.as_view()),
     path('leads/uploads', FileUploadView.as_view()),
-    path('leads/<int:pk>/', lead_list.LeadDetailViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'})),
+    path('leads/<int:pk>/', lead_list.LeadDetailGeneric.as_view()),
     path('leads-params/', lead_list.LeadDetailList.as_view()),
+    path('leads-params/<int:pk>/', lead_list.LeadDetailGeneric.as_view()),
     # Activities
     path('leads/<int:pk_lead>/activities/', lead_list.LeadActivitiesViewSet.as_view()),
     path('leads/<int:pk_lead>/activities/<int:pk>/', lead_list.LeadActivitiesDetailViewSet.as_view()),
