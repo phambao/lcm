@@ -132,6 +132,9 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
             contact_type = instance.contact_type.filter(lead_id=pk_lead).select_related('contact_type_name')
             data['contact_types'] = [{'id': ct.contact_type_name.id, 'name': ct.contact_type_name.name}
                                      for ct in contact_type if ct.contact_type_name]
+        if data['phone_contacts']:
+            data['phone_number'] = data['phone_contacts'][0]['phone_number']
+            data['phone_type'] = data['phone_contacts'][0]['phone_type']
         return data
 
 

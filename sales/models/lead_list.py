@@ -101,6 +101,8 @@ class PhoneOfContact(models.Model):
     contact = models.ForeignKey(
         Contact, on_delete=models.CASCADE, related_name='phone_contacts')
 
+    def __str__(self):
+        return self.phone_number
 
 class ContactTypeName(models.Model):
     name = models.CharField(max_length=128, unique=True)
