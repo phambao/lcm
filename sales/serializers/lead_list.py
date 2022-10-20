@@ -56,9 +56,9 @@ class ContactTypeNameCustomSerializer(serializers.Serializer):
 
 
 class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
-    city = IDAndNameSerializer(allow_null=True)
-    state = IDAndNameSerializer(allow_null=True)
-    country = IDAndNameSerializer(allow_null=True)
+    city = IDAndNameSerializer(allow_null=True, required=False)
+    state = IDAndNameSerializer(allow_null=True, required=False)
+    country = IDAndNameSerializer(allow_null=True, required=False)
     phone_contacts = PhoneContactsSerializer(
         'contact', many=True, allow_null=True, required=False)
     contact_types = ContactTypeNameCustomSerializer(many=True, allow_null=True)
@@ -69,6 +69,7 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         fields = ('id', 'first_name', 'last_name', 'gender', 'lead_id',
                   'email', 'phone_contacts', 'contact_types',
                   'street', 'city', 'state', 'zip_code', 'country')
+        extra_kwargs = {'street': {'required': False}}
 
     def create(self, validated_data):
         if self.is_param_exist('pk_lead'):
