@@ -67,6 +67,7 @@ default:
     - apt -y upgrade
     - pg_ctlcluster 12 main start
     - service postgresql start
+    - psql -h "postgres" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 'OK' AS status;"
     - psql -d template1 -U postgres
     - CREATE USER openpg WITH PASSWORD openpgpwd CREATEDB;
     - CREATE DATABASE lcm OWNER openpg;
