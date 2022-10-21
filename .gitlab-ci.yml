@@ -67,6 +67,10 @@ default:
     - apt -y upgrade
     - pg_ctlcluster 12 main start
     - service postgresql start
+    - sudo -u postgres psql -d template1
+    - CREATE USER openpg WITH PASSWORD openpgpwd CREATEDB;
+    - CREATE DATABASE lcm OWNER openpg;
+    - \q
     - pip3 install -r requirements.txt
 
 
