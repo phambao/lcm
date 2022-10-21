@@ -34,7 +34,7 @@ variables:
   # DJANGO_CONFIG: "test"
     ENVIRONMENT: development
     DB_ENGINE: django.db.backends.postgresql
-    DB_HOST: localhost
+    DB_HOST: postgres
     DB_PORT: 5432
     DB_NAME: lcm
     DB_PASSWORD: openpgpwd
@@ -71,6 +71,9 @@ default:
 
 
 migrations:
+  services:
+    - postgres
+  image: postgres
   stage: build
   script:
     - psql -h "postgres" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 'OK' AS status;"
