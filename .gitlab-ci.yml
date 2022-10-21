@@ -32,6 +32,13 @@
 
 variables:
   # DJANGO_CONFIG: "test"
+    ENVIRONMENT: development
+    DB_ENGINE: django.db.backends.postgresql
+    DB_HOST: localhost
+    DB_PORT: 5432
+    DB_NAME: lcm
+    DB_PASSWORD: openpgpwd
+    DB_USER: openpg
     POSTGRES_DB: $DB_NAME
     POSTGRES_USER: $DB_USER
     POSTGRES_PASSWORD: $DB_PASSWORD
