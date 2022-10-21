@@ -32,9 +32,10 @@
 
 variables:
   # DJANGO_CONFIG: "test"
-    POSTGRES_DB: custom_db
-    POSTGRES_USER: custom_user
-    POSTGRES_PASSWORD: custom_pass
+    POSTGRES_DB: $DB_NAME
+    POSTGRES_USER: $DB_USER
+    POSTGRES_PASSWORD: $DB_PASSWORD
+    POSTGRES_HOST_AUTH_METHOD: trust
 
 
 default:
@@ -54,6 +55,7 @@ default:
   before_script:
     - apt -y update
     - apt -y install apt-utils
+    - export TZ=Etc/UTC
     - apt-get install -y postgresql postgresql-client libpq-dev
     - apt -y upgrade
     - pip3 install -r requirements.txt
