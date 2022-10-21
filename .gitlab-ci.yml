@@ -80,17 +80,4 @@ migrations:
     # - python3 manage.py makemigrations myapp
     - python3 manage.py migrate
     - python3 manage.py check
-
-
-django-tests:
-  stage: test
-  script:
-    # official way to provide password to psql: http://www.postgresql.org/docs/9.3/static/libpq-envars.html
-    - psql -h "postgres" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 'OK' AS status;"
-    # use python3 explicitly. see https://wiki.ubuntu.com/Python/3
     - python3 manage.py test
-
-deploy:
-  stage: deploy
-  script: echo "Define your deployment script!"
-  environment: production
