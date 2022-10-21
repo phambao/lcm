@@ -38,8 +38,9 @@ class LeadDetailGeneric(generics.RetrieveUpdateDestroyAPIView):
 class LeadActivitiesViewSet(generics.ListCreateAPIView):
     serializer_class = lead_list.ActivitiesSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = (filters.DjangoFilterBackend,)
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = ActivitiesFilter
+    search_fields = ['title', 'phase', 'tag', 'status', 'assigned_to']
     
     def get_queryset(self):
         get_object_or_404(LeadDetail.objects.all(), pk=self.kwargs['pk_lead'])
@@ -114,8 +115,9 @@ class LeadContactsViewSet(generics.ListCreateAPIView):
     queryset = Contact.objects.all()
     serializer_class = lead_list.ContactsSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = (filters.DjangoFilterBackend,)
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = ContactsFilter
+    search_fields = ['first_name', 'last_name', 'email', 'phone_contacts__phone_number']
 
     def get_queryset(self):
         get_object_or_404(LeadDetail.objects.all(), pk=self.kwargs['pk_lead'])
