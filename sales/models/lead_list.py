@@ -52,7 +52,7 @@ class LeadDetail(BaseModel):
     tags = models.CharField(max_length=128, blank=True)
 
 
-class Contact(models.Model):
+class Contact(BaseModel):
     """Contact information"""
 
     class Meta:
@@ -68,7 +68,7 @@ class Contact(models.Model):
     gender = models.CharField(
         max_length=6, choices=Gender.choices, default=Gender.MALE)
     email = models.EmailField(max_length=128)
-    street = models.CharField(max_length=64)
+    street = models.CharField(max_length=64, null=True, blank=True)
     city = models.ForeignKey('base.City', on_delete=models.SET_NULL,
                              related_name='contact_cities', null=True, blank=True)
     state = models.ForeignKey('base.State', on_delete=models.SET_NULL,
@@ -103,6 +103,7 @@ class PhoneOfContact(models.Model):
 
     def __str__(self):
         return self.phone_number
+
 
 class ContactTypeName(models.Model):
     name = models.CharField(max_length=128, unique=True)

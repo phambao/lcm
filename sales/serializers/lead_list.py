@@ -11,7 +11,7 @@ from base.utils import pop
 
 
 class IDAndNameSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
+    id = serializers.IntegerField(required=False)
     name = serializers.CharField(required=False)
 
 
@@ -68,10 +68,11 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         model = lead_list.Contact
         fields = ('id', 'first_name', 'last_name', 'gender', 'lead_id',
                   'email', 'phone_contacts', 'contact_types',
-                  'street', 'city', 'state', 'zip_code', 'country')
+                  'street', 'city', 'state', 'zip_code', 'country', 'user_create')
         extra_kwargs = {'street': {'required': False}}
 
     def create(self, validated_data):
+        validated_data['user_create'] = self.context['request'].user
         if self.is_param_exist('pk_lead'):
             phone_contacts = validated_data.pop('phone_contacts')
             contact_types = validated_data.pop('contact_types')
@@ -90,6 +91,7 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
                     [lead_list.PhoneOfContact(contact=ct, **pct) for pct in phone_contacts]
                 )
             return ct
+
         return super().create(validated_data)
 
     def update_contact_type(self, instance, contact_types):
