@@ -148,6 +148,7 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
 
 class ActivitiesSerializer(serializers.ModelSerializer):
     assigned_to = UserCustomSerializer('assigners', many=True)
+    attendees = UserCustomSerializer('activity_attendees', many=True)
 
     class Meta:
         model = lead_list.Activities
@@ -171,10 +172,13 @@ class ActivitiesSerializer(serializers.ModelSerializer):
         pk_lead = self.context['request'].__dict__[
             'parser_context']['kwargs']['pk_lead']
         assigned_to = pop(validated_data, 'assigned_to', [])
-        user = get_user_model().objects.filter(pk__in=[at.get('id') for at in assigned_to])
+        attendees = pop(validated_data, 'attendees', [])
+        user_ass = get_user_model().objects.filter(pk__in=[at.get('id') for at in assigned_to])
+        user_att = get_user_model().objects.filter(pk__in=[at.get('id') for at in attendees])
         activities = lead_list.Activities.objects.create(lead_id=pk_lead, user_create=self.context['request'].user,
                                                          user_update=self.context['request'].user, **validated_data)
-        activities.assigned_to.add(*user)
+        activities.assigned_to.add(*user_ass)
+        activities.attendees.add(*user_att)
         return activities
 
     def update(self, instance, validated_data):
@@ -182,8 +186,20 @@ class ActivitiesSerializer(serializers.ModelSerializer):
         pk_lead = self.context['request'].__dict__[
             'parser_context']['kwargs']['pk_lead']
         assigned_to = pop(validated_data, 'assigned_to', [])
+        attendees = pop(validated_data, 'attendees', [])
+
+        # assigned_to
         user = get_user_model().objects.filter(pk__in=[at.get('id') for at in assigned_to])
-        instance.assigned_to.add(*user)
+        if user:
+            instance.assigned_to.clear()
+            instance.assigned_to.add(*user)
+
+        # attendees
+        user = get_user_model().objects.filter(pk__in=[at.get('id') for at in attendees])
+        if user:
+            instance.attendees.clear()
+            instance.attendees.add(*user)
+
         lead_list.Activities.objects.filter(pk=instance.pk).update(**validated_data)
         instance.refresh_from_db()
         return instance
@@ -280,9 +296,14 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
             [activity.pop(field) for activity in activities for field in PASS_FIELDS if field in activity]
             for activity in activities:
                 assigned_to = pop(activity, 'assigned_to', [])
+                attendees = pop(activity, 'attendees', [])
                 user = get_user_model().objects.filter(pk__in=[u.get('id') for u in assigned_to])
                 act = lead_list.Activities.objects.create(lead=ld, **activity)
-                act.assigned_to.add(*user)
+                if user:
+                    act.assigned_to.add(*user)
+                user = get_user_model().objects.filter(pk__in=[u.get('id') for u in attendees])
+                if user:
+                    act.attendees.add(user)
         if contacts:
             for contact in contacts:
                 contact_types = pop(contact, 'contact_types', [])
@@ -327,9 +348,16 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
 
             for activity in activities:
                 assigned_to = pop(activity, 'assigned_to', [])
+                attendees = pop(activity, 'attendees', [])
                 user = get_user_model().objects.filter(pk__in=[u.get('id') for u in assigned_to])
                 act = lead_list.Activities.objects.create(lead=ld, **activity)
-                act.assigned_to.add(*user)
+                if user:
+                    act.assigned_to.clear()
+                    act.assigned_to.add(*user)
+                user = get_user_model().objects.filter(pk__in=[u.get('id') for u in attendees])
+                if user:
+                    act.attendees.clear()
+                    act.attendees.add(*user)
         ld = lead_list.LeadDetail.objects.filter(pk=instance.pk)
 
         ld.update(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
