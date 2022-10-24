@@ -277,12 +277,12 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
             ld.salesperson.add(*sps)
 
         if activities:
-            acts = []
+            [activity.pop(field) for activity in activities for field in PASS_FIELDS if field in activity]
             for activity in activities:
-                [activity.pop(field) for field in PASS_FIELDS if field in activity]
-                acts.append(lead_list.Activities(
-                    user_create=user_create, user_update=user_update, lead=ld, **activity))
-            lead_list.Activities.objects.bulk_create(acts)
+                assigned_to = pop(activity, 'assigned_to', [])
+                user = get_user_model().objects.filter(pk__in=[u.get('id') for u in assigned_to])
+                act = lead_list.Activities.objects.create(lead=ld, **activity)
+                act.assigned_to.add(*user)
         if contacts:
             for contact in contacts:
                 contact_types = pop(contact, 'contact_types', [])
@@ -324,8 +324,12 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         ld.activities.all().delete()
         if activities:
             [activity.pop(field) for activity in activities for field in PASS_FIELDS if field in activity]
-            lead_list.Activities.objects.bulk_create([lead_list.Activities(lead=ld, **activity)
-                                                      for activity in activities])
+
+            for activity in activities:
+                assigned_to = pop(activity, 'assigned_to', [])
+                user = get_user_model().objects.filter(pk__in=[u.get('id') for u in assigned_to])
+                act = lead_list.Activities.objects.create(lead=ld, **activity)
+                act.assigned_to.add(*user)
         ld = lead_list.LeadDetail.objects.filter(pk=instance.pk)
 
         ld.update(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
