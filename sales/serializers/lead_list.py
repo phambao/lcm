@@ -178,7 +178,7 @@ class ActivitiesSerializer(serializers.ModelSerializer):
         return activities
 
     def update(self, instance, validated_data):
-        print('vo nek')
+
         pk_lead = self.context['request'].__dict__[
             'parser_context']['kwargs']['pk_lead']
         assigned_to = pop(validated_data, 'assigned_to', [])
