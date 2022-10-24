@@ -163,6 +163,7 @@ class Activities(BaseModel):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     assigned_to = models.ManyToManyField(get_user_model(), related_name='assigners', blank=True)
+    attendees = models.ManyToManyField(get_user_model(), related_name='activity_attendees', blank=True)
     lead = models.ForeignKey(
         LeadDetail, on_delete=models.CASCADE, related_name='activities')
 

@@ -21,7 +21,7 @@ urlpatterns = [
     path('leads-params/<int:pk>/', lead_list.LeadDetailGeneric.as_view()),
     # Activities
     path('leads/<int:pk_lead>/activities/', lead_list.LeadActivitiesViewSet.as_view()),
-    path('leads/<int:pk_lead>/activities/delete', lead_list.delete_activities),
+    path('leads/<int:pk_lead>/activities/delete/', lead_list.delete_activities),
     path('leads/<int:pk_lead>/activities/<int:pk>/', lead_list.LeadActivitiesDetailViewSet.as_view()),
     # Contacts
     path('leads/<int:pk_lead>/contacts/', lead_list.LeadContactsViewSet.as_view()),
