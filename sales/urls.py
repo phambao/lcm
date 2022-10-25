@@ -50,20 +50,18 @@ url_leads = [
 # Define Path for Catalog -------------------------------------------------------
 url_catalog = [
     # Materials
-    path('catalog/', include([
-        path('materials/', catalog.MaterialList.as_view()),
-        path('materials/<int:pk>/', catalog.MaterialDetail.as_view()),
-        path('cost-tables/', catalog.CostTableList.as_view()),
-        path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
-    ])),
+    path('materials/', catalog.MaterialList.as_view()),
+    path('materials/<int:pk>/', catalog.MaterialDetail.as_view()),
+    path('cost-tables/', catalog.CostTableList.as_view()),
+    path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
 ]
 
-# DEFINE API FOR SALES APP -----------------------------------------------------
+# DEFINE PATH FOR SALES APP -----------------------------------------------------
 url_sales = [
     path('', include(url_contacts)),
     path('', include(url_contact_types)),
-    path('', include(url_leads)),
-    path('', include(url_catalog)),
+    path('lead-list/', include(url_leads)),
+    path('catalog/', include(url_catalog)),
 ]
 
 schema_view_sales = get_schema_view(
@@ -71,7 +69,12 @@ schema_view_sales = get_schema_view(
         title="API FOR SALES APP",
         default_version='v1',
     ),
-    patterns=[path('api/sales/', include(url_sales))],
+    patterns=[
+        path('api/sales/', include(url_contacts)),
+        path('api/sales/', include(url_contact_types)),
+        path('api/sales/lead-list/', include(url_leads)),
+        path('api/sales/catalog/', include(url_catalog)),
+    ],
     public=True,
     permission_classes=[permissions.AllowAny],
 )
