@@ -1,3 +1,5 @@
+from rest_framework.decorators import api_view
+
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, ContactType, Photos, ContactTypeName, \
     ProjectType
 from ..serializers import lead_list
@@ -160,3 +162,16 @@ class ProjectTypeDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ProjectType.objects.all()
     serializer_class = lead_list.ProjectTypeSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+@api_view(['DELETE'])
+def delete_activities(request, pk_lead):
+    """
+        DELETE: delete multiple activities
+    """
+
+    if request.method == 'DELETE':
+        ids = request.data
+        albums = Activities.objects.filter(id__in=ids, lead=pk_lead)
+        albums.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

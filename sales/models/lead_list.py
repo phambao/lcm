@@ -52,7 +52,7 @@ class LeadDetail(BaseModel):
     tags = models.CharField(max_length=128, blank=True)
 
 
-class Contact(models.Model):
+class Contact(BaseModel):
     """Contact information"""
 
     class Meta:
@@ -68,7 +68,7 @@ class Contact(models.Model):
     gender = models.CharField(
         max_length=6, choices=Gender.choices, default=Gender.MALE)
     email = models.EmailField(max_length=128)
-    street = models.CharField(max_length=64)
+    street = models.CharField(max_length=64, null=True, blank=True)
     city = models.ForeignKey('base.City', on_delete=models.SET_NULL,
                              related_name='contact_cities', null=True, blank=True)
     state = models.ForeignKey('base.State', on_delete=models.SET_NULL,
@@ -103,6 +103,7 @@ class PhoneOfContact(models.Model):
 
     def __str__(self):
         return self.phone_number
+
 
 class ContactTypeName(models.Model):
     name = models.CharField(max_length=128, unique=True)
@@ -161,8 +162,8 @@ class Activities(BaseModel):
         max_length=128, choices=Status.choices, default=Status.NONE)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
-    assigned_to = models.CharField(
-        max_length=128, blank=True)  # TODO: Change to user
+    assigned_to = models.ManyToManyField(get_user_model(), related_name='assigners', blank=True)
+    attendees = models.ManyToManyField(get_user_model(), related_name='activity_attendees', blank=True)
     lead = models.ForeignKey(
         LeadDetail, on_delete=models.CASCADE, related_name='activities')
 

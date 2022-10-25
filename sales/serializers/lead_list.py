@@ -5,13 +5,13 @@ from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 from api.serializers.base import SerializerMixin
-from api.serializers.auth import UserSerializer
+from api.serializers.auth import UserSerializer, UserCustomSerializer
 from ..models import lead_list
 from base.utils import pop
 
 
 class IDAndNameSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
+    id = serializers.IntegerField(required=False)
     name = serializers.CharField(required=False)
 
 
@@ -68,10 +68,11 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         model = lead_list.Contact
         fields = ('id', 'first_name', 'last_name', 'gender', 'lead_id',
                   'email', 'phone_contacts', 'contact_types',
-                  'street', 'city', 'state', 'zip_code', 'country')
+                  'street', 'city', 'state', 'zip_code', 'country', 'user_create')
         extra_kwargs = {'street': {'required': False}}
 
     def create(self, validated_data):
+        validated_data['user_create'] = self.context['request'].user
         if self.is_param_exist('pk_lead'):
             phone_contacts = validated_data.pop('phone_contacts')
             contact_types = validated_data.pop('contact_types')
@@ -90,6 +91,7 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
                     [lead_list.PhoneOfContact(contact=ct, **pct) for pct in phone_contacts]
                 )
             return ct
+
         return super().create(validated_data)
 
     def update_contact_type(self, instance, contact_types):
@@ -145,12 +147,16 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
 
 
 class ActivitiesSerializer(serializers.ModelSerializer):
+    assigned_to = UserCustomSerializer('assigners', many=True)
+    attendees = UserCustomSerializer('activity_attendees', many=True)
+
     class Meta:
         model = lead_list.Activities
         fields = '__all__'
         extra_kwargs = {'lead': {'required': False},
                         'user_create': {'required': False},
                         'user_update': {'required': False}}
+        read_only_fields = ['user_create', 'user_update']
 
     def validate(self, validated_data):
         try:
@@ -165,9 +171,38 @@ class ActivitiesSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         pk_lead = self.context['request'].__dict__[
             'parser_context']['kwargs']['pk_lead']
+        assigned_to = pop(validated_data, 'assigned_to', [])
+        attendees = pop(validated_data, 'attendees', [])
+        user_ass = get_user_model().objects.filter(pk__in=[at.get('id') for at in assigned_to])
+        user_att = get_user_model().objects.filter(pk__in=[at.get('id') for at in attendees])
         activities = lead_list.Activities.objects.create(lead_id=pk_lead, user_create=self.context['request'].user,
                                                          user_update=self.context['request'].user, **validated_data)
+        activities.assigned_to.add(*user_ass)
+        activities.attendees.add(*user_att)
         return activities
+
+    def update(self, instance, validated_data):
+
+        pk_lead = self.context['request'].__dict__[
+            'parser_context']['kwargs']['pk_lead']
+        assigned_to = pop(validated_data, 'assigned_to', [])
+        attendees = pop(validated_data, 'attendees', [])
+
+        # assigned_to
+        user = get_user_model().objects.filter(pk__in=[at.get('id') for at in assigned_to])
+        if user:
+            instance.assigned_to.clear()
+            instance.assigned_to.add(*user)
+
+        # attendees
+        user = get_user_model().objects.filter(pk__in=[at.get('id') for at in attendees])
+        if user:
+            instance.attendees.clear()
+            instance.attendees.add(*user)
+
+        lead_list.Activities.objects.filter(pk=instance.pk).update(**validated_data)
+        instance.refresh_from_db()
+        return instance
 
 
 class LeadDetailSerializer(serializers.ModelSerializer):
@@ -175,7 +210,7 @@ class LeadDetailSerializer(serializers.ModelSerializer):
     state = IDAndNameSerializer(allow_null=True)
     country = IDAndNameSerializer(allow_null=True)
     project_types = IDAndNameSerializer(many=True, allow_null=True)
-    salesperson = UserSerializer(many=True, allow_null=True)
+    salesperson = UserCustomSerializer(many=True)
 
     class Meta:
         model = lead_list.LeadDetail
@@ -221,7 +256,7 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
     state = IDAndNameSerializer(allow_null=True, required=False)
     country = IDAndNameSerializer(allow_null=True, required=False)
     project_types = IDAndNameSerializer(many=True, allow_null=True, required=False)
-    salesperson = UserSerializer(many=True, allow_null=True, required=False)
+    salesperson = UserCustomSerializer(many=True)
 
     class Meta:
         model = lead_list.LeadDetail
@@ -258,12 +293,17 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
             ld.salesperson.add(*sps)
 
         if activities:
-            acts = []
+            [activity.pop(field) for activity in activities for field in PASS_FIELDS if field in activity]
             for activity in activities:
-                [activity.pop(field) for field in PASS_FIELDS if field in activity]
-                acts.append(lead_list.Activities(
-                    user_create=user_create, user_update=user_update, lead=ld, **activity))
-            lead_list.Activities.objects.bulk_create(acts)
+                assigned_to = pop(activity, 'assigned_to', [])
+                attendees = pop(activity, 'attendees', [])
+                user = get_user_model().objects.filter(pk__in=[u.get('id') for u in assigned_to])
+                act = lead_list.Activities.objects.create(lead=ld, **activity)
+                if user:
+                    act.assigned_to.add(*user)
+                user = get_user_model().objects.filter(pk__in=[u.get('id') for u in attendees])
+                if user:
+                    act.attendees.add(user)
         if contacts:
             for contact in contacts:
                 contact_types = pop(contact, 'contact_types', [])
@@ -305,8 +345,19 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         ld.activities.all().delete()
         if activities:
             [activity.pop(field) for activity in activities for field in PASS_FIELDS if field in activity]
-            lead_list.Activities.objects.bulk_create([lead_list.Activities(lead=ld, **activity)
-                                            for activity in activities])
+
+            for activity in activities:
+                assigned_to = pop(activity, 'assigned_to', [])
+                attendees = pop(activity, 'attendees', [])
+                user = get_user_model().objects.filter(pk__in=[u.get('id') for u in assigned_to])
+                act = lead_list.Activities.objects.create(lead=ld, **activity)
+                if user:
+                    act.assigned_to.clear()
+                    act.assigned_to.add(*user)
+                user = get_user_model().objects.filter(pk__in=[u.get('id') for u in attendees])
+                if user:
+                    act.attendees.clear()
+                    act.attendees.add(*user)
         ld = lead_list.LeadDetail.objects.filter(pk=instance.pk)
 
         ld.update(city_id=lead_city.get('id'), state_id=lead_state.get('id'),

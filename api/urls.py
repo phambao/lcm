@@ -15,7 +15,7 @@ urlpatterns = [
     path('users', UserList.as_view()),
 
     # For base
-    path('', include('base.urls')),
+    path('base/', include('base.urls')),
     # For sales
-    path('', include('sales.urls')),
+    path('sales/', include('sales.urls')),
 ]

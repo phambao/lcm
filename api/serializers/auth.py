@@ -18,6 +18,19 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
 
+class UserCustomSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=True)
+    email = serializers.EmailField(required=False)
+    username = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+    first_name = serializers.CharField(required=False, allow_blank=True)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['name'] = data['first_name'] + ' ' + data['last_name']
+        return data
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

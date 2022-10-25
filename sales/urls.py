@@ -36,6 +36,7 @@ url_leads = [
          lead_list.LeadActivitiesViewSet.as_view()),
     path('leads/<int:pk_lead>/activities/<int:pk>/',
          lead_list.LeadActivitiesDetailViewSet.as_view()),
+    path('leads/<int:pk_lead>/activities/delete/', lead_list.delete_activities),
     # Photos
     path('leads/<int:pk_lead>/photos/', lead_list.LeadPhotosViewSet.as_view()),
     path('<int:pk_lead>/photos/<int:pk>/',
@@ -47,30 +48,15 @@ url_leads = [
 ]
 
 # Define Path for Catalog -------------------------------------------------------
-
-# Materials
-url_materials = [
-    path('materials/', catalog.MaterialList.as_view()),
-    path('materials/<int:pk>/', catalog.MaterialDetail.as_view()),
-    path('cost-tables/', catalog.CostTableList.as_view()),
-    path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
-]
-
 url_catalog = [
-    path('catalog/', include(url_materials)),
+    # Materials
+    path('catalog/', include([
+        path('materials/', catalog.MaterialList.as_view()),
+        path('materials/<int:pk>/', catalog.MaterialDetail.as_view()),
+        path('cost-tables/', catalog.CostTableList.as_view()),
+        path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
+    ])),
 ]
-
-schema_view_catalog = get_schema_view(
-    openapi.Info(
-        title='API FOR CATALOG',
-        default_version='v1',
-    ),
-    patterns=[
-        path('api/sales/', include(url_catalog))
-    ],
-    public=True,
-    permission_classes=[permissions.AllowAny],
-)
 
 # DEFINE API FOR SALES APP -----------------------------------------------------
 url_sales = [
@@ -85,17 +71,12 @@ schema_view_sales = get_schema_view(
         title="API FOR SALES APP",
         default_version='v1',
     ),
-    patterns=[
-        path('api/sales', include(url_contacts)),
-        path('api/sales', include(url_contact_types)),
-        path('api/sales', include(url_leads)),
-        path('api/sales', include(url_catalog)),
-    ],
+    patterns=[path('api/sales/', include(url_sales))],
     public=True,
     permission_classes=[permissions.AllowAny],
 )
 
 urlpatterns = [
-    path('sales/', include(url_sales)),
-    path('sales/', schema_view_sales.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('', include(url_sales)),
+    path('', schema_view_sales.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
