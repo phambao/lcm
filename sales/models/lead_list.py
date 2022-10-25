@@ -27,14 +27,14 @@ class LeadDetail(BaseModel):
 
     # Lead information
     lead_title = models.CharField(max_length=128)
-    street_address = models.CharField(max_length=128)
+    street_address = models.CharField(max_length=128, blank=True)
     country = models.ForeignKey('base.Country', on_delete=models.SET_NULL,
                                 related_name='lead_countries', null=True, blank=True)
     city = models.ForeignKey('base.City', on_delete=models.SET_NULL,
                              related_name='lead_cities', null=True, blank=True)
     state = models.ForeignKey('base.State', on_delete=models.SET_NULL,
                               related_name='lead_states', null=True, blank=True)
-    zip_code = models.CharField(max_length=6)
+    zip_code = models.CharField(max_length=6, blank=True)
     status = models.CharField(
         max_length=16, choices=Status.choices, default=Status.OPEN)
     proposal_status = models.CharField(
