@@ -349,13 +349,12 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
                 attendees = pop(activity, 'attendees', [])
                 user = get_user_model().objects.filter(pk__in=[u.get('id') for u in assigned_to])
                 act = lead_list.Activities.objects.create(lead=ld, **activity)
-                if user:
-                    act.assigned_to.clear()
-                    act.assigned_to.add(*user)
+                act.assigned_to.clear()
+                act.assigned_to.add(*user)
+
                 user = get_user_model().objects.filter(pk__in=[u.get('id') for u in attendees])
-                if user:
-                    act.attendees.clear()
-                    act.attendees.add(*user)
+                act.attendees.clear()
+                act.attendees.add(*user)
         ld = lead_list.LeadDetail.objects.filter(pk=instance.pk)
 
         ld.update(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
