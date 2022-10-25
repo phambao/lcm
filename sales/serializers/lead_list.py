@@ -261,6 +261,8 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
         model = lead_list.LeadDetail
         fields = '__all__'
+        extra_kwargs = {'street_address': {'required': False},
+                        'zip_code': {'required': False}}
 
     def create(self, validated_data):
         request = self.context['request']
