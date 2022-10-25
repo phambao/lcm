@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, ContactType, Photos, ContactTypeName, \
-    ProjectType
+    ProjectType, PhaseActivity, TagActivity
 from ..serializers import lead_list
 
 from rest_framework import generics, permissions
@@ -161,6 +161,30 @@ class ProjectTypeGenericView(generics.ListCreateAPIView):
 class ProjectTypeDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ProjectType.objects.all()
     serializer_class = lead_list.ProjectTypeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class TagActivitiesGenericView(generics.ListCreateAPIView):
+    queryset = TagActivity.objects.all()
+    serializer_class = lead_list.TagActivitySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class TagActivityDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = TagActivity.objects.all()
+    serializer_class = lead_list.TagActivitySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class PhaseActivitiesGenericView(generics.ListCreateAPIView):
+    queryset = PhaseActivity.objects.all()
+    serializer_class = lead_list.PhaseActivitySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class PhaseActivityDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = PhaseActivity.objects.all()
+    serializer_class = lead_list.PhaseActivitySerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
