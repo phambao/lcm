@@ -190,15 +190,13 @@ class ActivitiesSerializer(serializers.ModelSerializer):
 
         # assigned_to
         user = get_user_model().objects.filter(pk__in=[at.get('id') for at in assigned_to])
-        if user:
-            instance.assigned_to.clear()
-            instance.assigned_to.add(*user)
+        instance.assigned_to.clear()
+        instance.assigned_to.add(*user)
 
         # attendees
         user = get_user_model().objects.filter(pk__in=[at.get('id') for at in attendees])
-        if user:
-            instance.attendees.clear()
-            instance.attendees.add(*user)
+        instance.attendees.clear()
+        instance.attendees.add(*user)
 
         lead_list.Activities.objects.filter(pk=instance.pk).update(**validated_data)
         instance.refresh_from_db()
