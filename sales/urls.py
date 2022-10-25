@@ -23,6 +23,16 @@ url_contact_types = [
          lead_list.ContactTypeNameDetailGenericView.as_view()),
 ]
 
+url_tag_activity = [
+    path('tags/', lead_list.TagActivitiesGenericView.as_view()),
+    path('tags/<int:pk>/', lead_list.TagActivityDetailGenericView.as_view())
+]
+
+url_phase_activity = [
+    path('phase/', lead_list.PhaseActivitiesGenericView.as_view()),
+    path('phase/<int:pk>/', lead_list.PhaseActivityDetailGenericView.as_view())
+]
+
 # Define Path for Leads ---------------------------------------------------------
 url_leads = [
     # Leads
@@ -40,6 +50,8 @@ url_leads = [
     path('leads/<int:pk_lead>/activities/<int:pk>/',
          lead_list.LeadActivitiesDetailViewSet.as_view()),
     path('leads/<int:pk_lead>/activities/delete/', lead_list.delete_activities),
+    path('activity/', include(url_tag_activity)),
+    path('activity/', include(url_phase_activity)),
     # Photos
     path('leads/<int:pk_lead>/photos/', lead_list.LeadPhotosViewSet.as_view()),
     path('<int:pk_lead>/photos/<int:pk>/',

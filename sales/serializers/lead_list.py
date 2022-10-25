@@ -149,6 +149,8 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
 class ActivitiesSerializer(serializers.ModelSerializer):
     assigned_to = UserCustomSerializer('assigners', many=True)
     attendees = UserCustomSerializer('activity_attendees', many=True)
+    tags = IDAndNameSerializer(many=True, required=False, allow_null=True)
+    phase = IDAndNameSerializer(required=False, allow_null=True)
 
     class Meta:
         model = lead_list.Activities
@@ -173,12 +175,18 @@ class ActivitiesSerializer(serializers.ModelSerializer):
             'parser_context']['kwargs']['pk_lead']
         assigned_to = pop(validated_data, 'assigned_to', [])
         attendees = pop(validated_data, 'attendees', [])
+        tags = pop(validated_data, 'tags', [])
+        phase = pop(validated_data, 'phase', {})
+
+        tags_objects = lead_list.TagActivity.objects.filter(pk__in=[tag.get('id') for tag in tags])
         user_ass = get_user_model().objects.filter(pk__in=[at.get('id') for at in assigned_to])
         user_att = get_user_model().objects.filter(pk__in=[at.get('id') for at in attendees])
         activities = lead_list.Activities.objects.create(lead_id=pk_lead, user_create=self.context['request'].user,
-                                                         user_update=self.context['request'].user, **validated_data)
+                                                         user_update=self.context['request'].user,
+                                                         phase_id=phase.get('id'), **validated_data)
         activities.assigned_to.add(*user_ass)
         activities.attendees.add(*user_att)
+        activities.tags.add(*tags_objects)
         return activities
 
     def update(self, instance, validated_data):
@@ -187,6 +195,8 @@ class ActivitiesSerializer(serializers.ModelSerializer):
             'parser_context']['kwargs']['pk_lead']
         assigned_to = pop(validated_data, 'assigned_to', [])
         attendees = pop(validated_data, 'attendees', [])
+        tags = pop(validated_data, 'tags', [])
+        phase = pop(validated_data, 'phase', {})
 
         # assigned_to
         user = get_user_model().objects.filter(pk__in=[at.get('id') for at in assigned_to])
@@ -198,7 +208,12 @@ class ActivitiesSerializer(serializers.ModelSerializer):
         instance.attendees.clear()
         instance.attendees.add(*user)
 
-        lead_list.Activities.objects.filter(pk=instance.pk).update(**validated_data)
+        # tags
+        tags_objects = lead_list.TagActivity.objects.filter(pk__in=[tag.get('id') for tag in tags])
+        instance.tags.clear()
+        instance.tags.add(*tags_objects)
+
+        lead_list.Activities.objects.filter(pk=instance.pk).update(phase_id=phase.get('id'), **validated_data)
         instance.refresh_from_db()
         return instance
 
@@ -303,7 +318,7 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
                     act.assigned_to.add(*user)
                 user = get_user_model().objects.filter(pk__in=[u.get('id') for u in attendees])
                 if user:
-                    act.attendees.add(user)
+                    act.attendees.add(*user)
         if contacts:
             for contact in contacts:
                 contact_types = pop(contact, 'contact_types', [])
@@ -383,4 +398,16 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
 class ProjectTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.ProjectType
+        fields = '__all__'
+
+
+class TagActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.TagActivity
+        fields = '__all__'
+
+
+class PhaseActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.PhaseActivity
         fields = '__all__'
