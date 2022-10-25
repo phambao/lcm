@@ -31,6 +31,9 @@ url_leads = [
     path('leads/<int:pk>/', lead_list.LeadDetailGeneric.as_view()),
     path('leads-params/', lead_list.LeadDetailList.as_view()),
     path('leads-params/<int:pk>/', lead_list.LeadDetailGeneric.as_view()),
+    # Contacts
+    path('leads/<int:pk_lead>/contacts/', lead_list.LeadContactsViewSet.as_view()),
+    path('leads/<int:pk_lead>/contacts/<int:pk>/', lead_list.LeadContactDetailsViewSet.as_view()),
     # Activities
     path('leads/<int:pk_lead>/activities/',
          lead_list.LeadActivitiesViewSet.as_view()),
