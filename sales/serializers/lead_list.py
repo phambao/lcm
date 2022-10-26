@@ -366,21 +366,6 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         lead_tags = pop(data, 'tags', [])
 
         ld = instance
-        ld.activities.all().delete()
-        if activities:
-            [activity.pop(field) for activity in activities for field in PASS_FIELDS if field in activity]
-
-            for activity in activities:
-                assigned_to = pop(activity, 'assigned_to', [])
-                attendees = pop(activity, 'attendees', [])
-                user = get_user_model().objects.filter(pk__in=[u.get('id') for u in assigned_to])
-                act = lead_list.Activities.objects.create(lead=ld, **activity)
-                act.assigned_to.clear()
-                act.assigned_to.add(*user)
-
-                user = get_user_model().objects.filter(pk__in=[u.get('id') for u in attendees])
-                act.attendees.clear()
-                act.attendees.add(*user)
         ld = lead_list.LeadDetail.objects.filter(pk=instance.pk)
 
         ld.update(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
