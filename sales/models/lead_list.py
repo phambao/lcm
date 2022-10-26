@@ -137,12 +137,18 @@ class TagActivity(models.Model):
 
     name = models.CharField(max_length=64)
 
+    def __str__(self):
+        return self.name
+
 
 class PhaseActivity(models.Model):
     class Meta:
         db_table = 'phase_activity'
 
     name = models.CharField(max_length=64)
+
+    def __str__(self):
+        return self.name
 
 
 class Activities(BaseModel):
