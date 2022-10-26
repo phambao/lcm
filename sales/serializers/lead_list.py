@@ -401,6 +401,12 @@ class ProjectTypeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class TagLeadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.TagLead
+        fields = '__all__'
+
+
 class TagActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.TagActivity

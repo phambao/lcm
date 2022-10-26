@@ -9,6 +9,14 @@ class ProjectType(models.Model):
     name = models.CharField(max_length=64)
 
 
+class TagLead(models.Model):
+    
+    class Meta:
+        db_table = 'tag_lead'
+        
+    name = models.CharField(max_length=64)
+
+
 class LeadDetail(BaseModel):
 
     class Meta:
@@ -49,8 +57,8 @@ class LeadDetail(BaseModel):
     project_types = models.ManyToManyField(ProjectType, related_name='leads', blank=True)
     salesperson = models.ManyToManyField(get_user_model(), related_name='lead_persons', blank=True)
     source = models.CharField(max_length=128, blank=True)
-    tags = models.CharField(max_length=128, blank=True)
-
+    tags = models.ManyToManyField(TagLead, related_name='lead_tags', blank=True)
+    
 
 class Contact(BaseModel):
     """Contact information"""
