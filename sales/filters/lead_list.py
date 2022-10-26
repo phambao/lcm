@@ -32,8 +32,8 @@ class ContactsFilter(filters.FilterSet):
 
 class ActivitiesFilter(filters.FilterSet):
     status = filters.MultipleChoiceFilter(choices=Activities.Status.choices)
-    tag = filters.MultipleChoiceFilter(choices=Activities.Tags.choices)
-    phase = filters.MultipleChoiceFilter(choices=Activities.Phases.choices)
+    tags = filters.CharFilter(field_name="tags__name", lookup_expr='icontains')
+    phase = filters.CharFilter(field_name="phase__name", lookup_expr='icontains')
     assigned_to = filters.CharFilter(field_name='assigned_to', lookup_expr='icontains')
     attendees = filters.BooleanFilter(field_name='attendees', lookup_expr='isnull')
     start_date = filters.DateFilter(field_name='start_date', lookup_expr='gte')
@@ -41,4 +41,4 @@ class ActivitiesFilter(filters.FilterSet):
 
     class Meta:
         model = Activities
-        fields = ('status', 'tag', 'phase', 'assigned_to', 'start_date', 'end_date')
+        fields = ('status', 'tags', 'phase', 'assigned_to', 'start_date', 'end_date')

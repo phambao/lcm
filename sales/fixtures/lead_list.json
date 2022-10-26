@@ -1,0 +1,114 @@
+[
+    {
+        "model": "sales.projecttype",
+        "pk": 1,
+        "fields": {
+            "name": "Project Type 1"
+        }
+    },
+    {
+        "model": "sales.projecttype",
+        "pk": 2,
+        "fields": {
+            "name": "Project Type 2"
+        }
+    },
+    {
+        "model": "sales.projecttype",
+        "pk": 3,
+        "fields": {
+            "name": "Project Type 3"
+        }
+    },
+    {
+        "model": "sales.contacttypename",
+        "pk": 1,
+        "fields": {
+            "name": "Landlord"
+        }
+    },
+    {
+        "model": "sales.contacttypename",
+        "pk": 2,
+        "fields": {
+            "name": "Main"
+        }
+    },
+    {
+        "model": "sales.contacttypename",
+        "pk": 3,
+        "fields": {
+            "name": "Employee"
+        }
+    },
+    {
+        "model": "sales.tagactivity",
+        "pk": 1,
+        "fields": {
+            "name": "Unassigned"
+        }
+    },
+    {
+        "model": "sales.tagactivity",
+        "pk": 2,
+        "fields": {
+            "name": "Design Build"
+        }
+    },
+    {
+        "model": "sales.tagactivity",
+        "pk": 3,
+        "fields": {
+            "name": "Build Only"
+        }
+    },
+    {
+        "model": "sales.tagactivity",
+        "pk": 4,
+        "fields": {
+            "name": "Art Turf"
+        }
+    },
+    {
+        "model": "sales.tagactivity",
+        "pk": 5,
+        "fields": {
+            "name": "Paver Install"
+        }
+    },
+    {
+        "model": "sales.tagactivity",
+        "pk": 6,
+        "fields": {
+            "name": "Big Job"
+        }
+    },
+    {
+        "model": "sales.phaseactivity",
+        "pk": 1,
+        "fields": {
+            "name": "Unassigned"
+        }
+    },
+    {
+        "model": "sales.phaseactivity",
+        "pk": 2,
+        "fields": {
+            "name": "Phase 1 Learning"
+        }
+    },
+    {
+        "model": "sales.phaseactivity",
+        "pk": 3,
+        "fields": {
+            "name": "Job Learning"
+        }
+    },
+    {
+        "model": "sales.phaseactivity",
+        "pk": 4,
+        "fields": {
+            "name": "Pre-Construction"
+        }
+    }
+]

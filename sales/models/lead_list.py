@@ -152,20 +152,6 @@ class Activities(BaseModel):
         PAST_DUE = 'past_due', 'Past Due'
         UNCONFIRMED = 'unconfirmed', 'Unconfirmed'
 
-    class Tags(models.TextChoices):  # Todo need to remove for filter
-        UNASSIGNED = 'unassigned', 'Unassigned'
-        DESIGN_BUILD = 'design_build', 'Design Build'
-        BUILD_ONLY = 'build_only', 'Build Only'
-        ART_TURF = 'art_turf', 'Art Turf'
-        PAVER_INSTALL = 'paver_install', 'Paver Install'
-        BIG_JOB = 'big_job', 'Big Job'
-
-    class Phases(models.TextChoices):  # Todo need to remove for filter
-        PHASE_1 = 'phase_1', 'Phase 1 Learning'
-        JOB_LEARNING = 'job_learning', 'Job Learning'
-        PRE_CONSTRUCTION = 'pre_construction', 'Pre-Construction'
-        UNASSIGNED = 'unassigned', 'Unassigned'
-
     title = models.CharField(max_length=128)
     is_completed = models.BooleanField(default=False)
     phase = models.ForeignKey(PhaseActivity, on_delete=models.CASCADE,
