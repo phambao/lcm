@@ -23,15 +23,7 @@ url_contact_types = [
          lead_list.ContactTypeNameDetailGenericView.as_view()),
 ]
 
-url_tag_activity = [
-    path('tags/', lead_list.TagActivitiesGenericView.as_view()),
-    path('tags/<int:pk>/', lead_list.TagActivityDetailGenericView.as_view())
-]
 
-url_phase_activity = [
-    path('phase/', lead_list.PhaseActivitiesGenericView.as_view()),
-    path('phase/<int:pk>/', lead_list.PhaseActivityDetailGenericView.as_view())
-]
 
 # Define Path for Leads ---------------------------------------------------------
 url_leads = [
@@ -50,8 +42,14 @@ url_leads = [
     path('leads/<int:pk_lead>/activities/<int:pk>/',
          lead_list.LeadActivitiesDetailViewSet.as_view()),
     path('leads/<int:pk_lead>/activities/delete/', lead_list.delete_activities),
-    path('activity/', include(url_tag_activity)),
-    path('activity/', include(url_phase_activity)),
+    path('activity/', include([
+        path('tags/', lead_list.TagActivitiesGenericView.as_view()),
+        path('tags/<int:pk>/', lead_list.TagActivityDetailGenericView.as_view())
+    ])),
+    path('activity/', include([
+        path('phase/', lead_list.PhaseActivitiesGenericView.as_view()),
+        path('phase/<int:pk>/', lead_list.PhaseActivityDetailGenericView.as_view())
+    ])),
     # Photos
     path('leads/<int:pk_lead>/photos/', lead_list.LeadPhotosViewSet.as_view()),
     path('<int:pk_lead>/photos/<int:pk>/',
@@ -60,6 +58,9 @@ url_leads = [
     path('project-types/', lead_list.ProjectTypeGenericView.as_view()),
     path('project-types/<int:pk>/',
          lead_list.ProjectTypeDetailGenericView.as_view()),
+    # Tags
+    path('tags/', lead_list.TagLeadGenericView.as_view()),
+    path('tags/<int:pk>/', lead_list.TagLeadDetailGenericView.as_view()),
 ]
 
 # Define Path for Catalog -------------------------------------------------------

@@ -270,6 +270,7 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
     country = IDAndNameSerializer(allow_null=True, required=False)
     project_types = IDAndNameSerializer(many=True, allow_null=True, required=False)
     salesperson = UserCustomSerializer(many=True)
+    tags = IDAndNameSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_list.LeadDetail
@@ -289,12 +290,19 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         lead_state = pop(data, 'state', {})
         lead_city = pop(data, 'city', {})
         lead_country = pop(data, 'country', {})
+        lead_tags = pop(data, 'tags', [])
 
         [data.pop(field) for field in PASS_FIELDS if field in data]
 
         ld = lead_list.LeadDetail.objects.create(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
                                                  user_create=user_create, user_update=user_update,
                                                  country_id=lead_country.get('id'), **data)
+        if lead_tags:
+            tags = []
+            for lt in lead_tags:
+                tags.append(lead_list.TagLead.objects.get(id=lt.get('id')))
+            ld.tags.add(*tags)
+
         if project_types:
             pts = []
             for project_type in project_types:
@@ -355,6 +363,7 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         lead_state = pop(data, 'state', {})
         lead_city = pop(data, 'city', {})
         lead_country = pop(data, 'country', {})
+        lead_tags = pop(data, 'tags', [])
 
         ld = instance
         ld.activities.all().delete()
@@ -378,6 +387,13 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
                   country_id=lead_country.get('id'), **data)
         ld = ld.first()
 
+        ld.tags.clear()
+        if lead_tags:
+            tags = []
+            for lt in lead_tags:
+                tags.append(lead_list.TagLead.objects.get(id=lt.get('id')))
+            ld.tags.add(*tags)
+
         ld.project_types.clear()
         if project_types:
             pts = []
@@ -398,6 +414,12 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
 class ProjectTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.ProjectType
+        fields = '__all__'
+
+
+class TagLeadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.TagLead
         fields = '__all__'
 
 
