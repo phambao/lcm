@@ -6,10 +6,10 @@ from rest_framework.response import Response
 from ..models import catalog
 
 
-class MaterialSerializer(serializers.ModelSerializer):
+class CatalogSerializer(serializers.ModelSerializer):
     class Meta:
-        model = catalog.Material
-        fields = ('id', 'type', 'name', 'parent', 'sequence', 'cost_table')
+        model = catalog.Catalog
+        fields = ('id', 'name', 'parent', 'sequence', 'cost_table')
 
 
 class CostTableModelSerializer(serializers.ModelSerializer):

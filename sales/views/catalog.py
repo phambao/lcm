@@ -1,20 +1,20 @@
-from ..models.catalog import Material, CostTable
+from ..models.catalog import Catalog, CostTable
 from ..serializers import catalog
 
 from rest_framework import generics, permissions
 
 
-class MaterialList(generics.ListCreateAPIView):
+class CatalogList(generics.ListCreateAPIView):
 
-    queryset = Material.objects.all()
-    serializer_class = catalog.MaterialSerializer
+    queryset = Catalog.objects.all()
+    serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class MaterialDetail(generics.RetrieveUpdateDestroyAPIView):
+class CatalogDetail(generics.RetrieveUpdateDestroyAPIView):
 
-    queryset = Material.objects.all()
-    serializer_class = catalog.MaterialSerializer
+    queryset = Catalog.objects.all()
+    serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 

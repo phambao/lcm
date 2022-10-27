@@ -14,18 +14,19 @@ class CostTable(models.Model):
         return self.name
 
 
-class Material(BaseModel):
+class Catalog(BaseModel):
 
     class Meta:
-        db_table = 'material'
+        db_table = 'catalog'
         ordering = ['-modified_date']
 
     sequence = models.IntegerField(default=0)
     name = models.CharField(max_length=128)
     parent = models.ForeignKey(
         'self', on_delete=models.CASCADE, null=True, blank=True)
-    type = models.CharField(max_length=128, null=True, blank=True)
     cost_table = models.OneToOneField(CostTable, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.name
+    
+    
