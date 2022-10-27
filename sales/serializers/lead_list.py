@@ -264,7 +264,7 @@ PASS_FIELDS = ['user_create', 'user_update', 'lead']
 class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
     activities = ActivitiesSerializer('lead', many=True, allow_null=True, required=False)
     contacts = ContactsSerializer('leads', many=True, allow_null=True, required=False)
-    photos = PhotoSerializer('lead', many=True, allow_null=True, required=False)
+    # photos = PhotoSerializer('lead', many=True, allow_null=True, required=False)
     city = IDAndNameSerializer(allow_null=True, required=False)
     state = IDAndNameSerializer(allow_null=True, required=False)
     country = IDAndNameSerializer(allow_null=True, required=False)
@@ -347,9 +347,9 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
                     lead_list.ContactType.objects.create(contact=ct, lead=ld, contact_type_name=ctn)
                 lead_list.PhoneOfContact.objects.bulk_create(
                     [lead_list.PhoneOfContact(contact=ct, **phone) for phone in phones])
-        if photos:
-            photo_id = [photo.get('id') for photo in photos]
-            lead_list.Photos.objects.filter(pk__in=photo_id).update(lead=ld)
+        # if photos:
+        #     photo_id = [photo.get('id') for photo in photos]
+        #     lead_list.Photos.objects.filter(pk__in=photo_id).update(lead=ld)
         return ld
 
     def update(self, instance, data):
