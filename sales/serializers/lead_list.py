@@ -371,6 +371,8 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         ld.update(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
                   country_id=lead_country.get('id'), **data)
         ld = ld.first()
+        # ld.update does not update modified Date
+        ld.save()
 
         ld.tags.clear()
         if lead_tags:
@@ -392,7 +394,7 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
             for sp in salesperson:
                 sps.append(get_user_model().objects.get(id=sp.get('id')))
             ld.salesperson.add(*sps)
-
+        instance.refresh_from_db()
         return instance
 
 
