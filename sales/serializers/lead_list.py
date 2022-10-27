@@ -76,9 +76,9 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         if self.is_param_exist('pk_lead'):
             phone_contacts = validated_data.pop('phone_contacts')
             contact_types = validated_data.pop('contact_types')
-            state = validated_data.pop('state')
-            city = validated_data.pop('city')
-            country = validated_data.pop('country')
+            state = validated_data.pop('state') or {}
+            city = validated_data.pop('city') or {}
+            country = validated_data.pop('country') or {}
             ct = lead_list.Contact.objects.create(country_id=country.get('id'), state_id=state.get('id'),
                                                   city_id=city.get('id'), **validated_data)
             ld = lead_list.LeadDetail.objects.get(pk=self.get_params()['pk_lead'])
@@ -106,9 +106,9 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         phone_contacts = validated_data.pop('phone_contacts')
         contact_types = validated_data.pop('contact_types')
         lead_id = validated_data.pop('lead_id')
-        state = validated_data.pop('state')
-        city = validated_data.pop('city')
-        country = validated_data.pop('country')
+        state = validated_data.pop('state') or {}
+        city = validated_data.pop('city') or {}
+        country = validated_data.pop('country') or {}
 
         instance = lead_list.Contact.objects.filter(pk=self.get_params()['pk'])
         instance.update(country_id=country.get('id'), state_id=state.get('id'),
