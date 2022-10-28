@@ -17,7 +17,7 @@ services:
       - db
 
   db:
-    image: postgres
+    image: postgres:14
     restart: 'always'
     volumes:
       - ./data/db:/var/lib/postgresql/data
@@ -25,3 +25,16 @@ services:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
+
+  pgadmin:
+      image: dpage/pgadmin4
+      restart: always
+      environment:
+        PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+        PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+        PGADMIN_CONFIG_SERVER_MODE: ${PGADMIN_CONFIG_SERVER_MODE}
+      volumes:
+       - ./../pgAdmin:/pgAdmin
+
+      ports:
+        - "${PGADMIN_PORT:-5050}:80"
