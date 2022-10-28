@@ -39,8 +39,6 @@ url_leads = [
     path('leads/', lead_list.LeadDetailList.as_view()),
     path('leads/uploads', FileUploadView.as_view()),
     path('leads/<int:pk>/', lead_list.LeadDetailGeneric.as_view()),
-    path('leads-params/', lead_list.LeadDetailList.as_view()),
-    path('leads-params/<int:pk>/', lead_list.LeadDetailGeneric.as_view()),
     # Contacts
     path('leads/<int:pk_lead>/contacts/', lead_list.LeadContactsViewSet.as_view()),
     path('leads/<int:pk_lead>/contacts/<int:pk>/', lead_list.LeadContactDetailsViewSet.as_view()),
