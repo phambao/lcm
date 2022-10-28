@@ -9,6 +9,14 @@ class ProjectType(models.Model):
     name = models.CharField(max_length=64)
 
 
+class TagLead(models.Model):
+    
+    class Meta:
+        db_table = 'tag_lead'
+        
+    name = models.CharField(max_length=64)
+
+
 class LeadDetail(BaseModel):
 
     class Meta:
@@ -49,8 +57,8 @@ class LeadDetail(BaseModel):
     project_types = models.ManyToManyField(ProjectType, related_name='leads', blank=True)
     salesperson = models.ManyToManyField(get_user_model(), related_name='lead_persons', blank=True)
     source = models.CharField(max_length=128, blank=True)
-    tags = models.CharField(max_length=128, blank=True)
-
+    tags = models.ManyToManyField(TagLead, related_name='lead_tags', blank=True)
+    
 
 class Contact(BaseModel):
     """Contact information"""
@@ -96,7 +104,7 @@ class PhoneOfContact(models.Model):
     phone_number = models.CharField(max_length=20)
     phone_type = models.CharField(
         max_length=8, choices=PhoneType.choices, default=PhoneType.MOBILE)
-    text_massage_received = models.BooleanField(default=True)
+    text_massage_received = models.CharField(max_length=10, blank=True)
     mobile_phone_service_provider = models.CharField('Mobile Phone Service Provider', max_length=32, blank=True, null=True)
     contact = models.ForeignKey(
         Contact, on_delete=models.CASCADE, related_name='phone_contacts')
@@ -129,12 +137,18 @@ class TagActivity(models.Model):
 
     name = models.CharField(max_length=64)
 
+    def __str__(self):
+        return self.name
+
 
 class PhaseActivity(models.Model):
     class Meta:
         db_table = 'phase_activity'
 
     name = models.CharField(max_length=64)
+
+    def __str__(self):
+        return self.name
 
 
 class Activities(BaseModel):

@@ -76,9 +76,9 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         if self.is_param_exist('pk_lead'):
             phone_contacts = validated_data.pop('phone_contacts')
             contact_types = validated_data.pop('contact_types')
-            state = validated_data.pop('state')
-            city = validated_data.pop('city')
-            country = validated_data.pop('country')
+            state = validated_data.pop('state') or {}
+            city = validated_data.pop('city') or {}
+            country = validated_data.pop('country') or {}
             ct = lead_list.Contact.objects.create(country_id=country.get('id'), state_id=state.get('id'),
                                                   city_id=city.get('id'), **validated_data)
             ld = lead_list.LeadDetail.objects.get(pk=self.get_params()['pk_lead'])
@@ -106,9 +106,9 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         phone_contacts = validated_data.pop('phone_contacts')
         contact_types = validated_data.pop('contact_types')
         lead_id = validated_data.pop('lead_id')
-        state = validated_data.pop('state')
-        city = validated_data.pop('city')
-        country = validated_data.pop('country')
+        state = validated_data.pop('state') or {}
+        city = validated_data.pop('city') or {}
+        country = validated_data.pop('country') or {}
 
         instance = lead_list.Contact.objects.filter(pk=self.get_params()['pk'])
         instance.update(country_id=country.get('id'), state_id=state.get('id'),
@@ -270,6 +270,7 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
     country = IDAndNameSerializer(allow_null=True, required=False)
     project_types = IDAndNameSerializer(many=True, allow_null=True, required=False)
     salesperson = UserCustomSerializer(many=True)
+    tags = IDAndNameSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_list.LeadDetail
@@ -289,12 +290,19 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         lead_state = pop(data, 'state', {})
         lead_city = pop(data, 'city', {})
         lead_country = pop(data, 'country', {})
+        lead_tags = pop(data, 'tags', [])
 
         [data.pop(field) for field in PASS_FIELDS if field in data]
 
         ld = lead_list.LeadDetail.objects.create(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
                                                  user_create=user_create, user_update=user_update,
                                                  country_id=lead_country.get('id'), **data)
+        if lead_tags:
+            tags = []
+            for lt in lead_tags:
+                tags.append(lead_list.TagLead.objects.get(id=lt.get('id')))
+            ld.tags.add(*tags)
+
         if project_types:
             pts = []
             for project_type in project_types:
@@ -339,9 +347,6 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
                     lead_list.ContactType.objects.create(contact=ct, lead=ld, contact_type_name=ctn)
                 lead_list.PhoneOfContact.objects.bulk_create(
                     [lead_list.PhoneOfContact(contact=ct, **phone) for phone in phones])
-        if photos:
-            photo_id = [photo.get('id') for photo in photos]
-            lead_list.Photos.objects.filter(pk__in=photo_id).update(lead=ld)
         return ld
 
     def update(self, instance, data):
@@ -355,28 +360,23 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         lead_state = pop(data, 'state', {})
         lead_city = pop(data, 'city', {})
         lead_country = pop(data, 'country', {})
+        lead_tags = pop(data, 'tags', [])
 
         ld = instance
-        ld.activities.all().delete()
-        if activities:
-            [activity.pop(field) for activity in activities for field in PASS_FIELDS if field in activity]
-
-            for activity in activities:
-                assigned_to = pop(activity, 'assigned_to', [])
-                attendees = pop(activity, 'attendees', [])
-                user = get_user_model().objects.filter(pk__in=[u.get('id') for u in assigned_to])
-                act = lead_list.Activities.objects.create(lead=ld, **activity)
-                act.assigned_to.clear()
-                act.assigned_to.add(*user)
-
-                user = get_user_model().objects.filter(pk__in=[u.get('id') for u in attendees])
-                act.attendees.clear()
-                act.attendees.add(*user)
         ld = lead_list.LeadDetail.objects.filter(pk=instance.pk)
 
         ld.update(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
                   country_id=lead_country.get('id'), **data)
         ld = ld.first()
+        # ld.update does not update modified Date
+        ld.save()
+
+        ld.tags.clear()
+        if lead_tags:
+            tags = []
+            for lt in lead_tags:
+                tags.append(lead_list.TagLead.objects.get(id=lt.get('id')))
+            ld.tags.add(*tags)
 
         ld.project_types.clear()
         if project_types:
@@ -391,13 +391,19 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
             for sp in salesperson:
                 sps.append(get_user_model().objects.get(id=sp.get('id')))
             ld.salesperson.add(*sps)
-
+        instance.refresh_from_db()
         return instance
 
 
 class ProjectTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.ProjectType
+        fields = '__all__'
+
+
+class TagLeadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.TagLead
         fields = '__all__'
 
 

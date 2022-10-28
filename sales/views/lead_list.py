@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, ContactType, Photos, ContactTypeName, \
-    ProjectType, PhaseActivity, TagActivity
+    ProjectType, TagLead, PhaseActivity, TagActivity
 from ..serializers import lead_list
 
 from rest_framework import generics, permissions
@@ -164,6 +164,18 @@ class ProjectTypeDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
+class TagLeadGenericView(generics.ListCreateAPIView):
+    queryset = TagLead.objects.all()
+    serializer_class = lead_list.TagLeadSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+
+class TagLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = TagLead.objects.all()
+    serializer_class = lead_list.TagLeadSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
 class TagActivitiesGenericView(generics.ListCreateAPIView):
     queryset = TagActivity.objects.all()
     serializer_class = lead_list.TagActivitySerializer
@@ -198,4 +210,4 @@ def delete_activities(request, pk_lead):
         ids = request.data
         albums = Activities.objects.filter(id__in=ids, lead=pk_lead)
         albums.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    return Response(status=status.HTTP_204_NO_CONTENT)
