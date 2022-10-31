@@ -30,6 +30,7 @@ schema_view = get_schema_view(
         title="API FOR LCM PROJECT",
         default_version='v1',
     ),
+    url=settings.BASE_URL,
     public=True,
     permission_classes=[permissions.AllowAny],
 )
