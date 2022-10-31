@@ -9,7 +9,15 @@ from ..models import catalog
 class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = catalog.Material
-        fields = ('id', 'type', 'name', 'parent', 'sequence', 'cost_table')
+        fields = ('id', 'type', 'name', 'parents', 'sequence', 'cost_table', 'icon')
+        extra_kwargs = {'icon': {'required': False,
+                                 'allow_null': True}}
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.icon:
+            data['icon'] = r'(?<=/media/).+?(?=/)'.replace(r'(?<=/media/).+?(?=/)', instance.icon.url)
+        return data
 
 
 class CostTableModelSerializer(serializers.ModelSerializer):
