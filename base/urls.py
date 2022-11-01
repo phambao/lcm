@@ -14,6 +14,7 @@ url_base = [
                   country_state_city.CountryStateList.as_view()),
              path('countries/<int:pk_country>/states/<int:pk_state>/cities/',
                   country_state_city.CountryStateCityList.as_view()),
+             path('zipcodes/', country_state_city.Zipcode.as_view()),
          ])
          ),
 ]

@@ -8,12 +8,7 @@ from api.serializers.base import SerializerMixin
 from api.serializers.auth import UserSerializer, UserCustomSerializer
 from ..models import lead_list
 from base.utils import pop
-
-
-class IDAndNameSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=False)
-    name = serializers.CharField(required=False)
-
+from base.serializers import base
 
 class PhoneContactsSerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
@@ -56,9 +51,9 @@ class ContactTypeNameCustomSerializer(serializers.Serializer):
 
 
 class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
-    city = IDAndNameSerializer(allow_null=True, required=False)
-    state = IDAndNameSerializer(allow_null=True, required=False)
-    country = IDAndNameSerializer(allow_null=True, required=False)
+    city = base.IDAndNameSerializer(allow_null=True, required=False)
+    state = base.IDAndNameSerializer(allow_null=True, required=False)
+    country = base.IDAndNameSerializer(allow_null=True, required=False)
     phone_contacts = PhoneContactsSerializer(
         'contact', many=True, allow_null=True, required=False)
     contact_types = ContactTypeNameCustomSerializer(many=True, allow_null=True)
@@ -149,8 +144,8 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
 class ActivitiesSerializer(serializers.ModelSerializer):
     assigned_to = UserCustomSerializer('assigners', many=True)
     attendees = UserCustomSerializer('activity_attendees', many=True)
-    tags = IDAndNameSerializer(many=True, required=False, allow_null=True)
-    phase = IDAndNameSerializer(required=False, allow_null=True)
+    tags = base.IDAndNameSerializer(many=True, required=False, allow_null=True)
+    phase = base.IDAndNameSerializer(required=False, allow_null=True)
 
     class Meta:
         model = lead_list.Activities
@@ -219,10 +214,10 @@ class ActivitiesSerializer(serializers.ModelSerializer):
 
 
 class LeadDetailSerializer(serializers.ModelSerializer):
-    city = IDAndNameSerializer(allow_null=True)
-    state = IDAndNameSerializer(allow_null=True)
-    country = IDAndNameSerializer(allow_null=True)
-    project_types = IDAndNameSerializer(many=True, allow_null=True)
+    city = base.IDAndNameSerializer(allow_null=True)
+    state = base.IDAndNameSerializer(allow_null=True)
+    country = base.IDAndNameSerializer(allow_null=True)
+    project_types = base.IDAndNameSerializer(many=True, allow_null=True)
     salesperson = UserCustomSerializer(many=True)
 
     class Meta:
@@ -265,12 +260,12 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
     activities = ActivitiesSerializer('lead', many=True, allow_null=True, required=False)
     contacts = ContactsSerializer('leads', many=True, allow_null=True, required=False)
     photos = PhotoSerializer('lead', many=True, allow_null=True, required=False)
-    city = IDAndNameSerializer(allow_null=True, required=False)
-    state = IDAndNameSerializer(allow_null=True, required=False)
-    country = IDAndNameSerializer(allow_null=True, required=False)
-    project_types = IDAndNameSerializer(many=True, allow_null=True, required=False)
+    city = base.IDAndNameSerializer(allow_null=True, required=False)
+    state = base.IDAndNameSerializer(allow_null=True, required=False)
+    country = base.IDAndNameSerializer(allow_null=True, required=False)
+    project_types = base.IDAndNameSerializer(many=True, allow_null=True, required=False)
     salesperson = UserCustomSerializer(many=True)
-    tags = IDAndNameSerializer(allow_null=True, required=False, many=True)
+    tags = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_list.LeadDetail

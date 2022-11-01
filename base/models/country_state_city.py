@@ -42,3 +42,17 @@ class City(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ZipCode(models.Model):
+    """Zipcode information"""
+    class Meta:
+        db_table = 'zipcode'
+
+    zipcode = models.CharField(max_length=16, blank=True)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, related_name='zipcode')
+    state = models.ForeignKey(State, on_delete=models.CASCADE, related_name='zipcode')
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='zipcode')
+    
+    def __str__(self):
+        return self.zipcode
