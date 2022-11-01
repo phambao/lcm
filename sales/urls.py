@@ -23,8 +23,6 @@ url_contact_types = [
          lead_list.ContactTypeNameDetailGenericView.as_view()),
 ]
 
-
-
 # Define Path for Leads ---------------------------------------------------------
 url_leads = [
     # Leads
@@ -61,6 +59,10 @@ url_leads = [
     # Tags
     path('tags/', lead_list.TagLeadGenericView.as_view()),
     path('tags/<int:pk>/', lead_list.TagLeadDetailGenericView.as_view()),
+
+    # Source
+    path('sources/', lead_list.SourceLeadGenericView.as_view()),
+    path('sources/<int:pk>/', lead_list.SourceLeadDetailGenericView.as_view()),
 ]
 
 # Define Path for Catalog -------------------------------------------------------
