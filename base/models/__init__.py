@@ -1,1 +1,1 @@
-from .country_state_city import Country, State, City
+from .country_state_city import Country, State, City, ZipCode
