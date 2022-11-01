@@ -5,6 +5,10 @@ from django.contrib.auth import get_user_model
 from api.models import BaseModel
 
 
+class SourceLead(models.Model):
+    name = models.CharField(max_length=64)
+
+
 class ProjectType(models.Model):
     name = models.CharField(max_length=64)
 
@@ -56,9 +60,11 @@ class LeadDetail(BaseModel):
     projected_sale_date = models.DateTimeField()
     project_types = models.ManyToManyField(ProjectType, related_name='leads', blank=True)
     salesperson = models.ManyToManyField(get_user_model(), related_name='lead_persons', blank=True)
-    source = models.CharField(max_length=128, blank=True)
+    sources = models.ManyToManyField(SourceLead, related_name='leads', blank=True)
     tags = models.ManyToManyField(TagLead, related_name='lead_tags', blank=True)
-    
+    number_of_click = models.IntegerField(default=0, null=True, blank=True)  # For filter
+    recent_click = models.DateTimeField(null=True, blank=True)  # For filter
+
 
 class Contact(BaseModel):
     """Contact information"""

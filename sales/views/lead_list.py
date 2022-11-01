@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, ContactType, Photos, ContactTypeName, \
-    ProjectType, TagLead, PhaseActivity, TagActivity
+    ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead
 from ..serializers import lead_list
 
 from rest_framework import generics, permissions
@@ -9,15 +9,14 @@ from rest_framework import status, filters as rf_filters
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
+from django.utils import timezone
 from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter
 
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
 
 
 class LeadDetailList(generics.ListCreateAPIView):
-    """
-    Used for get params
-    """
+
     queryset = LeadDetail.objects.all()
     serializer_class = lead_list.LeadDetailCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -36,6 +35,16 @@ class LeadDetailGeneric(generics.RetrieveUpdateDestroyAPIView):
         data['pk_lead'] = self.kwargs.get('pk')
         return data
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        if not instance.number_of_click:
+            instance.number_of_click = 0
+        instance.number_of_click += 1
+        instance.recent_click = timezone.now()
+        instance.save()
+        return Response(serializer.data)
+
 
 class LeadActivitiesViewSet(generics.ListCreateAPIView):
     serializer_class = lead_list.ActivitiesSerializer
@@ -43,16 +52,14 @@ class LeadActivitiesViewSet(generics.ListCreateAPIView):
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = ActivitiesFilter
     search_fields = ['title', 'phase', 'tag', 'status', 'assigned_to']
-    
+
     def get_queryset(self):
         get_object_or_404(LeadDetail.objects.all(), pk=self.kwargs['pk_lead'])
         return Activities.objects.filter(lead_id=self.kwargs['pk_lead'])
 
 
 class LeadActivitiesDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Used for get params
-    """
+
     queryset = Activities.objects.all()
     serializer_class = lead_list.ActivitiesSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -197,6 +204,18 @@ class PhaseActivitiesGenericView(generics.ListCreateAPIView):
 class PhaseActivityDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = PhaseActivity.objects.all()
     serializer_class = lead_list.PhaseActivitySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class SourceLeadGenericView(generics.ListCreateAPIView):
+    queryset = SourceLead.objects.all()
+    serializer_class = lead_list.SourceLeadSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class SourceLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = SourceLead.objects.all()
+    serializer_class = lead_list.SourceLeadSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
