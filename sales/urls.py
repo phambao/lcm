@@ -15,6 +15,7 @@ url_contacts = [
          lead_list.PhoneOfContactsViewSet.as_view()),
     path('contacts/<int:pk_contact>/phone_contacts/<int:pk>/',
          lead_list.PhoneOfContactsDetailViewSet.as_view()),
+    path('contacts/delete/', lead_list.delete_contacts),
 ]
 
 url_contact_types = [
@@ -29,11 +30,11 @@ url_leads = [
     path('leads/', lead_list.LeadDetailList.as_view()),
     path('leads/uploads', FileUploadView.as_view()),
     path('leads/<int:pk>/', lead_list.LeadDetailGeneric.as_view()),
-    path('leads-params/', lead_list.LeadDetailList.as_view()),
-    path('leads-params/<int:pk>/', lead_list.LeadDetailGeneric.as_view()),
+    path('leads/delete/', lead_list.delete_leads),
     # Contacts
     path('leads/<int:pk_lead>/contacts/', lead_list.LeadContactsViewSet.as_view()),
     path('leads/<int:pk_lead>/contacts/<int:pk>/', lead_list.LeadContactDetailsViewSet.as_view()),
+    path('leads/<int:pk_lead>/contacts/unlink/', lead_list.unlink_contact_from_lead),
     # Activities
     path('leads/<int:pk_lead>/activities/',
          lead_list.LeadActivitiesViewSet.as_view()),

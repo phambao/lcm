@@ -227,6 +227,48 @@ def delete_activities(request, pk_lead):
 
     if request.method == 'DELETE':
         ids = request.data
-        albums = Activities.objects.filter(id__in=ids, lead=pk_lead)
-        albums.delete()
+        activities = Activities.objects.filter(id__in=ids, lead=pk_lead)
+        activities.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+def delete_leads(request):
+    """
+        DELETE: delete multiple leads
+    """
+
+    if request.method == 'DELETE':
+        ids = request.data
+        leads = LeadDetail.objects.filter(id__in=ids)
+        leads.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+def delete_contacts(request):
+    """
+        DELETE: delete multiple contacts
+    """
+
+    if request.method == 'DELETE':
+        ids = request.data
+        contacts = Contact.objects.filter(id__in=ids)
+        contacts.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['PUT'])
+def unlink_contact_from_lead(request, pk_lead):
+    """
+        PUT: unlink contact from lead
+    """
+
+    if request.method == 'PUT':
+        contact_ids = request.data
+        lead = LeadDetail.objects.get(pk=pk_lead)
+        contacts_to_unlink = lead.contacts.all().filter(id__in=contact_ids)
+        lead.contacts.remove(*contacts_to_unlink)
+        data = lead_list.ContactsSerializer(
+            contacts_to_unlink, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=data)
