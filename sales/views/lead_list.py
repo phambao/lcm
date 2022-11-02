@@ -1,5 +1,7 @@
 from rest_framework.decorators import api_view
 
+from base.models.search import Search
+from base.serializers.search import SearchSerializer
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, ContactType, Photos, ContactTypeName, \
     ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead
 from ..serializers import lead_list
@@ -10,6 +12,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from django.utils import timezone
+from django.contrib.contenttypes.models import ContentType
 from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter
 
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
@@ -217,6 +220,41 @@ class SourceLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SourceLead.objects.all()
     serializer_class = lead_list.SourceLeadSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class SearchLeadGenericView(generics.ListCreateAPIView):
+    queryset = Search.objects.all()
+    serializer_class = SearchSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        data = super().get_queryset()
+        content_type = ContentType.objects.get_for_model(LeadDetail)
+        data.filter(user=self.request.user, content_type=content_type)
+        return data
+
+    def create(self, request, *args, **kwargs):
+        content_type = ContentType.objects.get_for_model(LeadDetail)
+        data = request.data.copy()
+        data['content_type'] = content_type.id
+        data['user'] = request.user.id
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class SearchLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Search.objects.all()
+    serializer_class = SearchSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        data = super().get_queryset()
+        content_type = ContentType.objects.get_for_model(LeadDetail)
+        data.filter(user=self.request.user, content_type=content_type)
+        return data
 
 
 @api_view(['DELETE'])
