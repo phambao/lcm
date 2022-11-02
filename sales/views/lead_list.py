@@ -230,7 +230,7 @@ class SearchLeadGenericView(generics.ListCreateAPIView):
     def get_queryset(self):
         data = super().get_queryset()
         content_type = ContentType.objects.get_for_model(LeadDetail)
-        data.filter(user=self.request.user, content_type=content_type)
+        data = data.filter(user=self.request.user, content_type=content_type)
         return data
 
     def create(self, request, *args, **kwargs):
@@ -253,7 +253,7 @@ class SearchLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         data = super().get_queryset()
         content_type = ContentType.objects.get_for_model(LeadDetail)
-        data.filter(user=self.request.user, content_type=content_type)
+        data = data.filter(user=self.request.user, content_type=content_type)
         return data
 
 
