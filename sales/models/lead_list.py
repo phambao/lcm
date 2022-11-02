@@ -73,9 +73,10 @@ class Contact(BaseModel):
         db_table = 'contact'
 
     class Gender(models.TextChoices):
+        
         MALE = 'male', _('Male')
         FEMALE = 'female', _('Female')
-        OTHER = 'other', _('Other')
+        OTHER = '', _('Other')
 
     first_name = models.CharField(verbose_name='First Name', max_length=128)
     last_name = models.CharField(verbose_name='Last Name', max_length=128)
