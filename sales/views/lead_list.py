@@ -1,7 +1,9 @@
 from rest_framework.decorators import api_view
 
+from base.models.search import Search
+from base.serializers.search import SearchSerializer
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, ContactType, Photos, ContactTypeName, \
-    ProjectType, TagLead, PhaseActivity, TagActivity
+    ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead
 from ..serializers import lead_list
 
 from rest_framework import generics, permissions
@@ -9,15 +11,15 @@ from rest_framework import status, filters as rf_filters
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
+from django.utils import timezone
+from django.contrib.contenttypes.models import ContentType
 from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter
 
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
 
 
 class LeadDetailList(generics.ListCreateAPIView):
-    """
-    Used for get params
-    """
+
     queryset = LeadDetail.objects.all()
     serializer_class = lead_list.LeadDetailCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -36,6 +38,16 @@ class LeadDetailGeneric(generics.RetrieveUpdateDestroyAPIView):
         data['pk_lead'] = self.kwargs.get('pk')
         return data
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        if not instance.number_of_click:
+            instance.number_of_click = 0
+        instance.number_of_click += 1
+        instance.recent_click = timezone.now()
+        instance.save()
+        return Response(serializer.data)
+
 
 class LeadActivitiesViewSet(generics.ListCreateAPIView):
     serializer_class = lead_list.ActivitiesSerializer
@@ -43,16 +55,14 @@ class LeadActivitiesViewSet(generics.ListCreateAPIView):
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = ActivitiesFilter
     search_fields = ['title', 'phase', 'tag', 'status', 'assigned_to']
-    
+
     def get_queryset(self):
         get_object_or_404(LeadDetail.objects.all(), pk=self.kwargs['pk_lead'])
         return Activities.objects.filter(lead_id=self.kwargs['pk_lead'])
 
 
 class LeadActivitiesDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Used for get params
-    """
+
     queryset = Activities.objects.all()
     serializer_class = lead_list.ActivitiesSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -200,6 +210,53 @@ class PhaseActivityDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
+class SourceLeadGenericView(generics.ListCreateAPIView):
+    queryset = SourceLead.objects.all()
+    serializer_class = lead_list.SourceLeadSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class SourceLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = SourceLead.objects.all()
+    serializer_class = lead_list.SourceLeadSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class SearchLeadGenericView(generics.ListCreateAPIView):
+    queryset = Search.objects.all()
+    serializer_class = SearchSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        data = super().get_queryset()
+        content_type = ContentType.objects.get_for_model(LeadDetail)
+        data = data.filter(user=self.request.user, content_type=content_type)
+        return data
+
+    def create(self, request, *args, **kwargs):
+        content_type = ContentType.objects.get_for_model(LeadDetail)
+        data = request.data.copy()
+        data['content_type'] = content_type.id
+        data['user'] = request.user.id
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class SearchLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Search.objects.all()
+    serializer_class = SearchSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        data = super().get_queryset()
+        content_type = ContentType.objects.get_for_model(LeadDetail)
+        data = data.filter(user=self.request.user, content_type=content_type)
+        return data
+
+
 @api_view(['DELETE'])
 def delete_activities(request, pk_lead):
     """
@@ -208,6 +265,64 @@ def delete_activities(request, pk_lead):
 
     if request.method == 'DELETE':
         ids = request.data
-        albums = Activities.objects.filter(id__in=ids, lead=pk_lead)
-        albums.delete()
+        activities = Activities.objects.filter(id__in=ids, lead=pk_lead)
+        activities.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+def delete_leads(request):
+    """
+        DELETE: delete multiple leads
+    """
+
+    if request.method == 'DELETE':
+        ids = request.data
+        leads = LeadDetail.objects.filter(id__in=ids)
+        leads.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+def delete_contacts(request):
+    """
+        DELETE: delete multiple contacts
+    """
+
+    if request.method == 'DELETE':
+        ids = request.data
+        contacts = Contact.objects.filter(id__in=ids)
+        contacts.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['PUT'])
+def unlink_contact_from_lead(request, pk_lead):
+    """
+        PUT: unlink contact from lead
+    """
+
+    if request.method == 'PUT':
+        contact_ids = request.data
+        lead = LeadDetail.objects.get(pk=pk_lead)
+        contacts_to_unlink = lead.contacts.all().filter(id__in=contact_ids)
+        lead.contacts.remove(*contacts_to_unlink)
+        data = lead_list.ContactsSerializer(
+            contacts_to_unlink, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['PUT'])
+def link_contacts_to_lead(request, pk_lead):
+    """
+        PUT: link contacts to lead
+    """
+
+    if request.method == 'PUT':
+        contact_ids = request.data
+        lead = LeadDetail.objects.get(pk=pk_lead)
+        contacts_to_link = Contact.objects.filter(id__in=contact_ids)
+        lead.contacts.add(*contacts_to_link)
+        data = lead_list.ContactsSerializer(
+            contacts_to_link, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=data)
