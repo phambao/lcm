@@ -1,4 +1,4 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 
 from base.models.search import Search
 from base.serializers.search import SearchSerializer
@@ -258,6 +258,7 @@ class SearchLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
 
 
 @api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
 def delete_activities(request, pk_lead):
     """
         DELETE: delete multiple activities
@@ -271,6 +272,7 @@ def delete_activities(request, pk_lead):
 
 
 @api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
 def delete_leads(request):
     """
         DELETE: delete multiple leads
@@ -284,6 +286,7 @@ def delete_leads(request):
 
 
 @api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
 def delete_contacts(request):
     """
         DELETE: delete multiple contacts
@@ -297,6 +300,7 @@ def delete_contacts(request):
 
 
 @api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated])
 def unlink_contact_from_lead(request, pk_lead):
     """
         PUT: unlink contact from lead
@@ -309,6 +313,28 @@ def unlink_contact_from_lead(request, pk_lead):
         lead.contacts.remove(*contacts_to_unlink)
         data = lead_list.ContactsSerializer(
             contacts_to_unlink, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_summaries(request):
+    data = {
+        'closed-job': {'title': 'TOTAL CLOSED JOBS',
+                       'number': 350,
+                       'content': 200},
+        'number-of-job': {'title': 'TOTAL # OF JOBS IN PROGRESS',
+                          'number': 89,
+                          'content': 200},
+        'closed-ratio': {'title': 'CLOSED RATIO',
+                         'number': 45,
+                         'content': -200},
+        '$-of-job': {'title': 'TOTAL $ OF JOBS IN PROGRESS',
+                     'number': 60090,
+                     'content': 2000},
+    }
+    if request.method == 'GET':
+        pass
     return Response(status=status.HTTP_200_OK, data=data)
 
 
