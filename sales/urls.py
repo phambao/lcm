@@ -34,6 +34,7 @@ url_leads = [
     # Contacts
     path('leads/<int:pk_lead>/contacts/', lead_list.LeadContactsViewSet.as_view()),
     path('leads/<int:pk_lead>/contacts/<int:pk>/', lead_list.LeadContactDetailsViewSet.as_view()),
+    path('leads/<int:pk_lead>/contacts/link/', lead_list.link_contacts_to_lead),
     path('leads/<int:pk_lead>/contacts/unlink/', lead_list.unlink_contact_from_lead),
     # Activities
     path('leads/<int:pk_lead>/activities/',

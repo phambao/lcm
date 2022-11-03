@@ -310,3 +310,19 @@ def unlink_contact_from_lead(request, pk_lead):
         data = lead_list.ContactsSerializer(
             contacts_to_unlink, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['PUT'])
+def link_contacts_to_lead(request, pk_lead):
+    """
+        PUT: link contacts to lead
+    """
+
+    if request.method == 'PUT':
+        contact_ids = request.data
+        lead = LeadDetail.objects.get(pk=pk_lead)
+        contacts_to_link = Contact.objects.filter(id__in=contact_ids)
+        lead.contacts.add(*contacts_to_link)
+        data = lead_list.ContactsSerializer(
+            contacts_to_link, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=data)
