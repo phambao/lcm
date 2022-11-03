@@ -31,8 +31,8 @@ class Catalog(BaseModel):
         return self.name
 
     def link(self, pk):
-        material = Catalog.objects.get(pk=pk)
-        material.children.add(self)
+        catalog = Catalog.objects.get(pk=pk)
+        catalog.children.add(self)
 
     def duplicate(self, pk):
         pass
