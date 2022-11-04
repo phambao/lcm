@@ -106,11 +106,12 @@ class ActivitiesFilter(filters.FilterSet):
     status = filters.MultipleChoiceFilter(choices=Activities.Status.choices)
     tags = filters.ModelMultipleChoiceFilter(queryset=TagActivity.objects.all())
     phase = filters.ModelChoiceFilter(queryset=PhaseActivity.objects.all())
-    assigned_to = filters.CharFilter(field_name='assigned_to', lookup_expr='icontains')
-    attendees = filters.BooleanFilter(field_name='attendees', lookup_expr='isnull')
+    assigned_to = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
+    attendees = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
     start_date = filters.DateFilter(field_name='start_date', lookup_expr='gte')
     end_date = filters.DateFilter(field_name='end_date', lookup_expr='lte')
+    title = filters.CharFilter(field_name='title', lookup_expr='icontains')
 
     class Meta:
         model = Activities
-        fields = ('status', 'tags', 'phase', 'assigned_to', 'start_date', 'end_date')
+        fields = ('title', 'status', 'tags', 'phase', 'assigned_to', 'start_date', 'end_date')
