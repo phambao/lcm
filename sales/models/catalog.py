@@ -14,10 +14,10 @@ class CostTable(models.Model):
         return self.name
 
 
-class Material(BaseModel):
+class Catalog(BaseModel):
 
     class Meta:
-        db_table = 'material'
+        db_table = 'catalog'
         ordering = ['-modified_date']
 
     sequence = models.IntegerField(default=0)
@@ -31,8 +31,8 @@ class Material(BaseModel):
         return self.name
 
     def link(self, pk):
-        material = Material.objects.get(pk=pk)
-        material.children.add(self)
+        catalog = Catalog.objects.get(pk=pk)
+        catalog.children.add(self)
 
     def duplicate(self, pk):
         pass

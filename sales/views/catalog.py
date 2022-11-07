@@ -1,4 +1,4 @@
-from ..models.catalog import Material, CostTable
+from ..models.catalog import Catalog, CostTable
 from ..serializers import catalog
 from ..filters.catalog import CatalogFilter
 
@@ -6,19 +6,19 @@ from rest_framework import generics, permissions
 from django_filters import rest_framework as filters
 
 
-class MaterialList(generics.ListCreateAPIView):
+class CatalogList(generics.ListCreateAPIView):
 
-    queryset = Material.objects.all()
-    serializer_class = catalog.MaterialSerializer
+    queryset = Catalog.objects.all()
+    serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = CatalogFilter
 
 
-class MaterialDetail(generics.RetrieveUpdateDestroyAPIView):
+class CatalogDetail(generics.RetrieveUpdateDestroyAPIView):
 
-    queryset = Material.objects.all()
-    serializer_class = catalog.MaterialSerializer
+    queryset = Catalog.objects.all()
+    serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 

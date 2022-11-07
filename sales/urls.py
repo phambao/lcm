@@ -72,9 +72,8 @@ url_leads = [
 
 # Define Path for Catalog -------------------------------------------------------
 url_catalog = [
-    # Materials
-    path('materials/', catalog.MaterialList.as_view()),
-    path('materials/<int:pk>/', catalog.MaterialDetail.as_view()),
+    path('list/', catalog.CatalogList.as_view()),
+    path('list/<int:pk>/', catalog.CatalogDetail.as_view()),
     path('cost-tables/', catalog.CostTableList.as_view()),
     path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
 ]
