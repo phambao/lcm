@@ -3,8 +3,8 @@ from sales.models.catalog import Catalog
 
 
 class CatalogFilter(filters.FilterSet):
-    parents = filters.BooleanFilter('parents', lookup_expr='isnull')
+    is_ancestor = filters.BooleanFilter('is_ancestor')
 
     class Meta:
         model = Catalog
-        fields = ('parents', )
+        fields = ('is_ancestor', )

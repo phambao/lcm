@@ -72,6 +72,7 @@ url_leads = [
 url_catalog = [
     path('list/', catalog.CatalogList.as_view()),
     path('list/<int:pk>/', catalog.CatalogDetail.as_view()),
+    path('list/<int:pk>/children/', catalog.get_catalog_children),
     path('cost-tables/', catalog.CostTableList.as_view()),
     path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
 ]
