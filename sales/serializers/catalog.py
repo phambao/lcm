@@ -6,7 +6,7 @@ from ..models import catalog
 class CatalogSerializer(serializers.ModelSerializer):
     class Meta:
         model = catalog.Catalog
-        fields = ('id', 'type', 'name', 'parents', 'sequence', 'cost_table', 'icon')
+        fields = ('id', 'name', 'parents', 'sequence', 'cost_table', 'icon', 'is_ancestor')
         extra_kwargs = {'icon': {'required': False,
                                  'allow_null': True}}
 

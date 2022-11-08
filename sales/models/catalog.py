@@ -22,8 +22,8 @@ class Catalog(BaseModel):
 
     sequence = models.IntegerField(default=0)
     name = models.CharField(max_length=128)
+    is_ancestor = models.BooleanField(default=False, blank=True)
     parents = models.ManyToManyField('self', related_name='children', blank=True)
-    type = models.CharField(max_length=128, null=True, blank=True)
     cost_table = models.OneToOneField(CostTable, on_delete=models.CASCADE, null=True, blank=True)
     icon = models.ImageField(upload_to='catalog/%Y/%m/%d/', blank=True)
 
