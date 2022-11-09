@@ -9,9 +9,7 @@
             "is_ancestor": true,
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -24,9 +22,7 @@
             "cost_table": null,
             "is_ancestor": true,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -39,9 +35,7 @@
             "is_ancestor": true,
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -54,9 +48,7 @@
             "is_ancestor": true,
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -65,12 +57,12 @@
         "fields": {
             "sequence": 1,
             "name": "Pavers",
-            "parents": [1],
+            "parents": [
+                1
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -79,12 +71,12 @@
         "fields": {
             "sequence": 2,
             "name": "Block",
-            "parents": [1],
+            "parents": [
+                1
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -93,12 +85,12 @@
         "fields": {
             "sequence": 3,
             "name": "Sod",
-            "parents": [1],
+            "parents": [
+                1
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -107,12 +99,12 @@
         "fields": {
             "sequence": 4,
             "name": "Seed",
-            "parents": [1],
+            "parents": [
+                1
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -121,12 +113,12 @@
         "fields": {
             "sequence": 5,
             "name": "Irrigation",
-            "parents": [1],
+            "parents": [
+                1
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -135,12 +127,12 @@
         "fields": {
             "sequence": 6,
             "name": "Outdoor Covers",
-            "parents": [1],
+            "parents": [
+                1
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -149,12 +141,12 @@
         "fields": {
             "sequence": 7,
             "name": "Steel",
-            "parents": [1],
+            "parents": [
+                1
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -163,12 +155,12 @@
         "fields": {
             "sequence": 8,
             "name": "Rock",
-            "parents": [1],
+            "parents": [
+                1
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -177,12 +169,12 @@
         "fields": {
             "sequence": 1,
             "name": "Paver Install",
-            "parents": [2],
+            "parents": [
+                2
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -191,12 +183,12 @@
         "fields": {
             "sequence": 2,
             "name": "Block Install",
-            "parents": [2],
+            "parents": [
+                2
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -205,12 +197,12 @@
         "fields": {
             "sequence": 3,
             "name": "Sod Install",
-            "parents": [2],
+            "parents": [
+                2
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -219,12 +211,12 @@
         "fields": {
             "sequence": 4,
             "name": "Seed Install",
-            "parents": [2],
+            "parents": [
+                2
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -233,12 +225,12 @@
         "fields": {
             "sequence": 5,
             "name": "Irrigation Install",
-            "parents": [2],
+            "parents": [
+                2
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -247,12 +239,12 @@
         "fields": {
             "sequence": 6,
             "name": "Outdoor Covers Install",
-            "parents": [2],
+            "parents": [
+                2
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -261,12 +253,12 @@
         "fields": {
             "sequence": 7,
             "name": "Steel Install",
-            "parents": [2],
+            "parents": [
+                2
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -275,12 +267,12 @@
         "fields": {
             "sequence": 8,
             "name": "Rock Install",
-            "parents": [2],
+            "parents": [
+                2
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -289,12 +281,12 @@
         "fields": {
             "sequence": 1,
             "name": "Paver Install",
-            "parents": [3],
+            "parents": [
+                3
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -303,12 +295,12 @@
         "fields": {
             "sequence": 2,
             "name": "Block Install",
-            "parents": [3],
+            "parents": [
+                3
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -317,12 +309,12 @@
         "fields": {
             "sequence": 3,
             "name": "Sod Install",
-            "parents": [3],
+            "parents": [
+                3
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -331,12 +323,12 @@
         "fields": {
             "sequence": 4,
             "name": "Seed Install",
-            "parents": [3],
+            "parents": [
+                3
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -345,12 +337,12 @@
         "fields": {
             "sequence": 5,
             "name": "Irrigation Install",
-            "parents": [3],
+            "parents": [
+                3
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -359,12 +351,12 @@
         "fields": {
             "sequence": 6,
             "name": "Outdoor Covers Install",
-            "parents": [3],
+            "parents": [
+                3
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -373,12 +365,12 @@
         "fields": {
             "sequence": 7,
             "name": "Steel Install",
-            "parents": [3],
+            "parents": [
+                3
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -387,12 +379,12 @@
         "fields": {
             "sequence": 8,
             "name": "Rock Install",
-            "parents": [3],
+            "parents": [
+                3
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -401,12 +393,12 @@
         "fields": {
             "sequence": 1,
             "name": "Compacting",
-            "parents": [4],
+            "parents": [
+                4
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -415,12 +407,12 @@
         "fields": {
             "sequence": 2,
             "name": "Excavation",
-            "parents": [4],
+            "parents": [
+                4
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     },
     {
@@ -429,12 +421,12 @@
         "fields": {
             "sequence": 3,
             "name": "Delivery",
-            "parents": [4],
+            "parents": [
+                4
+            ],
             "cost_table": null,
             "created_date": "2022-01-01T00:00:00Z",
-            "modified_date": "2022-01-01T00:00:00Z",
-            "user_create": 1,
-            "user_update": 1
+            "modified_date": "2022-01-01T00:00:00Z"
         }
     }
 ]
