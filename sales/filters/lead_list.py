@@ -30,10 +30,8 @@ FILTERS = {
     ),
     "yesterday": lambda qs, name: qs.filter(
         **{
-            "%s__range" % name: (
-                _truncate(now() - timedelta(days=1)),
-                _truncate(now()),
-            )
+            "%s__gte" % name: now() - timedelta(days=1),
+            "%s__lt" % name: now(),
         }
     ),
     "past-7-days": lambda qs, name: qs.filter(
