@@ -15,6 +15,7 @@ url_contacts = [
          lead_list.PhoneOfContactsViewSet.as_view()),
     path('contacts/<int:pk_contact>/phone_contacts/<int:pk>/',
          lead_list.PhoneOfContactsDetailViewSet.as_view()),
+    path('contacts/delete/', lead_list.delete_contacts),
 ]
 
 url_contact_types = [
@@ -23,19 +24,18 @@ url_contact_types = [
          lead_list.ContactTypeNameDetailGenericView.as_view()),
 ]
 
-
-
 # Define Path for Leads ---------------------------------------------------------
 url_leads = [
     # Leads
     path('leads/', lead_list.LeadDetailList.as_view()),
     path('leads/uploads', FileUploadView.as_view()),
     path('leads/<int:pk>/', lead_list.LeadDetailGeneric.as_view()),
-    path('leads-params/', lead_list.LeadDetailList.as_view()),
-    path('leads-params/<int:pk>/', lead_list.LeadDetailGeneric.as_view()),
+    path('leads/delete/', lead_list.delete_leads),
     # Contacts
     path('leads/<int:pk_lead>/contacts/', lead_list.LeadContactsViewSet.as_view()),
     path('leads/<int:pk_lead>/contacts/<int:pk>/', lead_list.LeadContactDetailsViewSet.as_view()),
+    path('leads/<int:pk_lead>/contacts/link/', lead_list.link_contacts_to_lead),
+    path('leads/<int:pk_lead>/contacts/unlink/', lead_list.unlink_contact_from_lead),
     # Activities
     path('leads/<int:pk_lead>/activities/',
          lead_list.LeadActivitiesViewSet.as_view()),
@@ -61,13 +61,18 @@ url_leads = [
     # Tags
     path('tags/', lead_list.TagLeadGenericView.as_view()),
     path('tags/<int:pk>/', lead_list.TagLeadDetailGenericView.as_view()),
+
+    # Source
+    path('sources/', lead_list.SourceLeadGenericView.as_view()),
+    path('sources/<int:pk>/', lead_list.SourceLeadDetailGenericView.as_view()),
+    path('leads/summary/', lead_list.get_summaries),
 ]
 
 # Define Path for Catalog -------------------------------------------------------
 url_catalog = [
-    # Materials
-    path('materials/', catalog.MaterialList.as_view()),
-    path('materials/<int:pk>/', catalog.MaterialDetail.as_view()),
+    path('list/', catalog.CatalogList.as_view()),
+    path('list/<int:pk>/', catalog.CatalogDetail.as_view()),
+    path('list/<int:pk>/children/', catalog.get_catalog_children),
     path('cost-tables/', catalog.CostTableList.as_view()),
     path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
 ]

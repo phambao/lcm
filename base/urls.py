@@ -3,7 +3,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from base.views import country_state_city
+from base.views import country_state_city, base
 
 # Define path for Base App ------------------------------------------------------
 url_base = [
@@ -14,8 +14,12 @@ url_base = [
                   country_state_city.CountryStateList.as_view()),
              path('countries/<int:pk_country>/states/<int:pk_state>/cities/',
                   country_state_city.CountryStateCityList.as_view()),
+             path('zipcodes/', country_state_city.Zipcode.as_view()),
          ])
          ),
+    path('content-type/', base.ContentTypeList.as_view()),
+    path('search/', base.SearchLeadGenericView.as_view()),
+    path('search/<int:pk>/', base.SearchLeadDetailGenericView.as_view()),
 ]
 
 # Create schema view for Swagger ------------------------------------------------

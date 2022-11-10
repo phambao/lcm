@@ -15,6 +15,7 @@ from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_URL = config('BASE_URL', None)
 
 
 # Quick-start development settings - unsuitable for production
@@ -144,6 +145,8 @@ REST_KNOX = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3333",
     "http://127.0.0.1:3333",
+    "http://localhost:3334",
+    "http://127.0.0.1:3334",
 ]
 
 # https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-DATABASE-ATOMIC_REQUESTS
@@ -174,3 +177,12 @@ STATIC_URL = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_ROOT = "uploads/"
 MEDIA_URL = '/media/'
+
+# Email settings
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='localhost')
+EMAIL_PORT = config('EMAIL_PORT', default=25)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool, default=False)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', cast=bool, default=False)
