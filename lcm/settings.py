@@ -145,6 +145,8 @@ REST_KNOX = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3333",
     "http://127.0.0.1:3333",
+    "http://localhost:3334",
+    "http://127.0.0.1:3334",
 ]
 
 # https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-DATABASE-ATOMIC_REQUESTS
