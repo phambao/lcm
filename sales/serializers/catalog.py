@@ -6,7 +6,7 @@ from ..models import catalog
 class CatalogSerializer(serializers.ModelSerializer):
     class Meta:
         model = catalog.Catalog
-        fields = ('id', 'name', 'parents', 'sequence', 'cost_table', 'icon', 'is_ancestor')
+        fields = ('id', 'name', 'parents', 'sequence', 'cost_table', 'icon', 'is_ancestor', 'level')
         extra_kwargs = {'icon': {'required': False,
                                  'allow_null': True}}
 
@@ -21,3 +21,9 @@ class CostTableModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = catalog.CostTable
         fields = ('id', 'name', 'data')
+
+
+class CatalogLevelModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = catalog.CatalogLevel
+        fields = ('id', 'name', 'parent')
