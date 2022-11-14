@@ -44,7 +44,7 @@ class Catalog(BaseModel):
     sequence = models.IntegerField(default=0)
     name = models.CharField(max_length=128)
     is_ancestor = models.BooleanField(default=False, blank=True)
-    parents = models.ManyToManyField('self', related_name='children', blank=True)
+    parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False)
     cost_table = models.OneToOneField(CostTable, on_delete=models.CASCADE, null=True, blank=True)
     icon = models.ImageField(upload_to='catalog/%Y/%m/%d/', blank=True)
     level = models.ForeignKey(CatalogLevel, on_delete=models.CASCADE, null=True, blank=True, default=None)
@@ -53,7 +53,20 @@ class Catalog(BaseModel):
         return self.name
 
     def get_tree_view(self):
-        pass
+        tree = []
+        catalogs = Catalog.objects.filter(parents__id=self.pk)
+        for c in catalogs:
+            tree.append(c.get_tree_view())
+        return {
+            'id': self.pk,
+            'name': self.name,
+            'is_ancestor': self.is_ancestor,
+            'parents': self.parents.all().values_list('pk', flat=True),
+            'cost_table': self.cost_table,
+            'icon': self.icon.url if self.icon else None,
+            'level': self.level,
+            'children': tree
+        }
 
     def link(self, pk):
         catalog = Catalog.objects.get(pk=pk)

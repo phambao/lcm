@@ -300,6 +300,7 @@ def get_summaries(request):
 
 
 @api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated])
 def link_contacts_to_lead(request, pk_lead):
     """
         PUT: link contacts to lead
