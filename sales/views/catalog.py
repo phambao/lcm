@@ -85,3 +85,11 @@ def get_catalog_levels(request, pk):
     all_catalog_level_descendant = CatalogLevel.objects.filter(pk__in=catalog_level_ids)
     serializer = catalog.CatalogLevelModelSerializer(all_catalog_level_descendant, many=True)
     return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_catalog_tree(request, pk):
+    catalog = Catalog.objects.get(pk=pk)
+    catalog_tree = catalog.get_tree_view()
+    return Response(status=status.HTTP_200_OK, data=catalog_tree)
