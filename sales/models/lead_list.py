@@ -111,7 +111,7 @@ class PhoneOfContact(models.Model):
     phone_number = models.CharField(verbose_name='Phone Number', max_length=20, blank=True)
     phone_type = models.CharField(verbose_name='Phone Type', max_length=8,
                                   choices=PhoneType.choices, default=PhoneType.OTHER)
-    text_massage_received = models.CharField(max_length=10, blank=True)
+    text_massage_received = models.CharField(verbose_name="Text Message Received", max_length=10, blank=True)
     mobile_phone_service_provider = models.CharField('Mobile Phone Service Provider', max_length=32, blank=True, null=True)
     contact = models.ForeignKey(
         Contact, on_delete=models.CASCADE, related_name='phone_contacts')

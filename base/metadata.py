@@ -22,7 +22,10 @@ def get_field_info(self, field):
     for attr in attrs:
         value = getattr(field, attr, None)
         if value is not None and value != '':
-            field_info[attr] = force_str(value, strings_only=True)
+            new_value = force_str(value, strings_only=True)
+            if attr == 'label':
+                new_value = new_value.title()
+            field_info[attr] = new_value
 
     if getattr(field, 'child', None):
         field_info['child'] = self.get_field_info(field.child)
