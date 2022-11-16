@@ -76,7 +76,7 @@ class Catalog(BaseModel):
             'parents': self.parents.all().values_list('pk', flat=True),
             'cost_table': self.cost_table,
             'icon': self.icon.url if self.icon else None,
-            'level': self.level,
+            'level': self.level.id if self.level else None,
             'children': tree
         }
 
