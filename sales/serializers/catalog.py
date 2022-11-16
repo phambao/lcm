@@ -26,4 +26,5 @@ class CostTableModelSerializer(serializers.ModelSerializer):
 class CatalogLevelModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = catalog.CatalogLevel
-        fields = ('id', 'name', 'parent')
+        fields = ('id', 'name', 'parent', 'catalog')
+        extra_kwargs = {'catalog': {'read_only': True}}
