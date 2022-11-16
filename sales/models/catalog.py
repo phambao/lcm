@@ -52,6 +52,15 @@ class Catalog(BaseModel):
     def __str__(self):
         return self.name
 
+    def get_all_descendant(self):
+        """Get all descendant of this catalog. Return a list of id"""
+        descendants = []
+        catalogs = Catalog.objects.filter(parents__id=self.pk)
+        for c in catalogs:
+            descendants.append(c.pk)
+            descendants.extend(c.get_all_descendant())
+        return descendants
+    
     def get_tree_view(self):
         tree = []
         catalogs = Catalog.objects.filter(parents__id=self.pk)
@@ -68,6 +77,13 @@ class Catalog(BaseModel):
             'children': tree
         }
 
+    def delete(self, *args, **kwargs):
+        """Delete all descendant of this catalog (include itself)"""
+        ids = self.get_all_descendant()
+        catalogs = Catalog.objects.filter(pk__in=ids)
+        catalogs.delete()
+        return super(Catalog, self).delete(*args, **kwargs)
+    
     def link(self, pk):
         catalog = Catalog.objects.get(pk=pk)
         catalog.children.add(self)
