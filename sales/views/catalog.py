@@ -93,3 +93,13 @@ def get_catalog_tree(request, pk):
     catalog = Catalog.objects.get(pk=pk)
     catalog_tree = catalog.get_tree_view()
     return Response(status=status.HTTP_200_OK, data=catalog_tree)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_catalogs(request):
+    ids = request.data
+    catalogs = Catalog.objects.filter(pk__in=ids)
+    for catalog in catalogs:
+        catalog.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)

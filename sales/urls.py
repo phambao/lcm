@@ -75,6 +75,7 @@ url_catalog = [
     path('list/<int:pk>/children/', catalog.get_catalog_children),
     path('list/<int:pk>/levels/', catalog.get_catalog_levels),
     path('list/<int:pk>/tree/', catalog.get_catalog_tree),
+    path('list/delete/', catalog.delete_catalogs),
     path('cost-tables/', catalog.CostTableList.as_view()),
     path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
     path('levels/', catalog.CatalogLevelList.as_view()),
