@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
@@ -44,11 +45,23 @@ class CatalogLevelList(generics.ListCreateAPIView):
     serializer_class = catalog.CatalogLevelModelSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        catalog = get_object_or_404(Catalog.objects.all(), pk=self.kwargs['pk_catalog'])
+        return catalog.all_levels.all()
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        instance.catalog_id = self.kwargs['pk_catalog']
+        instance.save()
+
 
 class CatalogLevelDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = CatalogLevel.objects.all()
     serializer_class = catalog.CatalogLevelModelSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        catalog = get_object_or_404(Catalog.objects.all(), pk=self.kwargs['pk_catalog'])
+        return catalog.all_levels.all()
 
 
 @api_view(['GET'])

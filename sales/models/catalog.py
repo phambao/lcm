@@ -10,6 +10,8 @@ class CatalogLevel(models.Model):
     name = models.CharField(max_length=64)
     parent = models.ForeignKey('self', related_name='child', null=True,
                                blank=True, on_delete=models.CASCADE, default=None)
+    catalog = models.ForeignKey('Catalog', on_delete=models.CASCADE, null=True,
+                                blank=True, default=None, related_name='all_levels')
 
     def __str__(self):
         return self.name
@@ -47,7 +49,8 @@ class Catalog(BaseModel):
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False)
     cost_table = models.OneToOneField(CostTable, on_delete=models.CASCADE, null=True, blank=True)
     icon = models.ImageField(upload_to='catalog/%Y/%m/%d/', blank=True)
-    level = models.ForeignKey(CatalogLevel, on_delete=models.CASCADE, null=True, blank=True, default=None)
+    level = models.ForeignKey(CatalogLevel, on_delete=models.CASCADE, null=True,
+                              blank=True, default=None, related_name='catalogs')
 
     def __str__(self):
         return self.name
