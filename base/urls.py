@@ -20,6 +20,8 @@ url_base = [
     path('content-type/', base.ContentTypeList.as_view()),
     path('search/', base.SearchLeadGenericView.as_view()),
     path('search/<int:pk>/', base.SearchLeadDetailGenericView.as_view()),
+    path('column/', base.ColumnLeadGenericView.as_view()),
+    path('column/<int:pk>/', base.ColumnLeadDetailGenericView.as_view()),
 ]
 
 # Create schema view for Swagger ------------------------------------------------

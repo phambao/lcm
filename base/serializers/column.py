@@ -1,8 +1,8 @@
 from rest_framework import serializers
-from ..models.search import Search
+from ..models.column import Column
 
 
-class SearchSerializer(serializers.ModelSerializer):
+class ColumnSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Search
+        model = Column
         fields = ('id', 'name', 'params', 'content_type', 'user')

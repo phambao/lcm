@@ -6,7 +6,7 @@ from ..models.catalog import Catalog, CostTable, CatalogLevel
 from ..serializers import catalog
 from ..filters.catalog import CatalogFilter
 
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, filters as rf_filters
 from django_filters import rest_framework as filters
 
 
@@ -15,8 +15,9 @@ class CatalogList(generics.ListCreateAPIView):
     queryset = Catalog.objects.all()
     serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = (filters.DjangoFilterBackend,)
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = CatalogFilter
+    search_fields = ('name',)
 
 
 class CatalogDetail(generics.RetrieveUpdateDestroyAPIView):
