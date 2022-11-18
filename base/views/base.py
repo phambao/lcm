@@ -3,12 +3,10 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import generics, permissions, status
 from django_filters import rest_framework as filters
 
-from ..filters import SearchFilter, ColumnFilter
-from ..models.search import Search
-from ..models.column import Column
+from ..filters import SearchFilter, ColumnFilter, ConfigFilter
+from ..models.config import Column, Search, Config
 from ..serializers.base import ContentTypeSerializer
-from ..serializers.search import SearchSerializer
-from ..serializers.column import ColumnSerializer
+from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer
 
 
 class ContentTypeList(generics.ListAPIView):
@@ -53,6 +51,7 @@ class SearchLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
         data = data.filter(user=self.request.user)
         return data
 
+
 class ColumnLeadGenericView(generics.ListCreateAPIView):
     queryset = Column.objects.all()
     serializer_class = ColumnSerializer
@@ -79,6 +78,32 @@ class ColumnLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Column.objects.all()
     serializer_class = ColumnSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        data = super().get_queryset()
+        data = data.filter(user=self.request.user)
+        return data
+
+
+class ConfigListGenericView(generics.ListCreateAPIView):
+    queryset = Config.objects.all()
+    serializer_class = ConfigSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = ConfigFilter
+
+    def get_queryset(self):
+        data = super().get_queryset()
+        data = data.filter(user=self.request.user)
+        return data
+
+
+class ConfigListDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Config.objects.all()
+    serializer_class = ConfigSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
 
     def get_queryset(self):
         data = super().get_queryset()
