@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ..models import catalog
+from ..models import catalog, Catalog
 
 
 class CatalogSerializer(serializers.ModelSerializer):
@@ -14,6 +14,11 @@ class CatalogSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         if instance.icon:
             data['icon'] = r'(?<=/media/).+?(?=/)'.replace(r'(?<=/media/).+?(?=/)', instance.icon.url)
+        if data['parents']:
+            data['parents'] = data['parents'][0]
+        else:
+            data['parents'] = None
+        data['children'] = Catalog.objects.filter(parents__id=instance.pk).values_list('pk', flat=True)
         return data
 
 
