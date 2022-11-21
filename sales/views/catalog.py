@@ -109,6 +109,16 @@ def get_catalog_tree(request, pk):
     return Response(status=status.HTTP_200_OK, data=catalog_tree)
 
 
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_catalog_list(request, pk):
+    catalog_obj = Catalog.objects.get(pk=pk)
+    catalog_ids = catalog_obj.get_all_descendant()
+    catalogs = Catalog.objects.filter(pk__in=catalog_ids)
+    serializer = catalog.CatalogSerializer(catalogs, many=True)
+    return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+
 @api_view(['DELETE'])
 @permission_classes([permissions.IsAuthenticated])
 def delete_catalogs(request):
