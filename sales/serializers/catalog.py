@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ..models import catalog, Catalog
+from ..models import catalog
 
 
 class CatalogSerializer(serializers.ModelSerializer):
@@ -18,7 +18,7 @@ class CatalogSerializer(serializers.ModelSerializer):
             data['parents'] = data['parents'][0]
         else:
             data['parents'] = None
-        data['children'] = Catalog.objects.filter(parents__id=instance.pk).values_list('pk', flat=True)
+        data['children'] = catalog.Catalog.objects.filter(parents__id=instance.pk).values_list('pk', flat=True)
         return data
 
 
