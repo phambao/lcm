@@ -90,8 +90,8 @@ class LeadDetailFilter(filters.FilterSet):
     def filter_has_valid_email(self, queryset, name, value):
         valid_email = r'^[a-zA-Z0-9\_\.\+\-]+@[a-zA-Z0-9\-]+\.[a-zA-Z0-9\-\.]+$'
         if value:
-            return queryset.filter(contacts__email__regex=valid_email)
-        return queryset.exclude(contacts__email__regex=valid_email)
+            return queryset.filter(contacts__email__regex=valid_email).distinct()
+        return queryset.exclude(contacts__email__regex=valid_email).distinct()
 
 class ContactsFilter(filters.FilterSet, CountryStateCityBaseFilter):
     first_name = filters.CharFilter(field_name="first_name", lookup_expr='icontains')
