@@ -1,3 +1,4 @@
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import generics, permissions, status
@@ -85,27 +86,27 @@ class ColumnLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
         return data
 
 
-class ConfigListGenericView(generics.ListCreateAPIView):
-    queryset = Config.objects.all()
-    serializer_class = ConfigSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    pagination_class = None
-    filter_backends = (filters.DjangoFilterBackend,)
-    filterset_class = ConfigFilter
+@api_view(['GET', 'PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def config_view(request, model):
+    if request.method == 'GET':
+        try:
+            config = Config.objects.get(user=request.user, content_type__model__exact=model)
+        except Config.DoesNotExist:
+            content_type = ContentType.objects.get(model=model)
+            settings = {}
+            if model == 'leaddetail':
+                settings = {"search": None,
+                            "column": []}
+            config = Config.objects.create(user=request.user, content_type=content_type, settings=settings)
+        serializer = ConfigSerializer(config)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
 
-    def get_queryset(self):
-        data = super().get_queryset()
-        data = data.filter(user=self.request.user)
-        return data
-
-
-class ConfigListDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Config.objects.all()
-    serializer_class = ConfigSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    pagination_class = None
-
-    def get_queryset(self):
-        data = super().get_queryset()
-        data = data.filter(user=self.request.user)
-        return data
+    if request.method == 'PUT':
+        config = Config.objects.get(user=request.user, content_type__model__exact=model)
+        config.settings = request.data['settings']
+        config.save()
+        config.refresh_from_db()
+        serializer = ConfigSerializer(config)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+    return Response(status=status.HTTP_204_NO_CONTENT)

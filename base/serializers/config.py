@@ -26,28 +26,7 @@ class CustomSearchSerializer(serializers.Serializer):
 
 
 class ConfigSerializer(serializers.ModelSerializer):
-    column = CustomColumnSerializer()
-    search = CustomSearchSerializer()
 
     class Meta:
         model = Config
-        fields = ('id', 'search', 'column', 'content_type')
-
-    def create(self, validated_data):
-        user = self.context['request'].user
-        content_type = validated_data.get('content_type')
-        column_data = validated_data.get('column', {})
-        column = Column.objects.create(user=user, content_type=content_type,
-                                       params=column_data.get('params', []))
-        try:
-            config = Config.objects.create(user=user, search_id=validated_data.get('search', {}).get('id'),
-                                           column=column, content_type=content_type)
-        except IntegrityError:
-            raise serializers.ValidationError({'detail': 'Duplicate unique constraint'})
-        return config
-
-    def update(self, instance, validated_data):
-        instance.search_id = validated_data['search'].get('id')
-        instance.column.params = validated_data['column'].get('params')
-        instance.save()
-        return instance
+        fields = ('id', 'settings', 'content_type')
