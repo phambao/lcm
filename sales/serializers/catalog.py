@@ -11,15 +11,19 @@ class DataPointSerializer(serializers.ModelSerializer):
 
 class CatalogSerializer(serializers.ModelSerializer):
     data_points = DataPointSerializer(many=True, required=False)
+    parent = serializers.IntegerField(allow_null=True, required=False)
 
     class Meta:
         model = catalog.Catalog
-        fields = ('id', 'name', 'parents', 'sequence', 'cost_table', 'icon', 'is_ancestor', 'level', 'data_points')
+        fields = ('id', 'name', 'parents', 'parent', 'sequence', 'cost_table', 'icon', 'is_ancestor', 'level', 'data_points')
         extra_kwargs = {'icon': {'required': False,
                                  'allow_null': True}}
 
     def create(self, validated_data):
         data_points = validated_data.pop('data_points', [])
+        parent = validated_data.pop('parent', None)
+        if parent:
+            validated_data['parents'] = [parent]
         instance = super().create(validated_data)
         for data_point in data_points:
             catalog.DataPoint.objects.create(catalog=instance, **data_point)
@@ -27,6 +31,9 @@ class CatalogSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         data_points = validated_data.pop('data_points', [])
+        parent = validated_data.pop('parent', None)
+        if parent:
+            validated_data['parents'] = [parent]
         instance = super().update(instance, validated_data)
         for data_point in data_points:
             catalog.DataPoint.objects.update(catalog=instance, **data_point)
