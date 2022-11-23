@@ -6,7 +6,7 @@ from ..models import catalog
 class DataPointSerializer(serializers.ModelSerializer):
     class Meta:
         model = catalog.DataPoint
-        fields = ('name', 'value', 'unit', 'linked_description', 'is_linked')
+        fields = ('value', 'unit', 'linked_description', 'is_linked')
 
 
 class CatalogSerializer(serializers.ModelSerializer):

@@ -45,8 +45,7 @@ class DataPoint(models.Model):
         INCHES = 'in', 'inches'
         METERS = 'm', 'meters'
         EMPTY = '', ''
-        
-    name = models.CharField(max_length=128, blank=True)
+
     value = models.CharField(max_length=128, blank=True)
     unit = models.CharField(max_length=16, choices=Unit.choices, default=Unit.EMPTY, blank=True)
     linked_description = models.CharField(max_length=128, blank=True)
