@@ -37,6 +37,23 @@ class CostTable(models.Model):
         return self.name
 
 
+class DataPoint(models.Model):
+    class Meta:
+        db_table = 'data_point'
+        
+    class Unit(models.TextChoices):
+        INCHES = 'in', 'inches'
+        METERS = 'm', 'meters'
+        EMPTY = '', ''
+
+    value = models.CharField(max_length=128, blank=True)
+    unit = models.CharField(max_length=16, choices=Unit.choices, default=Unit.EMPTY, blank=True)
+    linked_description = models.CharField(max_length=128, blank=True)
+    is_linked = models.BooleanField(default=False)
+    catalog = models.ForeignKey('Catalog', on_delete=models.CASCADE, related_name='data_points',
+                                null=True, blank=True)
+
+
 class Catalog(BaseModel):
 
     class Meta:
