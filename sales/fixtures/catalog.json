@@ -428,5 +428,59 @@
             "created_date": "2022-01-01T00:00:00Z",
             "modified_date": "2022-01-01T00:00:00Z"
         }
+    },
+    {
+        "model": "sales.cataloglevel",
+        "pk": 1,
+        "fields": {
+            "name": "Types",
+            "parent": null,
+            "catalog": 5
+        }
+    },
+    {
+        "model": "sales.cataloglevel",
+        "pk": 2,
+        "fields": {
+            "name": "Brands",
+            "parent": 1,
+            "catalog": 5
+        }
+    },
+    {
+        "model": "sales.cataloglevel",
+        "pk": 3,
+        "fields": {
+            "name": "Series",
+            "parent": 2,
+            "catalog": 5
+        }
+    },
+    {
+        "model": "sales.cataloglevel",
+        "pk": 4,
+        "fields": {
+            "name": "Thickness",
+            "parent": 3,
+            "catalog": 5
+        }
+    },
+    {
+        "model": "sales.cataloglevel",
+        "pk": 5,
+        "fields": {
+            "name": "Patterns",
+            "parent": 4,
+            "catalog": 5
+        }
+    },
+    {
+        "model": "sales.cataloglevel",
+        "pk": 6,
+        "fields": {
+            "name": "Colors",
+            "parent": 5,
+            "catalog": 5
+        }
     }
 ]

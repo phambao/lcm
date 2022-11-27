@@ -1,5 +1,5 @@
 from django_filters import rest_framework as filters
-from base.models.search import Search
+from base.models.config import Search, Column, Config
 from django.contrib.contenttypes.models import ContentType
 
 
@@ -24,3 +24,19 @@ class SearchFilter(filters.FilterSet):
     class Meta:
         model = Search
         fields = ('content_type', )
+
+
+class ColumnFilter(filters.FilterSet):
+    content_type = filters.ModelChoiceFilter(queryset=ContentType.objects.all())
+
+    class Meta:
+        model = Column
+        fields = ('content_type', )
+
+
+class ConfigFilter(filters.FilterSet):
+    content_type = filters.ModelChoiceFilter(queryset=ContentType.objects.all())
+
+    class Meta:
+        model = Config
+        fields = ('content_type',)

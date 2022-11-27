@@ -79,13 +79,19 @@ class LeadDetailFilter(filters.FilterSet):
     most_recent_click = filters.DateRangeFilter(field_name='recent_click', choices=CHOICES, filters=FILTERS)
     most_of_click = filters.NumberFilter(field_name='number_of_click', lookup_expr='gt')
     sources = filters.ModelMultipleChoiceFilter(queryset=lead_list.SourceLead.objects.all())
-
+    has_valid_email = filters.BooleanFilter(method='filter_has_valid_email', label='Has Valid Email')
+    
     class Meta:
         model = LeadDetail
         fields = ('lead_title', 'salesperson', 'status', 'tags', 'project_types',
                   'proposal_status', 'age_of_lead', 'sold_date', 'most_recent_click',
-                  'most_of_click', 'sources')
-
+                  'most_of_click', 'sources', 'has_valid_email')
+    
+    def filter_has_valid_email(self, queryset, name, value):
+        valid_email = r'^[a-zA-Z0-9\_\.\+\-]+@[a-zA-Z0-9\-]+\.[a-zA-Z0-9\-\.]+$'
+        if value:
+            return queryset.filter(contacts__email__regex=valid_email).distinct()
+        return queryset.exclude(contacts__email__regex=valid_email).distinct()
 
 class ContactsFilter(filters.FilterSet, CountryStateCityBaseFilter):
     first_name = filters.CharFilter(field_name="first_name", lookup_expr='icontains')
