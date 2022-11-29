@@ -4,9 +4,11 @@ from ..models.config import Column, Search, Config
 
 
 class ColumnSerializer(serializers.ModelSerializer):
+    model = serializers.CharField(required=False, allow_blank=True)
+
     class Meta:
         model = Column
-        fields = ('id', 'params', 'content_type', 'user')
+        fields = ('id', 'params', 'content_type', 'user', 'model')
 
 
 class SearchSerializer(serializers.ModelSerializer):

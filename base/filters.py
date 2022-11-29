@@ -28,10 +28,11 @@ class SearchFilter(filters.FilterSet):
 
 class ColumnFilter(filters.FilterSet):
     content_type = filters.ModelChoiceFilter(queryset=ContentType.objects.all())
+    model = filters.CharFilter(field_name='content_type__model', lookup_expr='exact')
 
     class Meta:
         model = Column
-        fields = ('content_type', )
+        fields = ('content_type', 'model')
 
 
 class ConfigFilter(filters.FilterSet):
