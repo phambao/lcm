@@ -1,4 +1,5 @@
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import generics, permissions, status
@@ -68,7 +69,10 @@ class ColumnLeadGenericView(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
         data['user'] = request.user.id
-        data['content_type'] = ContentType.objects.get(model=data['model']).id
+        try:
+            data['content_type'] = ContentType.objects.get(model=data['model']).id
+        except ContentType.DoesNotExist:
+            raise ValidationError({'model': 'Model not found'})
         del data['model']
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
