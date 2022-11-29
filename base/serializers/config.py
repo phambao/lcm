@@ -8,7 +8,7 @@ class ColumnSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Column
-        fields = ('id', 'params', 'content_type', 'user', 'model')
+        fields = ('id', 'name', 'params', 'content_type', 'user', 'model')
 
 
 class SearchSerializer(serializers.ModelSerializer):
