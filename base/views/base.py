@@ -68,6 +68,8 @@ class ColumnLeadGenericView(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
         data['user'] = request.user.id
+        data['content_type'] = ContentType.objects.get(model=data['model']).id
+        del data['model']
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
