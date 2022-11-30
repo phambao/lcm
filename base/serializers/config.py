@@ -39,4 +39,4 @@ class GridSettingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GridSetting
-        fields = ('id', 'name', 'params', 'content_type', 'user', 'model')
+        fields = ('id', 'name', 'params', 'content_type', 'user', 'model', 'is_public')
