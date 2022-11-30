@@ -112,7 +112,7 @@ class GridSettingListView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         data = super().get_queryset()
-        data = data.filter(user=self.request.user) | GridSetting.objects.filter(is_public=True)
+        data = data.filter(user=self.request.user)
         return data
 
     def create(self, request, *args, **kwargs):
