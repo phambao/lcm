@@ -1,6 +1,6 @@
 from django.db import IntegrityError
 from rest_framework import serializers
-from ..models.config import Column, Search, Config
+from ..models.config import Column, Search, Config, GridSetting
 
 
 class ColumnSerializer(serializers.ModelSerializer):
@@ -32,3 +32,11 @@ class ConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = Config
         fields = ('id', 'settings', 'content_type')
+
+
+class GridSettingSerializer(serializers.ModelSerializer):
+    model = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = GridSetting
+        fields = ('id', 'name', 'params', 'content_type', 'user', 'model')
