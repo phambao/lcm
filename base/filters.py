@@ -1,5 +1,5 @@
 from django_filters import rest_framework as filters
-from base.models.config import Search, Column, Config
+from base.models.config import Search, Column, Config, GridSetting
 from django.contrib.contenttypes.models import ContentType
 
 
@@ -32,6 +32,15 @@ class ColumnFilter(filters.FilterSet):
 
     class Meta:
         model = Column
+        fields = ('content_type', 'model')
+
+
+class GridSettingFilter(filters.FilterSet):
+    content_type = filters.ModelChoiceFilter(queryset=ContentType.objects.all())
+    model = filters.CharFilter(field_name='content_type__model', lookup_expr='exact')
+
+    class Meta:
+        model = GridSetting
         fields = ('content_type', 'model')
 
 
