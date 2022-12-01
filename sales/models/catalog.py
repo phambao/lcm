@@ -103,7 +103,16 @@ class Catalog(BaseModel):
         catalogs = Catalog.objects.filter(pk__in=ids)
         catalogs.delete()
         return super(Catalog, self).delete(*args, **kwargs)
-    
+
+    def get_navigation_path(self):
+        ancester = [self.name]
+        parent = self.parents.all()[0]
+        if self.level:
+            ancester.extend(parent.get_navigation_path())
+        else:
+            return []
+        return ancester
+
     def link(self, pk):
         catalog = Catalog.objects.get(pk=pk)
         catalog.children.add(self)
