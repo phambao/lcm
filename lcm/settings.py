@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'knox',
     'base.apps.BaseConfig',
     'api.apps.ApiConfig',
-    'sales.apps.SalesConfig',
+    'sales.apps.SalesConfig'
 ]
 
 MIDDLEWARE = [
@@ -66,7 +66,12 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 ROOT_URLCONF = 'lcm.urls'
-
+# SPECTACULAR_SETTINGS = {
+#     'TITLE': 'Student API',
+#     'DESCRIPTION': 'This is a student official API documentation.',
+#     'VERSION': '1.0.0',
+#     'SERVE_INCLUDE_SCHEMA': False
+# }
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -132,7 +137,8 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100,
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
-    'DEFAULT_METADATA_CLASS': 'base.metadata.SimpleMetadata'
+    'DEFAULT_METADATA_CLASS': 'base.metadata.SimpleMetadata',
+    # 'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema'
 }
 
 REST_KNOX = {

@@ -3,9 +3,8 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from sales.views import lead_list, catalog
+from sales.views import lead_list, catalog, lead_schedule
 from api.views.upload_file import FileUploadView
-
 
 # Define Path for Contacts -----------------------------------------------------
 url_contacts = [
@@ -83,13 +82,29 @@ url_catalog = [
     path('list/<int:pk_catalog>/levels/', catalog.CatalogLevelList.as_view()),
     path('list/<int:pk_catalog>/levels/<int:pk>/', catalog.CatalogLevelDetail.as_view()),
 ]
-
+# define path for Schedule -------------------------------------------------------
+url_schedule = [
+    # TO_DO
+    path('todo/', lead_schedule.SourceScheduleToDoGenericView.as_view()),
+    path('todo/<int:pk>/', lead_schedule.ScheduleDetailGenericView.as_view()),
+    # FILE
+    path('todo/<int:pk_todo>/attachments/', lead_schedule.ScheduleAttachmentsGenericView.as_view({
+        "post": "create_file", "get": "get_file"})),
+    # TAG
+    path('tags/', lead_schedule.TagScheduleGenericView.as_view()),
+    path('tags/<int:pk>/', lead_schedule.TagScheduleDetailGenericView.as_view()),
+    # CHECKLIST ITEM
+    path('checklist-item/', lead_schedule.ScheduleCheckListItemGenericView.as_view()),
+    path('checklist-item/<int:pk>/', lead_schedule.ScheduleCheckListItemDetailGenericView.as_view()),
+    path('<int:pk_todo>/checklist-item/', lead_schedule.get_checklist_by_todo),
+]
 # DEFINE PATH FOR SALES APP -----------------------------------------------------
 url_sales = [
     path('', include(url_contacts)),
     path('', include(url_contact_types)),
     path('lead-list/', include(url_leads)),
     path('catalog/', include(url_catalog)),
+    path('schedule/', include(url_schedule))
 ]
 
 schema_view_sales = get_schema_view(
@@ -102,6 +117,7 @@ schema_view_sales = get_schema_view(
         path('api/sales/', include(url_contact_types)),
         path('api/sales/lead-list/', include(url_leads)),
         path('api/sales/catalog/', include(url_catalog)),
+        path('api/sales/schedule/', include(url_schedule))
     ],
     public=True,
     permission_classes=[permissions.AllowAny],
