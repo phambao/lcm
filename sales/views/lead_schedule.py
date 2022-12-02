@@ -19,12 +19,11 @@ class ScheduleAttachmentsGenericView(GenericViewSet):
         get_object_or_404(ToDo.objects.all(), pk=self.kwargs['pk_todo'])
         return Attachments.objects.filter(to_do=self.kwargs['pk_todo'])
 
-    @staticmethod
-    def create_file(request, **kwargs):
+    def create_file(self, request, **kwargs):
         serializer = lead_schedule.ScheduleAttachmentsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = request.user
-        pk_todo = kwargs.get('pk_todo')
+        pk_todo = self.kwargs.get('pk_todo')
         todo = ToDo.objects.filter(id=pk_todo).first()
         if not todo:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='ToDo not found')
@@ -46,12 +45,9 @@ class ScheduleAttachmentsGenericView(GenericViewSet):
         attachments = list(Attachments.objects.filter(to_do=pk_todo).values())
         return Response(attachments)
 
-    @staticmethod
-    def get_file(request, **kwargs):
-        pk_todo = kwargs.get('pk_todo')
-        if not ToDo.objects.filter(pk=pk_todo).exists():
-            return Response(status=status.HTTP_400_BAD_REQUEST, data='ToDo not found')
-        data_file = list(Attachments.objects.filter(to_do=pk_todo).values())
+    def get_file(self, request, **kwargs):
+        get_object_or_404(ToDo.objects.all(), pk=self.kwargs['pk_todo'])
+        data_file = list(Attachments.objects.filter(to_do=self.kwargs['pk_todo']).values())
         return Response(data_file)
 
 
@@ -65,27 +61,6 @@ class ScheduleDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ToDo.objects.all()
     serializer_class = lead_schedule.ToDoCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-    def delete(self, request, *args, **kwargs):
-        to_do_id = kwargs.get('pk')
-
-        # DELETE CHECK LIST
-        check_list = CheckListItems.objects.filter(to_do=to_do_id)
-        check_list.delete()
-
-        # DELETE ATTACHMENT
-        attachments = Attachments.objects.filter(to_do=to_do_id)
-        attachments.delete()
-
-        # DELETE MESSAGING
-        messaging = Messaging.objects.filter(to_do=to_do_id)
-        messaging.delete()
-
-        # DELETE TO_DO
-        todo = ToDo.objects.filter(id=to_do_id)
-        todo.delete()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TagScheduleGenericView(generics.ListCreateAPIView):
@@ -116,9 +91,6 @@ class ScheduleCheckListItemDetailGenericView(generics.RetrieveUpdateDestroyAPIVi
 @permission_classes([permissions.IsAuthenticated])
 def get_checklist_by_todo(request, *args, **kwargs):
     pk_todo = kwargs.get('pk_todo')
-    todo = ToDo.objects.filter(id=pk_todo).first()
-    if not todo:
-        return Response(status=status.HTTP_400_BAD_REQUEST, data='ToDo not found')
-
+    get_object_or_404(ToDo.objects.all(), pk=pk_todo)
     data_checklist = list(CheckListItems.objects.filter(to_do=pk_todo).values())
     return Response(status=status.HTTP_200_OK, data=data_checklist)

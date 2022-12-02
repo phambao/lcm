@@ -1,6 +1,6 @@
 import uuid
 from django.db import models
-
+from django.contrib.auth import get_user_model
 from api.models import BaseModel
 
 
@@ -30,9 +30,9 @@ class ToDo(BaseModel):
     is_complete = models.BooleanField(default=False)
     sync_due_date = models.DateTimeField()
     reminder = models.IntegerField(null=True, blank=True)
-    assigned_to = models.IntegerField(null=True, blank=True)
+    assigned_to = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='todo_assigned_to', null=True, blank=True)
     tags = models.ManyToManyField(TagSchedule, related_name='to_do_tags')
-    notes = models.CharField(blank=True, max_length=128)
+    notes = models.TextField(blank=True, max_length=128)
 
 
 class CheckListItems(BaseModel):
@@ -52,7 +52,7 @@ class Attachments(BaseModel):
         db_table = 'attachments'
         ordering = ['-modified_date']
 
-    file = models.FileField(upload_to='file')
+    file = models.FileField(upload_to='sales/catalog/%Y/%m/%d/')
     to_do = models.ForeignKey(ToDo, on_delete=models.CASCADE, related_name='attachments')
 
 

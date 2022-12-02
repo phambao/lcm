@@ -40,11 +40,13 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         data_checklist = pop(data, 'check_list', [])
         messaging = pop(data, 'messaging', [])
         tags = pop(data, 'tags', [])
+        assigned_to = pop(data, 'assigned_to', None)
         data_todo = data
 
         todo_create = ToDo.objects.create(
-            user_create=user_create, user_update=user_update, **data_todo
+            user_create=user_create, user_update=user_update,  assigned_to_id=assigned_to, **data_todo
         )
+
         if tags:
             tmp_tags = []
             for tag in tags:
