@@ -40,8 +40,11 @@ class ScheduleAttachmentsGenericView(GenericViewSet):
             attachment_create.append(attachment)
 
         Attachments.objects.bulk_create(attachment_create)
-        attachments = list(Attachments.objects.filter(to_do=pk_todo).values())
-        return Response(attachments)
+
+        attachments = Attachments.objects.filter(to_do=pk_todo)
+        data = lead_schedule.ScheduleAttachmentsModelSerializer(
+            attachments, many=True, context={'request': request}).data
+        return Response(status=status.HTTP_200_OK, data=data)
 
     def get_file(self, request, **kwargs):
 

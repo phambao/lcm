@@ -10,6 +10,10 @@ class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
         model = lead_schedule.Attachments
         fields = '__all__'
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['file'] = r'(?<=/media/).+?(?=/)'.replace(r'(?<=/media/).+?(?=/)', instance.file.url)
+        return data
 
 class ScheduleAttachmentsSerializer(serializers.Serializer):
     file = serializers.FileField()
