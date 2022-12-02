@@ -1,9 +1,14 @@
-import uuid
 
 from rest_framework import serializers
 from ..models import lead_schedule
 from base.utils import pop
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging
+
+
+class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.Attachments
+        fields = '__all__'
 
 
 class ScheduleAttachmentsSerializer(serializers.Serializer):
@@ -44,7 +49,7 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         data_todo = data
 
         todo_create = ToDo.objects.create(
-            user_create=user_create, user_update=user_update,  assigned_to_id=assigned_to, **data_todo
+            user_create=user_create, user_update=user_update, assigned_to_id=assigned_to, **data_todo
         )
 
         if tags:

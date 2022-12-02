@@ -24,9 +24,7 @@ class ScheduleAttachmentsGenericView(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         user = request.user
         pk_todo = self.kwargs.get('pk_todo')
-        todo = ToDo.objects.filter(id=pk_todo).first()
-        if not todo:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data='ToDo not found')
+        todo = get_object_or_404(ToDo.objects.all(), pk=self.kwargs['pk_todo'])
         data_attachments = Attachments.objects.filter(to_do=pk_todo)
         data_attachments.delete()
         files = request.FILES.getlist('file')
@@ -46,10 +44,12 @@ class ScheduleAttachmentsGenericView(GenericViewSet):
         return Response(attachments)
 
     def get_file(self, request, **kwargs):
-        get_object_or_404(ToDo.objects.all(), pk=self.kwargs['pk_todo'])
-        data_file = list(Attachments.objects.filter(to_do=self.kwargs['pk_todo']).values())
-        return Response(data_file)
 
+        get_object_or_404(ToDo.objects.all(), pk=self.kwargs['pk_todo'])
+        data_file = Attachments.objects.filter(to_do=self.kwargs['pk_todo'])
+        data = lead_schedule.ScheduleAttachmentsModelSerializer(
+            data_file, many=True, context={'request': request}).data
+        return Response(status=status.HTTP_200_OK, data=data)
 
 class SourceScheduleToDoGenericView(generics.ListCreateAPIView):
     queryset = ToDo.objects.all()
@@ -92,5 +92,7 @@ class ScheduleCheckListItemDetailGenericView(generics.RetrieveUpdateDestroyAPIVi
 def get_checklist_by_todo(request, *args, **kwargs):
     pk_todo = kwargs.get('pk_todo')
     get_object_or_404(ToDo.objects.all(), pk=pk_todo)
-    data_checklist = list(CheckListItems.objects.filter(to_do=pk_todo).values())
-    return Response(status=status.HTTP_200_OK, data=data_checklist)
+    data_checklist = CheckListItems.objects.filter(to_do=pk_todo)
+    data = lead_schedule.CheckListItemSerializer(
+        data_checklist, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=data)
