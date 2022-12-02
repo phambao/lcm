@@ -16,14 +16,14 @@ class CatalogLevel(models.Model):
     def __str__(self):
         return self.name
 
-    def get_all_descendant(self):
-        ids = [self.pk]
+    def get_ordered_descendant(self):
+        descendant = [self]
         try:
             catalog_level = CatalogLevel.objects.get(parent__id=self.pk)
-            ids.extend(catalog_level.get_all_descendant())
+            descendant.extend(catalog_level.get_ordered_descendant())
         except CatalogLevel.DoesNotExist:
             pass
-        return ids
+        return descendant
 
 
 class CostTable(models.Model):
@@ -112,6 +112,14 @@ class Catalog(BaseModel):
         else:
             return []
         return ancester
+
+    def get_ordered_levels(self):
+        """
+        Ancestor level will be the first and descendant will be the last
+        """
+        levels = self.all_levels.all()
+        ancester = levels.get(parent=None)
+        return ancester.get_ordered_descendant()
 
     def link(self, pk):
         catalog = Catalog.objects.get(pk=pk)

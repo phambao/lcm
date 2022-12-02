@@ -95,9 +95,8 @@ def get_catalog_levels(request, pk):
         return Response(status=status.HTTP_200_OK, data=[])
 
     catalog_level = CatalogLevel.objects.get(pk=level.pk)
-    catalog_level_ids = catalog_level.get_all_descendant()
-    all_catalog_level_descendant = CatalogLevel.objects.filter(pk__in=catalog_level_ids)
-    serializer = catalog.CatalogLevelModelSerializer(all_catalog_level_descendant, many=True)
+    catalog_levels = catalog_level.get_ordered_descendant()
+    serializer = catalog.CatalogLevelModelSerializer(catalog_levels, many=True)
     return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
