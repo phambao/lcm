@@ -4,13 +4,6 @@ from django.db import models
 from api.models import BaseModel
 
 
-# class Priority(BaseModel):
-#     class Meta:
-#         db_table = 'priority'
-#
-#     name = models.CharField(max_length=64)
-
-
 class TagSchedule(BaseModel):
     class Meta:
         db_table = 'tag_schedule'

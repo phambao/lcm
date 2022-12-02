@@ -3,6 +3,7 @@ import uuid
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import permissions, status
 from rest_framework.viewsets import GenericViewSet
@@ -25,10 +26,10 @@ class ScheduleAttachmentsGenericView(GenericViewSet):
         user = request.user
         pk_todo = kwargs.get('pk_todo')
         todo = ToDo.objects.filter(id=pk_todo).first()
-        data_attachments = Attachments.objects.filter(to_do=pk_todo)
-        data_attachments.delete()
         if not todo:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='ToDo not found')
+        data_attachments = Attachments.objects.filter(to_do=pk_todo)
+        data_attachments.delete()
         files = request.FILES.getlist('file')
         attachment_create = list()
         for file in files:
@@ -97,3 +98,27 @@ class TagScheduleDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ToDo.objects.all()
     serializer_class = lead_schedule.TagScheduleSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleCheckListItemGenericView(generics.ListCreateAPIView):
+    queryset = CheckListItems.objects.all()
+    serializer_class = lead_schedule.CheckListItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleCheckListItemDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CheckListItems.objects.all()
+    serializer_class = lead_schedule.CheckListItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_checklist_by_todo(request, *args, **kwargs):
+    pk_todo = kwargs.get('pk_todo')
+    todo = ToDo.objects.filter(id=pk_todo).first()
+    if not todo:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data='ToDo not found')
+
+    data_checklist = list(CheckListItems.objects.filter(to_do=pk_todo).values())
+    return Response(status=status.HTTP_200_OK, data=data_checklist)

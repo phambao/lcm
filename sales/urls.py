@@ -81,7 +81,7 @@ url_catalog = [
     path('list/<int:pk_catalog>/levels/', catalog.CatalogLevelList.as_view()),
     path('list/<int:pk_catalog>/levels/<int:pk>/', catalog.CatalogLevelDetail.as_view()),
 ]
-# define path for Schedule
+# define path for Schedule -------------------------------------------------------
 url_schedule = [
     # TO_DO
     path('todo/', lead_schedule.SourceScheduleToDoGenericView.as_view()),
@@ -92,6 +92,10 @@ url_schedule = [
     # TAG
     path('tags/', lead_schedule.TagScheduleGenericView.as_view()),
     path('tags/<int:pk>/', lead_schedule.TagScheduleDetailGenericView.as_view()),
+    # CHECKLIST ITEM
+    path('checklist-item/', lead_schedule.ScheduleCheckListItemGenericView.as_view()),
+    path('checklist-item/<int:pk>/', lead_schedule.ScheduleCheckListItemDetailGenericView.as_view()),
+    path('<int:pk_todo>/checklist-item/', lead_schedule.get_checklist_by_todo),
 ]
 # DEFINE PATH FOR SALES APP -----------------------------------------------------
 url_sales = [

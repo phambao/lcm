@@ -1,8 +1,7 @@
 import uuid
 
-from django.core.files.base import ContentFile
 from rest_framework import serializers
-from ..models import lead_schedule, Catalog
+from ..models import lead_schedule
 from base.utils import pop
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging
 
@@ -29,8 +28,6 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
     check_list = serializers.JSONField()
     messaging = MessagingSerializer(many=True, allow_null=True)
     temp_checklist = list()
-    parent_uuid = uuid.uuid4()
-    children_uuid = uuid.uuid4()
 
     class Meta:
         model = lead_schedule.ToDo
@@ -52,8 +49,8 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
             tmp_tags = []
             for tag in tags:
                 tmp_tags.append(TagSchedule.objects.get(id=tag))
-
             todo_create.tags.add(*tmp_tags)
+
         data_create_checklist = list()
         for checklist in data_checklist:
             rs_checklist = CheckListItems(
@@ -84,6 +81,7 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         return todo_create
 
     def update(self, instance, data):
+        # todo: update check list
         check_list = pop(data, 'check_list', [])
         messaging = pop(data, 'messaging', [])
         todo_tags = pop(data, 'tags', [])
@@ -110,8 +108,8 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         rs_checklist = list(CheckListItems.objects.filter(to_do=data['id']).values())
         data['check_list'] = rs_checklist
-        rs = list(Messaging.objects.filter(to_do=data['id']).values())
-        data['messaging'] = rs
+        rs_messaging = list(Messaging.objects.filter(to_do=data['id']).values())
+        data['messaging'] = rs_messaging
         return data
 
     # def get_checklist_item(self, checklist):
@@ -146,3 +144,9 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
     #             self.get_checklist_item(data_checklist['children'])
     #
     #     return self.temp_checklist
+
+
+class CheckListItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.CheckListItems
+        fields = ('to_do', 'uuid', 'parent', 'description', 'is_check', 'is_root')
