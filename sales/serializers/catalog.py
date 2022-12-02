@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from api.serializers.base import SerializerMixin
 from ..models import catalog
 
 
@@ -58,8 +59,16 @@ class CostTableModelSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'data')
 
 
-class CatalogLevelModelSerializer(serializers.ModelSerializer):
+class CatalogLevelModelSerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
         model = catalog.CatalogLevel
         fields = ('id', 'name', 'parent', 'catalog')
         extra_kwargs = {'catalog': {'read_only': True}}
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if self.is_param_exist('pk_catalog'):
+            c = catalog.Catalog.objects.get(pk=self.get_params()['pk_catalog'])
+            ordered_levels = c.get_ordered_levels()
+            data['index'] = ordered_levels.index(instance)
+        return data
