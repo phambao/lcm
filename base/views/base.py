@@ -1,13 +1,14 @@
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import generics, permissions, status
 from django_filters import rest_framework as filters
 
-from ..filters import SearchFilter, ColumnFilter, ConfigFilter
-from ..models.config import Column, Search, Config
+from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter
+from ..models.config import Column, Search, Config, GridSetting
 from ..serializers.base import ContentTypeSerializer
-from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer
+from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer
 
 
 class ContentTypeList(generics.ListAPIView):
@@ -68,6 +69,11 @@ class ColumnLeadGenericView(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
         data['user'] = request.user.id
+        try:
+            data['content_type'] = ContentType.objects.get(model=data['model']).id
+        except ContentType.DoesNotExist:
+            raise ValidationError({'model': 'Model not found'})
+        del data['model']
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -84,6 +90,44 @@ class ColumnLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
         data = super().get_queryset()
         data = data.filter(user=self.request.user)
         return data
+
+
+class GridSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = GridSetting.objects.all()
+    serializer_class = GridSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        data = super().get_queryset()
+        data = data.filter(user=self.request.user)
+        return data
+
+
+class GridSettingListView(generics.ListCreateAPIView):
+    queryset = GridSetting.objects.all()
+    serializer_class = GridSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = GridSettingFilter
+
+    def get_queryset(self):
+        data = super().get_queryset()
+        data = data.filter(user=self.request.user)
+        return data
+
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        data['user'] = request.user.id
+        try:
+            data['content_type'] = ContentType.objects.get(model=data['model']).id
+        except ContentType.DoesNotExist:
+            raise ValidationError({'model': 'Model not found'})
+        del data['model']
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 @api_view(['GET', 'PUT'])

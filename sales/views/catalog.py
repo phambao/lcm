@@ -104,7 +104,7 @@ def get_catalog_levels(request, pk):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_catalog_tree(request, pk):
-    catalog = Catalog.objects.get(pk=pk)
+    catalog = get_object_or_404(Catalog, pk=pk)
     catalog_tree = catalog.get_tree_view()
     return Response(status=status.HTTP_200_OK, data=catalog_tree)
 
@@ -112,7 +112,7 @@ def get_catalog_tree(request, pk):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_catalog_list(request, pk):
-    catalog_obj = Catalog.objects.get(pk=pk)
+    catalog_obj = get_object_or_404(Catalog, pk=pk)
     catalog_ids = catalog_obj.get_all_descendant()
     catalogs = Catalog.objects.filter(pk__in=catalog_ids)
     serializer = catalog.CatalogSerializer(catalogs, many=True)
@@ -127,3 +127,11 @@ def delete_catalogs(request):
     for catalog in catalogs:
         catalog.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_catalog_navigation(request, pk):
+    catalog = get_object_or_404(Catalog, pk=pk)
+    navigation = catalog.get_navigation_path()
+    return Response(status=status.HTTP_200_OK, data=navigation[::-1])
