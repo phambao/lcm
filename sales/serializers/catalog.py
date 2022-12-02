@@ -74,11 +74,13 @@ class CatalogLevelModelSerializer(serializers.ModelSerializer, SerializerMixin):
             data['index'] = ordered_levels.index(instance)
         return data
 
-    def create(self, validated_data):
+    def validate_parent(self, value):
         if self.is_param_exist('pk_catalog'):
             # Only one level in catalog has parent is null
             c = Catalog.objects.get(pk=self.get_params()['pk_catalog'])
             levels = c.all_levels.all()
-            if levels and not validated_data.get('parent'):
-                raise ValidationError({'parent': 'parent not null'})
-        return super().create(validated_data)
+            if levels and not value:
+                raise ValidationError('parent is not null')
+            if not levels and value:
+                raise ValidationError('parent must null')
+        return value
