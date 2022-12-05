@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -48,7 +49,10 @@ class CatalogLevelList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         catalog = get_object_or_404(Catalog.objects.all(), pk=self.kwargs['pk_catalog'])
-        ancester_level = catalog.all_levels.get(parent=None)
+        try:
+            ancester_level = catalog.all_levels.get(parent=None)
+        except ObjectDoesNotExist:
+            return []
         return ancester_level.get_ordered_descendant()
 
     def perform_create(self, serializer):
