@@ -48,7 +48,8 @@ class CatalogLevelList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         catalog = get_object_or_404(Catalog.objects.all(), pk=self.kwargs['pk_catalog'])
-        return catalog.all_levels.all()
+        ancester_level = catalog.all_levels.get(parent=None)
+        return ancester_level.get_ordered_descendant()
 
     def perform_create(self, serializer):
         instance = serializer.save()
