@@ -8,7 +8,7 @@ class ColumnSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Column
-        fields = ('id', 'name', 'params', 'content_type', 'user', 'model')
+        fields = ('id', 'name', 'params', 'content_type', 'user', 'model', 'hidden_params')
 
 
 class SearchSerializer(serializers.ModelSerializer):
@@ -39,4 +39,4 @@ class GridSettingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GridSetting
-        fields = ('id', 'name', 'params', 'content_type', 'user', 'model', 'is_public')
+        fields = ('id', 'name', 'params', 'content_type', 'user', 'model', 'is_public', 'hidden_params')
