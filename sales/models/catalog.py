@@ -9,12 +9,30 @@ class CatalogLevel(models.Model):
 
     name = models.CharField(max_length=64)
     parent = models.ForeignKey('self', related_name='child', null=True,
-                               blank=True, on_delete=models.CASCADE, default=None)
+                               blank=True, on_delete=models.SET_NULL, default=None)
     catalog = models.ForeignKey('Catalog', on_delete=models.CASCADE, null=True,
                                 blank=True, default=None, related_name='all_levels')
 
     def __str__(self):
         return self.name
+
+    def delete(self, using=None, keep_parents=False):
+        child_level = CatalogLevel.objects.filter(parent=self)
+        has_child = child_level.exists()
+
+        if has_child:
+            catalogs = Catalog.objects.filter(level=self)
+            for c in catalogs:
+                children = Catalog.objects.filter(parents=c)
+                parent = c.parents.first()
+                for child in children:
+                    child.parents.clear()
+                    child.parents.add(parent)
+            child_level = child_level.first()
+            child_level.parent = self.parent
+            child_level.save()
+
+        super(CatalogLevel, self).delete(using=using, keep_parents=keep_parents)
 
     def get_ordered_descendant(self):
         descendant = [self]
