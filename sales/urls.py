@@ -97,6 +97,16 @@ url_schedule = [
     path('checklist-item/', lead_schedule.ScheduleCheckListItemGenericView.as_view()),
     path('checklist-item/<int:pk>/', lead_schedule.ScheduleCheckListItemDetailGenericView.as_view()),
     path('<int:pk_todo>/checklist-item/', lead_schedule.get_checklist_by_todo),
+
+    # DAILY LOGS
+    path('daily-logs/', lead_schedule.DailyLogGenericView.as_view()),
+    path('daily-logs/<int:pk>/', lead_schedule.DailyLogDetailGenericView.as_view()),
+    # FILE DAILY LOG
+    path('daily-logs/<int:pk_daily_log>/attachments/', lead_schedule.AttachmentsDailyLogGenericView.as_view({
+        "post": "create_file", "get": "get_file"})),
+    # TEMPLATE NOTE DAILY LOG
+    path('daily-logs/template/', lead_schedule.DailyLogTemplateNoteGenericView.as_view()),
+    path('daily-logs/template/<int:pk>', lead_schedule.DailyLogTemplateNoteDetailGenericView.as_view()),
 ]
 # DEFINE PATH FOR SALES APP -----------------------------------------------------
 url_sales = [

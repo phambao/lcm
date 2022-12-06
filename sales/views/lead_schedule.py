@@ -7,7 +7,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import permissions, status
 from rest_framework.viewsets import GenericViewSet
-from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, Messaging
+from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, Messaging, DailyLog, \
+    AttachmentDailyLog, DailyLogTemplateNotes
 from ..serializers import lead_schedule
 
 
@@ -47,12 +48,55 @@ class ScheduleAttachmentsGenericView(GenericViewSet):
         return Response(status=status.HTTP_200_OK, data=data)
 
     def get_file(self, request, **kwargs):
-
         get_object_or_404(ToDo.objects.all(), pk=self.kwargs['pk_todo'])
         data_file = Attachments.objects.filter(to_do=self.kwargs['pk_todo'])
         data = lead_schedule.ScheduleAttachmentsModelSerializer(
             data_file, many=True, context={'request': request}).data
         return Response(status=status.HTTP_200_OK, data=data)
+
+
+class AttachmentsDailyLogGenericView(GenericViewSet):
+    serializer_class = lead_schedule.AttachmentsDailyLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        get_object_or_404(DailyLog.objects.all(), pk=self.kwargs['pk_daily_log'])
+        return AttachmentDailyLog.objects.filter(to_do=self.kwargs['pk_daily_log'])
+
+    def create_file(self, request, **kwargs):
+        serializer = lead_schedule.AttachmentsDailyLogSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        pk_daily_log = self.kwargs.get('pk_daily_log')
+        daily_log = get_object_or_404(DailyLog.objects.all(), pk=self.kwargs['pk_daily_log'])
+        data_attachments = AttachmentDailyLog.objects.filter(daily_log=pk_daily_log)
+        data_attachments.delete()
+        files = request.FILES.getlist('file')
+        attachment_create = list()
+        for file in files:
+            file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+            content_file = ContentFile(file.read(), name=file_name)
+            attachment = AttachmentDailyLog(
+                file=content_file,
+                daily_log=daily_log,
+                user_create=user
+            )
+            attachment_create.append(attachment)
+
+        AttachmentDailyLog.objects.bulk_create(attachment_create)
+
+        attachments = AttachmentDailyLog.objects.filter(daily_log=pk_daily_log)
+        data = lead_schedule.AttachmentsDailyLogModelSerializer(
+            attachments, many=True, context={'request': request}).data
+        return Response(status=status.HTTP_200_OK, data=data)
+
+    def get_file(self, request, **kwargs):
+        get_object_or_404(DailyLog.objects.all(), pk=self.kwargs['pk_daily_log'])
+        data_file = AttachmentDailyLog.objects.filter(daily_log=self.kwargs['pk_daily_log'])
+        data = lead_schedule.AttachmentsDailyLogModelSerializer(
+            data_file, many=True, context={'request': request}).data
+        return Response(status=status.HTTP_200_OK, data=data)
+
 
 class SourceScheduleToDoGenericView(generics.ListCreateAPIView):
     queryset = ToDo.objects.all()
@@ -87,6 +131,30 @@ class ScheduleCheckListItemGenericView(generics.ListCreateAPIView):
 class ScheduleCheckListItemDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CheckListItems.objects.all()
     serializer_class = lead_schedule.CheckListItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class DailyLogGenericView(generics.ListCreateAPIView):
+    queryset = DailyLog.objects.all()
+    serializer_class = lead_schedule.DailyLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class DailyLogDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = DailyLog.objects.all()
+    serializer_class = lead_schedule.DailyLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class DailyLogTemplateNoteGenericView(generics.ListCreateAPIView):
+    queryset = DailyLogTemplateNotes.objects.all()
+    serializer_class = lead_schedule.DailyLogNoteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class DailyLogTemplateNoteDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = DailyLogTemplateNotes.objects.all()
+    serializer_class = lead_schedule.DailyLogNoteSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
