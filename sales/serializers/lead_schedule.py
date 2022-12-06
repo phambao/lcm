@@ -4,26 +4,23 @@ from base.utils import pop
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging
 
 
-class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
+class FileSerializerMixin(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['file'] = r'(?<=/media/).+?(?=/)'.replace(r'(?<=/media/).+?(?=/)', instance.file.url)
+        return data
+
+
+class ScheduleAttachmentsModelSerializer(FileSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = lead_schedule.Attachments
         fields = '__all__'
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['file'] = r'(?<=/media/).+?(?=/)'.replace(r'(?<=/media/).+?(?=/)', instance.file.url)
-        return data
 
-
-class AttachmentsDailyLogModelSerializer(serializers.ModelSerializer):
+class AttachmentsDailyLogModelSerializer(FileSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = lead_schedule.AttachmentDailyLog
         fields = '__all__'
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['file'] = r'(?<=/media/).+?(?=/)'.replace(r'(?<=/media/).+?(?=/)', instance.file.url)
-        return data
 
 
 class ScheduleAttachmentsSerializer(serializers.Serializer):
@@ -240,7 +237,5 @@ class DailyLogSerializer(serializers.ModelSerializer):
         return instance
 
 
-class AttachmentsDailyLogSerializer(serializers.Serializer):
-    file = serializers.FileField()
-
-
+class AttachmentsDailyLogSerializer(ScheduleAttachmentsSerializer):
+    pass
