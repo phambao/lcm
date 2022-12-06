@@ -106,7 +106,7 @@ url_schedule = [
         "post": "create_file", "get": "get_file"})),
     # TEMPLATE NOTE DAILY LOG
     path('daily-logs/template/', lead_schedule.DailyLogTemplateNoteGenericView.as_view()),
-    path('daily-logs/template/<int:pk>', lead_schedule.DailyLogTemplateNoteDetailGenericView.as_view()),
+    path('daily-logs/template/<int:pk>/', lead_schedule.DailyLogTemplateNoteDetailGenericView.as_view()),
 ]
 # DEFINE PATH FOR SALES APP -----------------------------------------------------
 url_sales = [
