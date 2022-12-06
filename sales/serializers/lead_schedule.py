@@ -1,19 +1,27 @@
-
 from rest_framework import serializers
 from ..models import lead_schedule
 from base.utils import pop
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging
 
 
-class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = lead_schedule.Attachments
-        fields = '__all__'
-
+class FileSerializerMixin(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['file'] = r'(?<=/media/).+?(?=/)'.replace(r'(?<=/media/).+?(?=/)', instance.file.url)
         return data
+
+
+class ScheduleAttachmentsModelSerializer(FileSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.Attachments
+        fields = '__all__'
+
+
+class AttachmentsDailyLogModelSerializer(FileSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.AttachmentDailyLog
+        fields = '__all__'
+
 
 class ScheduleAttachmentsSerializer(serializers.Serializer):
     file = serializers.FileField()
@@ -50,10 +58,12 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         messaging = pop(data, 'messaging', [])
         tags = pop(data, 'tags', [])
         assigned_to = pop(data, 'assigned_to', None)
+        lead_list = pop(data, 'lead_list', None)
         data_todo = data
 
         todo_create = ToDo.objects.create(
-            user_create=user_create, user_update=user_update, assigned_to_id=assigned_to, **data_todo
+            user_create=user_create, user_update=user_update, assigned_to_id=assigned_to,
+            lead_list_id=lead_list, **data_todo
         )
 
         if tags:
@@ -161,3 +171,71 @@ class CheckListItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_schedule.CheckListItems
         fields = ('to_do', 'uuid', 'parent', 'description', 'is_check', 'is_root')
+
+
+class DailyLogNoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.DailyLogTemplateNotes
+        fields = ('title', 'notes')
+
+
+class DailyLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.DailyLog
+        fields = ('date', 'tags', 'to_do', 'note', 'lead_list')
+
+    def create(self, validated_data):
+        request = self.context['request']
+        data = request.data
+        user_create = user_update = request.user
+        tags = pop(data, 'tags', [])
+        to_do = pop(data, 'to_do', [])
+        lead_list = pop(data, 'lead_list', None)
+
+        daily_log_create = lead_schedule.DailyLog.objects.create(
+            user_create=user_create, user_update=user_update, lead_list_id=lead_list,
+            **data
+        )
+
+        if tags:
+            tmp_tags = []
+            for tag in tags:
+                tmp_tags.append(TagSchedule.objects.get(id=tag))
+            daily_log_create.tags.add(*tmp_tags)
+
+        if to_do:
+            tmp_todo = []
+            for data_todo in to_do:
+                tmp_todo.append(ToDo.objects.get(id=data_todo))
+
+            daily_log_create.to_do.add(*tmp_todo)
+        return daily_log_create
+
+    def update(self, instance, data):
+        to_do = pop(data, 'to_do', [])
+        daily_log_tags = pop(data, 'tags', [])
+        daily_log = lead_schedule.DailyLog.objects.filter(pk=instance.pk)
+        daily_log.update(**data)
+        daily_log = daily_log.first()
+        daily_log.save()
+        daily_log.tags.clear()
+        daily_log.to_do.clear()
+        if daily_log_tags:
+            tags = []
+            for t in daily_log_tags:
+                tags.append(lead_schedule.TagSchedule.objects.get(id=t.id))
+            daily_log.tags.add(*tags)
+
+        if to_do:
+            tmp_todo = []
+            for data_todo in to_do:
+                tmp_todo.append(ToDo.objects.get(id=data_todo.id))
+
+            daily_log.to_do.add(*tmp_todo)
+
+        instance.refresh_from_db()
+        return instance
+
+
+class AttachmentsDailyLogSerializer(ScheduleAttachmentsSerializer):
+    pass
