@@ -17,7 +17,8 @@ class CatalogLevel(models.Model):
         return self.name
 
     def delete(self, using=None, keep_parents=False):
-        has_child = CatalogLevel.objects.filter(pk=self.pk).exists()
+        child_level = CatalogLevel.objects.filter(parent=self)
+        has_child = child_level.exists()
 
         if has_child:
             catalogs = Catalog.objects.filter(level=self)
@@ -27,6 +28,9 @@ class CatalogLevel(models.Model):
                 for child in children:
                     child.parents.clear()
                     child.parents.add(parent)
+            child_level = child_level.first()
+            child_level.parent = self.parent
+            child_level.save()
 
         super(CatalogLevel, self).delete(using=using, keep_parents=keep_parents)
 
