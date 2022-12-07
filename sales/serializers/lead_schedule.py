@@ -8,20 +8,13 @@ from base.utils import pop
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging
 
 
-class FileSerializerMixin(serializers.ModelSerializer):
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['file'] = r'(?<=/media/).+?(?=/)'.replace(r'(?<=/media/).+?(?=/)', instance.file.url)
-        return data
-
-
-class ScheduleAttachmentsModelSerializer(FileSerializerMixin, serializers.ModelSerializer):
+class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_schedule.Attachments
         fields = '__all__'
 
 
-class AttachmentsDailyLogModelSerializer(FileSerializerMixin, serializers.ModelSerializer):
+class AttachmentsDailyLogModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_schedule.AttachmentDailyLog
         fields = '__all__'

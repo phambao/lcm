@@ -246,11 +246,6 @@ class PhotoSerializer(serializers.ModelSerializer):
         photo = lead_list.Photos.objects.create(
             photo=content_file, lead_id=pk_lead)
         return photo
-    
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['photo'] = r'(?<=/media/).+?(?=/)'.replace(r'(?<=/media/).+?(?=/)', instance.photo.url)
-        return data
 
 
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
