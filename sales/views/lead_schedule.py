@@ -98,6 +98,49 @@ class AttachmentsDailyLogGenericView(GenericViewSet):
         return Response(status=status.HTTP_200_OK, data=data)
 
 
+# class FileChecklistGenericView(GenericViewSet):
+#     serializer_class = lead_schedule.FileChecklistSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+#
+#     def get_queryset(self):
+#         get_object_or_404(CheckListItems.objects.all(), pk=self.kwargs['pk_checklist'])
+#         return FileCheckListItems.objects.filter(checklist_item=self.kwargs['pk_checklist'])
+#
+#     def create_file(self, request, **kwargs):
+#         serializer = lead_schedule.FileChecklistSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         user = request.user
+#         pk_checklist = self.kwargs.get('pk_checklist')
+#         daily_log = get_object_or_404(CheckListItems.objects.all(), pk=self.kwargs['pk_checklist'])
+#         file_checklist_item = FileCheckListItems.objects.filter(checklist_item=pk_checklist)
+#         file_checklist_item.delete()
+#         files = request.FILES.getlist('file')
+#         file_checklist_item_create = list()
+#         for file in files:
+#             file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+#             content_file = ContentFile(file.read(), name=file_name)
+#             file_checklist = FileCheckListItems(
+#                 file=content_file,
+#                 daily_log=daily_log,
+#                 user_create=user
+#             )
+#             file_checklist_item_create.append(file_checklist)
+#
+#         FileCheckListItems.objects.bulk_create(file_checklist_item_create)
+#
+#         file_checklist = FileCheckListItems.objects.filter(checklist_item=pk_checklist)
+#         data = lead_schedule.FileChecklistModelSerializer(
+#             file_checklist, many=True, context={'request': request}).data
+#         return Response(status=status.HTTP_200_OK, data=data)
+#
+#     def get_file(self, request, **kwargs):
+#         get_object_or_404(CheckListItems.objects.all(), pk=self.kwargs['pk_checklist'])
+#         data_file = FileCheckListItems.objects.filter(pk_checklist=self.kwargs['pk_checklist'])
+#         data = lead_schedule.FileChecklistModelSerializer(
+#             data_file, many=True, context={'request': request}).data
+#         return Response(status=status.HTTP_200_OK, data=data)
+
+
 class SourceScheduleToDoGenericView(generics.ListCreateAPIView):
     queryset = ToDo.objects.all()
     serializer_class = lead_schedule.ToDoCreateSerializer

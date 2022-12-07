@@ -1,3 +1,7 @@
+import uuid
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from rest_framework import serializers
 from ..models import lead_schedule
 from base.utils import pop
@@ -23,6 +27,12 @@ class AttachmentsDailyLogModelSerializer(FileSerializerMixin, serializers.ModelS
         fields = '__all__'
 
 
+# class FileChecklistModelSerializer(FileSerializerMixin, serializers.ModelSerializer):
+#     class Meta:
+#         model = lead_schedule.FileCheckListItems
+#         fields = '__all__'
+
+
 class ScheduleAttachmentsSerializer(serializers.Serializer):
     file = serializers.FileField()
 
@@ -41,8 +51,25 @@ class TagScheduleSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class CheckListItemSerializer(serializers.Serializer):
+    # file = serializers.FileField(required=False)
+
+    class Meta:
+        model = lead_schedule.CheckListItems
+        fields = ('to_do', 'uuid', 'parent', 'description', 'is_check', 'is_root', 'assigned_to')
+
+
+class ToDoChecklistItemSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = lead_schedule.CheckListItems
+        fields = ('id', 'uuid', 'parent', 'description', 'is_check', 'is_root', 'assigned_to')
+
+
 class ToDoCreateSerializer(serializers.ModelSerializer):
-    check_list = serializers.JSONField()
+    # check_list = serializers.JSONField()
+    check_list = ToDoChecklistItemSerializer(many=True, allow_null=True)
     messaging = MessagingSerializer(many=True, allow_null=True)
     temp_checklist = list()
 
@@ -52,7 +79,12 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context['request']
+
         data = request.data
+        # file = data['check_list.file']
+        # file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+        # content_file = ContentFile(file.read(), name=file_name)
+
         user_create = user_update = request.user
         data_checklist = pop(data, 'check_list', [])
         messaging = pop(data, 'messaging', [])
@@ -60,33 +92,27 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         assigned_to = pop(data, 'assigned_to', None)
         lead_list = pop(data, 'lead_list', None)
         data_todo = data
-
         todo_create = ToDo.objects.create(
-            user_create=user_create, user_update=user_update, assigned_to_id=assigned_to,
+            user_create=user_create, user_update=user_update,
             lead_list_id=lead_list, **data_todo
         )
+        tags_objects = TagSchedule.objects.filter(pk__in=[tag for tag in tags])
+        user = get_user_model().objects.filter(pk__in=[at for at in assigned_to])
 
-        if tags:
-            tmp_tags = []
-            for tag in tags:
-                tmp_tags.append(TagSchedule.objects.get(id=tag))
-            todo_create.tags.add(*tmp_tags)
+        todo_create.tags.add(*tags_objects)
+        todo_create.assigned_to.add(*user)
 
-        data_create_checklist = list()
         for checklist in data_checklist:
-            rs_checklist = CheckListItems(
-                to_do=todo_create,
+            # files = pop(checklist, 'files', [])
+            assigned_to_checklist = pop(checklist, 'assigned_to', [])
+            create_checklist = CheckListItems.objects.create(
                 user_create=user_create,
                 user_update=user_update,
-                description=checklist['description'],
-                is_check=checklist['is_check'],
-                uuid=checklist['uuid'],
-                parent=checklist['parent_uuid'],
-                is_root=True
+                to_do=todo_create,
+                **checklist
             )
-            data_create_checklist.append(rs_checklist)
-
-        CheckListItems.objects.bulk_create(data_create_checklist)
+            user = get_user_model().objects.filter(pk__in=[tmp for tmp in assigned_to_checklist])
+            create_checklist.assigned_to.add(*user)
 
         data_create_messaging = list()
         for message in messaging:
@@ -102,26 +128,43 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         return todo_create
 
     def update(self, instance, data):
-        # todo: update check list
         check_list = pop(data, 'check_list', [])
         messaging = pop(data, 'messaging', [])
         todo_tags = pop(data, 'tags', [])
+        assigned_to = pop(data, 'assigned_to', [])
         to_do = lead_schedule.ToDo.objects.filter(pk=instance.pk)
         to_do.update(**data)
         to_do = to_do.first()
         to_do.save()
+
+        # tags
+        tags = lead_schedule.TagSchedule.objects.filter(pk__in=[tmp.id for tmp in todo_tags])
         to_do.tags.clear()
-        if todo_tags:
-            tags = []
-            for t in todo_tags:
-                tags.append(lead_schedule.TagSchedule.objects.get(id=t.id))
-            to_do.tags.add(*tags)
+        to_do.tags.add(*tags)
+
+        # assigned_to
+        user = get_user_model().objects.filter(pk__in=[tmp.id for tmp in assigned_to])
+        to_do.assigned_to.clear()
+        to_do.assigned_to.add(*user)
 
         for message in messaging:
             data_message = lead_schedule.Messaging.objects.filter(pk=message['id'])
             data_message.update(message=message['message'])
             data_message = data_message.first()
             data_message.save()
+
+        for checklist in check_list:
+            assigned_to_checklist = pop(checklist, 'assigned_to', [])
+            data_checklist = lead_schedule.CheckListItems.objects.filter(pk=checklist['id'])
+            data_checklist.update(**checklist)
+            data_checklist = data_checklist.first()
+            data_checklist.save()
+
+            # assigned_to checklist
+            user = get_user_model().objects.filter(pk__in=[tmp.id for tmp in assigned_to_checklist])
+            data_checklist.assigned_to.clear()
+            data_checklist.assigned_to.add(*user)
+
         instance.refresh_from_db()
         return instance
 
@@ -167,12 +210,6 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
     #     return self.temp_checklist
 
 
-class CheckListItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = lead_schedule.CheckListItems
-        fields = ('to_do', 'uuid', 'parent', 'description', 'is_check', 'is_root')
-
-
 class DailyLogNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_schedule.DailyLogTemplateNotes
@@ -180,9 +217,11 @@ class DailyLogNoteSerializer(serializers.ModelSerializer):
 
 
 class DailyLogSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
     class Meta:
         model = lead_schedule.DailyLog
-        fields = ('date', 'tags', 'to_do', 'note', 'lead_list')
+        fields = ('id', 'date', 'tags', 'to_do', 'note', 'lead_list')
 
     def create(self, validated_data):
         request = self.context['request']
@@ -196,19 +235,11 @@ class DailyLogSerializer(serializers.ModelSerializer):
             user_create=user_create, user_update=user_update, lead_list_id=lead_list,
             **data
         )
+        tags_objects = TagSchedule.objects.filter(pk__in=[tag for tag in tags])
+        todo_objects = ToDo.objects.filter(pk__in=[tmp for tmp in to_do])
 
-        if tags:
-            tmp_tags = []
-            for tag in tags:
-                tmp_tags.append(TagSchedule.objects.get(id=tag))
-            daily_log_create.tags.add(*tmp_tags)
-
-        if to_do:
-            tmp_todo = []
-            for data_todo in to_do:
-                tmp_todo.append(ToDo.objects.get(id=data_todo))
-
-            daily_log_create.to_do.add(*tmp_todo)
+        daily_log_create.tags.add(*tags_objects)
+        daily_log_create.to_do.add(*todo_objects)
         return daily_log_create
 
     def update(self, instance, data):
@@ -218,24 +249,24 @@ class DailyLogSerializer(serializers.ModelSerializer):
         daily_log.update(**data)
         daily_log = daily_log.first()
         daily_log.save()
+
+        # tags
+        tags_objects = TagSchedule.objects.filter(pk__in=[tag.id for tag in daily_log_tags])
         daily_log.tags.clear()
+        daily_log.tags.add(*tags_objects)
+
+        # to_do
+        todo_objects = ToDo.objects.filter(pk__in=[tmp.id for tmp in to_do])
         daily_log.to_do.clear()
-        if daily_log_tags:
-            tags = []
-            for t in daily_log_tags:
-                tags.append(lead_schedule.TagSchedule.objects.get(id=t.id))
-            daily_log.tags.add(*tags)
-
-        if to_do:
-            tmp_todo = []
-            for data_todo in to_do:
-                tmp_todo.append(ToDo.objects.get(id=data_todo.id))
-
-            daily_log.to_do.add(*tmp_todo)
+        daily_log.to_do.add(*todo_objects)
 
         instance.refresh_from_db()
         return instance
 
 
 class AttachmentsDailyLogSerializer(ScheduleAttachmentsSerializer):
+    pass
+
+
+class FileChecklistSerializer(ScheduleAttachmentsSerializer):
     pass
