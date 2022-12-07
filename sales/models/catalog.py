@@ -124,7 +124,10 @@ class Catalog(BaseModel):
 
     def get_ancestors(self):
         ancester = [self]
-        parent = self.parents.all()[0]
+        try:
+            parent = self.parents.all()[0]
+        except IndexError:
+            return []
         if self.level:
             ancester.extend(parent.get_ancestors())
         else:
