@@ -75,7 +75,7 @@ url_catalog = [
     # path('list/<int:pk>/levels/', catalog.get_catalog_levels), temporarily removed
     path('list/<int:pk>/tree/', catalog.get_catalog_tree),
     path('list/<int:pk>/list/', catalog.get_catalog_list),
-    path('list/<int:pk>/navigation/', catalog.get_catalog_navigation),
+    path('list/ancestors/', catalog.get_catalog_ancestors),
     path('list/delete/', catalog.delete_catalogs),
     path('cost-tables/', catalog.CostTableList.as_view()),
     path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),

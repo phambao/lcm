@@ -122,11 +122,14 @@ class Catalog(BaseModel):
         catalogs.delete()
         return super(Catalog, self).delete(*args, **kwargs)
 
-    def get_navigation_path(self):
-        ancester = [self.name]
-        parent = self.parents.all()[0]
+    def get_ancestors(self):
+        ancester = [self]
+        try:
+            parent = self.parents.all()[0]
+        except IndexError:
+            return []
         if self.level:
-            ancester.extend(parent.get_navigation_path())
+            ancester.extend(parent.get_ancestors())
         else:
             return []
         return ancester
