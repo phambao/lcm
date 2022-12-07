@@ -135,7 +135,8 @@ def delete_catalogs(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
-def get_catalog_navigation(request, pk):
-    catalog = get_object_or_404(Catalog, pk=pk)
-    navigation = catalog.get_navigation_path()
-    return Response(status=status.HTTP_200_OK, data=navigation[::-1])
+def get_catalog_ancestors(request, pk):
+    c = get_object_or_404(Catalog, pk=pk)
+    navigation = c.get_ancestors()
+    serializer = catalog.CatalogSerializer(navigation[::-1], many=True)
+    return Response(status=status.HTTP_200_OK, data=serializer.data)
