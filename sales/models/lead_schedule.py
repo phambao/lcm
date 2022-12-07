@@ -32,7 +32,7 @@ class ToDo(BaseModel):
     sync_due_date = models.DateTimeField()
     reminder = models.IntegerField(null=True, blank=True)
     assigned_to = models.ManyToManyField(get_user_model(), related_name='todo_assigned_to',
-                                    null=True, blank=True)
+                                         null=True, blank=True)
     tags = models.ManyToManyField(TagSchedule, related_name='to_do_tags')
     notes = models.TextField(blank=True, max_length=128)
     lead_list = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='to_do_lead_list', blank=True,
@@ -48,8 +48,8 @@ class CheckListItems(BaseModel):
     parent = models.UUIDField()
     description = models.CharField(blank=True, max_length=128)
     assigned_to = models.ManyToManyField(get_user_model(),
-                                    related_name='checklist_item_assigned_to',
-                                    null=True, blank=True)
+                                         related_name='checklist_item_assigned_to',
+                                         null=True, blank=True)
     is_check = models.BooleanField(default=False)
     is_root = models.BooleanField(default=False)
 
@@ -62,6 +62,13 @@ class FileCheckListItems(BaseModel):
     checklist_item = models.ForeignKey(CheckListItems, on_delete=models.CASCADE, related_name='file_check_list')
 
 
+class TodoTemplateChecklistItem(BaseModel):
+    class Meta:
+        db_table = 'todo_template_check_list_items'
+
+    template_name = models.CharField(blank=True, max_length=128)
+
+
 class CheckListItemsTemplate(BaseModel):
     class Meta:
         db_table = 'template_check_list_items'
@@ -71,6 +78,13 @@ class CheckListItemsTemplate(BaseModel):
     description = models.CharField(blank=True, max_length=128)
     is_check = models.BooleanField(default=False)
     is_root = models.BooleanField(default=False)
+    assigned_to = models.ManyToManyField(get_user_model(),
+                                         related_name='checklist_item_template_assigned_to',
+                                         null=True, blank=True)
+
+    to_do_checklist_template = models.ForeignKey(TodoTemplateChecklistItem,
+                                                 on_delete=models.CASCADE,
+                                                 related_name='checklist_item_to_do_template', null=True, blank=True)
 
 
 #
@@ -81,14 +95,6 @@ class FileCheckListItemsTemplate(BaseModel):
     file = models.FileField()
     checklist_item_template = models.ForeignKey(CheckListItemsTemplate, on_delete=models.CASCADE,
                                                 related_name='file_check_list')
-
-
-class TodoTemplateChecklistItem(BaseModel):
-    class Meta:
-        db_table = 'todo_template_check_list_items'
-
-    template_name = models.CharField(blank=True, max_length=128)
-    checklist = models.ForeignKey(CheckListItemsTemplate, on_delete=models.CASCADE, related_name='template_checklist')
 
 
 class Attachments(BaseModel):
