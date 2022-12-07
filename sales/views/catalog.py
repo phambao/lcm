@@ -143,6 +143,5 @@ def get_catalog_ancestors(request):
         for c in catalogs:
             navigation = c.get_ancestors()
             navigation = navigation[1:]
-            serializer = catalog.CatalogSerializer(navigation[::-1], many=True)
-            data[c.pk] = serializer.data
+            data[c.pk] = [n.id for n in navigation[::-1]]
     return Response(status=status.HTTP_200_OK, data=data)
