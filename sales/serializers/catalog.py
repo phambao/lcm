@@ -8,7 +8,7 @@ from ..models import catalog, Catalog
 class DataPointSerializer(serializers.ModelSerializer):
     class Meta:
         model = catalog.DataPoint
-        fields = ('value', 'unit', 'linked_description', 'is_linked')
+        fields = ('id', 'value', 'unit', 'linked_description', 'is_linked')
 
 
 class CatalogSerializer(serializers.ModelSerializer):
@@ -37,10 +37,12 @@ class CatalogSerializer(serializers.ModelSerializer):
         if parent:
             validated_data['parents'] = [parent]
         instance = super().update(instance, validated_data)
-        for data_point in data_points:
-            catalog.DataPoint.objects.update(catalog=instance, **data_point)
+        instance.data_points.all().delete()
+        catalog.DataPoint.objects.bulk_create(
+            [catalog.DataPoint(catalog=instance, **data_point) for data_point in data_points]
+        )
         return instance
-    
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if data['parents']:
