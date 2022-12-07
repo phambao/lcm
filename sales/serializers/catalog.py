@@ -43,8 +43,6 @@ class CatalogSerializer(serializers.ModelSerializer):
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if instance.icon:
-            data['icon'] = r'(?<=/media/).+?(?=/)'.replace(r'(?<=/media/).+?(?=/)', instance.icon.url)
         if data['parents']:
             data['parent'] = data['parents'][0]
         else:
