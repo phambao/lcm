@@ -3,6 +3,8 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from rest_framework import serializers
+
+from api.serializers.base import SerializerMixin
 from ..models import lead_schedule
 from base.utils import pop
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging
@@ -256,7 +258,7 @@ class DailyLogSerializer(serializers.ModelSerializer):
         return instance
 
 
-class CheckListItemsTemplateSerializer(serializers.ModelSerializer):
+class CheckListItemsTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
     id = serializers.CharField(required=False)
 
     class Meta:
@@ -269,18 +271,19 @@ PASS_FIELDS = ['user_create', 'user_update', 'to_do_checklist_template']
 
 class ToDoCheckListItemsTemplateSerializer(serializers.ModelSerializer):
     template_name = serializers.CharField(allow_null=True)
-    checklist_item = CheckListItemsTemplateSerializer(many=True, allow_null=True)
+    checklist_item_to_do_template = CheckListItemsTemplateSerializer('to_do_checklist_template', many=True,
+                                                                     allow_null=True)
 
     class Meta:
         model = lead_schedule.TodoTemplateChecklistItem
-        fields = ('id', 'template_name', 'checklist_item')
+        fields = ('id', 'template_name', 'checklist_item_to_do_template')
 
     def create(self, validated_data):
         request = self.context['request']
         data = request.data
         user_create = user_update = request.user
 
-        checklist_item = pop(data, 'checklist_item', [])
+        checklist_item = pop(data, 'checklist_item_to_do_template', [])
 
         template_to_do_checklist = lead_schedule.TodoTemplateChecklistItem.objects.create(
             user_create=user_create,
@@ -328,13 +331,6 @@ class ToDoCheckListItemsTemplateSerializer(serializers.ModelSerializer):
 
         instance.refresh_from_db()
         return instance
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        rs_checklist = list(
-            lead_schedule.CheckListItemsTemplate.objects.filter(to_do_checklist_template=data['id']).values())
-        data['check_list'] = rs_checklist
-        return data
 
 
 class AttachmentsDailyLogSerializer(ScheduleAttachmentsSerializer):
