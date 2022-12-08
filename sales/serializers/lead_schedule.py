@@ -130,7 +130,6 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         to_do = lead_schedule.ToDo.objects.filter(pk=instance.pk)
         to_do.update(**data)
         to_do = to_do.first()
-        to_do.save()
 
         # tags
         tags = lead_schedule.TagSchedule.objects.filter(pk__in=[tmp.id for tmp in todo_tags])
@@ -146,7 +145,6 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
             data_message = lead_schedule.Messaging.objects.filter(pk=message['id'])
             data_message.update(message=message['message'])
             data_message = data_message.first()
-            data_message.save()
 
         data_checklist = lead_schedule.CheckListItems.objects.filter(to_do=to_do.id)
         data_checklist.delete()
@@ -242,7 +240,6 @@ class DailyLogSerializer(serializers.ModelSerializer):
         daily_log = lead_schedule.DailyLog.objects.filter(pk=instance.pk)
         daily_log.update(**data)
         daily_log = daily_log.first()
-        daily_log.save()
 
         # tags
         tags_objects = TagSchedule.objects.filter(pk__in=[tag.id for tag in daily_log_tags])
@@ -313,7 +310,6 @@ class ToDoCheckListItemsTemplateSerializer(serializers.ModelSerializer):
         to_do_checklist_template = lead_schedule.TodoTemplateChecklistItem.objects.filter(pk=instance.pk)
         to_do_checklist_template.update(**data)
         to_do_checklist_template = to_do_checklist_template.first()
-        to_do_checklist_template.save()
 
         data_checklist_template = lead_schedule.CheckListItemsTemplate.objects.filter(
             to_do_checklist_template=to_do_checklist_template.id)

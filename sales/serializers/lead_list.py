@@ -368,7 +368,7 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
                   country_id=lead_country.get('id'), **data)
         ld = ld.first()
         # ld.update does not update modified Date
-        ld.save()
+        # ld.save()
 
         ld.tags.clear()
         if lead_tags:
