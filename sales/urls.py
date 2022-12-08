@@ -97,7 +97,9 @@ url_schedule = [
     path('checklist-item/', lead_schedule.ScheduleCheckListItemGenericView.as_view()),
     path('checklist-item/<int:pk>/', lead_schedule.ScheduleCheckListItemDetailGenericView.as_view()),
     path('<int:pk_todo>/checklist-item/', lead_schedule.get_checklist_by_todo),
-
+    # TEMPLATE CHECKLIST ITEM
+    path('todo/checklist-item/template/', lead_schedule.ToDoChecklistItemTemplateGenericView.as_view()),
+    path('todo/checklist-items/template/<int:pk>/', lead_schedule.ToDoChecklistItemTemplateDetailGenericView.as_view()),
     # DAILY LOGS
     path('daily-logs/', lead_schedule.DailyLogGenericView.as_view()),
     path('daily-logs/<int:pk>/', lead_schedule.DailyLogDetailGenericView.as_view()),

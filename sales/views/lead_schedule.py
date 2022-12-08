@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import permissions, status
 from rest_framework.viewsets import GenericViewSet
 from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, Messaging, DailyLog, \
-    AttachmentDailyLog, DailyLogTemplateNotes
+    AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem
 from ..serializers import lead_schedule
 
 
@@ -98,6 +98,49 @@ class AttachmentsDailyLogGenericView(GenericViewSet):
         return Response(status=status.HTTP_200_OK, data=data)
 
 
+# class FileChecklistGenericView(GenericViewSet):
+#     serializer_class = lead_schedule.FileChecklistSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+#
+#     def get_queryset(self):
+#         get_object_or_404(CheckListItems.objects.all(), pk=self.kwargs['pk_checklist'])
+#         return FileCheckListItems.objects.filter(checklist_item=self.kwargs['pk_checklist'])
+#
+#     def create_file(self, request, **kwargs):
+#         serializer = lead_schedule.FileChecklistSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         user = request.user
+#         pk_checklist = self.kwargs.get('pk_checklist')
+#         daily_log = get_object_or_404(CheckListItems.objects.all(), pk=self.kwargs['pk_checklist'])
+#         file_checklist_item = FileCheckListItems.objects.filter(checklist_item=pk_checklist)
+#         file_checklist_item.delete()
+#         files = request.FILES.getlist('file')
+#         file_checklist_item_create = list()
+#         for file in files:
+#             file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+#             content_file = ContentFile(file.read(), name=file_name)
+#             file_checklist = FileCheckListItems(
+#                 file=content_file,
+#                 daily_log=daily_log,
+#                 user_create=user
+#             )
+#             file_checklist_item_create.append(file_checklist)
+#
+#         FileCheckListItems.objects.bulk_create(file_checklist_item_create)
+#
+#         file_checklist = FileCheckListItems.objects.filter(checklist_item=pk_checklist)
+#         data = lead_schedule.FileChecklistModelSerializer(
+#             file_checklist, many=True, context={'request': request}).data
+#         return Response(status=status.HTTP_200_OK, data=data)
+#
+#     def get_file(self, request, **kwargs):
+#         get_object_or_404(CheckListItems.objects.all(), pk=self.kwargs['pk_checklist'])
+#         data_file = FileCheckListItems.objects.filter(pk_checklist=self.kwargs['pk_checklist'])
+#         data = lead_schedule.FileChecklistModelSerializer(
+#             data_file, many=True, context={'request': request}).data
+#         return Response(status=status.HTTP_200_OK, data=data)
+
+
 class SourceScheduleToDoGenericView(generics.ListCreateAPIView):
     queryset = ToDo.objects.all()
     serializer_class = lead_schedule.ToDoCreateSerializer
@@ -158,6 +201,17 @@ class DailyLogTemplateNoteDetailGenericView(generics.RetrieveUpdateDestroyAPIVie
     permission_classes = [permissions.IsAuthenticated]
 
 
+class ToDoChecklistItemTemplateGenericView(generics.ListCreateAPIView):
+    queryset = TodoTemplateChecklistItem.objects.all()
+    serializer_class = lead_schedule.ToDoCheckListItemsTemplateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ToDoChecklistItemTemplateDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = TodoTemplateChecklistItem.objects.all()
+    serializer_class = lead_schedule.ToDoCheckListItemsTemplateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_checklist_by_todo(request, *args, **kwargs):
@@ -167,3 +221,5 @@ def get_checklist_by_todo(request, *args, **kwargs):
     data = lead_schedule.CheckListItemSerializer(
         data_checklist, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=data)
+
+
