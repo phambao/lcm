@@ -41,9 +41,11 @@ class MessagingSerializer(serializers.ModelSerializer):
 
 
 class TagScheduleSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
     class Meta:
-        model = lead_schedule.ToDo
-        fields = '__all__'
+        model = lead_schedule.TagSchedule
+        fields = ('id', 'name')
 
 
 class CheckListItemSerializer(serializers.Serializer):

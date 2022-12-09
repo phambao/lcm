@@ -154,13 +154,13 @@ class ScheduleDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class TagScheduleGenericView(generics.ListCreateAPIView):
-    queryset = ToDo.objects.all()
+    queryset = TagSchedule.objects.all()
     serializer_class = lead_schedule.TagScheduleSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
 class TagScheduleDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ToDo.objects.all()
+    queryset = TagSchedule.objects.all()
     serializer_class = lead_schedule.TagScheduleSerializer
     permission_classes = [permissions.IsAuthenticated]
 

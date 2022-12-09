@@ -32,7 +32,7 @@ class ToDo(BaseModel):
     sync_due_date = models.DateTimeField()
     reminder = models.IntegerField(null=True, blank=True)
     assigned_to = models.ManyToManyField(get_user_model(), related_name='todo_assigned_to',
-                                         null=True, blank=True)
+                                         blank=True)
     tags = models.ManyToManyField(TagSchedule, related_name='to_do_tags')
     notes = models.TextField(blank=True, max_length=128)
     lead_list = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='to_do_lead_list', blank=True,
@@ -49,7 +49,7 @@ class CheckListItems(BaseModel):
     description = models.CharField(blank=True, max_length=128)
     assigned_to = models.ManyToManyField(get_user_model(),
                                          related_name='checklist_item_assigned_to',
-                                         null=True, blank=True)
+                                         blank=True)
     is_check = models.BooleanField(default=False)
     is_root = models.BooleanField(default=False)
 
@@ -80,7 +80,7 @@ class CheckListItemsTemplate(BaseModel):
     is_root = models.BooleanField(default=False)
     assigned_to = models.ManyToManyField(get_user_model(),
                                          related_name='checklist_item_template_assigned_to',
-                                         null=True, blank=True)
+                                         blank=True)
 
     to_do_checklist_template = models.ForeignKey(TodoTemplateChecklistItem,
                                                  on_delete=models.CASCADE,
