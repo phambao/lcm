@@ -83,4 +83,6 @@ class CatalogLevelModelSerializer(serializers.ModelSerializer, SerializerMixin):
                 raise ValidationError('parent is not null')
             if not levels and value:
                 raise ValidationError('parent must null')
+        if catalog.CatalogLevel.objects.filter(parent=value).exists():
+            raise ValidationError(f'Level has only one child. Level id: {value}')
         return value
