@@ -81,6 +81,8 @@ url_catalog = [
     path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
     path('list/<int:pk_catalog>/levels/', catalog.CatalogLevelList.as_view()),
     path('list/<int:pk_catalog>/levels/<int:pk>/', catalog.CatalogLevelDetail.as_view()),
+    path('unit/', catalog.DataPointUnitView.as_view()),
+    path('unit/<int:pk>/', catalog.DataPointUnitDetailView.as_view()),
 ]
 # define path for Schedule -------------------------------------------------------
 url_schedule = [

@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
-from ..models.catalog import Catalog, CostTable, CatalogLevel
+from ..models.catalog import Catalog, CostTable, CatalogLevel, DataPointUnit
 from ..serializers import catalog
 from ..filters.catalog import CatalogFilter
 
@@ -68,6 +68,18 @@ class CatalogLevelDetail(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         catalog = get_object_or_404(Catalog.objects.all(), pk=self.kwargs['pk_catalog'])
         return catalog.all_levels.all()
+
+
+class DataPointUnitView(generics.ListCreateAPIView):
+    serializer_class = catalog.DataPointUnitSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = DataPointUnit.objects.all()
+
+
+class DataPointUnitDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = catalog.DataPointUnitSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = DataPointUnit.objects.all()
 
 
 @api_view(['GET'])

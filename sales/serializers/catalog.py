@@ -2,10 +2,22 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from api.serializers.base import SerializerMixin
+from base.serializers.base import IDAndNameSerializer
 from ..models import catalog, Catalog
 
 
+class DataPointUnitSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = catalog.DataPointUnit
+        fields = ('id', 'name')
+        extra_kwargs = {'name': {'required': False},
+                        'id': {'required': False}}
+
+
 class DataPointSerializer(serializers.ModelSerializer):
+    unit = IDAndNameSerializer(required=False, allow_null=True)
+
     class Meta:
         model = catalog.DataPoint
         fields = ('id', 'value', 'unit', 'linked_description', 'is_linked')
@@ -28,7 +40,9 @@ class CatalogSerializer(serializers.ModelSerializer):
             validated_data['parents'] = [parent]
         instance = super().create(validated_data)
         for data_point in data_points:
-            catalog.DataPoint.objects.create(catalog=instance, **data_point)
+            print(data_point)
+            unit = data_point.pop('unit')
+            catalog.DataPoint.objects.create(catalog=instance, **data_point, unit_id=unit.get('id'))
         return instance
     
     def update(self, instance, validated_data):
@@ -39,7 +53,7 @@ class CatalogSerializer(serializers.ModelSerializer):
         instance = super().update(instance, validated_data)
         instance.data_points.all().delete()
         catalog.DataPoint.objects.bulk_create(
-            [catalog.DataPoint(catalog=instance, **data_point) for data_point in data_points]
+            [catalog.DataPoint(catalog=instance, unit_id=data_point.pop('unit').get('id'), **data_point) for data_point in data_points]
         )
         return instance
 

@@ -3,6 +3,10 @@ from django.db import models
 from api.models import BaseModel
 
 
+class DataPointUnit(BaseModel):
+    name = models.CharField(max_length=128, unique=True)
+
+
 class CatalogLevel(models.Model):
     class Meta:
         db_table = 'catalog_level'
@@ -65,7 +69,7 @@ class DataPoint(models.Model):
         EMPTY = '', ''
 
     value = models.CharField(max_length=128, blank=True)
-    unit = models.CharField(max_length=16, choices=Unit.choices, default=Unit.EMPTY, blank=True)
+    unit = models.ForeignKey(DataPointUnit, on_delete=models.CASCADE, null=True, blank=True)
     linked_description = models.CharField(max_length=128, blank=True)
     is_linked = models.BooleanField(default=False)
     catalog = models.ForeignKey('Catalog', on_delete=models.CASCADE, related_name='data_points',
