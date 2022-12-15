@@ -66,6 +66,7 @@ class ToDoChecklistItemSerializer(serializers.ModelSerializer):
 
 class ToDoCreateSerializer(serializers.ModelSerializer):
     # check_list = serializers.JSONField()
+    file = serializers.FileField()
     check_list = ToDoChecklistItemSerializer(many=True, allow_null=True)
     messaging = MessagingSerializer(many=True, allow_null=True)
     temp_checklist = list()
@@ -330,6 +331,18 @@ class ToDoCheckListItemsTemplateSerializer(serializers.ModelSerializer):
         instance.refresh_from_db()
         return instance
 
+# class PredecessorsLinkSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = lead_schedule.ScheduleEventPredecessorsLink
+#         fields = ('name', 'type', 'log_day')
+#
+#
+# class ScheduleEventSerializer(serializers.ModelSerializer):
+#     predecessors_link = PredecessorsLinkSerializer(many=True)
+#
+#     class Meta:
+#         model = lead_schedule.ScheduleEvent
+#         fields = '__all__'
 
 class AttachmentsDailyLogSerializer(ScheduleAttachmentsSerializer):
     pass
