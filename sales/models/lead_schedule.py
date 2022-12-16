@@ -58,7 +58,7 @@ class FileCheckListItems(BaseModel):
     class Meta:
         db_table = 'file_check_list_items'
 
-    file = models.FileField()
+    file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
     checklist_item = models.ForeignKey(CheckListItems, on_delete=models.CASCADE, related_name='file_check_list')
 
 
@@ -92,7 +92,7 @@ class FileCheckListItemsTemplate(BaseModel):
     class Meta:
         db_table = 'template_file_check_list_items'
 
-    file = models.FileField()
+    file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
     checklist_item_template = models.ForeignKey(CheckListItemsTemplate, on_delete=models.CASCADE,
                                                 related_name='file_check_list')
 
@@ -102,7 +102,7 @@ class Attachments(BaseModel):
         db_table = 'attachments'
         ordering = ['-modified_date']
 
-    file = models.FileField(upload_to='sales/catalog/%Y/%m/%d/')
+    file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
     to_do = models.ForeignKey(ToDo, on_delete=models.CASCADE, related_name='attachments')
 
 
@@ -139,7 +139,7 @@ class AttachmentDailyLog(BaseModel):
         db_table = 'attachment_daily_log'
         ordering = ['-modified_date']
 
-    file = models.FileField(upload_to='sales/catalog/%Y/%m/%d/')
+    file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
     daily_log = models.ForeignKey(DailyLog, on_delete=models.CASCADE, related_name='attachment_daily_log_daily_log')
 
 
