@@ -111,6 +111,10 @@ url_schedule = [
     # TEMPLATE NOTE DAILY LOG
     path('daily-logs/template/', lead_schedule.DailyLogTemplateNoteGenericView.as_view()),
     path('daily-logs/template/<int:pk>/', lead_schedule.DailyLogTemplateNoteDetailGenericView.as_view()),
+    # SCHEDULE EVENT
+    path('schedule-event/', lead_schedule.ScheduleEventGenericView.as_view()),
+    path('schedule-event/<int:pk>/', lead_schedule.ScheduleEventDetailGenericView.as_view()),
+
 ]
 # DEFINE PATH FOR SALES APP -----------------------------------------------------
 url_sales = [
