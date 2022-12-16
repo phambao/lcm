@@ -331,18 +331,58 @@ class ToDoCheckListItemsTemplateSerializer(serializers.ModelSerializer):
         instance.refresh_from_db()
         return instance
 
+
 # class PredecessorsLinkSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = lead_schedule.ScheduleEventPredecessorsLink
 #         fields = ('name', 'type', 'log_day')
-#
-#
-# class ScheduleEventSerializer(serializers.ModelSerializer):
-#     predecessors_link = PredecessorsLinkSerializer(many=True)
-#
-#     class Meta:
-#         model = lead_schedule.ScheduleEvent
-#         fields = '__all__'
+
+
+class ScheduleEventSerializer(serializers.ModelSerializer):
+    # predecessors_link = PredecessorsLinkSerializer(many=True)
+
+    class Meta:
+        model = lead_schedule.ScheduleEvent
+        fields = '__all__'
+
+    def create(self, validated_data):
+        request = self.context['request']
+        data = request.data
+        user_create = user_update = request.user
+        # predecessors_link = pop(data, 'predecessors_link', [])
+        assigned_user = pop(data, 'assigned_user', [])
+        lead_list = pop(data, 'lead_list', None)
+        viewing = pop(data, 'viewing', None)
+
+        schedule_event_create = lead_schedule.ScheduleEvent.objects.create(
+            user_create=user_create, user_update=user_update,
+            lead_list_id=lead_list,
+            **data
+        )
+        user = get_user_model().objects.filter(pk__in=[at for at in assigned_user])
+        view = get_user_model().objects.filter(pk__in=[at for at in viewing])
+        schedule_event_create.assigned_user.add(*user)
+        schedule_event_create.viewing.add(*view)
+        return schedule_event_create
+
+    def update(self, instance, data):
+        # to_predecessors_link = pop(data, 'predecessors_link', [])
+        assigned_user = pop(data, 'assigned_user', [])
+        viewing = pop(data, 'viewing', None)
+        schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=instance.pk)
+        schedule_event.update(**data)
+        schedule_event = schedule_event.first()
+
+        user = get_user_model().objects.filter(pk__in=[tmp.id for tmp in assigned_user])
+        view = get_user_model().objects.filter(pk__in=[at.id for at in viewing])
+        schedule_event.assigned_user.clear()
+        schedule_event.assigned_user.add(*user)
+        schedule_event.viewing.clear()
+        schedule_event.viewing.add(*view)
+
+        instance.refresh_from_db()
+        return instance
+
 
 class AttachmentsDailyLogSerializer(ScheduleAttachmentsSerializer):
     pass

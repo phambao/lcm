@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import permissions, status
 from rest_framework.viewsets import GenericViewSet
 from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, Messaging, DailyLog, \
-    AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem
+    AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent
 from ..serializers import lead_schedule
 
 
@@ -213,10 +213,17 @@ class ToDoChecklistItemTemplateDetailGenericView(generics.RetrieveUpdateDestroyA
     permission_classes = [permissions.IsAuthenticated]
 
 
-# class ScheduleEventGenericView(generics.ListCreateAPIView):
-#     queryset = ScheduleEvent.objects.all()
-#     serializer_class = lead_schedule.ScheduleEventSerializer
-#     permission_classes = [permissions.IsAuthenticated]
+class ScheduleEventGenericView(generics.ListCreateAPIView):
+    queryset = ScheduleEvent.objects.all()
+    serializer_class = lead_schedule.ScheduleEventSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleEventDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ScheduleEvent.objects.all()
+    serializer_class = lead_schedule.ScheduleEventSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])

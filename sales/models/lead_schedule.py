@@ -143,31 +143,31 @@ class AttachmentDailyLog(BaseModel):
     daily_log = models.ForeignKey(DailyLog, on_delete=models.CASCADE, related_name='attachment_daily_log_daily_log')
 
 
-# class ScheduleEvent(BaseModel):
-#     class Meta:
-#         db_table = 'schedule_event'
-#
-#     lead_list = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='schedule_event_lead_list')
-#     # division = models.CharField
-#     # project = models.CharField
-#     event_title = models.CharField(blank=True, max_length=128)
-#     assigned_user = models.ManyToManyField(get_user_model(), related_name='schedule_event_assigned_user',
-#                                            blank=True)
-#     reminder = models.IntegerField(blank=True, null=True)
-#     start_day = models.DateField()
-#     due_day = models.DateField()
-#     viewing = models.ManyToManyField(get_user_model(), related_name='schedule_event_viewing',
-#                                      blank=True)
+class ScheduleEvent(BaseModel):
+    class Meta:
+        db_table = 'schedule_event'
 
-#
+    lead_list = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='schedule_event_lead_list')
+    # division = models.CharField
+    # project = models.CharField
+    event_title = models.CharField(blank=True, max_length=128)
+    assigned_user = models.ManyToManyField(get_user_model(), related_name='schedule_event_assigned_user',
+                                           blank=True)
+    reminder = models.IntegerField(blank=True, null=True)
+    start_day = models.DateField()
+    # due_day = models.DateField()
+    viewing = models.ManyToManyField(get_user_model(), related_name='schedule_event_viewing',
+                                     blank=True)
+
+
 # class ScheduleEventPredecessorsLink(BaseModel):
 #     class Meta:
 #         db_table = 'schedule_event_predecessors_link'
-#
-#     name_predecessors = models.ForeignKey(get_user_model(), on_delete=models.CASCADE,
-#                                           related_name='schedule_event_predecessors_link_name')
-#
-#     type = models.CharField(max_length=128, blank=True)
-#     log_day = models.DateField()
-#     event_schedule = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE,
-#                                        related_name='predecessors_link_schedule_event')
+
+    # name_predecessors = models.ForeignKey(get_user_model(), on_delete=models.CASCADE,
+    #                                       related_name='schedule_event_predecessors_link_name')
+
+    # type = models.CharField(max_length=128, blank=True)
+    # log_day = models.DateField()
+    # event_schedule = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE,
+    #                                    related_name='predecessors_link_schedule_event')
