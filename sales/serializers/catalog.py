@@ -36,11 +36,16 @@ class CatalogSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         data_points = validated_data.pop('data_points', [])
         parent = validated_data.pop('parent', None)
+        level = validated_data.pop('level', None)
+        if level:
+            if catalog.Catalog.objects.filter(level=level, name__exact=validated_data['name']).exists():
+                raise ValidationError({'name': 'Name has been exist.'})
         if parent:
+            if catalog.Catalog.objects.filter(parents__id=parent, name__exact=validated_data['name']).exists():
+                raise ValidationError({'name': 'Name has been exist.'})
             validated_data['parents'] = [parent]
         instance = super().create(validated_data)
         for data_point in data_points:
-            print(data_point)
             unit = data_point.pop('unit')
             catalog.DataPoint.objects.create(catalog=instance, **data_point, unit_id=unit.get('id'))
         return instance
@@ -65,14 +70,6 @@ class CatalogSerializer(serializers.ModelSerializer):
             data['parent'] = None
         del data['parents']
         data['children'] = catalog.Catalog.objects.filter(parents__id=instance.pk).values_list('pk', flat=True)
-        return data
-
-    def validate(self, data):
-        # Check sub category's name if it's exist
-        records = catalog.Catalog.objects.filter(parents__id=data['parent'], name__exact=data['name'])
-        records = records | catalog.Catalog.objects.filter(level=data['level'], name__exact=data['name'])
-        if records.exists():
-            raise ValidationError({'name': 'Name has been exist.'})
         return data
 
 
