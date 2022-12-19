@@ -67,6 +67,14 @@ class CatalogSerializer(serializers.ModelSerializer):
         data['children'] = catalog.Catalog.objects.filter(parents__id=instance.pk).values_list('pk', flat=True)
         return data
 
+    def validate(self, data):
+        # Check sub category's name if it's exist
+        records = catalog.Catalog.objects.filter(parents__id=data['parent'], name__exact=data['name'])
+        records = records | catalog.Catalog.objects.filter(level=data['level'], name__exact=data['name'])
+        if records.exists():
+            raise ValidationError({'name': 'Name has been exist.'})
+        return data
+
 
 class CostTableModelSerializer(serializers.ModelSerializer):
     class Meta:

@@ -69,7 +69,7 @@ url_leads = [
 
 # Define Path for Catalog -------------------------------------------------------
 url_catalog = [
-    path('list/', catalog.CatalogList.as_view()),
+    path('list/', catalog.CatalogList.as_view(), name='catalogs'),
     path('list/<int:pk>/', catalog.CatalogDetail.as_view()),
     path('list/<int:pk>/children/', catalog.get_catalog_children),
     # path('list/<int:pk>/levels/', catalog.get_catalog_levels), temporarily removed
