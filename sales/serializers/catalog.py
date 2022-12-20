@@ -36,10 +36,7 @@ class CatalogSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         data_points = validated_data.pop('data_points', [])
         parent = validated_data.pop('parent', None)
-        level = validated_data.get('level', None)
-        if level:
-            if catalog.Catalog.objects.filter(level=level, name__exact=validated_data['name']).exists():
-                raise ValidationError({'name': 'Name has been exist.'})
+
         if parent:
             if catalog.Catalog.objects.filter(parents__id=parent, name__exact=validated_data['name']).exists():
                 raise ValidationError({'name': 'Name has been exist.'})
@@ -82,7 +79,7 @@ class CostTableModelSerializer(serializers.ModelSerializer):
 class CatalogLevelModelSerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
         model = catalog.CatalogLevel
-        fields = ('id', 'name', 'parent', 'catalog')
+        fields = ('id', 'name', 'parent', 'catalog', 'level_index')
         extra_kwargs = {'catalog': {'read_only': True}}
 
     def to_representation(self, instance):
