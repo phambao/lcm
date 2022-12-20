@@ -166,6 +166,8 @@ def add_multiple_level(request, pk_catalog):
         c = Catalog.objects.get(pk=pk_catalog)
     except Catalog.DoesNotExist:
         return Response(status=status.HTTP_400_BAD_REQUEST, data="Catalog not found")
+    if c.all_levels.all().exists():
+        return Response(status=status.HTTP_400_BAD_REQUEST, data="Could not create a new one")
     if isinstance(request.data, list):
         parent = None
         data = []
