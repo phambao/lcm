@@ -157,3 +157,22 @@ def get_catalog_ancestors(request):
             navigation = navigation[1:]
             data[c.pk] = [n.id for n in navigation[::-1]]
     return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def add_multiple_level(request, pk_catalog):
+    try:
+        c = Catalog.objects.get(pk=pk_catalog)
+    except Catalog.DoesNotExist:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data="Catalog not found")
+    if isinstance(request.data, list):
+        parent = None
+        data = []
+        for name in request.data:
+            catalog_level = CatalogLevel.objects.create(name=name, parent=parent, catalog=c)
+            parent = catalog_level
+            data.append(catalog_level)
+        serializer = catalog.CatalogLevelModelSerializer(data, many=True, context={'request': request})
+        return Response(status=status.HTTP_201_CREATED, data=serializer.data)
+    return Response(status=status.HTTP_400_BAD_REQUEST, data="Could not create levels")
