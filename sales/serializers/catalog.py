@@ -36,7 +36,7 @@ class CatalogSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         data_points = validated_data.pop('data_points', [])
         parent = validated_data.pop('parent', None)
-        level = validated_data.pop('level', None)
+        level = validated_data.get('level', None)
         if level:
             if catalog.Catalog.objects.filter(level=level, name__exact=validated_data['name']).exists():
                 raise ValidationError({'name': 'Name has been exist.'})
