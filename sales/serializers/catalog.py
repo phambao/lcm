@@ -29,7 +29,8 @@ class CatalogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = catalog.Catalog
-        fields = ('id', 'name', 'parents', 'parent', 'sequence', 'cost_table', 'icon', 'is_ancestor', 'level', 'data_points')
+        fields = ('id', 'name', 'parents', 'parent', 'sequence', 'cost_table', 'icon',
+                  'is_ancestor', 'level', 'data_points', 'level_index')
         extra_kwargs = {'icon': {'required': False,
                                  'allow_null': True}}
 
@@ -79,7 +80,7 @@ class CostTableModelSerializer(serializers.ModelSerializer):
 class CatalogLevelModelSerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
         model = catalog.CatalogLevel
-        fields = ('id', 'name', 'parent', 'catalog', 'level_index')
+        fields = ('id', 'name', 'parent', 'catalog')
         extra_kwargs = {'catalog': {'read_only': True}}
 
     def to_representation(self, instance):
