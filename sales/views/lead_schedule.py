@@ -272,11 +272,10 @@ def get_checklist_template_by_todo(request, *args, **kwargs):
     user_create = user_update = request.user
     pk_todo = kwargs.get('pk_todo')
     get_object_or_404(ToDo.objects.all(), pk=pk_todo)
-    data_checklist = list(CheckListItemsTemplate.objects.filter(todo=pk_todo, to_do_checklist_template=None))
+    data_checklist = CheckListItemsTemplate.objects.filter(todo=pk_todo, to_do_checklist_template=None)
     if not data_checklist:
         data_checklist = CheckListItems.objects.filter(to_do=pk_todo)
         for checklist_item in data_checklist:
-            user = get_user_model().objects.filter(pk__in=[at.id for at in checklist_item.assigned_to.all()])
             checklist_item_template = CheckListItemsTemplate.objects.create(
                 user_create=user_create, user_update=user_update,
                 uuid=checklist_item.uuid,
@@ -286,8 +285,8 @@ def get_checklist_template_by_todo(request, *args, **kwargs):
                 is_root=checklist_item.is_root,
                 todo_id=pk_todo
             )
-            checklist_item_template.assigned_to.add(*user)
-        data_checklist = list(CheckListItemsTemplate.objects.filter(todo=pk_todo, to_do_checklist_template=None))
+            checklist_item_template.assigned_to.add(*checklist_item.assigned_to.all())
+        data_checklist = CheckListItemsTemplate.objects.filter(todo=pk_todo, to_do_checklist_template=None)
         data = lead_schedule.CheckListItemsTemplateSerializer(
             data_checklist, many=True, context={'request': request}).data
         Response(status=status.HTTP_200_OK, data=data)
@@ -315,17 +314,16 @@ def select_checklist_template(request, *args, **kwargs):
         temp['is_check'] = checklist.is_check
         temp['is_root'] = checklist.is_root
 
-        user = get_user_model().objects.filter(pk__in=[at.id for at in checklist.assigned_to.all()])
         checklist_item_create = CheckListItems.objects.create(
             user_create=user_create, user_update=user_update,
             to_do_id=pk_todo, **temp
         )
-        checklist_item_create.assigned_to.add(*user)
+        checklist_item_create.assigned_to.add(*checklist.assigned_to.all())
         checklist_item_template = CheckListItemsTemplate.objects.create(
             user_create=user_create, user_update=user_update,
             todo_id=pk_todo, **temp
         )
-        checklist_item_template.assigned_to.add(*user)
+        checklist_item_template.assigned_to.add(*checklist.assigned_to.all())
 
     rs_checklist = CheckListItems.objects.filter(to_do=pk_todo)
     rs = lead_schedule.ToDoChecklistItemSerializer(
