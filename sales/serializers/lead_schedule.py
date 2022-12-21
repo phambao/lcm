@@ -4,10 +4,13 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
+from api.serializers.auth import UserSerializer
+from base.serializers import base
 from api.serializers.base import SerializerMixin
 from ..models import lead_schedule
 from base.utils import pop
-from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging
+from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging, CheckListItemsTemplate, \
+    TodoTemplateChecklistItem
 
 
 class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
@@ -53,27 +56,79 @@ class CheckListItemSerializer(serializers.Serializer):
 
     class Meta:
         model = lead_schedule.CheckListItems
-        fields = ('to_do', 'uuid', 'parent', 'description', 'is_check', 'is_root', 'assigned_to')
+        fields = ('to_do', 'uuid', 'parent_uuid', 'description', 'is_check', 'is_root', 'assigned_to')
 
 
 class ToDoChecklistItemSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
+    assigned_to = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
+
+    # messaging = MessagingSerializer(many=True, allow_null=True)
 
     class Meta:
         model = lead_schedule.CheckListItems
-        fields = ('id', 'uuid', 'parent', 'description', 'is_check', 'is_root', 'assigned_to')
+        fields = ('id', 'parent_uuid', 'description', 'is_check', 'is_root', 'assigned_to', 'to_do', 'uuid')
+
+    def create(self, validated_data):
+        request = self.context['request']
+        data = request.data
+        user_create = user_update = request.user
+        assigned_to = pop(data, 'assigned_to', [])
+        todo = pop(data, 'to_do', None)
+        data_uuid = uuid.uuid4()
+        user = get_user_model().objects.filter(pk__in=[at['id'] for at in assigned_to])
+        checklist_item_create = CheckListItems.objects.create(
+            user_create=user_create, user_update=user_update,
+            uuid=data_uuid,
+            to_do_id=todo, **data
+        )
+        checklist_item_create.assigned_to.add(*user)
+        checklist_item_template = CheckListItemsTemplate.objects.create(
+            user_create=user_create, user_update=user_update,
+            uuid=data_uuid,
+            todo_id=todo, **data
+        )
+        checklist_item_template.assigned_to.add(*user)
+        return checklist_item_create
+
+    def update(self, instance, data):
+        assigned_to = pop(data, 'assigned_to', [])
+        todo = pop(data, 'to_do', None)
+        checklist_item = lead_schedule.CheckListItems.objects.filter(pk=instance.pk)
+        checklist_item.update(**data)
+        checklist_item = checklist_item.first()
+        uuid = checklist_item.uuid
+
+        checklist_item_template = lead_schedule.CheckListItemsTemplate.objects.filter(todo=todo.id, uuid=uuid,
+                                                                                      to_do_checklist_template=None)
+        checklist_item_template.update(**data)
+        checklist_item_template = checklist_item_template.first()
+
+        # assigned_to
+        user = get_user_model().objects.filter(pk__in=[tmp.get('id') for tmp in assigned_to])
+        checklist_item.assigned_to.clear()
+        checklist_item.assigned_to.add(*user)
+
+        checklist_item_template.assigned_to.clear()
+        checklist_item_template.assigned_to.add(*user)
+        instance.refresh_from_db()
+        return instance
 
 
 class ToDoCreateSerializer(serializers.ModelSerializer):
     # check_list = serializers.JSONField()
-    file = serializers.FileField()
-    check_list = ToDoChecklistItemSerializer(many=True, allow_null=True)
-    messaging = MessagingSerializer(many=True, allow_null=True)
+    # file = serializers.FileField()
+    # check_list = ToDoChecklistItemSerializer(many=True, allow_null=True)
+
     temp_checklist = list()
+    # lead = base.IDAndNameSerializer(allow_null=True, required=False)
+    assigned_to = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
+    tags = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_schedule.ToDo
         fields = '__all__'
+        # exclude = ('lead_list',)
 
     def create(self, validated_data):
         request = self.context['request']
@@ -87,47 +142,46 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         data_checklist = pop(data, 'check_list', [])
         messaging = pop(data, 'messaging', [])
         tags = pop(data, 'tags', [])
-        assigned_to = pop(data, 'assigned_to', None)
+        assigned_to = pop(data, 'assigned_to', [])
         lead_list = pop(data, 'lead_list', None)
         data_todo = data
         todo_create = ToDo.objects.create(
             user_create=user_create, user_update=user_update,
             lead_list_id=lead_list, **data_todo
         )
-        tags_objects = TagSchedule.objects.filter(pk__in=[tag for tag in tags])
-        user = get_user_model().objects.filter(pk__in=[at for at in assigned_to])
-
+        tags_objects = TagSchedule.objects.filter(pk__in=[tag['id'] for tag in tags])
+        user = get_user_model().objects.filter(pk__in=[at['id'] for at in assigned_to])
         todo_create.tags.add(*tags_objects)
         todo_create.assigned_to.add(*user)
 
-        for checklist in data_checklist:
-            # files = pop(checklist, 'files', [])
-            assigned_to_checklist = pop(checklist, 'assigned_to', [])
-            create_checklist = CheckListItems.objects.create(
-                user_create=user_create,
-                user_update=user_update,
-                to_do=todo_create,
-                **checklist
-            )
-            user = get_user_model().objects.filter(pk__in=[tmp for tmp in assigned_to_checklist])
-            create_checklist.assigned_to.add(*user)
-
-        data_create_messaging = list()
-        for message in messaging:
-            rs_message = Messaging(
-                message=message['message'],
-                to_do=todo_create,
-                user_create=user_create,
-                user_update=user_update
-            )
-            data_create_messaging.append(rs_message)
-        Messaging.objects.bulk_create(data_create_messaging)
+        # for checklist in data_checklist:
+        #     # files = pop(checklist, 'files', [])
+        #     assigned_to_checklist = pop(checklist, 'assigned_to', [])
+        #     create_checklist = CheckListItems.objects.create(
+        #         user_create=user_create,
+        #         user_update=user_update,
+        #         to_do=todo_create,
+        #         **checklist
+        #     )
+        #     user = get_user_model().objects.filter(pk__in=[tmp['id'] for tmp in assigned_to_checklist])
+        #     create_checklist.assigned_to.add(*user)
+        #
+        # data_create_messaging = list()
+        # for message in messaging:
+        #     rs_message = Messaging(
+        #         message=message['message'],
+        #         to_do=todo_create,
+        #         user_create=user_create,
+        #         user_update=user_update
+        #     )
+        #     data_create_messaging.append(rs_message)
+        # Messaging.objects.bulk_create(data_create_messaging)
 
         return todo_create
 
     def update(self, instance, data):
-        check_list = pop(data, 'check_list', [])
-        messaging = pop(data, 'messaging', [])
+        # check_list = pop(data, 'check_list', [])
+        # messaging = pop(data, 'messaging', [])
         todo_tags = pop(data, 'tags', [])
         assigned_to = pop(data, 'assigned_to', [])
         to_do = lead_schedule.ToDo.objects.filter(pk=instance.pk)
@@ -144,21 +198,21 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         to_do.assigned_to.clear()
         to_do.assigned_to.add(*user)
 
-        for message in messaging:
-            data_message = lead_schedule.Messaging.objects.filter(pk=message['id'])
-            data_message.update(message=message['message'])
-            data_message = data_message.first()
-
-        data_checklist = lead_schedule.CheckListItems.objects.filter(to_do=to_do.id)
-        data_checklist.delete()
-        for checklist in check_list:
-            assigned_to_checklist = pop(checklist, 'assigned_to', [])
-            create_checklist = CheckListItems.objects.create(
-                to_do=to_do,
-                **checklist
-            )
-            user = get_user_model().objects.filter(pk__in=[tmp.id for tmp in assigned_to_checklist])
-            create_checklist.assigned_to.add(*user)
+        # for message in messaging:
+        #     data_message = lead_schedule.Messaging.objects.filter(pk=message['id'])
+        #     data_message.update(message=message['message'])
+        #     data_message = data_message.first()
+        #
+        # data_checklist = lead_schedule.CheckListItems.objects.filter(to_do=to_do.id)
+        # data_checklist.delete()
+        # for checklist in check_list:
+        #     assigned_to_checklist = pop(checklist, 'assigned_to', [])
+        #     create_checklist = CheckListItems.objects.create(
+        #         to_do=to_do,
+        #         **checklist
+        #     )
+        #     user = get_user_model().objects.filter(pk__in=[tmp.id for tmp in assigned_to_checklist])
+        #     create_checklist.assigned_to.add(*user)
 
         instance.refresh_from_db()
         return instance
@@ -260,10 +314,44 @@ class DailyLogSerializer(serializers.ModelSerializer):
 
 class CheckListItemsTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
     id = serializers.CharField(required=False)
+    assigned_to = UserSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_schedule.CheckListItemsTemplate
-        fields = ('id', 'uuid', 'parent', 'description', 'is_check', 'is_root', 'assigned_to')
+        fields = (
+            'id', 'parent_uuid', 'description', 'is_check', 'is_root', 'assigned_to', 'todo',
+            'to_do_checklist_template')
+
+    def create(self, validated_data):
+        request = self.context['request']
+        data = request.data
+        user_create = user_update = request.user
+        assigned_to = pop(data, 'assigned_to', [])
+        todo = pop(data, 'to_do', None)
+        data_uuid = uuid.uuid4()
+        user = get_user_model().objects.filter(pk__in=[at['id'] for at in assigned_to])
+        checklist_item_template = CheckListItemsTemplate.objects.create(
+            user_create=user_create, user_update=user_update,
+            uuid=data_uuid,
+            todo_id=todo, **data
+        )
+        checklist_item_template.assigned_to.add(*user)
+        return checklist_item_template
+
+    def update(self, instance, data):
+        assigned_to = pop(data, 'assigned_to', [])
+        todo = pop(data, 'to_do', None)
+
+        checklist_item_template = lead_schedule.CheckListItemsTemplate.objects.filter(pk=instance.pk)
+        checklist_item_template.update(**data)
+        checklist_item_template = checklist_item_template.first()
+
+        # assigned_to
+        user = get_user_model().objects.filter(pk__in=[tmp.get('id') for tmp in assigned_to])
+        checklist_item_template.assigned_to.clear()
+        checklist_item_template.assigned_to.add(*user)
+        instance.refresh_from_db()
+        return instance
 
 
 PASS_FIELDS = ['user_create', 'user_update', 'to_do_checklist_template']
@@ -271,19 +359,18 @@ PASS_FIELDS = ['user_create', 'user_update', 'to_do_checklist_template']
 
 class ToDoCheckListItemsTemplateSerializer(serializers.ModelSerializer):
     template_name = serializers.CharField(allow_null=True)
-    checklist_item_to_do_template = CheckListItemsTemplateSerializer('to_do_checklist_template', many=True,
-                                                                     allow_null=True)
+    todo = serializers.IntegerField(allow_null=True)
 
     class Meta:
         model = lead_schedule.TodoTemplateChecklistItem
-        fields = ('id', 'template_name', 'checklist_item_to_do_template')
+        fields = ('id', 'template_name', 'todo')
 
     def create(self, validated_data):
         request = self.context['request']
         data = request.data
         user_create = user_update = request.user
 
-        checklist_item = pop(data, 'checklist_item_to_do_template', [])
+        todo = pop(data, 'todo', None)
 
         template_to_do_checklist = lead_schedule.TodoTemplateChecklistItem.objects.create(
             user_create=user_create,
@@ -291,51 +378,53 @@ class ToDoCheckListItemsTemplateSerializer(serializers.ModelSerializer):
             **data
         )
 
-        for checklist in checklist_item:
-            assigned_to_checklist = pop(checklist, 'assigned_to', [])
+        update_list = []
+        model_checklist_item = lead_schedule.CheckListItemsTemplate.objects.filter(todo=todo,
+                                                                                   to_do_checklist_template=None)
+        for checklist in model_checklist_item:
+            checklist.to_do_checklist_template = template_to_do_checklist
+            update_list.append(checklist)
 
-            create_checklist_template = lead_schedule.CheckListItemsTemplate.objects.create(
-                user_create=user_create,
-                user_update=user_update,
-                to_do_checklist_template=template_to_do_checklist,
-                **checklist
-            )
-
-            user = get_user_model().objects.filter(pk__in=[tmp for tmp in assigned_to_checklist])
-            create_checklist_template.assigned_to.add(*user)
+        CheckListItemsTemplate.objects.bulk_update(update_list, ['to_do_checklist_template'])
+        # for checklist in checklist_item:
+        #     assigned_to_checklist = pop(checklist, 'assigned_to', [])
+        #
+        #     create_checklist_template = lead_schedule.CheckListItemsTemplate.objects.create(
+        #         user_create=user_create,
+        #         user_update=user_update,
+        #         to_do_checklist_template=template_to_do_checklist,
+        #         **checklist
+        #     )
+        #
+        #     user = get_user_model().objects.filter(pk__in=[tmp for tmp in assigned_to_checklist])
+        #     create_checklist_template.assigned_to.add(*user)
 
         return template_to_do_checklist
 
     def update(self, instance, data):
         request = self.context['request']
         user_create = user_update = request.user
-        checklist_item = pop(data, 'checklist_item', [])
+        # checklist_item = pop(data, 'checklist_item', [])
         to_do_checklist_template = lead_schedule.TodoTemplateChecklistItem.objects.filter(pk=instance.pk)
         to_do_checklist_template.update(**data)
-        to_do_checklist_template = to_do_checklist_template.first()
-
-        data_checklist_template = lead_schedule.CheckListItemsTemplate.objects.filter(
-            to_do_checklist_template=to_do_checklist_template.id)
-        data_checklist_template.delete()
-        for checklist in checklist_item:
-            assigned_to_checklist = pop(checklist, 'assigned_to', [])
-            create_checklist = lead_schedule.CheckListItemsTemplate.objects.create(
-                to_do_checklist_template=to_do_checklist_template,
-                user_create=user_create,
-                user_update=user_update,
-                **checklist
-            )
-            user = get_user_model().objects.filter(pk__in=[tmp.id for tmp in assigned_to_checklist])
-            create_checklist.assigned_to.add(*user)
+        # to_do_checklist_template = to_do_checklist_template.first()
+        #
+        # data_checklist_template = lead_schedule.CheckListItemsTemplate.objects.filter(
+        #     to_do_checklist_template=to_do_checklist_template.id)
+        # data_checklist_template.delete()
+        # for checklist in checklist_item:
+        #     assigned_to_checklist = pop(checklist, 'assigned_to', [])
+        #     create_checklist = lead_schedule.CheckListItemsTemplate.objects.create(
+        #         to_do_checklist_template=to_do_checklist_template,
+        #         user_create=user_create,
+        #         user_update=user_update,
+        #         **checklist
+        #     )
+        #     user = get_user_model().objects.filter(pk__in=[tmp.id for tmp in assigned_to_checklist])
+        #     create_checklist.assigned_to.add(*user)
 
         instance.refresh_from_db()
         return instance
-
-
-# class PredecessorsLinkSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = lead_schedule.ScheduleEventPredecessorsLink
-#         fields = ('name', 'type', 'log_day')
 
 
 class ScheduleEventSerializer(serializers.ModelSerializer):
