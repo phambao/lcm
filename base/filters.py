@@ -29,10 +29,14 @@ class SearchFilter(filters.FilterSet):
 class ColumnFilter(filters.FilterSet):
     content_type = filters.ModelChoiceFilter(queryset=ContentType.objects.all())
     model = filters.CharFilter(field_name='content_type__model', lookup_expr='exact')
+    is_public = filters.BooleanFilter(field_name='is_public', method='get_public')
 
     class Meta:
         model = Column
         fields = ('content_type', 'model')
+
+    def get_public(self, queryset, name, value):
+        return Column.objects.filter(is_public=value).exclude(user=self.request.user)
 
 
 class GridSettingFilter(filters.FilterSet):

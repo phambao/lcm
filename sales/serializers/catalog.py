@@ -29,18 +29,21 @@ class CatalogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = catalog.Catalog
-        fields = ('id', 'name', 'parents', 'parent', 'sequence', 'cost_table', 'icon', 'is_ancestor', 'level', 'data_points')
+        fields = ('id', 'name', 'parents', 'parent', 'sequence', 'cost_table', 'icon',
+                  'is_ancestor', 'level', 'data_points', 'level_index')
         extra_kwargs = {'icon': {'required': False,
                                  'allow_null': True}}
 
     def create(self, validated_data):
         data_points = validated_data.pop('data_points', [])
         parent = validated_data.pop('parent', None)
+
         if parent:
+            if catalog.Catalog.objects.filter(parents__id=parent, name__exact=validated_data['name']).exists():
+                raise ValidationError({'name': 'Name has been exist.'})
             validated_data['parents'] = [parent]
         instance = super().create(validated_data)
         for data_point in data_points:
-            print(data_point)
             unit = data_point.pop('unit')
             catalog.DataPoint.objects.create(catalog=instance, **data_point, unit_id=unit.get('id'))
         return instance

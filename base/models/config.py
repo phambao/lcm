@@ -10,6 +10,7 @@ class Column(models.Model):
     hidden_params = ArrayField(models.CharField(max_length=64), default=list, blank=True)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True, blank=True)
+    is_public = models.BooleanField(default=False, blank=True)
 
 
 class Search(models.Model):

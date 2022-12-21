@@ -69,7 +69,7 @@ url_leads = [
 
 # Define Path for Catalog -------------------------------------------------------
 url_catalog = [
-    path('list/', catalog.CatalogList.as_view()),
+    path('list/', catalog.CatalogList.as_view(), name='catalogs'),
     path('list/<int:pk>/', catalog.CatalogDetail.as_view()),
     path('list/<int:pk>/children/', catalog.get_catalog_children),
     # path('list/<int:pk>/levels/', catalog.get_catalog_levels), temporarily removed
@@ -81,6 +81,7 @@ url_catalog = [
     path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
     path('list/<int:pk_catalog>/levels/', catalog.CatalogLevelList.as_view()),
     path('list/<int:pk_catalog>/levels/<int:pk>/', catalog.CatalogLevelDetail.as_view()),
+    path('list/<int:pk_catalog>/add-levels/', catalog.add_multiple_level),
     path('unit/', catalog.DataPointUnitView.as_view()),
     path('unit/<int:pk>/', catalog.DataPointUnitDetailView.as_view()),
 ]
