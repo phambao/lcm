@@ -1,5 +1,6 @@
 import uuid
 
+from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
@@ -8,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework import permissions, status
 from rest_framework.viewsets import GenericViewSet
 from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, Messaging, DailyLog, \
-    AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent
+    AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate
 from ..serializers import lead_schedule
 
 
@@ -167,13 +168,13 @@ class TagScheduleDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
 
 class ScheduleCheckListItemGenericView(generics.ListCreateAPIView):
     queryset = CheckListItems.objects.all()
-    serializer_class = lead_schedule.CheckListItemSerializer
+    serializer_class = lead_schedule.ToDoChecklistItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
 class ScheduleCheckListItemDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CheckListItems.objects.all()
-    serializer_class = lead_schedule.CheckListItemSerializer
+    serializer_class = lead_schedule.ToDoChecklistItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
@@ -199,6 +200,35 @@ class DailyLogTemplateNoteDetailGenericView(generics.RetrieveUpdateDestroyAPIVie
     queryset = DailyLogTemplateNotes.objects.all()
     serializer_class = lead_schedule.DailyLogNoteSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class CheckListItemGenericView(generics.ListCreateAPIView):
+    queryset = CheckListItems.objects.all()
+    serializer_class = lead_schedule.ToDoChecklistItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class CheckListItemDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CheckListItems.objects.all()
+    serializer_class = lead_schedule.ToDoChecklistItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        pk_checklist = kwargs.get('pk')
+        checklist_item = CheckListItems.objects.get(pk=pk_checklist)
+        uuid = checklist_item.uuid
+        todo = checklist_item.to_do
+        checklist_item_children = CheckListItems.objects.filter(to_do=todo.id, parent_uuid=uuid)
+
+        checklist_item_template = CheckListItemsTemplate.objects.filter(todo=todo.id, uuid=uuid, to_do_checklist_template=None)
+        checklist_item_children_template = CheckListItemsTemplate.objects.filter(todo=todo.id, parent_uuid=uuid, to_do_checklist_template=None)
+
+        checklist_item.delete()
+        checklist_item_children.delete()
+        checklist_item_template.delete()
+        checklist_item_children_template.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ToDoChecklistItemTemplateGenericView(generics.ListCreateAPIView):
@@ -234,3 +264,71 @@ def get_checklist_by_todo(request, *args, **kwargs):
     data = lead_schedule.CheckListItemSerializer(
         data_checklist, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_checklist_template_by_todo(request, *args, **kwargs):
+    user_create = user_update = request.user
+    pk_todo = kwargs.get('pk_todo')
+    get_object_or_404(ToDo.objects.all(), pk=pk_todo)
+    data_checklist = list(CheckListItemsTemplate.objects.filter(todo=pk_todo, to_do_checklist_template=None))
+    if not data_checklist:
+        data_checklist = CheckListItems.objects.filter(to_do=pk_todo)
+        for checklist_item in data_checklist:
+            user = get_user_model().objects.filter(pk__in=[at.id for at in checklist_item.assigned_to.all()])
+            checklist_item_template = CheckListItemsTemplate.objects.create(
+                user_create=user_create, user_update=user_update,
+                uuid=checklist_item.uuid,
+                parent_uuid=checklist_item.parent_uuid,
+                description=checklist_item.description,
+                is_check=checklist_item.is_check,
+                is_root=checklist_item.is_root,
+                todo_id=pk_todo
+            )
+            checklist_item_template.assigned_to.add(*user)
+        data_checklist = list(CheckListItemsTemplate.objects.filter(todo=pk_todo, to_do_checklist_template=None))
+        data = lead_schedule.CheckListItemsTemplateSerializer(
+            data_checklist, many=True, context={'request': request}).data
+        Response(status=status.HTTP_200_OK, data=data)
+
+    data = lead_schedule.CheckListItemsTemplateSerializer(
+        data_checklist, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def select_checklist_template(request, *args, **kwargs):
+    user_create = user_update = request.user
+    pk_template = kwargs.get('pk_template')
+    pk_todo = kwargs.get('pk_todo')
+    get_object_or_404(ToDo.objects.all(), pk=pk_todo)
+    CheckListItems.objects.filter(to_do=pk_todo).delete()
+    CheckListItemsTemplate.objects.filter(todo=pk_todo, to_do_checklist_template=None).delete()
+    data_checklist = CheckListItemsTemplate.objects.filter(to_do_checklist_template=pk_template)
+    for checklist in data_checklist:
+        temp = dict()
+        temp['uuid'] = checklist.uuid
+        temp['parent_uuid'] = checklist.parent_uuid
+        temp['description'] = checklist.description
+        temp['is_check'] = checklist.is_check
+        temp['is_root'] = checklist.is_root
+
+        user = get_user_model().objects.filter(pk__in=[at.id for at in checklist.assigned_to.all()])
+        checklist_item_create = CheckListItems.objects.create(
+            user_create=user_create, user_update=user_update,
+            to_do_id=pk_todo, **temp
+        )
+        checklist_item_create.assigned_to.add(*user)
+        checklist_item_template = CheckListItemsTemplate.objects.create(
+            user_create=user_create, user_update=user_update,
+            todo_id=pk_todo, **temp
+        )
+        checklist_item_template.assigned_to.add(*user)
+
+    rs_checklist = CheckListItems.objects.filter(to_do=pk_todo)
+    rs = lead_schedule.ToDoChecklistItemSerializer(
+        rs_checklist, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=rs)
+
