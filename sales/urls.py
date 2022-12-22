@@ -3,7 +3,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from sales.views import lead_list, catalog, lead_schedule
+from sales.views import lead_list, catalog, lead_schedule, estimate
 from api.views.upload_file import FileUploadView
 
 # Define Path for Contacts -----------------------------------------------------
@@ -76,6 +76,7 @@ url_catalog = [
     path('list/<int:pk>/tree/', catalog.get_catalog_tree),
     path('list/<int:pk>/list/', catalog.get_catalog_list),
     path('list/ancestors/', catalog.get_catalog_ancestors),
+    path('list/copy/', catalog.duplicate_catalogs),
     path('list/delete/', catalog.delete_catalogs),
     path('cost-tables/', catalog.CostTableList.as_view()),
     path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
@@ -121,13 +122,21 @@ url_schedule = [
     path('schedule-event/<int:pk>/', lead_schedule.ScheduleEventDetailGenericView.as_view()),
 
 ]
+
+# URL Estimate
+url_estimate = [
+    path('po-formula/', estimate.POFormulaList.as_view()),
+    path('po-formula/<int:pk>/', estimate.POFormulaDetail.as_view()),
+]
+
 # DEFINE PATH FOR SALES APP -----------------------------------------------------
 url_sales = [
     path('', include(url_contacts)),
     path('', include(url_contact_types)),
     path('lead-list/', include(url_leads)),
     path('catalog/', include(url_catalog)),
-    path('schedule/', include(url_schedule))
+    path('schedule/', include(url_schedule)),
+    path('estimate/', include(url_estimate)),
 ]
 
 schema_view_sales = get_schema_view(
@@ -140,7 +149,8 @@ schema_view_sales = get_schema_view(
         path('api/sales/', include(url_contact_types)),
         path('api/sales/lead-list/', include(url_leads)),
         path('api/sales/catalog/', include(url_catalog)),
-        path('api/sales/schedule/', include(url_schedule))
+        path('api/sales/schedule/', include(url_schedule)),
+        path('api/sales/estimate/', include(url_estimate))
     ],
     public=True,
     permission_classes=[permissions.AllowAny],

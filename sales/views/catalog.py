@@ -176,3 +176,11 @@ def add_multiple_level(request):
         return Response(status=status.HTTP_201_CREATED, data={"levels": serializer.data,
                                                               "catalog": catalog_serializer.data})
     return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def duplicate_catalogs(request):
+    if isinstance(request.data, dict):
+        return Response(status=status.HTTP_201_CREATED, data={})
+    return Response(status=status.HTTP_400_BAD_REQUEST)
