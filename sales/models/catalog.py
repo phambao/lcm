@@ -87,6 +87,7 @@ class Catalog(BaseModel):
     is_ancestor = models.BooleanField(default=False, blank=True)
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False)
     cost_table = models.OneToOneField(CostTable, on_delete=models.CASCADE, null=True, blank=True)
+    c_table = models.JSONField(default=dict, blank=True)
     icon = models.ImageField(upload_to='catalog/%Y/%m/%d/', blank=True)
     level = models.ForeignKey(CatalogLevel, on_delete=models.CASCADE, null=True,
                               blank=True, default=None, related_name='catalogs')
