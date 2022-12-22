@@ -30,7 +30,7 @@ class CatalogSerializer(serializers.ModelSerializer):
     class Meta:
         model = catalog.Catalog
         fields = ('id', 'name', 'parents', 'parent', 'sequence', 'cost_table', 'icon',
-                  'is_ancestor', 'level', 'data_points', 'level_index')
+                  'is_ancestor', 'level', 'data_points', 'level_index', 'c_table')
         extra_kwargs = {'icon': {'required': False,
                                  'allow_null': True}}
 
