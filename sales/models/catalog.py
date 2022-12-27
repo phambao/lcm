@@ -1,3 +1,5 @@
+import copy
+
 from django.db import models
 
 from api.models import BaseModel
@@ -152,5 +154,18 @@ class Catalog(BaseModel):
         catalog = Catalog.objects.get(pk=pk)
         catalog.children.add(self)
 
-    def duplicate(self, pk):
-        pass
+    def clone(self, parent=None):
+        c = copy.copy(self)
+        c.id = None
+        c.sequence = self.sequence + 1
+        c.save()
+        if parent:
+            c.parents.add(parent)
+        return c
+
+    def duplicate(self, parent=None, depth=0):
+        c = self.clone(parent=parent)
+        if depth:
+            children = Catalog.objects.filter(parents__id=self.pk)
+            for child in children:
+                child.duplicate(parent=c, depth=depth-1)
