@@ -181,6 +181,10 @@ def add_multiple_level(request):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def duplicate_catalogs(request):
-    if isinstance(request.data, dict):
+    if isinstance(request.data, list):
+        for d in request.data:
+            depth = int(d.pop('depth'))
+            c = Catalog.objects.get(pk=d.pop('id'))
+            c.duplicate(parent=c.parents.first(), depth=depth)
         return Response(status=status.HTTP_201_CREATED, data={})
     return Response(status=status.HTTP_400_BAD_REQUEST)
