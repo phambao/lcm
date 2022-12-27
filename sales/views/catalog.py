@@ -157,3 +157,34 @@ def get_catalog_ancestors(request):
             navigation = navigation[1:]
             data[c.pk] = [n.id for n in navigation[::-1]]
     return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def add_multiple_level(request):
+    if isinstance(request.data, dict):
+        catalog_serializer = catalog.CatalogSerializer(data=request.data.get('catalog'))
+        catalog_serializer.is_valid(raise_exception=True)
+        c = catalog_serializer.save()
+        parent = None
+        data = []
+        for name in request.data.get('levels', []):
+            catalog_level = CatalogLevel.objects.create(name=name, parent=parent, catalog=c)
+            parent = catalog_level
+            data.append(catalog_level)
+        serializer = catalog.CatalogLevelModelSerializer(data, many=True, context={'request': request})
+        return Response(status=status.HTTP_201_CREATED, data={"levels": serializer.data,
+                                                              "catalog": catalog_serializer.data})
+    return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def duplicate_catalogs(request):
+    if isinstance(request.data, list):
+        for d in request.data:
+            depth = int(d.pop('depth'))
+            c = Catalog.objects.get(pk=d.pop('id'))
+            c.duplicate(parent=c.parents.first(), depth=depth)
+        return Response(status=status.HTTP_201_CREATED, data={})
+    return Response(status=status.HTTP_400_BAD_REQUEST)

@@ -3,7 +3,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from sales.views import lead_list, catalog, lead_schedule
+from sales.views import lead_list, catalog, lead_schedule, estimate
 from api.views.upload_file import FileUploadView
 
 # Define Path for Contacts -----------------------------------------------------
@@ -69,18 +69,20 @@ url_leads = [
 
 # Define Path for Catalog -------------------------------------------------------
 url_catalog = [
-    path('list/', catalog.CatalogList.as_view()),
+    path('list/', catalog.CatalogList.as_view(), name='catalogs'),
     path('list/<int:pk>/', catalog.CatalogDetail.as_view()),
     path('list/<int:pk>/children/', catalog.get_catalog_children),
     # path('list/<int:pk>/levels/', catalog.get_catalog_levels), temporarily removed
     path('list/<int:pk>/tree/', catalog.get_catalog_tree),
     path('list/<int:pk>/list/', catalog.get_catalog_list),
     path('list/ancestors/', catalog.get_catalog_ancestors),
+    path('list/copy/', catalog.duplicate_catalogs),
     path('list/delete/', catalog.delete_catalogs),
     path('cost-tables/', catalog.CostTableList.as_view()),
     path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
     path('list/<int:pk_catalog>/levels/', catalog.CatalogLevelList.as_view()),
     path('list/<int:pk_catalog>/levels/<int:pk>/', catalog.CatalogLevelDetail.as_view()),
+    path('list/add-catalog-levels/', catalog.add_multiple_level),
     path('unit/', catalog.DataPointUnitView.as_view()),
     path('unit/<int:pk>/', catalog.DataPointUnitDetailView.as_view()),
 ]
@@ -96,12 +98,16 @@ url_schedule = [
     path('tags/', lead_schedule.TagScheduleGenericView.as_view()),
     path('tags/<int:pk>/', lead_schedule.TagScheduleDetailGenericView.as_view()),
     # CHECKLIST ITEM
-    path('checklist-item/', lead_schedule.ScheduleCheckListItemGenericView.as_view()),
-    path('checklist-item/<int:pk>/', lead_schedule.ScheduleCheckListItemDetailGenericView.as_view()),
+    path('checklist-item/', lead_schedule.CheckListItemGenericView.as_view()),
+    path('checklist-item/<int:pk>/', lead_schedule.CheckListItemDetailGenericView.as_view()),
     path('<int:pk_todo>/checklist-item/', lead_schedule.get_checklist_by_todo),
+    path('<int:pk_todo>/checklist-item-template/', lead_schedule.get_checklist_template_by_todo),
+
     # TEMPLATE CHECKLIST ITEM
     path('todo/checklist-item/template/', lead_schedule.ToDoChecklistItemTemplateGenericView.as_view()),
     path('todo/checklist-items/template/<int:pk>/', lead_schedule.ToDoChecklistItemTemplateDetailGenericView.as_view()),
+    path('<int:pk_todo>/todo/<int:pk_template>/select-template/', lead_schedule.select_checklist_template),
+
     # DAILY LOGS
     path('daily-logs/', lead_schedule.DailyLogGenericView.as_view()),
     path('daily-logs/<int:pk>/', lead_schedule.DailyLogDetailGenericView.as_view()),
@@ -116,13 +122,21 @@ url_schedule = [
     path('schedule-event/<int:pk>/', lead_schedule.ScheduleEventDetailGenericView.as_view()),
 
 ]
+
+# URL Estimate
+url_estimate = [
+    path('po-formula/', estimate.POFormulaList.as_view()),
+    path('po-formula/<int:pk>/', estimate.POFormulaDetail.as_view()),
+]
+
 # DEFINE PATH FOR SALES APP -----------------------------------------------------
 url_sales = [
     path('', include(url_contacts)),
     path('', include(url_contact_types)),
     path('lead-list/', include(url_leads)),
     path('catalog/', include(url_catalog)),
-    path('schedule/', include(url_schedule))
+    path('schedule/', include(url_schedule)),
+    path('estimate/', include(url_estimate)),
 ]
 
 schema_view_sales = get_schema_view(
@@ -135,7 +149,8 @@ schema_view_sales = get_schema_view(
         path('api/sales/', include(url_contact_types)),
         path('api/sales/lead-list/', include(url_leads)),
         path('api/sales/catalog/', include(url_catalog)),
-        path('api/sales/schedule/', include(url_schedule))
+        path('api/sales/schedule/', include(url_schedule)),
+        path('api/sales/estimate/', include(url_estimate))
     ],
     public=True,
     permission_classes=[permissions.AllowAny],

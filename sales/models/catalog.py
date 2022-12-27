@@ -1,3 +1,5 @@
+import copy
+
 from django.db import models
 
 from api.models import BaseModel
@@ -87,9 +89,11 @@ class Catalog(BaseModel):
     is_ancestor = models.BooleanField(default=False, blank=True)
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False)
     cost_table = models.OneToOneField(CostTable, on_delete=models.CASCADE, null=True, blank=True)
+    c_table = models.JSONField(default=dict, blank=True)
     icon = models.ImageField(upload_to='catalog/%Y/%m/%d/', blank=True)
     level = models.ForeignKey(CatalogLevel, on_delete=models.CASCADE, null=True,
                               blank=True, default=None, related_name='catalogs')
+    level_index = models.IntegerField(default=0, blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -150,5 +154,18 @@ class Catalog(BaseModel):
         catalog = Catalog.objects.get(pk=pk)
         catalog.children.add(self)
 
-    def duplicate(self, pk):
-        pass
+    def clone(self, parent=None):
+        c = copy.copy(self)
+        c.id = None
+        c.sequence = self.sequence + 1
+        c.save()
+        if parent:
+            c.parents.add(parent)
+        return c
+
+    def duplicate(self, parent=None, depth=0):
+        c = self.clone(parent=parent)
+        if depth:
+            children = Catalog.objects.filter(parents__id=self.pk)
+            for child in children:
+                child.duplicate(parent=c, depth=depth-1)

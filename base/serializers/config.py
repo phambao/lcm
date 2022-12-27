@@ -1,4 +1,3 @@
-from django.db import IntegrityError
 from rest_framework import serializers
 from ..models.config import Column, Search, Config, GridSetting
 
@@ -8,7 +7,7 @@ class ColumnSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Column
-        fields = ('id', 'name', 'params', 'content_type', 'user', 'model', 'hidden_params')
+        fields = ('id', 'name', 'params', 'content_type', 'user', 'model', 'is_public', 'hidden_params')
 
 
 class SearchSerializer(serializers.ModelSerializer):
