@@ -180,11 +180,19 @@ def add_multiple_level(request):
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
-def duplicate_catalogs(request):
+def duplicate_catalogs(request, pk):
+    """
+    Payload: [{"id": int, "depth": int, data_points: [id,...]},...]
+    """
     if isinstance(request.data, list):
+        parent_catalog = get_object_or_404(Catalog, pk=pk)
         for d in request.data:
-            depth = int(d.pop('depth'))
-            c = Catalog.objects.get(pk=d.pop('id'))
-            c.duplicate(parent=c.parents.first(), depth=depth)
+            depth = int(d.get('depth', 0))
+            data_points = d.get('data_points', [])
+            try:
+                c = Catalog.objects.get(pk=d.get('id'))
+                c.duplicate(parent=parent_catalog, depth=depth)
+            except Catalog.DoesNotExist:
+                pass
         return Response(status=status.HTTP_201_CREATED, data={})
     return Response(status=status.HTTP_400_BAD_REQUEST)
