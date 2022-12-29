@@ -373,7 +373,7 @@ def select_lead_list(request, *args, **kwargs):
 
 def get_id_by_group(pk):
     rs = []
-    event = list(ScheduleEvent.objects.filter(predecessor=pk))
+    event = ScheduleEvent.objects.filter(predecessor=pk)
     for e in event:
         rs.append(e.id)
         rs.extend(get_id_by_group(e.id))
