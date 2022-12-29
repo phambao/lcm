@@ -191,7 +191,7 @@ def duplicate_catalogs(request, pk):
             data_points = d.get('data_points', [])
             try:
                 c = Catalog.objects.get(pk=d.get('id'))
-                c.duplicate(parent=parent_catalog, depth=depth)
+                c.duplicate(parent=parent_catalog, depth=depth, data_points=data_points)
             except Catalog.DoesNotExist:
                 pass
         return Response(status=status.HTTP_201_CREATED, data={})

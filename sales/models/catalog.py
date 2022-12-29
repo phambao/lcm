@@ -14,8 +14,8 @@ class CatalogLevel(models.Model):
         db_table = 'catalog_level'
 
     name = models.CharField(max_length=64)
-    parent = models.ForeignKey('self', related_name='child', null=True,
-                               blank=True, on_delete=models.SET_NULL, default=None)
+    parent = models.OneToOneField('self', related_name='child', null=True,
+                                  blank=True, on_delete=models.SET_NULL, default=None)
     catalog = models.ForeignKey('Catalog', on_delete=models.CASCADE, null=True,
                                 blank=True, default=None, related_name='all_levels')
 
@@ -162,6 +162,15 @@ class Catalog(BaseModel):
         if parent:
             c.parents.add(parent)
         points = self.data_points.filter(id__in=data_points)
+        d_points = []
+        for p in points:
+            params = {'value': p.value,
+                      'unit_id': p.unit_id,
+                      'linked_description': p.linked_description,
+                      'is_linked': p.is_linked,
+                      'catalog_id': c.id}
+            d_points.append(DataPoint(**params))
+        DataPoint.objects.bulk_create(d_points)
         return c
 
     def duplicate(self, parent=None, depth=0, data_points=[]):
