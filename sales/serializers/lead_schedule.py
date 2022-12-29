@@ -25,10 +25,10 @@ class AttachmentsDailyLogModelSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# class FileChecklistModelSerializer(FileSerializerMixin, serializers.ModelSerializer):
-#     class Meta:
-#         model = lead_schedule.FileCheckListItems
-#         fields = '__all__'
+class AttachmentsEventModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.FileScheduleEvent
+        fields = '__all__'
 
 
 class ScheduleAttachmentsSerializer(serializers.Serializer):
@@ -270,7 +270,9 @@ class DailyLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = lead_schedule.DailyLog
-        fields = ('id', 'date', 'tags', 'to_do', 'note', 'lead_list')
+        fields = ('id', 'date', 'tags', 'to_do', 'note', 'lead_list', 'internal_user_share', 'internal_user_notify',
+                  'sub_member_share', 'sub_member_notify', 'owner_share', 'owner_notify', 'private_share',
+                  'private_notify',)
 
     def create(self, validated_data):
         request = self.context['request']
@@ -427,22 +429,34 @@ class ToDoCheckListItemsTemplateSerializer(serializers.ModelSerializer):
         return instance
 
 
+class NamePredecessorsSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    name = serializers.CharField(required=False)
+
+
+class PredecessorsLinkSerializer(serializers.Serializer):
+    name_predecessors = NamePredecessorsSerializer(allow_null=True, required=False)
+    is_predecessors = serializers.BooleanField(required=False)
+    type = serializers.CharField(required=False)
+    lag_day = serializers.IntegerField(required=False)
+
+
 class ScheduleEventSerializer(serializers.ModelSerializer):
-    # predecessors_link = PredecessorsLinkSerializer(many=True)
+    predecessors_link = PredecessorsLinkSerializer(required=False, many=True)
 
     class Meta:
         model = lead_schedule.ScheduleEvent
-        fields = '__all__'
+        fields = ('id', 'lead_list', 'event_title', 'assigned_user', 'reminder', 'start_day', 'end_day', 'due_days',
+                  'time', 'viewing', 'notes', 'predecessors_link', 'type', 'lag_day', 'predecessor')
 
     def create(self, validated_data):
         request = self.context['request']
         data = request.data
         user_create = user_update = request.user
-        # predecessors_link = pop(data, 'predecessors_link', [])
+        predecessors_link = pop(data, 'predecessors_link', [])
         assigned_user = pop(data, 'assigned_user', [])
         lead_list = pop(data, 'lead_list', None)
         viewing = pop(data, 'viewing', None)
-
         schedule_event_create = lead_schedule.ScheduleEvent.objects.create(
             user_create=user_create, user_update=user_update,
             lead_list_id=lead_list,
@@ -452,15 +466,33 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         view = get_user_model().objects.filter(pk__in=[at for at in viewing])
         schedule_event_create.assigned_user.add(*user)
         schedule_event_create.viewing.add(*view)
+
+        for data in predecessors_link:
+            if data['is_predecessors'] is True:
+                data_update = dict()
+                data_update['predecessor'] = data['name_predecessors']['id']
+                data_update['lag_day'] = data['lag_day']
+                data_update['type'] = data['type']
+                schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=schedule_event_create.id)
+                schedule_event.update(**data_update)
+
+            if data['is_predecessors'] is False:
+                data_update = dict()
+                data_update['predecessor'] = schedule_event_create.id
+                data_update['lag_day'] = data['lag_day']
+                data_update['type'] = data['type']
+                schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=data['name_predecessors']['id'])
+                schedule_event.update(**data_update)
+
         return schedule_event_create
 
     def update(self, instance, data):
-        # to_predecessors_link = pop(data, 'predecessors_link', [])
+        predecessors_link = pop(data, 'predecessors_link', [])
         assigned_user = pop(data, 'assigned_user', [])
         viewing = pop(data, 'viewing', None)
-        schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=instance.pk)
-        schedule_event.update(**data)
-        schedule_event = schedule_event.first()
+        data_schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=instance.pk)
+        data_schedule_event.update(**data)
+        schedule_event = data_schedule_event.first()
 
         user = get_user_model().objects.filter(pk__in=[tmp.id for tmp in assigned_user])
         view = get_user_model().objects.filter(pk__in=[at.id for at in viewing])
@@ -468,6 +500,21 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         schedule_event.assigned_user.add(*user)
         schedule_event.viewing.clear()
         schedule_event.viewing.add(*view)
+        for data in predecessors_link:
+            if data['is_predecessors'] is True:
+                data_update = dict()
+                data_update['predecessor'] = data['name_predecessors']['id']
+                data_update['lag_day'] = data['lag_day']
+                data_update['type'] = data['type']
+                data_schedule_event.update(**data_update)
+
+            if data['is_predecessors'] is False:
+                data_update = dict()
+                data_update['predecessor'] = instance.pk
+                data_update['lag_day'] = data['lag_day']
+                data_update['type'] = data['type']
+                schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=data['name_predecessors']['id'])
+                schedule_event.update(**data_update)
 
         instance.refresh_from_db()
         return instance
@@ -478,4 +525,8 @@ class AttachmentsDailyLogSerializer(ScheduleAttachmentsSerializer):
 
 
 class FileChecklistSerializer(ScheduleAttachmentsSerializer):
+    pass
+
+
+class AttachmentsEventSerializer(ScheduleAttachmentsSerializer):
     pass

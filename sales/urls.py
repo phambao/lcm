@@ -119,6 +119,13 @@ url_schedule = [
     # SCHEDULE EVENT
     path('schedule-event/', lead_schedule.ScheduleEventGenericView.as_view()),
     path('schedule-event/<int:pk>/', lead_schedule.ScheduleEventDetailGenericView.as_view()),
+    path('select-schedule-event/', lead_schedule.select_event_predecessors),
+    path('select-schedule-event-link/<int:pk>/', lead_schedule.select_event_link),
+    # FILE EVENT
+    path('event/<int:pk_event>/attachments/', lead_schedule.AttachmentsEventGenericView.as_view({
+        "post": "create_file", "get": "get_file"})),
+
+    path('schedule-event-lead-list/', lead_schedule.select_lead_list),
 
 ]
 # DEFINE PATH FOR SALES APP -----------------------------------------------------
