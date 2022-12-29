@@ -35,10 +35,11 @@ class CatalogLevel(models.Model):
                     child.parents.clear()
                     child.parents.add(parent)
             child_level = child_level.first()
-            child_level.parent = self.parent
-            child_level.save()
+            child_level.parent = copy.copy(self.parent)
 
         super(CatalogLevel, self).delete(using=using, keep_parents=keep_parents)
+        if has_child:
+            child_level.save()
 
     def get_ordered_descendant(self):
         descendant = [self]
