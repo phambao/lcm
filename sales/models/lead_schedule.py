@@ -181,7 +181,7 @@ class ScheduleEvent(BaseModel):
     type = models.CharField(max_length=128, choices=Type.choices, default=Type.FINISH_TO_START)
     lag_day = models.IntegerField(default=0, blank=True, null=True)
     predecessor = models.ForeignKey('self', related_name='parent_event', null=True,
-                               blank=True, on_delete=models.SET_NULL, default=None)
+                                    blank=True, on_delete=models.SET_NULL, default=None)
 
 
 # class ScheduleEventPredecessorsLink(BaseModel):
@@ -205,3 +205,28 @@ class FileScheduleEvent(BaseModel):
 
     file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
     event = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE, related_name='event_file')
+
+
+class DataType(models.TextChoices):
+    FINISH_TO_START = 'finish_to_start', 'FINISH_TO_START'
+    START_TO_START = 'start_to_start', 'START_TO_START'
+
+
+# class CustomFieldScheduleSetting(BaseModel):
+#     class Meta:
+#         db_table = 'custom_field_schedule_setting'
+#
+#     label = models.CharField(blank=True, max_length=128)
+#     data_type = models.CharField(max_length=128, choices=DataType.choices, default=DataType.FINISH_TO_START)
+#     required = models.BooleanField(default=False)
+#     include_in_filters = models.BooleanField(default=False)
+#     display_order = models.IntegerField(default=0, blank=True, null=True)
+#     tool_tip_text = models.CharField(blank=True, max_length=128)
+#     show_owners = models.BooleanField(default=False)
+#     allow_permitted_sub = models.BooleanField(default=False)
+#     default_value = models.CharField(blank=True, max_length=128)
+#
+#
+# class ItemFieldDropDown(BaseModel):
+#     dropdown = models.ForeignKey(CustomFieldScheduleSetting, on_delete=models.CASCADE, related_name='custom_field_drop_down')
+#     name = models.CharField(blank=True, max_length=128)

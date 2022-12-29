@@ -365,7 +365,7 @@ def select_event_link(request, *args, **kwargs):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def select_lead_list(request, *args, **kwargs):
-    rs = ScheduleEvent.objects.all().values('id', name=Lower('event_title'))
+    rs = LeadDetail.objects.all().values('id', name=Lower('lead_title'))
     rs = IDAndNameSerializer(
         rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
