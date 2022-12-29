@@ -161,20 +161,38 @@ def get_catalog_ancestors(request):
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
-def add_multiple_level(request, pk_catalog):
-    try:
-        c = Catalog.objects.get(pk=pk_catalog)
-    except Catalog.DoesNotExist:
-        return Response(status=status.HTTP_400_BAD_REQUEST, data="Catalog not found")
-    if c.all_levels.all().exists():
-        return Response(status=status.HTTP_400_BAD_REQUEST, data="Could not create a new one")
-    if isinstance(request.data, list):
+def add_multiple_level(request):
+    if isinstance(request.data, dict):
+        catalog_serializer = catalog.CatalogSerializer(data=request.data.get('catalog'))
+        catalog_serializer.is_valid(raise_exception=True)
+        c = catalog_serializer.save()
         parent = None
         data = []
-        for name in request.data:
+        for name in request.data.get('levels', []):
             catalog_level = CatalogLevel.objects.create(name=name, parent=parent, catalog=c)
             parent = catalog_level
             data.append(catalog_level)
         serializer = catalog.CatalogLevelModelSerializer(data, many=True, context={'request': request})
-        return Response(status=status.HTTP_201_CREATED, data=serializer.data)
-    return Response(status=status.HTTP_400_BAD_REQUEST, data="Could not create levels")
+        return Response(status=status.HTTP_201_CREATED, data={"levels": serializer.data,
+                                                              "catalog": catalog_serializer.data})
+    return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def duplicate_catalogs(request, pk):
+    """
+    Payload: [{"id": int, "depth": int, data_points: [id,...]},...]
+    """
+    if isinstance(request.data, list):
+        parent_catalog = get_object_or_404(Catalog, pk=pk)
+        for d in request.data:
+            depth = int(d.get('depth', 0))
+            data_points = d.get('data_points', [])
+            try:
+                c = Catalog.objects.get(pk=d.get('id'))
+                c.duplicate(parent=parent_catalog, depth=depth)
+            except Catalog.DoesNotExist:
+                pass
+        return Response(status=status.HTTP_201_CREATED, data={})
+    return Response(status=status.HTTP_400_BAD_REQUEST)
