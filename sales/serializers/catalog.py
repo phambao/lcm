@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -30,9 +31,15 @@ class CatalogSerializer(serializers.ModelSerializer):
     class Meta:
         model = catalog.Catalog
         fields = ('id', 'name', 'parents', 'parent', 'sequence', 'cost_table', 'icon',
-                  'is_ancestor', 'level', 'data_points', 'level_index', 'c_table')
+                  'is_ancestor', 'level', 'data_points', 'level_index', 'c_table', 
+                  'created_date', 'modified_date', 'user_create', 'user_update'
+                  )
         extra_kwargs = {'icon': {'required': False,
-                                 'allow_null': True}}
+                                 'allow_null': True},
+                        'created_date': {'read_only': True},
+                        'modified_date': {'read_only': True},
+                        'user_create': {'read_only': True},
+                        'user_update': {'read_only': True}}
 
     def create(self, validated_data):
         data_points = validated_data.pop('data_points', [])
@@ -43,6 +50,9 @@ class CatalogSerializer(serializers.ModelSerializer):
                 raise ValidationError({'name': 'Name has been exist.'})
             validated_data['parents'] = [parent]
         instance = super().create(validated_data)
+        instance.user_create = self.context['request'].user
+        instance.created_date = timezone.now()
+        instance.save()
         for data_point in data_points:
             unit = data_point.pop('unit')
             catalog.DataPoint.objects.create(catalog=instance, **data_point, unit_id=unit.get('id'))
@@ -55,6 +65,9 @@ class CatalogSerializer(serializers.ModelSerializer):
             validated_data['parents'] = [parent]
         instance = super().update(instance, validated_data)
         instance.data_points.all().delete()
+        instance.user_update = self.context['request'].user
+        instance.modified_date = timezone.now()
+        instance.save()
         catalog.DataPoint.objects.bulk_create(
             [catalog.DataPoint(catalog=instance, unit_id=data_point.pop('unit').get('id'), **data_point) for data_point in data_points]
         )
