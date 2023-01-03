@@ -163,7 +163,7 @@ def get_catalog_ancestors(request):
 @permission_classes([permissions.IsAuthenticated])
 def add_multiple_level(request):
     if isinstance(request.data, dict):
-        catalog_serializer = catalog.CatalogSerializer(data=request.data.get('catalog'))
+        catalog_serializer = catalog.CatalogSerializer(data=request.data.get('catalog'), context={'request': request})
         catalog_serializer.is_valid(raise_exception=True)
         c = catalog_serializer.save()
         parent = None
