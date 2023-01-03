@@ -5,6 +5,7 @@ from rest_framework.exceptions import ValidationError
 from api.serializers.base import SerializerMixin
 from base.serializers.base import IDAndNameSerializer
 from ..models import catalog, Catalog
+false = False
 
 
 class DataPointUnitSerializer(serializers.ModelSerializer):
@@ -25,7 +26,7 @@ class DataPointSerializer(serializers.ModelSerializer):
 
 
 class CatalogSerializer(serializers.ModelSerializer):
-    data_points = DataPointSerializer(many=True, required=False)
+    data_points = serializers.CharField(required=False, max_length=256, allow_blank=True)
     parent = serializers.IntegerField(allow_null=True, required=False)
 
     class Meta:
@@ -42,7 +43,7 @@ class CatalogSerializer(serializers.ModelSerializer):
                         'user_update': {'read_only': True}}
 
     def create(self, validated_data):
-        data_points = validated_data.pop('data_points', [])
+        data_points = eval(validated_data.pop('data_points', '[]'))
         parent = validated_data.pop('parent', None)
 
         if parent:
@@ -59,7 +60,7 @@ class CatalogSerializer(serializers.ModelSerializer):
         return instance
     
     def update(self, instance, validated_data):
-        data_points = validated_data.pop('data_points', [])
+        data_points = eval(validated_data.pop('data_points', '[]'))
         parent = validated_data.pop('parent', None)
         if parent:
             validated_data['parents'] = [parent]
@@ -80,6 +81,7 @@ class CatalogSerializer(serializers.ModelSerializer):
         else:
             data['parent'] = None
         del data['parents']
+        data['data_points'] = DataPointSerializer(instance.data_points.all(), many=True).data
         data['children'] = catalog.Catalog.objects.filter(parents__id=instance.pk).values_list('pk', flat=True)
         return data
 
