@@ -25,7 +25,7 @@ class CatalogTests(BaseTest):
                 "icon": None,
                 "is_ancestor": False,
                 "level": None,
-                "data_points": [],
+                "data_points": '',
                 "children": []
             }
             response = self.client.post(

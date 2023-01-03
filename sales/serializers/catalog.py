@@ -43,7 +43,11 @@ class CatalogSerializer(serializers.ModelSerializer):
                         'user_update': {'read_only': True}}
 
     def create(self, validated_data):
-        data_points = eval(validated_data.pop('data_points', '[]'))
+        data_points = validated_data.pop('data_points', '[]')
+        if data_points:
+            data_points = eval(data_points)
+        else:
+            data_points = []
         parent = validated_data.pop('parent', None)
 
         if parent:
@@ -60,7 +64,11 @@ class CatalogSerializer(serializers.ModelSerializer):
         return instance
     
     def update(self, instance, validated_data):
-        data_points = eval(validated_data.pop('data_points', '[]'))
+        data_points = validated_data.pop('data_points', '[]')
+        if data_points:
+            data_points = eval(data_points)
+        else:
+            data_points = []
         parent = validated_data.pop('parent', None)
         if parent:
             validated_data['parents'] = [parent]
