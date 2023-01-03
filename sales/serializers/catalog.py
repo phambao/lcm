@@ -65,6 +65,9 @@ class CatalogSerializer(serializers.ModelSerializer):
             validated_data['parents'] = [parent]
         instance = super().update(instance, validated_data)
         instance.data_points.all().delete()
+        instance.user_update = self.context['request'].user
+        instance.modified_date = timezone.now()
+        instance.save()
         catalog.DataPoint.objects.bulk_create(
             [catalog.DataPoint(catalog=instance, unit_id=data_point.pop('unit').get('id'), **data_point) for data_point in data_points]
         )
