@@ -1,9 +1,12 @@
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from api.serializers.base import SerializerMixin
 from base.serializers.base import IDAndNameSerializer
 from ..models import catalog, Catalog
+false = False
+true = True
 
 
 class DataPointUnitSerializer(serializers.ModelSerializer):
@@ -24,18 +27,28 @@ class DataPointSerializer(serializers.ModelSerializer):
 
 
 class CatalogSerializer(serializers.ModelSerializer):
-    data_points = DataPointSerializer(many=True, required=False)
+    data_points = serializers.CharField(required=False, max_length=256, allow_blank=True)
     parent = serializers.IntegerField(allow_null=True, required=False)
 
     class Meta:
         model = catalog.Catalog
         fields = ('id', 'name', 'parents', 'parent', 'sequence', 'cost_table', 'icon',
-                  'is_ancestor', 'level', 'data_points', 'level_index', 'c_table')
+                  'is_ancestor', 'level', 'data_points', 'level_index', 'c_table', 
+                  'created_date', 'modified_date', 'user_create', 'user_update'
+                  )
         extra_kwargs = {'icon': {'required': False,
-                                 'allow_null': True}}
+                                 'allow_null': True},
+                        'created_date': {'read_only': True},
+                        'modified_date': {'read_only': True},
+                        'user_create': {'read_only': True},
+                        'user_update': {'read_only': True}}
 
     def create(self, validated_data):
-        data_points = validated_data.pop('data_points', [])
+        data_points = validated_data.pop('data_points', '[]')
+        if data_points:
+            data_points = eval(data_points)
+        else:
+            data_points = []
         parent = validated_data.pop('parent', None)
 
         if parent:
@@ -43,18 +56,28 @@ class CatalogSerializer(serializers.ModelSerializer):
                 raise ValidationError({'name': 'Name has been exist.'})
             validated_data['parents'] = [parent]
         instance = super().create(validated_data)
+        instance.user_create = self.context['request'].user
+        instance.created_date = timezone.now()
+        instance.save()
         for data_point in data_points:
             unit = data_point.pop('unit')
             catalog.DataPoint.objects.create(catalog=instance, **data_point, unit_id=unit.get('id'))
         return instance
     
     def update(self, instance, validated_data):
-        data_points = validated_data.pop('data_points', [])
+        data_points = validated_data.pop('data_points', '[]')
+        if data_points:
+            data_points = eval(data_points)
+        else:
+            data_points = []
         parent = validated_data.pop('parent', None)
         if parent:
             validated_data['parents'] = [parent]
         instance = super().update(instance, validated_data)
         instance.data_points.all().delete()
+        instance.user_update = self.context['request'].user
+        instance.modified_date = timezone.now()
+        instance.save()
         catalog.DataPoint.objects.bulk_create(
             [catalog.DataPoint(catalog=instance, unit_id=data_point.pop('unit').get('id'), **data_point) for data_point in data_points]
         )
@@ -67,6 +90,7 @@ class CatalogSerializer(serializers.ModelSerializer):
         else:
             data['parent'] = None
         del data['parents']
+        data['data_points'] = DataPointSerializer(instance.data_points.all(), many=True).data
         data['children'] = catalog.Catalog.objects.filter(parents__id=instance.pk).values_list('pk', flat=True)
         return data
 
@@ -91,16 +115,23 @@ class CatalogLevelModelSerializer(serializers.ModelSerializer, SerializerMixin):
             data['index'] = ordered_levels.index(instance)
         return data
 
-    def validate_parent(self, value):
-        if self.is_param_exist('pk_catalog'):
-            # Only one level in catalog has parent is null
-            c = Catalog.objects.get(pk=self.get_params()['pk_catalog'])
-            levels = c.all_levels.all()
-            if levels and not value:
-                raise ValidationError('parent is not null')
-            if not levels and value:
+    def validate(self, attrs):
+        c = Catalog.objects.get(pk=self.get_params()['pk_catalog'])
+        num_levels = c.all_levels.all().count()
+        parent = attrs.get('parent')
+
+        # update
+        if self.is_param_exist('pk'):
+            list_levels = c.get_ordered_levels()
+            if list_levels[0].id == self.get_params()['pk'] and parent:
                 raise ValidationError('parent must null')
-        if value:
-            if catalog.CatalogLevel.objects.filter(parent=value).exists():
-                raise ValidationError(f'Level has only one child. Level id: {value}')
-        return value
+            if list_levels[0].id != self.get_params()['pk'] and not parent:
+                raise ValidationError('parent must have a value')
+
+        # create
+        if not self.is_param_exist('pk'):
+            if num_levels == 0 and parent:
+                raise ValidationError('parent must null')
+            if num_levels > 0 and not parent:
+                raise ValidationError('parent must have a value')
+        return attrs

@@ -25,7 +25,7 @@ class CatalogTests(BaseTest):
                 "icon": None,
                 "is_ancestor": False,
                 "level": None,
-                "data_points": [],
+                "data_points": '',
                 "children": []
             }
             response = self.client.post(
@@ -38,3 +38,19 @@ class CatalogTests(BaseTest):
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         catalog = Catalog.objects.get(id=list_catalog_id[0])
         self.assertEqual(len(catalog.get_all_descendant()), num_children-1)
+
+    def test_add_multiple_level_catalog(self):
+        data = {
+            "catalog": {
+                "name": "example"
+            },
+            "levels": ['level 1', 'level 2', 'level 3']
+        }
+        response = self.client.post(
+            reverse('add-multiple-level'),
+            data,
+            format='json',
+            HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        catalog = Catalog.objects.get(pk=response.data['catalog']['id'])
+        self.assertEqual(len(catalog.get_ordered_levels()), len(data['levels']))

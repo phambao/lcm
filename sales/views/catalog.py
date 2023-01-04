@@ -163,7 +163,7 @@ def get_catalog_ancestors(request):
 @permission_classes([permissions.IsAuthenticated])
 def add_multiple_level(request):
     if isinstance(request.data, dict):
-        catalog_serializer = catalog.CatalogSerializer(data=request.data.get('catalog'))
+        catalog_serializer = catalog.CatalogSerializer(data=request.data.get('catalog'), context={'request': request})
         catalog_serializer.is_valid(raise_exception=True)
         c = catalog_serializer.save()
         parent = None
@@ -191,7 +191,7 @@ def duplicate_catalogs(request, pk):
             data_points = d.get('data_points', [])
             try:
                 c = Catalog.objects.get(pk=d.get('id'))
-                c.duplicate(parent=parent_catalog, depth=depth)
+                c.duplicate(parent=parent_catalog, depth=depth, data_points=data_points)
             except Catalog.DoesNotExist:
                 pass
         return Response(status=status.HTTP_201_CREATED, data={})
