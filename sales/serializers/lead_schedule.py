@@ -573,8 +573,7 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context['request']
-        data = request.data
-        name_item = pop(data, 'name_item', [])
+        name_item = pop(validated_data, 'name_item', [])
         user_create = user_update = request.user
         item_types = {
             DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
@@ -583,15 +582,15 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
             DataType.DROPDOWN: DropdownFieldSerialized
         }
 
-        data_serializers = item_types.get(data['data_type'])
-        data_insert = data_serializers(data=data)
+        data_serializers = item_types.get(validated_data['data_type'])
+        data_insert = data_serializers(data=validated_data)
         data_insert.is_valid(raise_exception=True)
         data_insert = dict(data_insert.validated_data)
         custom_field_create = lead_schedule.CustomFieldScheduleSetting.objects.create(
             user_create=user_create, user_update=user_update,
             **data_insert
         )
-        if data['data_type'] == DataType.DROPDOWN:
+        if validated_data['data_type'] == DataType.DROPDOWN:
             temp = list()
             for item in name_item:
                 data_insert_item = ItemFieldDropDown(
@@ -607,7 +606,6 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
 
     def update(self, instance, data):
         request = self.context['request']
-        data = request.data
         name_item = pop(data, 'name_item', [])
         user_create = user_update = request.user
         item_types = {
@@ -641,7 +639,7 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        rs_item_dropdown = list(ItemFieldDropDown.objects.filter(dropdown=data['id']).values())
+        rs_item_dropdown = ItemFieldDropDown.objects.filter(dropdown=data['id']).values()
         data['name_item'] = rs_item_dropdown
         return data
 
