@@ -10,7 +10,7 @@ from api.serializers.base import SerializerMixin
 from ..models import lead_schedule
 from base.utils import pop
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging, CheckListItemsTemplate, \
-    TodoTemplateChecklistItem
+    TodoTemplateChecklistItem, DataType, ItemFieldDropDown
 
 
 class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
@@ -447,7 +447,8 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_schedule.ScheduleEvent
         fields = ('id', 'lead_list', 'event_title', 'assigned_user', 'reminder', 'start_day', 'end_day', 'due_days',
-                  'time', 'viewing', 'notes', 'predecessors_link', 'type', 'lag_day', 'predecessor')
+                  'time', 'viewing', 'notes', 'predecessors_link', 'type', 'lag_day', 'predecessor', 'start_time',
+                  'end_time', 'is_before', 'is_after')
 
     def create(self, validated_data):
         request = self.context['request']
@@ -518,6 +519,131 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
 
         instance.refresh_from_db()
         return instance
+
+
+class TextFieldSerialized(serializers.Serializer):
+    label = serializers.CharField(required=True)
+    data_type = serializers.CharField(required=True)
+    tool_tip_text = serializers.CharField(required=False)
+    required = serializers.BooleanField(default=False)
+    include_in_filters = serializers.BooleanField(default=False)
+    display_order = serializers.IntegerField()
+    show_owners = serializers.BooleanField(default=False)
+    allow_permitted_sub = serializers.BooleanField(default=False)
+
+    # class Meta:
+    #     model = lead_schedule.CustomFieldScheduleSetting
+    #     fields = ('label', 'data_type', 'required', 'include_in_filters', 'display_order', 'show_owners',
+    #               'allow_permitted_sub')
+
+
+class CheckboxFieldSerialized(serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.CustomFieldScheduleSetting
+        fields = ('label', 'data_type', 'include_in_filters', 'display_order', 'show_owners',
+                  'allow_permitted_sub')
+
+
+class DropdownFieldSerialized(serializers.Serializer):
+    default_value = serializers.CharField(required=False)
+    new_item = serializers.CharField(required=False)
+    label = serializers.CharField(required=True)
+    data_type = serializers.CharField(required=True)
+    required = serializers.BooleanField(default=False)
+    include_in_filters = serializers.BooleanField(default=False)
+    display_order = serializers.IntegerField()
+    show_owners = serializers.BooleanField(default=False)
+    allow_permitted_sub = serializers.BooleanField(default=False)
+    # class Meta:
+    #     model = lead_schedule.CustomFieldScheduleSetting
+    #     fields = ('label', 'data_type', 'required', 'include_in_filters', 'display_order', 'show_owners',
+    #               'allow_permitted_sub')
+
+
+class ItemDropdownSerialized(serializers.Serializer):
+    name = serializers.CharField(required=False)
+
+
+class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
+    name_item = ItemDropdownSerialized(allow_null=True, required=False, many=True)
+
+    class Meta:
+        model = lead_schedule.CustomFieldScheduleSetting
+        fields = '__all__'
+
+    def create(self, validated_data):
+        request = self.context['request']
+        data = request.data
+        name_item = pop(data, 'name_item', [])
+        user_create = user_update = request.user
+        item_types = {
+            DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
+            DataType.MULTI_LINE_TEXT: TextFieldSerialized,
+            DataType.CHECKBOX: CheckboxFieldSerialized,
+            DataType.DROPDOWN: DropdownFieldSerialized
+        }
+
+        data_serializers = item_types.get(data['data_type'])
+        data_insert = data_serializers(data=data)
+        data_insert.is_valid(raise_exception=True)
+        data_insert = dict(data_insert.validated_data)
+        custom_field_create = lead_schedule.CustomFieldScheduleSetting.objects.create(
+            user_create=user_create, user_update=user_update,
+            **data_insert
+        )
+        if data['data_type'] == DataType.DROPDOWN:
+            temp = list()
+            for item in name_item:
+                data_insert_item = ItemFieldDropDown(
+                    dropdown=custom_field_create,
+                    name=item['name'],
+                    user_create=user_create,
+                    user_update=user_update
+                )
+                temp.append(data_insert_item)
+            ItemFieldDropDown.objects.bulk_create(temp)
+
+        return custom_field_create
+
+    def update(self, instance, data):
+        request = self.context['request']
+        data = request.data
+        name_item = pop(data, 'name_item', [])
+        user_create = user_update = request.user
+        item_types = {
+            DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
+            DataType.MULTI_LINE_TEXT: TextFieldSerialized,
+            DataType.CHECKBOX: CheckboxFieldSerialized,
+            DataType.DROPDOWN: DropdownFieldSerialized
+        }
+
+        data_serializers = item_types.get(data['data_type'])
+        data_update = data_serializers(data=data)
+        data_update.is_valid(raise_exception=True)
+        data_update = dict(data_update.validated_data)
+        data_custom_field = lead_schedule.CustomFieldScheduleSetting.objects.filter(pk=instance.pk)
+        data_custom_field.update(**data_update)
+        custom_field_setting = data_custom_field.first()
+        if data['data_type'] == DataType.DROPDOWN:
+            ItemFieldDropDown.objects.filter(dropdown=instance.pk).delete()
+            temp = list()
+            for item in name_item:
+                data_insert_item = ItemFieldDropDown(
+                    dropdown=custom_field_setting,
+                    name=item['name'],
+                    user_create=user_create,
+                    user_update=user_update
+                )
+                temp.append(data_insert_item)
+            ItemFieldDropDown.objects.bulk_create(temp)
+
+        return custom_field_setting
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        rs_item_dropdown = list(ItemFieldDropDown.objects.filter(dropdown=data['id']).values())
+        data['name_item'] = rs_item_dropdown
+        return data
 
 
 class AttachmentsDailyLogSerializer(ScheduleAttachmentsSerializer):

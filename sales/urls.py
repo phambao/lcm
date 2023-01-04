@@ -100,13 +100,13 @@ url_schedule = [
     # CHECKLIST ITEM
     path('checklist-item/', lead_schedule.CheckListItemGenericView.as_view()),
     path('checklist-item/<int:pk>/', lead_schedule.CheckListItemDetailGenericView.as_view()),
-    path('<int:pk_todo>/checklist-item/', lead_schedule.get_checklist_by_todo),
-    path('<int:pk_todo>/checklist-item-template/', lead_schedule.get_checklist_template_by_todo),
+    path('todo/<int:pk_todo>/checklist-item/', lead_schedule.get_checklist_by_todo),
+    path('todo/<int:pk_todo>/checklist-item/template/', lead_schedule.get_checklist_template_by_todo),
 
     # TEMPLATE CHECKLIST ITEM
     path('todo/checklist-item/template/', lead_schedule.ToDoChecklistItemTemplateGenericView.as_view()),
     path('todo/checklist-items/template/<int:pk>/', lead_schedule.ToDoChecklistItemTemplateDetailGenericView.as_view()),
-    path('<int:pk_todo>/todo/<int:pk_template>/select-template/', lead_schedule.select_checklist_template),
+    path('todo/<int:pk_todo>/template/<int:pk_template>/', lead_schedule.select_checklist_template),
 
     # DAILY LOGS
     path('daily-logs/', lead_schedule.DailyLogGenericView.as_view()),
@@ -126,7 +126,10 @@ url_schedule = [
     path('event/<int:pk_event>/attachments/', lead_schedule.AttachmentsEventGenericView.as_view({
         "post": "create_file", "get": "get_file"})),
 
-    path('schedule-event-lead-list/', lead_schedule.select_lead_list),
+
+    # CUSTOM FIELD SCHEDULE
+    path('schedule-event/custom-field/', lead_schedule.ScheduleEventCustomFieldGenericView.as_view()),
+    path('schedule-event/custom-field/<int:pk>/', lead_schedule.ScheduleEventCustomFieldDetailGenericView.as_view()),
 
 ]
 
@@ -135,9 +138,13 @@ url_estimate = [
     path('po-formula/', estimate.POFormulaList.as_view()),
     path('po-formula/<int:pk>/', estimate.POFormulaDetail.as_view()),
 ]
-
+# URL Config
+url_config = [
+    path('options-lead-list/', lead_schedule.select_lead_list),
+]
 # DEFINE PATH FOR SALES APP -----------------------------------------------------
 url_sales = [
+    path('', include(url_config)),
     path('', include(url_contacts)),
     path('', include(url_contact_types)),
     path('lead-list/', include(url_leads)),
@@ -152,6 +159,7 @@ schema_view_sales = get_schema_view(
         default_version='v1',
     ),
     patterns=[
+        path('api/sales/', include(url_config)),
         path('api/sales/', include(url_contacts)),
         path('api/sales/', include(url_contact_types)),
         path('api/sales/lead-list/', include(url_leads)),

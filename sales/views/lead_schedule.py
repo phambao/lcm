@@ -14,7 +14,7 @@ from base.serializers.base import IDAndNameSerializer
 from ..models import LeadDetail
 from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, Messaging, DailyLog, \
     AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate, \
-    FileScheduleEvent
+    FileScheduleEvent, CustomFieldScheduleSetting
 from ..serializers import lead_schedule
 
 
@@ -260,6 +260,18 @@ class ScheduleEventGenericView(generics.ListCreateAPIView):
 class ScheduleEventDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ScheduleEvent.objects.all()
     serializer_class = lead_schedule.ScheduleEventSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleEventCustomFieldGenericView(generics.ListCreateAPIView):
+    queryset = CustomFieldScheduleSetting.objects.all()
+    serializer_class = lead_schedule.CustomFieldScheduleSettingSerialized
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleEventCustomFieldDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CustomFieldScheduleSetting.objects.all()
+    serializer_class = lead_schedule.CustomFieldScheduleSettingSerialized
     permission_classes = [permissions.IsAuthenticated]
 
 
