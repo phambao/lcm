@@ -179,7 +179,7 @@ class ScheduleEvent(BaseModel):
     end_day = models.DateField(null=True, blank=True)
     start_time = models.IntegerField(default=None, blank=True, null=True)
     end_time = models.IntegerField(default=None, null=True, blank=True)
-    due_days = models.BooleanField(default=False)
+    due_days = models.IntegerField(default=None, null=True, blank=True)
     time = models.IntegerField(blank=True, null=True)
     is_before = models.BooleanField(default=False, blank=True)
     is_after = models.BooleanField(default=False, blank=True)
