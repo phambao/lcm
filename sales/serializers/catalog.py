@@ -6,6 +6,7 @@ from api.serializers.base import SerializerMixin
 from base.serializers.base import IDAndNameSerializer
 from ..models import catalog, Catalog
 false = False
+true = True
 
 
 class DataPointUnitSerializer(serializers.ModelSerializer):
