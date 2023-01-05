@@ -14,8 +14,8 @@ class CatalogLevel(models.Model):
         db_table = 'catalog_level'
 
     name = models.CharField(max_length=64)
-    parent = models.ForeignKey('self', related_name='child', null=True,
-                               blank=True, on_delete=models.SET_NULL, default=None)
+    parent = models.OneToOneField('self', related_name='child', null=True,
+                                  blank=True, on_delete=models.SET_NULL, default=None)
     catalog = models.ForeignKey('Catalog', on_delete=models.CASCADE, null=True,
                                 blank=True, default=None, related_name='all_levels')
 
@@ -35,10 +35,11 @@ class CatalogLevel(models.Model):
                     child.parents.clear()
                     child.parents.add(parent)
             child_level = child_level.first()
-            child_level.parent = self.parent
-            child_level.save()
+            child_level.parent = copy.copy(self.parent)
 
         super(CatalogLevel, self).delete(using=using, keep_parents=keep_parents)
+        if has_child:
+            child_level.save()
 
     def get_ordered_descendant(self):
         descendant = [self]
@@ -154,18 +155,28 @@ class Catalog(BaseModel):
         catalog = Catalog.objects.get(pk=pk)
         catalog.children.add(self)
 
-    def clone(self, parent=None):
+    def clone(self, parent=None, data_points=[]):
         c = copy.copy(self)
         c.id = None
         c.sequence = self.sequence + 1
         c.save()
         if parent:
             c.parents.add(parent)
+        points = self.data_points.filter(id__in=data_points)
+        d_points = []
+        for p in points:
+            params = {'value': p.value,
+                      'unit_id': p.unit_id,
+                      'linked_description': p.linked_description,
+                      'is_linked': p.is_linked,
+                      'catalog_id': c.id}
+            d_points.append(DataPoint(**params))
+        DataPoint.objects.bulk_create(d_points)
         return c
 
-    def duplicate(self, parent=None, depth=0):
-        c = self.clone(parent=parent)
+    def duplicate(self, parent=None, depth=0, data_points=[]):
+        c = self.clone(parent=parent, data_points=data_points)
         if depth:
             children = Catalog.objects.filter(parents__id=self.pk)
             for child in children:
-                child.duplicate(parent=c, depth=depth-1)
+                child.duplicate(parent=c, depth=depth-1, data_points=data_points)

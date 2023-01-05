@@ -1,15 +1,20 @@
 import uuid
-
+from django.db.models.functions import Lower
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
+from django.db.models import Subquery
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import permissions, status
 from rest_framework.viewsets import GenericViewSet
+
+from base.serializers.base import IDAndNameSerializer
+from ..models import LeadDetail
 from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, Messaging, DailyLog, \
-    AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate
+    AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate, \
+    FileScheduleEvent, CustomFieldScheduleSetting
 from ..serializers import lead_schedule
 
 
@@ -34,6 +39,7 @@ class ScheduleAttachmentsGenericView(GenericViewSet):
         for file in files:
             file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
             content_file = ContentFile(file.read(), name=file_name)
+
             attachment = Attachments(
                 file=content_file,
                 to_do=todo,
@@ -99,47 +105,47 @@ class AttachmentsDailyLogGenericView(GenericViewSet):
         return Response(status=status.HTTP_200_OK, data=data)
 
 
-# class FileChecklistGenericView(GenericViewSet):
-#     serializer_class = lead_schedule.FileChecklistSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-#
-#     def get_queryset(self):
-#         get_object_or_404(CheckListItems.objects.all(), pk=self.kwargs['pk_checklist'])
-#         return FileCheckListItems.objects.filter(checklist_item=self.kwargs['pk_checklist'])
-#
-#     def create_file(self, request, **kwargs):
-#         serializer = lead_schedule.FileChecklistSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         user = request.user
-#         pk_checklist = self.kwargs.get('pk_checklist')
-#         daily_log = get_object_or_404(CheckListItems.objects.all(), pk=self.kwargs['pk_checklist'])
-#         file_checklist_item = FileCheckListItems.objects.filter(checklist_item=pk_checklist)
-#         file_checklist_item.delete()
-#         files = request.FILES.getlist('file')
-#         file_checklist_item_create = list()
-#         for file in files:
-#             file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
-#             content_file = ContentFile(file.read(), name=file_name)
-#             file_checklist = FileCheckListItems(
-#                 file=content_file,
-#                 daily_log=daily_log,
-#                 user_create=user
-#             )
-#             file_checklist_item_create.append(file_checklist)
-#
-#         FileCheckListItems.objects.bulk_create(file_checklist_item_create)
-#
-#         file_checklist = FileCheckListItems.objects.filter(checklist_item=pk_checklist)
-#         data = lead_schedule.FileChecklistModelSerializer(
-#             file_checklist, many=True, context={'request': request}).data
-#         return Response(status=status.HTTP_200_OK, data=data)
-#
-#     def get_file(self, request, **kwargs):
-#         get_object_or_404(CheckListItems.objects.all(), pk=self.kwargs['pk_checklist'])
-#         data_file = FileCheckListItems.objects.filter(pk_checklist=self.kwargs['pk_checklist'])
-#         data = lead_schedule.FileChecklistModelSerializer(
-#             data_file, many=True, context={'request': request}).data
-#         return Response(status=status.HTTP_200_OK, data=data)
+class AttachmentsEventGenericView(GenericViewSet):
+    serializer_class = lead_schedule.AttachmentsEventSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        get_object_or_404(ScheduleEvent.objects.all(), pk=self.kwargs['pk_event'])
+        return FileScheduleEvent.objects.filter(event=self.kwargs['pk_event'])
+
+    def create_file(self, request, **kwargs):
+        serializer = lead_schedule.AttachmentsEventSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        pk_event = self.kwargs.get('pk_event')
+        data_event = get_object_or_404(ScheduleEvent.objects.all(), pk=self.kwargs['pk_event'])
+        data_attachments = FileScheduleEvent.objects.filter(event=pk_event)
+        data_attachments.delete()
+        files = request.FILES.getlist('file')
+        attachment_create = list()
+        for file in files:
+            file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+            content_file = ContentFile(file.read(), name=file_name)
+            attachment = FileScheduleEvent(
+                file=content_file,
+                event=data_event,
+                user_create=user
+            )
+            attachment_create.append(attachment)
+
+        FileScheduleEvent.objects.bulk_create(attachment_create)
+
+        attachments = FileScheduleEvent.objects.filter(event=pk_event)
+        data = lead_schedule.AttachmentsEventModelSerializer(
+            attachments, many=True, context={'request': request}).data
+        return Response(status=status.HTTP_200_OK, data=data)
+
+    def get_file(self, request, **kwargs):
+        get_object_or_404(ScheduleEvent.objects.all(), pk=self.kwargs['pk_event'])
+        data_file = FileScheduleEvent.objects.filter(event=self.kwargs['pk_event'])
+        data = lead_schedule.AttachmentsEventModelSerializer(
+            data_file, many=True, context={'request': request}).data
+        return Response(status=status.HTTP_200_OK, data=data)
 
 
 class SourceScheduleToDoGenericView(generics.ListCreateAPIView):
@@ -220,8 +226,10 @@ class CheckListItemDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
         todo = checklist_item.to_do
         checklist_item_children = CheckListItems.objects.filter(to_do=todo.id, parent_uuid=uuid)
 
-        checklist_item_template = CheckListItemsTemplate.objects.filter(todo=todo.id, uuid=uuid, to_do_checklist_template=None)
-        checklist_item_children_template = CheckListItemsTemplate.objects.filter(todo=todo.id, parent_uuid=uuid, to_do_checklist_template=None)
+        checklist_item_template = CheckListItemsTemplate.objects.filter(todo=todo.id, uuid=uuid,
+                                                                        to_do_checklist_template=None)
+        checklist_item_children_template = CheckListItemsTemplate.objects.filter(todo=todo.id, parent_uuid=uuid,
+                                                                                 to_do_checklist_template=None)
 
         checklist_item.delete()
         checklist_item_children.delete()
@@ -252,6 +260,18 @@ class ScheduleEventGenericView(generics.ListCreateAPIView):
 class ScheduleEventDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ScheduleEvent.objects.all()
     serializer_class = lead_schedule.ScheduleEventSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleEventCustomFieldGenericView(generics.ListCreateAPIView):
+    queryset = CustomFieldScheduleSetting.objects.all()
+    serializer_class = lead_schedule.CustomFieldScheduleSettingSerialized
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleEventCustomFieldDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CustomFieldScheduleSetting.objects.all()
+    serializer_class = lead_schedule.CustomFieldScheduleSettingSerialized
     permission_classes = [permissions.IsAuthenticated]
 
 
@@ -330,3 +350,43 @@ def select_checklist_template(request, *args, **kwargs):
         rs_checklist, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
 
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def select_event_predecessors(request, *args, **kwargs):
+    rs = ScheduleEvent.objects.all().values('id', name=Lower('event_title'))
+    rs = IDAndNameSerializer(
+        rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=rs)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def select_event_link(request, *args, **kwargs):
+    event_id = kwargs.get('pk')
+    list_id = get_id_by_group(event_id)
+    rs = ScheduleEvent.objects.exclude(id__in=list_id).values('id', name=Lower('event_title'))
+    # rs = ScheduleEvent.objects.exclude(id__in=list_id).annotate(
+    #     name=Subquery(ScheduleEvent.objects.exclude(id__in=list_id).values('event_title')[:1])
+    # )
+    rs = IDAndNameSerializer(
+        rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=rs)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def select_lead_list(request, *args, **kwargs):
+    rs = LeadDetail.objects.all().values('id', name=Lower('lead_title'))
+    rs = IDAndNameSerializer(
+        rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=rs)
+
+
+def get_id_by_group(pk):
+    rs = []
+    event = ScheduleEvent.objects.filter(predecessor=pk)
+    for e in event:
+        rs.append(e.id)
+        rs.extend(get_id_by_group(e.id))
+    return rs

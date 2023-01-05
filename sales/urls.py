@@ -76,13 +76,13 @@ url_catalog = [
     path('list/<int:pk>/tree/', catalog.get_catalog_tree),
     path('list/<int:pk>/list/', catalog.get_catalog_list),
     path('list/ancestors/', catalog.get_catalog_ancestors),
-    path('list/copy/', catalog.duplicate_catalogs),
+    path('list/<int:pk>/copy/', catalog.duplicate_catalogs),
     path('list/delete/', catalog.delete_catalogs),
     path('cost-tables/', catalog.CostTableList.as_view()),
     path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
     path('list/<int:pk_catalog>/levels/', catalog.CatalogLevelList.as_view()),
     path('list/<int:pk_catalog>/levels/<int:pk>/', catalog.CatalogLevelDetail.as_view()),
-    path('list/add-catalog-levels/', catalog.add_multiple_level),
+    path('list/add-catalog-levels/', catalog.add_multiple_level, name='add-multiple-level'),
     path('unit/', catalog.DataPointUnitView.as_view()),
     path('unit/<int:pk>/', catalog.DataPointUnitDetailView.as_view()),
 ]
@@ -100,13 +100,13 @@ url_schedule = [
     # CHECKLIST ITEM
     path('checklist-item/', lead_schedule.CheckListItemGenericView.as_view()),
     path('checklist-item/<int:pk>/', lead_schedule.CheckListItemDetailGenericView.as_view()),
-    path('<int:pk_todo>/checklist-item/', lead_schedule.get_checklist_by_todo),
-    path('<int:pk_todo>/checklist-item-template/', lead_schedule.get_checklist_template_by_todo),
+    path('todo/<int:pk_todo>/checklist-item/', lead_schedule.get_checklist_by_todo),
+    path('todo/<int:pk_todo>/checklist-item/template/', lead_schedule.get_checklist_template_by_todo),
 
     # TEMPLATE CHECKLIST ITEM
     path('todo/checklist-item/template/', lead_schedule.ToDoChecklistItemTemplateGenericView.as_view()),
     path('todo/checklist-items/template/<int:pk>/', lead_schedule.ToDoChecklistItemTemplateDetailGenericView.as_view()),
-    path('<int:pk_todo>/todo/<int:pk_template>/select-template/', lead_schedule.select_checklist_template),
+    path('todo/<int:pk_todo>/template/<int:pk_template>/', lead_schedule.select_checklist_template),
 
     # DAILY LOGS
     path('daily-logs/', lead_schedule.DailyLogGenericView.as_view()),
@@ -120,6 +120,16 @@ url_schedule = [
     # SCHEDULE EVENT
     path('schedule-event/', lead_schedule.ScheduleEventGenericView.as_view()),
     path('schedule-event/<int:pk>/', lead_schedule.ScheduleEventDetailGenericView.as_view()),
+    path('select-schedule-event/', lead_schedule.select_event_predecessors),
+    path('select-schedule-event-link/<int:pk>/', lead_schedule.select_event_link),
+    # FILE EVENT
+    path('event/<int:pk_event>/attachments/', lead_schedule.AttachmentsEventGenericView.as_view({
+        "post": "create_file", "get": "get_file"})),
+
+
+    # CUSTOM FIELD SCHEDULE
+    path('schedule-event/custom-field/', lead_schedule.ScheduleEventCustomFieldGenericView.as_view()),
+    path('schedule-event/custom-field/<int:pk>/', lead_schedule.ScheduleEventCustomFieldDetailGenericView.as_view()),
 
 ]
 
@@ -128,9 +138,13 @@ url_estimate = [
     path('po-formula/', estimate.POFormulaList.as_view()),
     path('po-formula/<int:pk>/', estimate.POFormulaDetail.as_view()),
 ]
-
+# URL Config
+url_config = [
+    path('options-lead-list/', lead_schedule.select_lead_list),
+]
 # DEFINE PATH FOR SALES APP -----------------------------------------------------
 url_sales = [
+    path('', include(url_config)),
     path('', include(url_contacts)),
     path('', include(url_contact_types)),
     path('lead-list/', include(url_leads)),
@@ -145,6 +159,7 @@ schema_view_sales = get_schema_view(
         default_version='v1',
     ),
     patterns=[
+        path('api/sales/', include(url_config)),
         path('api/sales/', include(url_contacts)),
         path('api/sales/', include(url_contact_types)),
         path('api/sales/lead-list/', include(url_leads)),

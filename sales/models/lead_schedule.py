@@ -19,6 +19,16 @@ class Priority(models.TextChoices):
     LOW = 'low', 'LOW'
 
 
+class Type(models.TextChoices):
+    FINISH_TO_START = 'finish_to_start', 'FINISH_TO_START'
+    START_TO_START = 'start_to_start', 'START_TO_START'
+
+
+class ReminderType(models.IntegerChoices):
+    NO = 0,
+    YES = 1,
+
+
 class ToDo(BaseModel):
     class Meta:
         db_table = 'to_do'
@@ -126,6 +136,14 @@ class DailyLog(BaseModel):
     to_do = models.ManyToManyField(ToDo, related_name='daily_log_tags')
     note = models.TextField(blank=True)
     lead_list = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='daily_log_lead_list')
+    internal_user_share = models.BooleanField(default=False)
+    internal_user_notify = models.BooleanField(default=False)
+    sub_member_share = models.BooleanField(default=False)
+    sub_member_notify = models.BooleanField(default=False)
+    owner_share = models.BooleanField(default=False)
+    owner_notify = models.BooleanField(default=False)
+    private_share = models.BooleanField(default=False)
+    private_notify = models.BooleanField(default=False)
 
 
 class DailyLogTemplateNotes(BaseModel):
@@ -156,20 +174,101 @@ class ScheduleEvent(BaseModel):
     event_title = models.CharField(blank=True, max_length=128)
     assigned_user = models.ManyToManyField(get_user_model(), related_name='schedule_event_assigned_user',
                                            blank=True)
-    reminder = models.IntegerField(blank=True, null=True)
-    start_day = models.DateField()
-    # due_day = models.DateField()
+    reminder = models.IntegerField(blank=True, null=True, choices=ReminderType.choices, default=ReminderType.NO)
+    start_day = models.DateField(null=True, blank=True)
+    end_day = models.DateField(null=True, blank=True)
+    start_time = models.IntegerField(default=None, blank=True, null=True)
+    end_time = models.IntegerField(default=None, null=True, blank=True)
+    due_days = models.IntegerField(default=None, null=True, blank=True)
+    time = models.IntegerField(blank=True, null=True)
+    is_before = models.BooleanField(default=False, blank=True)
+    is_after = models.BooleanField(default=False, blank=True)
     viewing = models.ManyToManyField(get_user_model(), related_name='schedule_event_viewing',
                                      blank=True)
+    notes = models.TextField(blank=True)
+    is_root = models.BooleanField(default=False)
+    type = models.CharField(max_length=128, choices=Type.choices, default=Type.FINISH_TO_START)
+    lag_day = models.IntegerField(default=0, blank=True, null=True)
+    predecessor = models.ForeignKey('self', related_name='parent_event', null=True,
+                                    blank=True, on_delete=models.SET_NULL, default=None)
+
 
 # class ScheduleEventPredecessorsLink(BaseModel):
 #     class Meta:
 #         db_table = 'schedule_event_predecessors_link'
+#
+#     name_predecessors = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE,
+#                                           related_name='schedule_event_predecessors_link_name')
+#
+#     is_predecessor = models.BooleanField(default=False)
+#     type = models.CharField(max_length=128, choices=Type.choices, default=Type.FINISH_TO_START)
+#     lag_day = models.IntegerField(default=0, blank=True, null=True)
+#     event_schedule = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE,
+#                                        blank=True, null=True,
+#                                        related_name='predecessors_link_schedule_event')
 
-# name_predecessors = models.ForeignKey(get_user_model(), on_delete=models.CASCADE,
-#                                       related_name='schedule_event_predecessors_link_name')
 
-# type = models.CharField(max_length=128, blank=True)
-# log_day = models.DateField()
-# event_schedule = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE,
-#                                    related_name='predecessors_link_schedule_event')
+class FileScheduleEvent(BaseModel):
+    class Meta:
+        db_table = 'schedule_event_file'
+
+    file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
+    event = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE, related_name='event_file')
+
+
+class DataType(models.TextChoices):
+    SINGLE_LINE_TEXT = 'single-line-text', 'SINGLE-LINE-TEXT'
+    MULTI_LINE_TEXT = 'multi-line text with expandable textbox', 'MULTI-LINE TEXT WITH EXPANDABLE TEXTBOX'
+    CHECKBOX = 'checkbox', 'CHECKBOX'
+    WHOLE_NUMBER = 'whole number', 'WHOLE NUMBER'
+    LIST_OF_USER_SINGLE_SELECT = 'list of User - Single Select', 'LIST OF USER - SINGLE SELECT'
+    LIST_OF_SUBS_VENDORS_SINGLE_SELECT = 'List of Subs/Vendors - Single Select', 'LIST OF SUBS/VENDORS-SINGLE SELECT'
+    DATE = 'date', 'DATE'
+    CURRENCY = 'currency', 'CURRENCY'
+    DROPDOWN = 'dropdown', 'DROPDOWN'
+    FILE = 'file', 'FILE',
+    MULTI_SELECT_DROPDOWN = 'Multi-Select-Dropdown', 'MULTI-SELECT-DROPDOWN'
+    LINK = 'link', 'LINK'
+    LIST_OF_USER_MULTI_SELECT = 'list of User - Multi Select', 'LIST OF USER - MULTI SELECT'
+    LIST_OF_SUBS_VENDORS_MULTI_SELECT = 'List of Subs/Vendors - Multi Select', 'LIST OF SUBS/VENDORS-MULTI SELECT'
+
+
+class CustomFieldScheduleSetting(BaseModel):
+    class Meta:
+        db_table = 'custom_field_schedule_setting'
+
+    label = models.CharField(blank=True, max_length=128)
+    data_type = models.CharField(max_length=128, choices=DataType.choices, default=DataType.SINGLE_LINE_TEXT)
+    required = models.BooleanField(default=False)
+    include_in_filters = models.BooleanField(default=False)
+    display_order = models.IntegerField(default=0, blank=True, null=True)
+    tool_tip_text = models.CharField(blank=True, max_length=128)
+    show_owners = models.BooleanField(default=False)
+    allow_permitted_sub = models.BooleanField(default=False)
+    default_value = models.CharField(blank=True, max_length=128)
+
+
+class ItemFieldDropDown(BaseModel):
+    class Meta:
+        db_table = 'item_dropdown'
+
+    dropdown = models.ForeignKey(CustomFieldScheduleSetting, on_delete=models.CASCADE,
+                                 related_name='custom_field_drop_down')
+    name = models.CharField(blank=True, max_length=128)
+
+
+class TodoCustomField(BaseModel):
+    class Meta:
+        db_table = 'todo_custom_field'
+
+    todo = models.ForeignKey(ToDo, related_name='custom_filed_to_do',
+                             null=True, blank=True, on_delete=models.SET_NULL)
+    label = models.CharField(blank=True, max_length=128)
+    data_type = models.CharField(max_length=128, choices=DataType.choices, default=DataType.SINGLE_LINE_TEXT)
+    required = models.BooleanField(default=False)
+    include_in_filters = models.BooleanField(default=False)
+    display_order = models.IntegerField(default=0, blank=True, null=True)
+    tool_tip_text = models.CharField(blank=True, max_length=128)
+    show_owners = models.BooleanField(default=False)
+    allow_permitted_sub = models.BooleanField(default=False)
+    value = models.CharField(blank=True, max_length=128)
