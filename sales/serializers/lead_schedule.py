@@ -447,7 +447,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_schedule.ScheduleEvent
         fields = ('id', 'lead_list', 'event_title', 'assigned_user', 'reminder', 'start_day', 'end_day', 'due_days',
-                  'time', 'viewing', 'notes', 'predecessors_link', 'type', 'lag_day', 'predecessor', 'start_time',
+                  'time', 'viewing', 'notes', 'predecessors_link', 'start_time',
                   'end_time', 'is_before', 'is_after')
 
     def create(self, validated_data):
