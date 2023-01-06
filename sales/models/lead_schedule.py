@@ -175,8 +175,8 @@ class ScheduleEvent(BaseModel):
     assigned_user = models.ManyToManyField(get_user_model(), related_name='schedule_event_assigned_user',
                                            blank=True)
     reminder = models.IntegerField(blank=True, null=True, choices=ReminderType.choices, default=ReminderType.NO)
-    start_day = models.DateField(null=True, blank=True)
-    end_day = models.DateField(null=True, blank=True)
+    start_day = models.DateTimeField(null=True, blank=True)
+    end_day = models.DateTimeField(null=True, blank=True)
     start_time = models.IntegerField(default=None, blank=True, null=True)
     end_time = models.IntegerField(default=None, null=True, blank=True)
     due_days = models.IntegerField(default=None, null=True, blank=True)

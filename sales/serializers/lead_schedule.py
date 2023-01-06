@@ -457,7 +457,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         predecessors_link = pop(data, 'predecessors_link', [])
         assigned_user = pop(data, 'assigned_user', [])
         lead_list = pop(data, 'lead_list', None)
-        viewing = pop(data, 'viewing', None)
+        viewing = pop(data, 'viewing', [])
         schedule_event_create = lead_schedule.ScheduleEvent.objects.create(
             user_create=user_create, user_update=user_update,
             lead_list_id=lead_list,
