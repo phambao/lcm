@@ -82,7 +82,7 @@ class Contact(BaseModel):
     last_name = models.CharField(verbose_name='Last Name', max_length=128)
     gender = models.CharField(
         max_length=6, choices=Gender.choices, default=Gender.MALE)
-    email = models.EmailField(max_length=128)
+    email = models.EmailField(max_length=128, blank=True)
     street = models.CharField(max_length=64, null=True, blank=True)
     city = models.ForeignKey('base.City', on_delete=models.SET_NULL,
                              related_name='contact_cities', null=True, blank=True)
