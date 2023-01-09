@@ -48,6 +48,7 @@ class ToDo(BaseModel):
     notes = models.TextField(blank=True, max_length=128)
     lead_list = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='to_do_lead_list', blank=True,
                                   null=True)
+    color = models.CharField(max_length=128, blank=True)
 
 
 class CheckListItems(BaseModel):
