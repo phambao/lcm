@@ -36,10 +36,11 @@ class ToDo(BaseModel):
     # To Do information
     title = models.CharField(max_length=128)
     priority = models.CharField(max_length=128, choices=Priority.choices, default=Priority.HIGH)
-    due_date = models.DateTimeField()
-    time = models.IntegerField(null=True, blank=True)
+    due_date = models.DateTimeField(blank=True, null=True)
+    # time = models.IntegerField(null=True, blank=True)
+    time_hour = models.DateTimeField(default=None, blank=True, null=True)
     is_complete = models.BooleanField(default=False)
-    sync_due_date = models.DateTimeField()
+    sync_due_date = models.DateTimeField(null=True, blank=True)
     reminder = models.IntegerField(null=True, blank=True)
     assigned_to = models.ManyToManyField(get_user_model(), related_name='todo_assigned_to',
                                          blank=True)
@@ -47,6 +48,7 @@ class ToDo(BaseModel):
     notes = models.TextField(blank=True, max_length=128)
     lead_list = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='to_do_lead_list', blank=True,
                                   null=True)
+    color = models.CharField(max_length=128, blank=True)
 
 
 class CheckListItems(BaseModel):
@@ -246,6 +248,11 @@ class CustomFieldScheduleSetting(BaseModel):
     show_owners = models.BooleanField(default=False)
     allow_permitted_sub = models.BooleanField(default=False)
     default_value = models.CharField(blank=True, max_length=128)
+    default_date = models.DateField(null=True, blank=True)
+    default_checkbox = models.BooleanField(default=False)
+    default_number = models.IntegerField(default=0, blank=True, null=True)
+    reminder = models.IntegerField(blank=True, null=True, default=0)
+    is_move_completed = models.BooleanField(default=False)
 
 
 class ItemFieldDropDown(BaseModel):
@@ -272,3 +279,6 @@ class TodoCustomField(BaseModel):
     show_owners = models.BooleanField(default=False)
     allow_permitted_sub = models.BooleanField(default=False)
     value = models.CharField(blank=True, max_length=128)
+    value_date = models.DateField(null=True, blank=True)
+    value_checkbox = models.BooleanField(default=False)
+    value_number = models.IntegerField(default=0, blank=True, null=True)

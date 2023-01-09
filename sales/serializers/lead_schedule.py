@@ -272,7 +272,7 @@ class DailyLogSerializer(serializers.ModelSerializer):
         model = lead_schedule.DailyLog
         fields = ('id', 'date', 'tags', 'to_do', 'note', 'lead_list', 'internal_user_share', 'internal_user_notify',
                   'sub_member_share', 'sub_member_notify', 'owner_share', 'owner_notify', 'private_share',
-                  'private_notify',)
+                  'private_notify')
 
     def create(self, validated_data):
         request = self.context['request']
@@ -521,7 +521,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         return instance
 
 
-class TextFieldSerialized(serializers.Serializer):
+class FieldSettingSerialized(serializers.Serializer):
     label = serializers.CharField(required=True)
     data_type = serializers.CharField(required=True)
     tool_tip_text = serializers.CharField(required=False)
@@ -531,17 +531,26 @@ class TextFieldSerialized(serializers.Serializer):
     show_owners = serializers.BooleanField(default=False)
     allow_permitted_sub = serializers.BooleanField(default=False)
 
-    # class Meta:
-    #     model = lead_schedule.CustomFieldScheduleSetting
-    #     fields = ('label', 'data_type', 'required', 'include_in_filters', 'display_order', 'show_owners',
-    #               'allow_permitted_sub')
+
+class TextFieldSerialized(FieldSettingSerialized):
+    default_value = serializers.CharField(required=False)
+
+
+class NumberFieldSerialized(FieldSettingSerialized):
+    default_value = serializers.IntegerField(required=False)
 
 
 class CheckboxFieldSerialized(serializers.ModelSerializer):
+    default_value = serializers.BooleanField(default=False)
+
     class Meta:
         model = lead_schedule.CustomFieldScheduleSetting
         fields = ('label', 'data_type', 'include_in_filters', 'display_order', 'show_owners',
-                  'allow_permitted_sub')
+                  'allow_permitted_sub', 'default_value')
+
+
+class ItemDropdownSerialized(serializers.Serializer):
+    name = serializers.CharField(required=False)
 
 
 class DropdownFieldSerialized(serializers.Serializer):
@@ -554,14 +563,7 @@ class DropdownFieldSerialized(serializers.Serializer):
     display_order = serializers.IntegerField()
     show_owners = serializers.BooleanField(default=False)
     allow_permitted_sub = serializers.BooleanField(default=False)
-    # class Meta:
-    #     model = lead_schedule.CustomFieldScheduleSetting
-    #     fields = ('label', 'data_type', 'required', 'include_in_filters', 'display_order', 'show_owners',
-    #               'allow_permitted_sub')
-
-
-class ItemDropdownSerialized(serializers.Serializer):
-    name = serializers.CharField(required=False)
+    name_item = ItemDropdownSerialized(allow_null=True, required=False, many=True)
 
 
 class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
