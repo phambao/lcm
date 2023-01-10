@@ -1,19 +1,17 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django_filters import rest_framework as filters
+from rest_framework import generics, permissions, status, filters as rf_filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
+from ..filters.catalog import CatalogFilter
 from ..models.catalog import Catalog, CostTable, CatalogLevel, DataPointUnit
 from ..serializers import catalog
-from ..filters.catalog import CatalogFilter
-
-from rest_framework import generics, permissions, status, filters as rf_filters
-from django_filters import rest_framework as filters
 
 
 class CatalogList(generics.ListCreateAPIView):
-
     queryset = Catalog.objects.all()
     serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -23,21 +21,18 @@ class CatalogList(generics.ListCreateAPIView):
 
 
 class CatalogDetail(generics.RetrieveUpdateDestroyAPIView):
-
     queryset = Catalog.objects.all()
     serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
 class CostTableList(generics.ListCreateAPIView):
-
     queryset = CostTable.objects.all()
     serializer_class = catalog.CostTableModelSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
 class CostTableDetail(generics.RetrieveUpdateDestroyAPIView):
-
     queryset = CostTable.objects.all()
     serializer_class = catalog.CostTableModelSerializer
     permission_classes = [permissions.IsAuthenticated]

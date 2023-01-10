@@ -1,10 +1,10 @@
 from django.urls import path, include
-from rest_framework import permissions
-from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
 
-from sales.views import lead_list, catalog, lead_schedule, estimate
 from api.views.upload_file import FileUploadView
+from sales.views import lead_list, catalog, lead_schedule, estimate
 
 # Define Path for Contacts -----------------------------------------------------
 url_contacts = [

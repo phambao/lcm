@@ -1,4 +1,5 @@
 from django_filters import rest_framework as filters
+
 from sales.models.catalog import Catalog, CatalogLevel
 
 
@@ -8,4 +9,4 @@ class CatalogFilter(filters.FilterSet):
 
     class Meta:
         model = Catalog
-        fields = ('is_ancestor', )
+        fields = ('is_ancestor',)

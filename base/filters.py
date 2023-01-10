@@ -1,6 +1,7 @@
-from django_filters import rest_framework as filters
-from base.models.config import Search, Column, Config, GridSetting
 from django.contrib.contenttypes.models import ContentType
+from django_filters import rest_framework as filters
+
+from base.models.config import Search, Column, Config, GridSetting
 
 
 class CountryStateCityBaseFilter:
@@ -23,7 +24,7 @@ class SearchFilter(filters.FilterSet):
 
     class Meta:
         model = Search
-        fields = ('content_type', )
+        fields = ('content_type',)
 
 
 class ColumnFilter(filters.FilterSet):
