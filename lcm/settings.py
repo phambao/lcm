@@ -158,9 +158,6 @@ REST_KNOX = {
 # Build for local development
 CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', cast=bool, default=False)
 
-# https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-DATABASE-ATOMIC_REQUESTS
-ATOMIC_REQUESTS = True
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
