@@ -4,11 +4,12 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
+from api.serializers.auth import UserCustomSerializer
 from api.serializers.base import SerializerMixin
-from api.serializers.auth import UserSerializer, UserCustomSerializer
-from ..models import lead_list
-from base.utils import pop
 from base.serializers import base
+from base.utils import pop
+from ..models import lead_list
+
 
 class PhoneContactsSerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
@@ -40,10 +41,9 @@ class ContactTypeNameSerializer(serializers.ModelSerializer):
 
 
 class ContactTypesSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = lead_list.ContactType
-        fields = ('id', 'contact_type_name', )
+        fields = ('id', 'contact_type_name',)
 
 
 class ContactTypeNameCustomSerializer(serializers.Serializer):
@@ -236,7 +236,7 @@ class PhotoSerializer(serializers.ModelSerializer):
         if not lead_list.LeadDetail.objects.filter(pk=pk_lead).exists():
             raise serializers.ValidationError('Lead not found')
         return validated_data
-    
+
     def create(self, validated_data):
         pk_lead = self.context['request'].__dict__[
             'parser_context']['kwargs']['pk_lead']

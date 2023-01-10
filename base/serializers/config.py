@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from ..models.config import Column, Search, Config, GridSetting
 
 
@@ -27,7 +28,6 @@ class CustomSearchSerializer(serializers.Serializer):
 
 
 class ConfigSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Config
         fields = ('id', 'settings', 'content_type')

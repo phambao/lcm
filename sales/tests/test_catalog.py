@@ -1,5 +1,5 @@
-from rest_framework import status
 from django.urls import reverse
+from rest_framework import status
 
 from .test_base import BaseTest
 from ..models import Catalog
@@ -37,7 +37,7 @@ class CatalogTests(BaseTest):
             list_catalog_id.append(parent)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         catalog = Catalog.objects.get(id=list_catalog_id[0])
-        self.assertEqual(len(catalog.get_all_descendant()), num_children-1)
+        self.assertEqual(len(catalog.get_all_descendant()), num_children - 1)
 
     def test_add_multiple_level_catalog(self):
         data = {
