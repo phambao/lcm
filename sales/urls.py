@@ -82,6 +82,7 @@ url_catalog = [
     path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
     path('list/<int:pk_catalog>/levels/', catalog.CatalogLevelList.as_view()),
     path('list/<int:pk_catalog>/levels/<int:pk>/', catalog.CatalogLevelDetail.as_view()),
+    path('list/<int:pk_catalog>/swap-level/', catalog.swap_level, name='swap-level'),
     path('list/add-catalog-levels/', catalog.add_multiple_level, name='add-multiple-level'),
     path('unit/', catalog.DataPointUnitView.as_view()),
     path('unit/<int:pk>/', catalog.DataPointUnitDetailView.as_view()),
@@ -125,7 +126,6 @@ url_schedule = [
     # FILE EVENT
     path('event/<int:pk_event>/attachments/', lead_schedule.AttachmentsEventGenericView.as_view({
         "post": "create_file", "get": "get_file"})),
-
 
     # CUSTOM FIELD SCHEDULE
     path('schedule-event/custom-field/', lead_schedule.ScheduleEventCustomFieldGenericView.as_view()),
