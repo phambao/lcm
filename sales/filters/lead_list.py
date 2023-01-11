@@ -5,20 +5,19 @@ from django.utils.timezone import now
 from django_filters import rest_framework as filters
 from django_filters.filters import _truncate
 
-from ..models.lead_list import Contact, Activities, LeadDetail, TagActivity, PhaseActivity
-from ..models import lead_list
 from base.filters import CountryStateCityBaseFilter
-
+from ..models import lead_list
+from ..models.lead_list import Contact, Activities, LeadDetail, TagActivity, PhaseActivity
 
 CHOICES = [
-        ("today", "Today"),
-        ("yesterday", "Yesterday"),
-        ("past-7-days", "Past 7 days"),
-        ("past-14-days", "Past 14 days"),
-        ("past-30-days", "Past 30 days"),
-        ("past-45-days", "Past 45 days"),
-        ("past-90-days", "Past 90 days"),
-    ]
+    ("today", "Today"),
+    ("yesterday", "Yesterday"),
+    ("past-7-days", "Past 7 days"),
+    ("past-14-days", "Past 14 days"),
+    ("past-30-days", "Past 30 days"),
+    ("past-45-days", "Past 45 days"),
+    ("past-90-days", "Past 90 days"),
+]
 
 FILTERS = {
     "today": lambda qs, name: qs.filter(
@@ -80,18 +79,19 @@ class LeadDetailFilter(filters.FilterSet):
     most_of_click = filters.NumberFilter(field_name='number_of_click', lookup_expr='gt')
     sources = filters.ModelMultipleChoiceFilter(queryset=lead_list.SourceLead.objects.all())
     has_valid_email = filters.BooleanFilter(method='filter_has_valid_email', label='Has Valid Email')
-    
+
     class Meta:
         model = LeadDetail
         fields = ('lead_title', 'salesperson', 'status', 'tags', 'project_types',
                   'proposal_status', 'age_of_lead', 'sold_date', 'most_recent_click',
                   'most_of_click', 'sources', 'has_valid_email')
-    
+
     def filter_has_valid_email(self, queryset, name, value):
         valid_email = r'^[a-zA-Z0-9\_\.\+\-]+@[a-zA-Z0-9\-]+\.[a-zA-Z0-9\-\.]+$'
         if value:
             return queryset.filter(contacts__email__regex=valid_email).distinct()
         return queryset.exclude(contacts__email__regex=valid_email).distinct()
+
 
 class ContactsFilter(filters.FilterSet, CountryStateCityBaseFilter):
     first_name = filters.CharFilter(field_name="first_name", lookup_expr='icontains')
@@ -101,7 +101,7 @@ class ContactsFilter(filters.FilterSet, CountryStateCityBaseFilter):
     city = filters.NumberFilter(method='filter_city_id')
     state = filters.NumberFilter(method='filter_state_id')
     country = filters.NumberFilter(method='filter_country_id')
-    
+
     class Meta:
         model = Contact
         fields = ('first_name', 'last_name', 'email', 'phone_contacts', 'city', 'state', 'country')

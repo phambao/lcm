@@ -1,5 +1,6 @@
 from rest_framework import status
 from rest_framework.test import APITestCase
+
 from api.models import User
 
 
@@ -11,7 +12,8 @@ class AuthTests(APITestCase):
     def test_auth(self):
         # register
         response = self.client.post('/api/register', {'username': 'test', 'password': 'test',
-                                    'email': 'test@test.com', 'first_name': 'test', 'last_name': 'test'}, format='json')
+                                                      'email': 'test@test.com', 'first_name': 'test',
+                                                      'last_name': 'test'}, format='json')
         # login
         response = self.client.post(
             '/api/login', {'email': 'admin@admin.com', 'password': 'admin', 'username': 'admin'}, format='json')

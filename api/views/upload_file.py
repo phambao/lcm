@@ -1,4 +1,8 @@
 import os
+import uuid
+
+from django.core.files.base import ContentFile
+from knox.auth import TokenAuthentication
 from rest_framework import views, status
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -6,11 +10,8 @@ from rest_framework.response import Response
 
 from sales.models.lead_list import Photos
 from sales.serializers.lead_list import PhotoSerializer
-from django.core.files.base import ContentFile
-from knox.auth import TokenAuthentication
-import uuid
 
-from django.shortcuts import get_object_or_404
+
 class FileUploadView(views.APIView):
     parser_classes = [MultiPartParser]
     authentication_classes = [TokenAuthentication]
@@ -20,7 +21,7 @@ class FileUploadView(views.APIView):
         queryset = Photos.objects.all()
         serializer = PhotoSerializer(queryset, many=True)
         return Response(serializer.data)
-    
+
     def post(self, request, format=None):
         try:
             files = request.FILES.getlist('files')
@@ -39,7 +40,7 @@ class FileUploadView(views.APIView):
         serializer = PhotoSerializer(photos, many=True)
 
         return Response(serializer.data)
-    
+
     def delete(self, request, *args, **kwargs):
         ids = request.data.get('ids').split(',')
         if ids:
@@ -47,4 +48,4 @@ class FileUploadView(views.APIView):
             for photo in queryset:
                 os.remove(photo.photo.path)
             queryset.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)    
+        return Response(status=status.HTTP_204_NO_CONTENT)

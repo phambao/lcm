@@ -65,7 +65,7 @@ class CostTable(models.Model):
 class DataPoint(models.Model):
     class Meta:
         db_table = 'data_point'
-        
+
     class Unit(models.TextChoices):
         INCHES = 'in', 'inches'
         METERS = 'm', 'meters'
@@ -80,7 +80,6 @@ class DataPoint(models.Model):
 
 
 class Catalog(BaseModel):
-
     class Meta:
         db_table = 'catalog'
         ordering = ['-modified_date']
@@ -107,7 +106,7 @@ class Catalog(BaseModel):
             descendants.append(c.pk)
             descendants.extend(c.get_all_descendant())
         return descendants
-    
+
     def get_tree_view(self):
         tree = []
         catalogs = Catalog.objects.filter(parents__id=self.pk)
@@ -179,4 +178,4 @@ class Catalog(BaseModel):
         if depth:
             children = Catalog.objects.filter(parents__id=self.pk)
             for child in children:
-                child.duplicate(parent=c, depth=depth-1, data_points=data_points)
+                child.duplicate(parent=c, depth=depth - 1, data_points=data_points)

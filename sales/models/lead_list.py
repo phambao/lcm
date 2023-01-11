@@ -1,6 +1,6 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth import get_user_model
 
 from api.models import BaseModel
 
@@ -14,15 +14,13 @@ class ProjectType(models.Model):
 
 
 class TagLead(models.Model):
-    
     class Meta:
         db_table = 'tag_lead'
-        
+
     name = models.CharField(max_length=64)
 
 
 class LeadDetail(BaseModel):
-
     class Meta:
         db_table = 'lead_detail'
         ordering = ['-modified_date']
@@ -57,7 +55,7 @@ class LeadDetail(BaseModel):
         max_digits=9, decimal_places=2, default=0, blank=True)
     estimate_revenue_to = models.DecimalField(
         max_digits=9, decimal_places=2, default=0, blank=True)
-    projected_sale_date = models.DateTimeField(verbose_name='Projected Sales Date',)
+    projected_sale_date = models.DateTimeField(verbose_name='Projected Sales Date', )
     project_types = models.ManyToManyField(ProjectType, verbose_name='Project Types', related_name='leads', blank=True)
     salesperson = models.ManyToManyField(get_user_model(), related_name='lead_persons', blank=True)
     sources = models.ManyToManyField(SourceLead, related_name='leads', blank=True)
@@ -73,7 +71,6 @@ class Contact(BaseModel):
         db_table = 'contact'
 
     class Gender(models.TextChoices):
-        
         MALE = 'male', _('Male')
         FEMALE = 'female', _('Female')
         OTHER = '', _('Other')
@@ -112,7 +109,8 @@ class PhoneOfContact(models.Model):
     phone_type = models.CharField(verbose_name='Phone Type', max_length=8,
                                   choices=PhoneType.choices, default=PhoneType.OTHER)
     text_massage_received = models.CharField(verbose_name="Text Message Received", max_length=10, blank=True)
-    mobile_phone_service_provider = models.CharField('Mobile Phone Service Provider', max_length=32, blank=True, null=True)
+    mobile_phone_service_provider = models.CharField('Mobile Phone Service Provider', max_length=32, blank=True,
+                                                     null=True)
     contact = models.ForeignKey(
         Contact, on_delete=models.CASCADE, related_name='phone_contacts')
 
@@ -159,7 +157,6 @@ class PhaseActivity(models.Model):
 
 
 class Activities(BaseModel):
-
     class Meta:
         db_table = 'activities'
         ordering = ['-modified_date']
@@ -180,9 +177,10 @@ class Activities(BaseModel):
     tags = models.ManyToManyField(TagActivity, related_name='activity_tags', blank=True)
     status = models.CharField(
         max_length=128, choices=Status.choices, default=Status.NONE)
-    start_date = models.DateTimeField(verbose_name='Start Date',)
-    end_date = models.DateTimeField(verbose_name='End Date',)
-    assigned_to = models.ManyToManyField(get_user_model(), verbose_name='Assigned To', related_name='assigners', blank=True)
+    start_date = models.DateTimeField(verbose_name='Start Date', )
+    end_date = models.DateTimeField(verbose_name='End Date', )
+    assigned_to = models.ManyToManyField(get_user_model(), verbose_name='Assigned To', related_name='assigners',
+                                         blank=True)
     attendees = models.ManyToManyField(get_user_model(), related_name='activity_attendees', blank=True)
     lead = models.ForeignKey(
         LeadDetail, on_delete=models.CASCADE, related_name='activities')
@@ -192,11 +190,11 @@ class Proposals(BaseModel):
     class Meta:
         db_table = 'proposal'
         ordering = ['-modified_date']
-    
+
     class Status(models.TextChoices):
         STATUS_1 = 'status_1', 'Status 1'
         STATUS_2 = 'status_2', 'Status 2'
-    
+
     proposal_name = models.CharField(max_length=64)
     estimate_number = models.CharField(max_length=32)
     status = models.CharField(

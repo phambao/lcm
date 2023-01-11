@@ -1,18 +1,17 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django_filters import rest_framework as filters
+from rest_framework import generics, permissions, status, filters as rf_filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
+from ..filters.catalog import CatalogFilter
 from ..models.catalog import Catalog, CostTable, CatalogLevel, DataPointUnit
 from ..serializers import catalog
-from ..filters.catalog import CatalogFilter
-
-from rest_framework import generics, permissions, status, filters as rf_filters
-from django_filters import rest_framework as filters
 
 
 class CatalogList(generics.ListCreateAPIView):
-
     queryset = Catalog.objects.all()
     serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -22,21 +21,18 @@ class CatalogList(generics.ListCreateAPIView):
 
 
 class CatalogDetail(generics.RetrieveUpdateDestroyAPIView):
-
     queryset = Catalog.objects.all()
     serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
 class CostTableList(generics.ListCreateAPIView):
-
     queryset = CostTable.objects.all()
     serializer_class = catalog.CostTableModelSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
 class CostTableDetail(generics.RetrieveUpdateDestroyAPIView):
-
     queryset = CostTable.objects.all()
     serializer_class = catalog.CostTableModelSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -195,4 +191,57 @@ def duplicate_catalogs(request, pk):
             except Catalog.DoesNotExist:
                 pass
         return Response(status=status.HTTP_201_CREATED, data={})
+    return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+@transaction.atomic
+def swap_level(request, pk_catalog):
+    """
+    Payload: {"levels": [{"id": int, "parent": int},...], "catalogs": [{"id": int, "parent": int},...]}
+    """
+    if isinstance(request.data, dict):
+        parent_catalog = get_object_or_404(Catalog, pk=pk_catalog)
+        try:
+            levels = request.data.get('levels')
+            catalogs = request.data.get('catalogs')
+
+            updated_level = []
+            level_id = []
+            for l in levels:
+                pk = l.get('id')
+                level_id.append(pk)
+                level = CatalogLevel.objects.get(pk=pk)
+                level.parent_id = l.get('parent')
+                updated_level.append(level)
+            parent_catalog.all_levels.filter(pk__in=level_id).update(parent=None)
+            CatalogLevel.objects.bulk_update(updated_level, fields=['parent'])
+
+            # Validate level
+            parent_catalog.get_ordered_levels()
+
+            updated_catalog = []
+            for c in catalogs:
+                ctl = Catalog.objects.get(pk=c.get('id'))
+                ctl.parents.clear()
+                ctl.parents.add(Catalog.objects.get(pk=c.get('parent')))
+                updated_catalog.append(ctl)
+
+            # Validate catalog
+            if Catalog.objects.filter(level__in=level_id).count() != len(updated_catalog):
+                raise Exception('Missing or too much categories updated')
+
+            catalog_serializer = catalog.CatalogSerializer(updated_catalog, many=True,
+                                                           context={'request': request})
+            level_serializer = catalog.CatalogLevelModelSerializer(updated_level, many=True,
+                                                                   context={'request': request})
+
+            return Response(status=status.HTTP_200_OK, data={
+                "levels": level_serializer.data,
+                "catalog": catalog_serializer.data
+            })
+        except Exception as e:
+            transaction.set_rollback(True)
+            raise e
     return Response(status=status.HTTP_400_BAD_REQUEST)
