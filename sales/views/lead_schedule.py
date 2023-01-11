@@ -10,10 +10,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from base.serializers.base import IDAndNameSerializer
+from base.utils import pop
 from ..models import LeadDetail
 from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, DailyLog, \
     AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate, \
-    FileScheduleEvent, CustomFieldScheduleSetting
+    FileScheduleEvent, CustomFieldScheduleSetting, TodoCustomField, ScheduleToDoSetting, ScheduleDailyLogSetting, \
+    CustomFieldScheduleDailyLogSetting
 from ..serializers import lead_schedule
 
 
@@ -250,6 +252,118 @@ class ToDoChecklistItemTemplateDetailGenericView(generics.RetrieveUpdateDestroyA
     permission_classes = [permissions.IsAuthenticated]
 
 
+class ToDoMessageCustomFieldGenericView(GenericViewSet):
+    serializer_class = lead_schedule.MessageAndCustomFieldToDoCreateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create_message_custom_field(self, request, **kwargs):
+        serializer = lead_schedule.MessageAndCustomFieldToDoCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        data_create = dict(serializer.validated_data)
+        pk_todo = data_create['todo']
+        todo = get_object_or_404(ToDo.objects.all(), pk=pk_todo)
+
+        data_message = data_create['message']
+        data_custom_field = data_create['custom_field']
+        data_create_messaging = list()
+        for message in data_message:
+            rs_message = Messaging(
+                message=message['message'],
+                to_do=todo,
+                user_create=user,
+                user_update=user
+            )
+            data_create_messaging.append(rs_message)
+        Messaging.objects.bulk_create(data_create_messaging)
+
+        data_create_custom_field = list()
+        for custom_field in data_custom_field:
+            temp = TodoCustomField(
+                custom_field=custom_field['custom_field'],
+                todo=todo,
+                label=custom_field['label'],
+                data_type=custom_field['data_type'],
+                required=custom_field['required'],
+                include_in_filters=custom_field['include_in_filters'],
+                display_order=custom_field['display_order'],
+                tool_tip_text=custom_field['tool_tip_text'],
+                show_owners=custom_field['show_owners'],
+                allow_permitted_sub=custom_field['allow_permitted_sub'],
+                value=custom_field['value'],
+                value_date=custom_field['value_date'],
+                value_checkbox=custom_field['value_checkbox'],
+                value_number=custom_field['value_number'],
+                user_create=user,
+                user_update=user,
+
+            )
+            data_create_custom_field.append(temp)
+        TodoCustomField.objects.bulk_create(data_create_custom_field)
+        messaging = Messaging.objects.filter(to_do=pk_todo).values()
+        rs_custom_field = TodoCustomField.objects.filter(todo=pk_todo).values()
+        data_rs = {
+            'todo': pk_todo,
+            'message': messaging,
+            'custom_field': rs_custom_field
+        }
+        rs = lead_schedule.MessageAndCustomFieldToDoCreateSerializer(
+            data_rs, context={'request': request}).data
+
+        return Response(status=status.HTTP_200_OK, data=rs)
+
+    def update_message_custom_field(self, request, **kwargs):
+        serializer = lead_schedule.MessageAndCustomFieldToDoCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        data_create = dict(serializer.validated_data)
+        pk_todo = data_create['todo']
+        todo = get_object_or_404(ToDo.objects.all(), pk=pk_todo)
+
+        data_message = data_create['message']
+        data_custom_field = data_create['custom_field']
+
+        for message in data_message:
+            data_message = lead_schedule.Messaging.objects.filter(pk=message['id'])
+            data_message.update(message=message['message'])
+
+        TodoCustomField.objects.filter(todo=pk_todo).delete()
+        data_create_custom_field = list()
+        for custom_field in data_custom_field:
+            temp = TodoCustomField(
+                custom_field=custom_field['custom_field'],
+                todo=todo,
+                label=custom_field['label'],
+                data_type=custom_field['data_type'],
+                required=custom_field['required'],
+                include_in_filters=custom_field['include_in_filters'],
+                display_order=custom_field['display_order'],
+                tool_tip_text=custom_field['tool_tip_text'],
+                show_owners=custom_field['show_owners'],
+                allow_permitted_sub=custom_field['allow_permitted_sub'],
+                value=custom_field['value'],
+                value_date=custom_field['value_date'],
+                value_checkbox=custom_field['value_checkbox'],
+                value_number=custom_field['value_number'],
+                user_create=user,
+                user_update=user,
+
+            )
+            data_create_custom_field.append(temp)
+        TodoCustomField.objects.bulk_create(data_create_custom_field)
+        messaging = Messaging.objects.filter(to_do=pk_todo).values()
+        rs_custom_field = TodoCustomField.objects.filter(todo=pk_todo).values()
+        data_rs = {
+            'todo': pk_todo,
+            'message': messaging,
+            'custom_field': rs_custom_field
+        }
+        rs = lead_schedule.MessageAndCustomFieldToDoCreateSerializer(
+            data_rs, context={'request': request}).data
+
+        return Response(status=status.HTTP_200_OK, data=rs)
+
+
 class ScheduleEventGenericView(generics.ListCreateAPIView):
     queryset = ScheduleEvent.objects.all()
     serializer_class = lead_schedule.ScheduleEventSerializer
@@ -262,15 +376,51 @@ class ScheduleEventDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleEventCustomFieldGenericView(generics.ListCreateAPIView):
+class ScheduleToDoCustomFieldGenericView(generics.ListCreateAPIView):
     queryset = CustomFieldScheduleSetting.objects.all()
     serializer_class = lead_schedule.CustomFieldScheduleSettingSerialized
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleEventCustomFieldDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleToDoCustomFieldDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomFieldScheduleSetting.objects.all()
     serializer_class = lead_schedule.CustomFieldScheduleSettingSerialized
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleToDoSettingGenericView(generics.ListCreateAPIView):
+    queryset = ScheduleToDoSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleToDoSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleToDoSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ScheduleToDoSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleToDoSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleDailyLogSettingGenericView(generics.ListCreateAPIView):
+    queryset = ScheduleDailyLogSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleDailyLogSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleDailyLogSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ScheduleDailyLogSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleDailyLogSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleDailyLogCustomFieldSettingGenericView(generics.ListCreateAPIView):
+    queryset = CustomFieldScheduleDailyLogSetting.objects.all()
+    serializer_class = lead_schedule.CustomFieldScheduleDailyLogSettingSerialized
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleDailyLogCustomFieldSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CustomFieldScheduleDailyLogSetting.objects.all()
+    serializer_class = lead_schedule.CustomFieldScheduleDailyLogSettingSerialized
     permission_classes = [permissions.IsAuthenticated]
 
 
@@ -380,6 +530,19 @@ def select_lead_list(request, *args, **kwargs):
     rs = IDAndNameSerializer(
         rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_custom_field(request, *args, **kwargs):
+    custom_field_id = kwargs.get('pk')
+    todo_list = request.data
+    temp = [data['id'] for data in todo_list]
+    custom_field_setting = CustomFieldScheduleSetting.objects.filter(id=custom_field_id)
+    todo_custom_field = TodoCustomField.objects.filter(todo__in=temp, custom_field=custom_field_id)
+    todo_custom_field.delete()
+    custom_field_setting.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 def get_id_by_group(pk):

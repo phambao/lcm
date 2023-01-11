@@ -1,10 +1,10 @@
 from django.urls import path, include
-from drf_yasg import openapi
-from drf_yasg.views import get_schema_view
 from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
 
-from api.views.upload_file import FileUploadView
 from sales.views import lead_list, catalog, lead_schedule, estimate
+from api.views.upload_file import FileUploadView
 
 # Define Path for Contacts -----------------------------------------------------
 url_contacts = [
@@ -92,6 +92,8 @@ url_schedule = [
     # TO_DO
     path('todo/', lead_schedule.SourceScheduleToDoGenericView.as_view()),
     path('todo/<int:pk>/', lead_schedule.ScheduleDetailGenericView.as_view()),
+    path('todo/message-custom-field/', lead_schedule.ToDoMessageCustomFieldGenericView.as_view({
+        "post": "create_message_custom_field", "put": "update_message_custom_field"})),
     # FILE
     path('todo/<int:pk_todo>/attachments/', lead_schedule.ScheduleAttachmentsGenericView.as_view({
         "post": "create_file", "get": "get_file"})),
@@ -118,6 +120,11 @@ url_schedule = [
     # TEMPLATE NOTE DAILY LOG
     path('daily-logs/template/', lead_schedule.DailyLogTemplateNoteGenericView.as_view()),
     path('daily-logs/template/<int:pk>/', lead_schedule.DailyLogTemplateNoteDetailGenericView.as_view()),
+    # SETTING DAILY LOG
+    path('daily-logs/setting/', lead_schedule.ScheduleDailyLogSettingGenericView.as_view()),
+    path('daily-logs/setting/<int:pk>/', lead_schedule.ScheduleDailyLogSettingDetailGenericView.as_view()),
+    path('daily-logs/custom-field/', lead_schedule.ScheduleDailyLogCustomFieldSettingGenericView.as_view()),
+    path('daily-logs/custom-field/<int:pk>/', lead_schedule.ScheduleDailyLogCustomFieldSettingDetailGenericView.as_view()),
     # SCHEDULE EVENT
     path('schedule-event/', lead_schedule.ScheduleEventGenericView.as_view()),
     path('schedule-event/<int:pk>/', lead_schedule.ScheduleEventDetailGenericView.as_view()),
@@ -127,9 +134,13 @@ url_schedule = [
     path('event/<int:pk_event>/attachments/', lead_schedule.AttachmentsEventGenericView.as_view({
         "post": "create_file", "get": "get_file"})),
 
-    # CUSTOM FIELD SCHEDULE
-    path('schedule-event/custom-field/', lead_schedule.ScheduleEventCustomFieldGenericView.as_view()),
-    path('schedule-event/custom-field/<int:pk>/', lead_schedule.ScheduleEventCustomFieldDetailGenericView.as_view()),
+
+    # CUSTOM FIELD SCHEDULE TO_DO
+    path('schedule-todo/setting/', lead_schedule.ScheduleToDoSettingGenericView.as_view()),
+    path('schedule-todo/setting/<int:pk>/', lead_schedule.ScheduleToDoSettingDetailGenericView.as_view()),
+    path('schedule-todo/custom-field/', lead_schedule.ScheduleToDoCustomFieldGenericView.as_view()),
+    path('schedule-todo/custom-field/<int:pk>/', lead_schedule.ScheduleToDoCustomFieldDetailGenericView.as_view()),
+    path('schedule-todo/delete-custom-field/<int:pk>/', lead_schedule.delete_custom_field),
 
 ]
 

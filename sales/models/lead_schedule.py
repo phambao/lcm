@@ -45,7 +45,7 @@ class ToDo(BaseModel):
     assigned_to = models.ManyToManyField(get_user_model(), related_name='todo_assigned_to',
                                          blank=True)
     tags = models.ManyToManyField(TagSchedule, related_name='to_do_tags')
-    notes = models.TextField(blank=True, max_length=128)
+    notes = models.TextField(blank=True)
     lead_list = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='to_do_lead_list', blank=True,
                                   null=True)
     color = models.CharField(max_length=128, blank=True)
@@ -179,35 +179,24 @@ class ScheduleEvent(BaseModel):
     reminder = models.IntegerField(blank=True, null=True, choices=ReminderType.choices, default=ReminderType.NO)
     start_day = models.DateTimeField(null=True, blank=True)
     end_day = models.DateTimeField(null=True, blank=True)
-    start_time = models.IntegerField(default=None, blank=True, null=True)
-    end_time = models.IntegerField(default=None, null=True, blank=True)
+    start_hour = models.DateTimeField(blank=True, null=True)
+    end_hour = models.DateTimeField(null=True, blank=True)
     due_days = models.IntegerField(default=None, null=True, blank=True)
     time = models.IntegerField(blank=True, null=True)
     is_before = models.BooleanField(default=False, blank=True)
     is_after = models.BooleanField(default=False, blank=True)
     viewing = models.ManyToManyField(get_user_model(), related_name='schedule_event_viewing',
                                      blank=True)
-    notes = models.TextField(blank=True)
+    notes = models.TextField(blank=True, null=True)
+    internal_notes = models.TextField(blank=True, null=True)
+    sub_notes = models.TextField(blank=True, null=True)
+    owner_notes = models.TextField(blank=True, null=True)
     is_root = models.BooleanField(default=False)
-    type = models.CharField(max_length=128, choices=Type.choices, default=Type.FINISH_TO_START)
+    type = models.CharField(max_length=128, choices=Type.choices, blank=True, null=True)
     lag_day = models.IntegerField(default=0, blank=True, null=True)
     predecessor = models.ForeignKey('self', related_name='parent_event', null=True,
                                     blank=True, on_delete=models.SET_NULL, default=None)
-
-
-# class ScheduleEventPredecessorsLink(BaseModel):
-#     class Meta:
-#         db_table = 'schedule_event_predecessors_link'
-#
-#     name_predecessors = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE,
-#                                           related_name='schedule_event_predecessors_link_name')
-#
-#     is_predecessor = models.BooleanField(default=False)
-#     type = models.CharField(max_length=128, choices=Type.choices, default=Type.FINISH_TO_START)
-#     lag_day = models.IntegerField(default=0, blank=True, null=True)
-#     event_schedule = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE,
-#                                        blank=True, null=True,
-#                                        related_name='predecessors_link_schedule_event')
+    link_to_outside_calendar = models.BooleanField(default=False, blank=True, null=True)
 
 
 class FileScheduleEvent(BaseModel):
@@ -235,6 +224,48 @@ class DataType(models.TextChoices):
     LIST_OF_SUBS_VENDORS_MULTI_SELECT = 'List of Subs/Vendors - Multi Select', 'LIST OF SUBS/VENDORS-MULTI SELECT'
 
 
+class ScheduleDailyLogSetting(BaseModel):
+    class Meta:
+        db_table = 'schedule_daily_log_setting'
+
+    stamp_location = models.BooleanField(default=False)
+    default_notes = models.TextField(blank=True, null=True)
+    internal_user_is_share = models.BooleanField(default=False)
+    internal_user_is_notify = models.BooleanField(default=False)
+    subs_vendors_is_share = models.BooleanField(default=False)
+    subs_vendors_is_notify = models.BooleanField(default=False)
+    owner_is_share = models.BooleanField(default=False)
+    owner_is_notify = models.BooleanField(default=False)
+
+
+class CustomFieldScheduleDailyLogSetting(BaseModel):
+    class Meta:
+        db_table = 'custom_field_schedule_daily_log'
+
+    label = models.CharField(blank=True, max_length=128)
+    data_type = models.CharField(max_length=128, choices=DataType.choices, default=DataType.SINGLE_LINE_TEXT)
+    required = models.BooleanField(default=False)
+    include_in_filters = models.BooleanField(default=False)
+    display_order = models.IntegerField(default=0, blank=True, null=True)
+    tool_tip_text = models.CharField(blank=True, max_length=128, null=True)
+    show_owners = models.BooleanField(default=False)
+    allow_permitted_sub = models.BooleanField(default=False)
+    default_value = models.CharField(blank=True, max_length=128)
+    default_date = models.DateField(null=True, blank=True)
+    default_checkbox = models.BooleanField(null=True, blank=True)
+    default_number = models.IntegerField(blank=True, null=True)
+    daily_log_setting = models.ForeignKey(ScheduleDailyLogSetting, related_name='custom_filed_daily_log_setting',
+                                          null=True, blank=True, on_delete=models.SET_NULL)
+
+
+class ScheduleToDoSetting(BaseModel):
+    class Meta:
+        db_table = 'schedule_todo_setting'
+
+    reminder = models.IntegerField(blank=True, null=True, default=0)
+    is_move_completed = models.BooleanField(default=False)
+
+
 class CustomFieldScheduleSetting(BaseModel):
     class Meta:
         db_table = 'custom_field_schedule_setting'
@@ -244,15 +275,15 @@ class CustomFieldScheduleSetting(BaseModel):
     required = models.BooleanField(default=False)
     include_in_filters = models.BooleanField(default=False)
     display_order = models.IntegerField(default=0, blank=True, null=True)
-    tool_tip_text = models.CharField(blank=True, max_length=128)
+    tool_tip_text = models.CharField(blank=True, max_length=128, null=True)
     show_owners = models.BooleanField(default=False)
     allow_permitted_sub = models.BooleanField(default=False)
     default_value = models.CharField(blank=True, max_length=128)
     default_date = models.DateField(null=True, blank=True)
-    default_checkbox = models.BooleanField(default=False)
-    default_number = models.IntegerField(default=0, blank=True, null=True)
-    reminder = models.IntegerField(blank=True, null=True, default=0)
-    is_move_completed = models.BooleanField(default=False)
+    default_checkbox = models.BooleanField(null=True, blank=True)
+    default_number = models.IntegerField(blank=True, null=True)
+    todo_setting = models.ForeignKey(ScheduleToDoSetting, related_name='custom_filed_to_do_setting',
+                                     null=True, blank=True, on_delete=models.SET_NULL)
 
 
 class ItemFieldDropDown(BaseModel):
@@ -261,6 +292,15 @@ class ItemFieldDropDown(BaseModel):
 
     dropdown = models.ForeignKey(CustomFieldScheduleSetting, on_delete=models.CASCADE,
                                  related_name='custom_field_drop_down')
+    name = models.CharField(blank=True, max_length=128)
+
+
+class ItemFieldDropDownDailyLog(BaseModel):
+    class Meta:
+        db_table = 'item_dropdown_daily_log'
+
+    dropdown = models.ForeignKey(CustomFieldScheduleDailyLogSetting, on_delete=models.CASCADE,
+                                 related_name='custom_field_daily_log_drop_down')
     name = models.CharField(blank=True, max_length=128)
 
 
@@ -275,10 +315,34 @@ class TodoCustomField(BaseModel):
     required = models.BooleanField(default=False)
     include_in_filters = models.BooleanField(default=False)
     display_order = models.IntegerField(default=0, blank=True, null=True)
-    tool_tip_text = models.CharField(blank=True, max_length=128)
+    tool_tip_text = models.CharField(blank=True, max_length=128, null=True)
     show_owners = models.BooleanField(default=False)
     allow_permitted_sub = models.BooleanField(default=False)
-    value = models.CharField(blank=True, max_length=128)
+    value = models.CharField(blank=True, max_length=128, null=True)
     value_date = models.DateField(null=True, blank=True)
-    value_checkbox = models.BooleanField(default=False)
+    value_checkbox = models.BooleanField(default=False, null=True, blank=True)
     value_number = models.IntegerField(default=0, blank=True, null=True)
+    custom_field = models.ForeignKey(CustomFieldScheduleSetting, related_name='custom_filed_setting',
+                                     null=True, blank=True, on_delete=models.SET_NULL)
+
+
+class DailyLogCustomField(BaseModel):
+    class Meta:
+        db_table = 'daily_log_custom_field'
+
+    daily_log = models.ForeignKey(DailyLog, related_name='custom_filed_daily_log',
+                                  null=True, blank=True, on_delete=models.SET_NULL)
+    label = models.CharField(blank=True, max_length=128)
+    data_type = models.CharField(max_length=128, choices=DataType.choices, default=DataType.SINGLE_LINE_TEXT)
+    required = models.BooleanField(default=False)
+    include_in_filters = models.BooleanField(default=False)
+    display_order = models.IntegerField(default=0, blank=True, null=True)
+    tool_tip_text = models.CharField(blank=True, max_length=128, null=True)
+    show_owners = models.BooleanField(default=False)
+    allow_permitted_sub = models.BooleanField(default=False)
+    value = models.CharField(blank=True, max_length=128, null=True)
+    value_date = models.DateField(null=True, blank=True)
+    value_checkbox = models.BooleanField(default=False, null=True, blank=True)
+    value_number = models.IntegerField(default=0, blank=True, null=True)
+    custom_field = models.ForeignKey(CustomFieldScheduleDailyLogSetting, related_name='custom_filed_setting_daily_log',
+                                     null=True, blank=True, on_delete=models.SET_NULL)
