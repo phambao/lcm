@@ -15,7 +15,7 @@ from ..models import LeadDetail
 from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, DailyLog, \
     AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate, \
     FileScheduleEvent, CustomFieldScheduleSetting, TodoCustomField, ScheduleToDoSetting, ScheduleDailyLogSetting, \
-    CustomFieldScheduleDailyLogSetting
+    CustomFieldScheduleDailyLogSetting, Messaging
 from ..serializers import lead_schedule
 
 
@@ -514,6 +514,7 @@ def select_event_predecessors(request, *args, **kwargs):
 def select_event_link(request, *args, **kwargs):
     event_id = kwargs.get('pk')
     list_id = get_id_by_group(event_id)
+    list_id.append(event_id)
     rs = ScheduleEvent.objects.exclude(id__in=list_id).values('id', name=Lower('event_title'))
     # rs = ScheduleEvent.objects.exclude(id__in=list_id).annotate(
     #     name=Subquery(ScheduleEvent.objects.exclude(id__in=list_id).values('event_title')[:1])
