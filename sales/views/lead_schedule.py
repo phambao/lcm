@@ -1,19 +1,18 @@
 import uuid
-from django.db.models.functions import Lower
-from django.contrib.auth import get_user_model
+
 from django.core.files.base import ContentFile
-from django.db.models import Subquery
+from django.db.models.functions import Lower
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
+from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework import permissions, status
 from rest_framework.viewsets import GenericViewSet
 
 from base.serializers.base import IDAndNameSerializer
 from base.utils import pop
 from ..models import LeadDetail
-from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, Messaging, DailyLog, \
+from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, DailyLog, \
     AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate, \
     FileScheduleEvent, CustomFieldScheduleSetting, TodoCustomField, ScheduleToDoSetting, ScheduleDailyLogSetting, \
     CustomFieldScheduleDailyLogSetting
