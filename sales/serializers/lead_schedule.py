@@ -6,7 +6,6 @@ from rest_framework import serializers
 from api.serializers.auth import UserSerializer
 from api.serializers.base import SerializerMixin
 from base.serializers.base import IDAndNameSerializer
-from ..models import lead_schedule
 from base.serializers import base
 from base.utils import pop
 from ..models import lead_schedule
@@ -446,7 +445,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         schedule_event_create.assigned_user.add(*user)
         schedule_event_create.viewing.add(*view)
         for data in links:
-            data_update = dict()
+            data_update = {}
             data_update['predecessor'] = schedule_event_create.id
             data_update['lag_day'] = data['lag_day']
             data_update['type'] = data['type']
@@ -472,7 +471,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         schedule_event.viewing.add(*view)
         lead_schedule.ScheduleEvent.objects.filter(predecessor=instance.pk).update(predecessor=None)
         for data in links:
-            data_update = dict()
+            data_update = {}
             data_update['predecessor'] = instance.pk
             data_update['lag_day'] = data['lag_day']
             data_update['type'] = data['type']
@@ -565,7 +564,7 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
             **data_insert
         )
         if validated_data['data_type'] == DataType.DROPDOWN:
-            temp = list()
+            temp = []
             for item in name_item:
                 data_insert_item = ItemFieldDropDown(
                     dropdown=custom_field_create,
@@ -601,7 +600,7 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
 
         if data['data_type'] == DataType.DROPDOWN:
             ItemFieldDropDown.objects.filter(dropdown=instance.pk).delete()
-            temp = list()
+            temp = []
             for item in name_item:
                 data_insert_item = ItemFieldDropDown(
                     dropdown=custom_field_setting,
@@ -613,7 +612,7 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
             ItemFieldDropDown.objects.bulk_create(temp)
 
         temp = [data['id'] for data in todo_list]
-        update_list = list()
+        update_list = []
         model_todo_custom_field = lead_schedule.TodoCustomField.objects.filter(todo__in=temp, custom_field=instance.pk)
         for custom_field in model_todo_custom_field:
             custom_field.label = data_update['label']
@@ -672,7 +671,7 @@ class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
             **data_insert
         )
         if validated_data['data_type'] == DataType.DROPDOWN:
-            temp = list()
+            temp = []
             for item in name_item:
                 data_insert_item = ItemFieldDropDownDailyLog(
                     dropdown=custom_field_create,
@@ -708,7 +707,7 @@ class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
 
         if data['data_type'] == DataType.DROPDOWN:
             ItemFieldDropDown.objects.filter(dropdown=instance.pk).delete()
-            temp = list()
+            temp = []
             for item in name_item:
                 data_insert_item = ItemFieldDropDown(
                     dropdown=custom_field_setting,
@@ -720,7 +719,7 @@ class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
             ItemFieldDropDown.objects.bulk_create(temp)
 
         temp = [data['id'] for data in daily_log_list]
-        update_list = list()
+        update_list = []
         model_daily_log_custom_field = lead_schedule.DailyLogCustomField.objects.filter(daily_log__in=temp,
                                                                                         custom_field=instance.pk)
         for custom_field in model_daily_log_custom_field:
