@@ -1,18 +1,19 @@
 import uuid
-from django.shortcuts import get_object_or_404
+
 from django.contrib.auth import get_user_model
-from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 from api.serializers.auth import UserSerializer
-from base.serializers import base
 from api.serializers.base import SerializerMixin
 from base.serializers.base import IDAndNameSerializer
 from ..models import lead_schedule
+from base.serializers import base
 from base.utils import pop
+from ..models import lead_schedule
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging, CheckListItemsTemplate, \
     TodoTemplateChecklistItem, DataType, ItemFieldDropDown, TodoCustomField, CustomFieldScheduleSetting, \
-    CustomFieldScheduleDailyLogSetting, DailyLogCustomField, ItemFieldDropDownDailyLog
+    CustomFieldScheduleDailyLogSetting, DailyLogCustomField, ItemFieldDropDownDailyLog, \
+    DataType, ItemFieldDropDown
 
 
 class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
@@ -422,7 +423,8 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         model = lead_schedule.ScheduleEvent
         fields = ('id', 'lead_list', 'event_title', 'assigned_user', 'reminder', 'start_day', 'end_day', 'due_days',
                   'time', 'viewing', 'notes', 'internal_notes', 'sub_notes', 'owner_notes', 'links',
-                  'start_hour', 'end_hour', 'is_before', 'is_after', 'predecessor_id', 'type', 'lag_day', 'link_to_outside_calendar')
+                  'start_hour', 'end_hour', 'is_before', 'is_after', 'predecessor_id', 'type', 'lag_day',
+                  'link_to_outside_calendar')
 
     def create(self, validated_data):
         request = self.context['request']
