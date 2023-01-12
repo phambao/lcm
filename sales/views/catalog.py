@@ -235,6 +235,10 @@ def swap_level(request, pk_catalog):
             if Catalog.objects.filter(level__in=level_id).count() != len(updated_catalog):
                 raise Exception('Missing or too much categories updated')
 
+            # Update level index for all categories
+            for l in ordered_level:
+                Catalog.objects.filter(level=l).update(level_index=ordered_level.index(l))
+
             catalog_serializer = catalog.CatalogSerializer(updated_catalog, many=True,
                                                            context={'request': request})
             level_serializer = catalog.CatalogLevelModelSerializer(updated_level, many=True,
