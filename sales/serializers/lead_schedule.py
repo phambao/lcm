@@ -12,7 +12,7 @@ from ..models import lead_schedule
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging, CheckListItemsTemplate, \
     TodoTemplateChecklistItem, DataType, ItemFieldDropDown, TodoCustomField, CustomFieldScheduleSetting, \
     CustomFieldScheduleDailyLogSetting, DailyLogCustomField, ItemFieldDropDownDailyLog, \
-    DataType, ItemFieldDropDown
+    DataType, ItemFieldDropDown, ScheduleEventPhaseSetting
 
 
 class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
@@ -417,31 +417,35 @@ class PredecessorsLinkSerializer(serializers.Serializer):
 class ScheduleEventSerializer(serializers.ModelSerializer):
     links = PredecessorsLinkSerializer(required=False, many=True)
     predecessor_id = serializers.IntegerField(required=False, allow_null=True)
-
     class Meta:
         model = lead_schedule.ScheduleEvent
         fields = ('id', 'lead_list', 'event_title', 'assigned_user', 'reminder', 'start_day', 'end_day', 'due_days',
                   'time', 'viewing', 'notes', 'internal_notes', 'sub_notes', 'owner_notes', 'links',
                   'start_hour', 'end_hour', 'is_before', 'is_after', 'predecessor_id', 'type', 'lag_day',
-                  'link_to_outside_calendar')
+                  'link_to_outside_calendar', 'tags', 'phase_label', 'phase_display_order', 'phase_color', 'phase_setting')
 
     def create(self, validated_data):
         request = self.context['request']
         data = request.data
         user_create = user_update = request.user
         predecessor_id = pop(data, 'predecessor_id', None)
+        phase_setting = pop(data, 'phase_setting', None)
         links = pop(data, 'links', [])
         assigned_user = pop(data, 'assigned_user', [])
         lead_list = pop(data, 'lead_list', None)
         viewing = pop(data, 'viewing', [])
+        tags = pop(data, 'tags', [])
         schedule_event_create = lead_schedule.ScheduleEvent.objects.create(
             user_create=user_create, user_update=user_update,
             lead_list_id=lead_list,
             predecessor_id=predecessor_id,
+            phase_setting_id=phase_setting,
             **data
         )
         user = get_user_model().objects.filter(pk__in=[at for at in assigned_user])
         view = get_user_model().objects.filter(pk__in=[at for at in viewing])
+        tags_objects = TagSchedule.objects.filter(pk__in=[tag for tag in tags])
+        schedule_event_create.tags.add(*tags_objects)
         schedule_event_create.assigned_user.add(*user)
         schedule_event_create.viewing.add(*view)
         for data in links:
@@ -458,13 +462,17 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         # predecessor_id = pop(data, 'predecessor_id', None)
         links = pop(data, 'links', [])
         assigned_user = pop(data, 'assigned_user', [])
-        viewing = pop(data, 'viewing', None)
+        viewing = pop(data, 'viewing', [])
+        tags = pop(data, 'tags', [])
         data_schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=instance.pk)
         data_schedule_event.update(**data)
         schedule_event = data_schedule_event.first()
 
         user = get_user_model().objects.filter(pk__in=[tmp.id for tmp in assigned_user])
         view = get_user_model().objects.filter(pk__in=[at.id for at in viewing])
+        # tags_objects = TagSchedule.objects.filter(pk__in=[tag for tag in tags])
+        schedule_event.tags.clear()
+        schedule_event.tags.add(*tags)
         schedule_event.assigned_user.clear()
         schedule_event.assigned_user.add(*user)
         schedule_event.viewing.clear()
@@ -770,6 +778,63 @@ class ScheduleDailyLogSettingSerializer(serializers.ModelSerializer):
         rs_custom_field = CustomFieldScheduleDailyLogSetting.objects.filter(daily_log_setting=data['id']).values()
         data['custom_field'] = rs_custom_field
         return data
+
+
+class ScheduleEventSettingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.ScheduleEventSetting
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        rs_custom_field = ScheduleEventPhaseSetting.objects.filter(event_setting=data['id']).values()
+        data['phases'] = rs_custom_field
+        return data
+
+
+class ScheduleEventPhaseSettingSerializer(serializers.ModelSerializer):
+    event_list = IDAndNameSerializer(required=False, many=True)
+
+    class Meta:
+        model = lead_schedule.ScheduleEventPhaseSetting
+        fields = '__all__'
+
+    def create(self, validated_data):
+        request = self.context['request']
+        event_list = pop(validated_data, 'event_list', [])
+
+        user_create = user_update = request.user
+        event_phase_create = lead_schedule.ScheduleEventPhaseSetting.objects.create(
+            user_create=user_create, user_update=user_update,
+            **validated_data
+        )
+
+        return event_phase_create
+
+    def update(self, instance, data):
+        request = self.context['request']
+        event_list = pop(data, 'event_list', [])
+        user_create = user_update = request.user
+        data_event_phase = lead_schedule.ScheduleEventPhaseSetting.objects.filter(pk=instance.pk)
+        data_event_phase.update(**data)
+        data_event_phase = data_event_phase.first()
+
+        temp = [data['id'] for data in event_list]
+        update_list = []
+        model_event_phase = lead_schedule.ScheduleEvent.objects.filter(id__in=temp, phase_setting=instance.pk)
+        for phase in model_event_phase:
+            phase.phase_label = data['label']
+            phase.phase_display_order = data['display_order']
+            phase.phase_color = data['color']
+            # phase.phase_setting = instance.pk
+            phase.user_create = user_create
+            phase.user_update = user_update
+            update_list.append(phase)
+        lead_schedule.ScheduleEvent.objects.bulk_update(update_list,
+                                                        ['phase_label', 'phase_display_order', 'phase_color', 'user_create',
+                                                         'user_update'])
+
+        return data_event_phase
 
 
 class AttachmentsDailyLogSerializer(ScheduleAttachmentsSerializer):
