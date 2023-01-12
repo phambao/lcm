@@ -194,7 +194,7 @@ def duplicate_catalogs(request, pk):
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
+@api_view(['PUT'])
 @permission_classes([permissions.IsAuthenticated])
 @transaction.atomic
 def swap_level(request, pk_catalog):
