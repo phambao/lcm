@@ -23,12 +23,14 @@ class Type(models.TextChoices):
     FINISH_TO_START = 'finish_to_start', 'FINISH_TO_START'
     START_TO_START = 'start_to_start', 'START_TO_START'
 
+
 class BuilderView(models.TextChoices):
     CALENDAR_DAY = 'calendar-day', 'CALENDAR-DAY'
     CALENDAR_WEEK = 'calendar-week', 'CALENDAR-WEEK'
     CALENDAR_MONTH = 'calendar-month', 'CALENDAR-MONTH'
     CALENDAR_YEAR = 'calendar-year', 'CALENDAR-YEAR'
     CALENDAR_SCHEDULE = 'calendar-schedule', 'CALENDAR-SCHEDULE'
+
 
 class ReminderType(models.IntegerChoices):
     NO = 0,
@@ -191,6 +193,7 @@ class ScheduleEventSetting(BaseModel):
 class ScheduleEventPhaseSetting(BaseModel):
     class Meta:
         db_table = 'schedule_event_phase_setting'
+
     label = models.CharField(blank=True, max_length=128, null=True)
     display_order = models.IntegerField(blank=True, null=True)
     color = models.CharField(blank=True, max_length=128, null=True)
@@ -268,9 +271,6 @@ class DataType(models.TextChoices):
     LINK = 'link', 'LINK'
     LIST_OF_USER_MULTI_SELECT = 'list of User - Multi Select', 'LIST OF USER - MULTI SELECT'
     LIST_OF_SUBS_VENDORS_MULTI_SELECT = 'List of Subs/Vendors - Multi Select', 'LIST OF SUBS/VENDORS-MULTI SELECT'
-
-
-
 
 
 class ScheduleDailyLogSetting(BaseModel):
