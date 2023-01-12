@@ -227,6 +227,9 @@ class DailyLogSerializer(serializers.ModelSerializer):
         fields = ('id', 'date', 'tags', 'to_do', 'note', 'lead_list', 'internal_user_share', 'internal_user_notify',
                   'sub_member_share', 'sub_member_notify', 'owner_share', 'owner_notify', 'private_share',
                   'private_notify', 'custom_field')
+        kwargs = {'to_do': {'required': False},
+                  'tags': {'required': False},
+        }
 
     def create(self, validated_data):
         request = self.context['request']

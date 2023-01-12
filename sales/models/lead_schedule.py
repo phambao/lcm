@@ -133,9 +133,9 @@ class DailyLog(BaseModel):
     class Meta:
         db_table = 'schedule_daily_log'
 
-    date = models.DateField()
-    tags = models.ManyToManyField(TagSchedule, related_name='daily_log_tags')
-    to_do = models.ManyToManyField(ToDo, related_name='daily_log_tags')
+    date = models.DateTimeField()
+    tags = models.ManyToManyField(TagSchedule, related_name='daily_log_tags', null=True)
+    to_do = models.ManyToManyField(ToDo, related_name='daily_log_tags', null=True)
     note = models.TextField(blank=True)
     lead_list = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='daily_log_lead_list')
     internal_user_share = models.BooleanField(default=False)
