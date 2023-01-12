@@ -23,6 +23,12 @@ class Type(models.TextChoices):
     FINISH_TO_START = 'finish_to_start', 'FINISH_TO_START'
     START_TO_START = 'start_to_start', 'START_TO_START'
 
+class BuilderView(models.TextChoices):
+    CALENDAR_DAY = 'calendar-day', 'CALENDAR-DAY'
+    CALENDAR_WEEK = 'calendar-week', 'CALENDAR-WEEK'
+    CALENDAR_MONTH = 'calendar-month', 'CALENDAR-MONTH'
+    CALENDAR_YEAR = 'calendar-year', 'CALENDAR-YEAR'
+    CALENDAR_SCHEDULE = 'calendar-schedule', 'CALENDAR-SCHEDULE'
 
 class ReminderType(models.IntegerChoices):
     NO = 0,
@@ -166,13 +172,37 @@ class AttachmentDailyLog(BaseModel):
     daily_log = models.ForeignKey(DailyLog, on_delete=models.CASCADE, related_name='attachment_daily_log_daily_log')
 
 
+class ScheduleEventSetting(BaseModel):
+    class Meta:
+        db_table = 'schedule_event_setting'
+
+    default_builder_view = models.CharField(max_length=128, choices=BuilderView.choices,
+                                            default=BuilderView.CALENDAR_DAY)
+    default_item_reminder = models.IntegerField(blank=True, null=True, choices=ReminderType.choices,
+                                                default=ReminderType.NO)
+    send_confirm = models.BooleanField(default=False)
+    default_notify = models.BooleanField(default=False)
+    show_time_for_hour = models.BooleanField(default=False)
+    automatically_mark = models.BooleanField(default=False)
+    default_show_subs_vendors = models.BooleanField(default=False)
+    include_header = models.BooleanField(default=False)
+
+
+class ScheduleEventPhaseSetting(BaseModel):
+    class Meta:
+        db_table = 'schedule_event_phase_setting'
+    label = models.CharField(blank=True, max_length=128, null=True)
+    display_order = models.IntegerField(blank=True, null=True)
+    color = models.CharField(blank=True, max_length=128, null=True)
+    event_setting = models.ForeignKey(ScheduleEventSetting, related_name='schedule_event_setting_phase',
+                                      null=True, blank=True, on_delete=models.SET_NULL)
+
+
 class ScheduleEvent(BaseModel):
     class Meta:
         db_table = 'schedule_event'
 
     lead_list = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='schedule_event_lead_list')
-    # division = models.CharField
-    # project = models.CharField
     event_title = models.CharField(blank=True, max_length=128)
     assigned_user = models.ManyToManyField(get_user_model(), related_name='schedule_event_assigned_user',
                                            blank=True)
@@ -197,8 +227,24 @@ class ScheduleEvent(BaseModel):
     predecessor = models.ForeignKey('self', related_name='parent_event', null=True,
                                     blank=True, on_delete=models.SET_NULL, default=None)
     link_to_outside_calendar = models.BooleanField(default=False, blank=True, null=True)
+    tags = models.ManyToManyField(TagSchedule, related_name='event_tags', blank=True)
+    phase_label = models.CharField(blank=True, max_length=128, null=True)
+    phase_display_order = models.IntegerField(blank=True, null=True)
+    phase_color = models.CharField(blank=True, max_length=128, null=True)
+    phase_setting = models.ForeignKey(ScheduleEventPhaseSetting, blank=True, null=True,
+                                      on_delete=models.SET_NULL, related_name='event_phase')
 
 
+# class ScheduleEventShiftHistory(BaseModel):
+#     class Meta:
+#         db_table = 'schedule_event_phase'
+#
+#     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='event_shift_history_user')
+#     start_day = models.DateTimeField(blank=True, null=True)
+#     start_day_after_change = models.DateTimeField(blank=True, null=True)
+#     end_day = models.DateTimeField(blank=True, null=True)
+#     end_day_after_change = models.DateTimeField(blank=True, null=True)
+#     slip = models.IntegerField(blank=True, null=True)
 class FileScheduleEvent(BaseModel):
     class Meta:
         db_table = 'schedule_event_file'
@@ -222,6 +268,9 @@ class DataType(models.TextChoices):
     LINK = 'link', 'LINK'
     LIST_OF_USER_MULTI_SELECT = 'list of User - Multi Select', 'LIST OF USER - MULTI SELECT'
     LIST_OF_SUBS_VENDORS_MULTI_SELECT = 'List of Subs/Vendors - Multi Select', 'LIST OF SUBS/VENDORS-MULTI SELECT'
+
+
+
 
 
 class ScheduleDailyLogSetting(BaseModel):
