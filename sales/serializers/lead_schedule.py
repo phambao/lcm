@@ -3,7 +3,7 @@ import uuid
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from api.serializers.auth import UserSerializer
+from api.serializers.auth import UserCustomSerializer
 from api.serializers.base import SerializerMixin
 from base.serializers.base import IDAndNameSerializer
 from base.serializers import base
@@ -63,9 +63,7 @@ class CheckListItemSerializer(serializers.Serializer):
 
 class ToDoChecklistItemSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
-    assigned_to = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
-
-    # messaging = MessagingSerializer(many=True, allow_null=True)
+    assigned_to = UserCustomSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_schedule.CheckListItems
@@ -118,13 +116,8 @@ class ToDoChecklistItemSerializer(serializers.ModelSerializer):
 
 
 class ToDoCreateSerializer(serializers.ModelSerializer):
-    # check_list = serializers.JSONField()
-    # file = serializers.FileField()
-    # check_list = ToDoChecklistItemSerializer(many=True, allow_null=True)
-
     temp_checklist = list()
-    # lead = base.IDAndNameSerializer(allow_null=True, required=False)
-    assigned_to = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
+    assigned_to = UserCustomSerializer(allow_null=True, required=False, many=True)
     tags = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
@@ -168,12 +161,12 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         to_do = to_do.first()
 
         # tags
-        tags = lead_schedule.TagSchedule.objects.filter(pk__in=[tmp.id for tmp in todo_tags])
+        tags = lead_schedule.TagSchedule.objects.filter(pk__in=[tmp['id'] for tmp in todo_tags])
         to_do.tags.clear()
         to_do.tags.add(*tags)
 
         # assigned_to
-        user = get_user_model().objects.filter(pk__in=[tmp.id for tmp in assigned_to])
+        user = get_user_model().objects.filter(pk__in=[tmp['id'] for tmp in assigned_to])
         to_do.assigned_to.clear()
         to_do.assigned_to.add(*user)
         instance.refresh_from_db()
@@ -221,6 +214,8 @@ class DailyLogCustomFieldSerializer(serializers.ModelSerializer):
 class DailyLogSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     custom_field = DailyLogCustomFieldSerializer(required=False, many=True)
+    tags = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
+    to_do = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_schedule.DailyLog
@@ -241,8 +236,8 @@ class DailyLogSerializer(serializers.ModelSerializer):
             user_create=user_create, user_update=user_update, lead_list_id=lead_list,
             **data
         )
-        tags_objects = TagSchedule.objects.filter(pk__in=[tag for tag in tags])
-        todo_objects = ToDo.objects.filter(pk__in=[tmp for tmp in to_do])
+        tags_objects = TagSchedule.objects.filter(pk__in=[tag['id'] for tag in tags])
+        todo_objects = ToDo.objects.filter(pk__in=[tmp['id'] for tmp in to_do])
         daily_log_create.tags.add(*tags_objects)
         daily_log_create.to_do.add(*todo_objects)
         data_insert = list()
@@ -277,12 +272,12 @@ class DailyLogSerializer(serializers.ModelSerializer):
         daily_log = daily_log.first()
 
         # tags
-        tags_objects = TagSchedule.objects.filter(pk__in=[tag.id for tag in daily_log_tags])
+        tags_objects = TagSchedule.objects.filter(pk__in=[tag['id'] for tag in daily_log_tags])
         daily_log.tags.clear()
         daily_log.tags.add(*tags_objects)
 
         # to_do
-        todo_objects = ToDo.objects.filter(pk__in=[tmp.id for tmp in to_do])
+        todo_objects = ToDo.objects.filter(pk__in=[tmp['id'] for tmp in to_do])
         daily_log.to_do.clear()
         daily_log.to_do.add(*todo_objects)
         DailyLogCustomField.objects.filter(daily_log=instance.pk).delete()
@@ -318,7 +313,7 @@ class DailyLogSerializer(serializers.ModelSerializer):
 
 class CheckListItemsTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
     id = serializers.CharField(required=False)
-    assigned_to = UserSerializer(allow_null=True, required=False, many=True)
+    assigned_to = UserCustomSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_schedule.CheckListItemsTemplate
@@ -417,12 +412,17 @@ class PredecessorsLinkSerializer(serializers.Serializer):
 class ScheduleEventSerializer(serializers.ModelSerializer):
     links = PredecessorsLinkSerializer(required=False, many=True)
     predecessor_id = serializers.IntegerField(required=False, allow_null=True)
+    viewing = UserCustomSerializer(allow_null=True, required=False, many=True)
+    tags = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
+    assigned_user = UserCustomSerializer(allow_null=True, required=False, many=True)
+
     class Meta:
         model = lead_schedule.ScheduleEvent
         fields = ('id', 'lead_list', 'event_title', 'assigned_user', 'reminder', 'start_day', 'end_day', 'due_days',
                   'time', 'viewing', 'notes', 'internal_notes', 'sub_notes', 'owner_notes', 'links',
                   'start_hour', 'end_hour', 'is_before', 'is_after', 'predecessor_id', 'type', 'lag_day',
-                  'link_to_outside_calendar', 'tags', 'phase_label', 'phase_display_order', 'phase_color', 'phase_setting')
+                  'link_to_outside_calendar', 'tags', 'phase_label', 'phase_display_order', 'phase_color',
+                  'phase_setting')
 
     def create(self, validated_data):
         request = self.context['request']
@@ -442,9 +442,9 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
             phase_setting_id=phase_setting,
             **data
         )
-        user = get_user_model().objects.filter(pk__in=[at for at in assigned_user])
-        view = get_user_model().objects.filter(pk__in=[at for at in viewing])
-        tags_objects = TagSchedule.objects.filter(pk__in=[tag for tag in tags])
+        user = get_user_model().objects.filter(pk__in=[at['id'] for at in assigned_user])
+        view = get_user_model().objects.filter(pk__in=[at['id'] for at in viewing])
+        tags_objects = TagSchedule.objects.filter(pk__in=[tag['id'] for tag in tags])
         schedule_event_create.tags.add(*tags_objects)
         schedule_event_create.assigned_user.add(*user)
         schedule_event_create.viewing.add(*view)
@@ -468,11 +468,11 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         data_schedule_event.update(**data)
         schedule_event = data_schedule_event.first()
 
-        user = get_user_model().objects.filter(pk__in=[tmp.id for tmp in assigned_user])
-        view = get_user_model().objects.filter(pk__in=[at.id for at in viewing])
-        # tags_objects = TagSchedule.objects.filter(pk__in=[tag for tag in tags])
+        user = get_user_model().objects.filter(pk__in=[tmp['id'] for tmp in assigned_user])
+        view = get_user_model().objects.filter(pk__in=[at['id'] for at in viewing])
+        tags_objects = TagSchedule.objects.filter(pk__in=[tag['id'] for tag in tags])
         schedule_event.tags.clear()
-        schedule_event.tags.add(*tags)
+        schedule_event.tags.add(*tags_objects)
         schedule_event.assigned_user.clear()
         schedule_event.assigned_user.add(*user)
         schedule_event.viewing.clear()
@@ -831,7 +831,8 @@ class ScheduleEventPhaseSettingSerializer(serializers.ModelSerializer):
             phase.user_update = user_update
             update_list.append(phase)
         lead_schedule.ScheduleEvent.objects.bulk_update(update_list,
-                                                        ['phase_label', 'phase_display_order', 'phase_color', 'user_create',
+                                                        ['phase_label', 'phase_display_order', 'phase_color',
+                                                         'user_create',
                                                          'user_update'])
 
         return data_event_phase
