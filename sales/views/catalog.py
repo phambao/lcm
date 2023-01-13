@@ -194,7 +194,7 @@ def duplicate_catalogs(request, pk):
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
+@api_view(['PUT'])
 @permission_classes([permissions.IsAuthenticated])
 @transaction.atomic
 def swap_level(request, pk_catalog):
@@ -234,6 +234,10 @@ def swap_level(request, pk_catalog):
             # Validate catalog
             if Catalog.objects.filter(level__in=level_id).count() != len(updated_catalog):
                 raise Exception('Missing or too much categories updated')
+
+            # Update level index for all categories
+            for l in ordered_level:
+                Catalog.objects.filter(level=l).update(level_index=ordered_level.index(l))
 
             catalog_serializer = catalog.CatalogSerializer(updated_catalog, many=True,
                                                            context={'request': request})
