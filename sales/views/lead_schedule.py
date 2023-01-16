@@ -637,10 +637,34 @@ def delete_phase(request, *args, **kwargs):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
-def select_checklist_item_template(request, *args, **kwargs):
-    rs = LeadDetail.objects.all().values('id', name=Lower('lead_title'))
-    rs = IDAndNameSerializer(
-        rs, many=True, context={'request': request}).data
+def select_checklist_item_template(request, pk_template, pk_todo):
+    data_checklist = CheckListItemsTemplate.objects.filter(to_do_checklist_template=pk_template)
+    for checklist in data_checklist:
+        temp = dict()
+        temp['uuid'] = checklist.uuid
+        temp['parent_uuid'] = checklist.parent_uuid
+        temp['description'] = checklist.description
+        temp['is_check'] = checklist.is_check
+        temp['is_root'] = checklist.is_root
+
+        checklist_item_template = CheckListItemsTemplate.objects.create(
+            todo_id=pk_todo, **temp
+        )
+        checklist_item_template.assigned_to.add(*checklist.assigned_to.all())
+        data_file = FileCheckListItemsTemplate.objects.filter(checklist_item_template=checklist.id)
+        file_checklist_item_template_create = list()
+        for file in data_file:
+            attachment_template = FileCheckListItemsTemplate(
+                file=file.file,
+                checklist_item_template=checklist_item_template,
+
+            )
+            file_checklist_item_template_create.append(attachment_template)
+        FileCheckListItemsTemplate.objects.bulk_create(file_checklist_item_template_create)
+
+    rs_checklist = CheckListItems.objects.filter(to_do=pk_todo)
+    rs = lead_schedule.ToDoChecklistItemSerializer(
+        rs_checklist, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
 
 
