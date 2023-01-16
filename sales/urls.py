@@ -110,7 +110,7 @@ url_schedule = [
     path('todo/checklist-item/template/', lead_schedule.ToDoChecklistItemTemplateGenericView.as_view()),
     path('todo/checklist-items/template/<int:pk>/', lead_schedule.ToDoChecklistItemTemplateDetailGenericView.as_view()),
     path('todo/<int:pk_todo>/template/<int:pk_template>/', lead_schedule.select_checklist_template),
-
+    path('todo/<int:pk_todo>/other-template/<int:pk_template>/', lead_schedule.select_checklist_template),
     # DAILY LOGS
     path('daily-logs/', lead_schedule.DailyLogGenericView.as_view()),
     path('daily-logs/<int:pk>/', lead_schedule.DailyLogDetailGenericView.as_view()),
