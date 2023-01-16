@@ -15,7 +15,8 @@ from ..models import LeadDetail
 from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, DailyLog, \
     AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate, \
     FileScheduleEvent, CustomFieldScheduleSetting, TodoCustomField, ScheduleToDoSetting, ScheduleDailyLogSetting, \
-    CustomFieldScheduleDailyLogSetting, Messaging, ScheduleEventSetting, ScheduleEventPhaseSetting, DailyLogCustomField
+    CustomFieldScheduleDailyLogSetting, Messaging, ScheduleEventSetting, ScheduleEventPhaseSetting, DailyLogCustomField, \
+    FileCheckListItems, FileCheckListItemsTemplate
 from ..serializers import lead_schedule
 from ..serializers.lead_schedule import ScheduleEventPhaseSettingSerializer
 
@@ -480,6 +481,17 @@ def get_checklist_template_by_todo(request, *args, **kwargs):
                 todo_id=pk_todo
             )
             checklist_item_template.assigned_to.add(*checklist_item.assigned_to.all())
+
+            data_file = FileCheckListItems.objects.filter(checklist_item=checklist_item.id)
+            file_checklist_item_template_create = list()
+            for file in data_file:
+                attachment_template = FileCheckListItemsTemplate(
+                    file=file.file,
+                    checklist_item_template=checklist_item_template,
+                    user_update=user_update
+                )
+                file_checklist_item_template_create.append(attachment_template)
+            FileCheckListItemsTemplate.objects.bulk_create(file_checklist_item_template_create)
         data_checklist = CheckListItemsTemplate.objects.filter(todo=pk_todo, to_do_checklist_template=None)
         data = lead_schedule.CheckListItemsTemplateSerializer(
             data_checklist, many=True, context={'request': request}).data
@@ -518,6 +530,24 @@ def select_checklist_template(request, *args, **kwargs):
             todo_id=pk_todo, **temp
         )
         checklist_item_template.assigned_to.add(*checklist.assigned_to.all())
+        data_file = FileCheckListItemsTemplate.objects.filter(checklist_item_template=checklist.id)
+        file_checklist_item_create = list()
+        file_checklist_item_template_create = list()
+        for file in data_file:
+            attachment = FileCheckListItems(
+                file=file.file,
+                checklist_item=checklist_item_create,
+                user_update=user_update
+            )
+            attachment_template = FileCheckListItemsTemplate(
+                file=file.file,
+                checklist_item_template=checklist_item_template,
+                user_update=user_update
+            )
+            file_checklist_item_create.append(attachment)
+            file_checklist_item_template_create.append(attachment_template)
+        FileCheckListItems.objects.bulk_create(file_checklist_item_create)
+        FileCheckListItemsTemplate.objects.bulk_create(file_checklist_item_template_create)
 
     rs_checklist = CheckListItems.objects.filter(to_do=pk_todo)
     rs = lead_schedule.ToDoChecklistItemSerializer(
@@ -603,6 +633,15 @@ def delete_phase(request, *args, **kwargs):
                                                     'phase_setting', 'user_update'])
     phase_setting.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def select_checklist_item_template(request, *args, **kwargs):
+    rs = LeadDetail.objects.all().values('id', name=Lower('lead_title'))
+    rs = IDAndNameSerializer(
+        rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=rs)
 
 
 def get_id_by_group(pk):
