@@ -194,15 +194,15 @@ def duplicate_catalogs(request, pk):
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
+@api_view(['PUT'])
 @permission_classes([permissions.IsAuthenticated])
 @transaction.atomic
 def swap_level(request, pk_catalog):
     """
-    Payload: {"levels": [{"id": int, "parent": int},...], "catalogs": [{"id": int, "parent": int},...]}
+    Payload: {"levels": [{"id": int, "parent": int},...], "catalogs": {"parent_id": [children_id,...],...}}
     """
     if isinstance(request.data, dict):
-        parent_catalog = get_object_or_404(Catalog, pk=pk_catalog)
+        ancestor_catalog = get_object_or_404(Catalog, pk=pk_catalog)
         try:
             levels = request.data.get('levels')
             catalogs = request.data.get('catalogs')
@@ -215,22 +215,29 @@ def swap_level(request, pk_catalog):
                 level = CatalogLevel.objects.get(pk=pk)
                 level.parent_id = l.get('parent')
                 updated_level.append(level)
-            parent_catalog.all_levels.filter(pk__in=level_id).update(parent=None)
+            ancestor_catalog.all_levels.filter(pk__in=level_id).update(parent=None)
             CatalogLevel.objects.bulk_update(updated_level, fields=['parent'])
 
             # Validate level
-            parent_catalog.get_ordered_levels()
+            ordered_level = ancestor_catalog.get_ordered_levels()
 
             updated_catalog = []
-            for c in catalogs:
-                ctl = Catalog.objects.get(pk=c.get('id'))
-                ctl.parents.clear()
-                ctl.parents.add(Catalog.objects.get(pk=c.get('parent')))
-                updated_catalog.append(ctl)
+            for key in catalogs.keys():
+                parent_catalog = Catalog.objects.get(pk=key)
+                children_catalog = Catalog.objects.filter(id__in=catalogs[key])
+                for c in children_catalog:
+                    c.parents.clear()
+                    c.parents.add(parent_catalog)
+                    c.level_index = ordered_level.index(c.level)
+                    updated_catalog.append(c)
 
             # Validate catalog
             if Catalog.objects.filter(level__in=level_id).count() != len(updated_catalog):
                 raise Exception('Missing or too much categories updated')
+
+            # Update level index for all categories
+            for l in ordered_level:
+                Catalog.objects.filter(level=l).update(level_index=ordered_level.index(l))
 
             catalog_serializer = catalog.CatalogSerializer(updated_catalog, many=True,
                                                            context={'request': request})

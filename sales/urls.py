@@ -125,6 +125,8 @@ url_schedule = [
     path('daily-logs/setting/<int:pk>/', lead_schedule.ScheduleDailyLogSettingDetailGenericView.as_view()),
     path('daily-logs/custom-field/', lead_schedule.ScheduleDailyLogCustomFieldSettingGenericView.as_view()),
     path('daily-logs/custom-field/<int:pk>/', lead_schedule.ScheduleDailyLogCustomFieldSettingDetailGenericView.as_view()),
+    path('daily-logs/delete-custom-field/<int:pk>/', lead_schedule.delete_custom_field_daily_log),
+
     # SCHEDULE EVENT
     path('schedule-event/', lead_schedule.ScheduleEventGenericView.as_view()),
     path('schedule-event/<int:pk>/', lead_schedule.ScheduleEventDetailGenericView.as_view()),
@@ -133,7 +135,12 @@ url_schedule = [
     # FILE EVENT
     path('event/<int:pk_event>/attachments/', lead_schedule.AttachmentsEventGenericView.as_view({
         "post": "create_file", "get": "get_file"})),
-
+    # SETTING EVENT
+    path('schedule-event/setting/', lead_schedule.ScheduleEventSettingGenericView.as_view()),
+    path('schedule-event/setting/<int:pk>/', lead_schedule.ScheduleEventSettingDetailGenericView.as_view()),
+    path('schedule-event/setting/phase/', lead_schedule.ScheduleEventPhaseSettingGenericView.as_view()),
+    path('schedule-event/setting/phase/<int:pk>/', lead_schedule.ScheduleEventPhaseSettingDetailGenericView.as_view()),
+    path('schedule-event/delete-phase/<int:pk>/', lead_schedule.delete_phase),
 
     # CUSTOM FIELD SCHEDULE TO_DO
     path('schedule-todo/setting/', lead_schedule.ScheduleToDoSettingGenericView.as_view()),

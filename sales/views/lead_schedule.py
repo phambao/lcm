@@ -15,8 +15,9 @@ from ..models import LeadDetail
 from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, DailyLog, \
     AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate, \
     FileScheduleEvent, CustomFieldScheduleSetting, TodoCustomField, ScheduleToDoSetting, ScheduleDailyLogSetting, \
-    CustomFieldScheduleDailyLogSetting, Messaging
+    CustomFieldScheduleDailyLogSetting, Messaging, ScheduleEventSetting, ScheduleEventPhaseSetting, DailyLogCustomField
 from ..serializers import lead_schedule
+from ..serializers.lead_schedule import ScheduleEventPhaseSettingSerializer
 
 
 class ScheduleAttachmentsGenericView(GenericViewSet):
@@ -424,6 +425,30 @@ class ScheduleDailyLogCustomFieldSettingDetailGenericView(generics.RetrieveUpdat
     permission_classes = [permissions.IsAuthenticated]
 
 
+class ScheduleEventSettingGenericView(generics.ListCreateAPIView):
+    queryset = ScheduleEventSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleEventSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleEventSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ScheduleEventSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleEventSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleEventPhaseSettingGenericView(generics.ListCreateAPIView):
+    queryset = ScheduleEventPhaseSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleEventPhaseSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleEventPhaseSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ScheduleEventPhaseSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleEventPhaseSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_checklist_by_todo(request, *args, **kwargs):
@@ -543,6 +568,40 @@ def delete_custom_field(request, *args, **kwargs):
     todo_custom_field = TodoCustomField.objects.filter(todo__in=temp, custom_field=custom_field_id)
     todo_custom_field.delete()
     custom_field_setting.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_custom_field_daily_log(request, *args, **kwargs):
+    custom_field_id = kwargs.get('pk')
+    daily_log_list = request.data
+    temp = [data['id'] for data in daily_log_list]
+    custom_field_setting = CustomFieldScheduleDailyLogSetting.objects.filter(id=custom_field_id)
+    daily_log_custom_field = DailyLogCustomField.objects.filter(daily_log__in=temp, custom_field=custom_field_id)
+    daily_log_custom_field.delete()
+    custom_field_setting.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_phase(request, *args, **kwargs):
+    phase_id = kwargs.get('pk')
+    event_list = request.data
+    temp = [data['id'] for data in event_list]
+    phase_setting = ScheduleEventPhaseSetting.objects.filter(id=phase_id)
+    model_event_phase = ScheduleEvent.objects.filter(id__in=temp, phase_setting=phase_id)
+    update_list = []
+    for phase in model_event_phase:
+        phase.phase_label = None
+        phase.phase_display_order = None
+        phase.phase_color = None
+        phase.phase_setting = None
+        update_list.append(phase)
+    ScheduleEvent.objects.bulk_update(update_list, ['phase_label', 'phase_display_order', 'phase_color', 'user_create',
+                                                    'phase_setting', 'user_update'])
+    phase_setting.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
