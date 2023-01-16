@@ -1,8 +1,10 @@
 import uuid
 
 from django.contrib.auth import get_user_model
-from rest_framework import serializers
 from django.core.files.base import ContentFile
+
+from rest_framework import serializers
+
 from api.serializers.auth import UserCustomSerializer
 from api.serializers.base import SerializerMixin
 from base.serializers.base import IDAndNameSerializer
