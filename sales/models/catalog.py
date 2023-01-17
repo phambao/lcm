@@ -174,8 +174,21 @@ class Catalog(BaseModel):
         return c
 
     def duplicate(self, parent=None, depth=0, data_points=[]):
+        """
+        duplicate by depth (level)
+        """
         c = self.clone(parent=parent, data_points=data_points)
         if depth:
             children = Catalog.objects.filter(parents__id=self.pk)
             for child in children:
-                child.duplicate(parent=c, depth=depth - 1, data_points=data_points)
+                child.duplicate(parent=c, depth=depth-1, data_points=data_points)
+
+    def duplicate_by_catalog(self, parent=None, descendant=[], data_points=[]):
+        """
+        duplicate by descendant
+        """
+        c = self.clone(parent=parent, data_points=data_points)
+        if descendant:
+            children = Catalog.objects.filter(parents__id=self.pk, id__in=descendant)
+            for child in children:
+                child.duplicate_by_catalog(parent=c, descendant=descendant, data_points=data_points)
