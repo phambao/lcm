@@ -1,6 +1,7 @@
 import uuid
 
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 from api.serializers.auth import UserCustomSerializer
@@ -12,7 +13,7 @@ from ..models import lead_schedule
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging, CheckListItemsTemplate, \
     TodoTemplateChecklistItem, DataType, ItemFieldDropDown, TodoCustomField, CustomFieldScheduleSetting, \
     CustomFieldScheduleDailyLogSetting, DailyLogCustomField, ItemFieldDropDownDailyLog, \
-    DataType, ItemFieldDropDown, ScheduleEventPhaseSetting
+    DataType, ItemFieldDropDown, ScheduleEventPhaseSetting, FileCheckListItems, FileCheckListItemsTemplate
 
 
 class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
@@ -63,43 +64,78 @@ class CheckListItemSerializer(serializers.Serializer):
 
 class ToDoChecklistItemSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
-    assigned_to = UserCustomSerializer(allow_null=True, required=False, many=True)
+    assigned_to = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    file = serializers.FileField(required=False)
 
     class Meta:
         model = lead_schedule.CheckListItems
-        fields = ('id', 'parent_uuid', 'description', 'is_check', 'is_root', 'assigned_to', 'to_do', 'uuid')
+        fields = ('id', 'parent_uuid', 'description', 'is_check', 'is_root', 'assigned_to', 'to_do', 'uuid', 'file')
 
     def create(self, validated_data):
         request = self.context['request']
-        data = request.data
         user_create = user_update = request.user
-        assigned_to = pop(data, 'assigned_to', [])
-        todo = pop(data, 'to_do', None)
+        assigned_to = validated_data.pop('assigned_to', '[]')
+        file = pop(validated_data, 'file', [])
+        files = request.FILES.getlist('file')
+        if assigned_to:
+            assigned_to = eval(assigned_to)
+        else:
+            assigned_to = []
+
+        todo = pop(validated_data, 'to_do', None)
         data_uuid = uuid.uuid4()
         user = get_user_model().objects.filter(pk__in=[at['id'] for at in assigned_to])
         checklist_item_create = CheckListItems.objects.create(
             user_create=user_create, user_update=user_update,
             uuid=data_uuid,
-            to_do_id=todo, **data
+            to_do=todo, **validated_data
         )
         checklist_item_create.assigned_to.add(*user)
+
         checklist_item_template = CheckListItemsTemplate.objects.create(
             user_create=user_create, user_update=user_update,
             uuid=data_uuid,
-            todo_id=todo, **data
+            todo=todo, **validated_data
         )
         checklist_item_template.assigned_to.add(*user)
+        file_checklist_item_create = list()
+        file_checklist_item_template_create = list()
+        for file in files:
+            file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+            content_file = ContentFile(file.read(), name=file_name)
+            attachment = FileCheckListItems(
+                file=content_file,
+                checklist_item=checklist_item_create,
+                user_create=user_create
+            )
+            attachment_template = FileCheckListItemsTemplate(
+                file=content_file,
+                checklist_item_template=checklist_item_template,
+                user_create=user_create
+            )
+            file_checklist_item_create.append(attachment)
+            file_checklist_item_template_create.append(attachment_template)
+        FileCheckListItems.objects.bulk_create(file_checklist_item_create)
+        FileCheckListItemsTemplate.objects.bulk_create(file_checklist_item_template_create)
         return checklist_item_create
 
     def update(self, instance, data):
-        assigned_to = pop(data, 'assigned_to', [])
+        request = self.context['request']
+        user_update = request.user
         todo = pop(data, 'to_do', None)
+        assigned_to = data.pop('assigned_to', '[]')
+        file = pop(data, 'file', [])
+        files = request.FILES.getlist('file')
+        if assigned_to:
+            assigned_to = eval(assigned_to)
+        else:
+            assigned_to = []
         checklist_item = lead_schedule.CheckListItems.objects.filter(pk=instance.pk)
         checklist_item.update(**data)
         checklist_item = checklist_item.first()
-        uuid = checklist_item.uuid
+        data_uuid = checklist_item.uuid
 
-        checklist_item_template = lead_schedule.CheckListItemsTemplate.objects.filter(todo=todo.id, uuid=uuid,
+        checklist_item_template = lead_schedule.CheckListItemsTemplate.objects.filter(todo=todo.id, uuid=data_uuid,
                                                                                       to_do_checklist_template=None)
         checklist_item_template.update(**data)
         checklist_item_template = checklist_item_template.first()
@@ -111,8 +147,37 @@ class ToDoChecklistItemSerializer(serializers.ModelSerializer):
 
         checklist_item_template.assigned_to.clear()
         checklist_item_template.assigned_to.add(*user)
+
+        FileCheckListItems.objects.filter(checklist_item=checklist_item.id).delete()
+        FileCheckListItemsTemplate.objects.filter(checklist_item_template=checklist_item_template.id).delete()
+        file_checklist_item_create = list()
+        file_checklist_item_template_create = list()
+        for file in files:
+            file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+            content_file = ContentFile(file.read(), name=file_name)
+            attachment = FileCheckListItems(
+                file=content_file,
+                checklist_item=checklist_item,
+                user_update=user_update
+            )
+            attachment_template = FileCheckListItemsTemplate(
+                file=content_file,
+                checklist_item_template=checklist_item_template,
+                user_update=user_update
+            )
+            file_checklist_item_create.append(attachment)
+            file_checklist_item_template_create.append(attachment_template)
+        FileCheckListItems.objects.bulk_create(file_checklist_item_create)
+        FileCheckListItemsTemplate.objects.bulk_create(file_checklist_item_template_create)
         instance.refresh_from_db()
         return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data_file = FileCheckListItems.objects.filter(checklist_item=data['id']).values()
+        data['assigned_to'] = UserCustomSerializer(instance.assigned_to.all(), many=True).data
+        data['files'] = data_file
+        return data
 
 
 class ToDoCreateSerializer(serializers.ModelSerializer):

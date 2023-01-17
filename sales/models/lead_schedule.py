@@ -95,8 +95,6 @@ class CheckListItemsTemplate(BaseModel):
 
     uuid = models.UUIDField(blank=True, null=True)
     parent_uuid = models.UUIDField(blank=True, null=True)
-    # parent_uuid = models.ForeignKey('self', related_name='child', null=True,
-    #                            blank=True, on_delete=models.SET_NULL, default=None)
     description = models.CharField(blank=True, max_length=128)
     is_check = models.BooleanField(default=False)
     is_root = models.BooleanField(default=False)
