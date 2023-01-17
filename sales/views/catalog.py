@@ -178,16 +178,22 @@ def add_multiple_level(request):
 @permission_classes([permissions.IsAuthenticated])
 def duplicate_catalogs(request, pk):
     """
-    Payload: [{"id": int, "depth": int, data_points: [id,...]},...]
+    Payload: [{"id": int, "depth": int, data_points: [id,...], descendant: [id,...]},...]
     """
     if isinstance(request.data, list):
         parent_catalog = get_object_or_404(Catalog, pk=pk)
         for d in request.data:
             depth = int(d.get('depth', 0))
             data_points = d.get('data_points', [])
+            descendant = d.get('descendant', [])
             try:
                 c = Catalog.objects.get(pk=d.get('id'))
-                c.duplicate(parent=parent_catalog, depth=depth, data_points=data_points)
+                if descendant:
+                    c.duplicate_by_catalog(parent=parent_catalog, descendant=descendant,
+                                           data_points=data_points)
+                else:
+                    # duplicate by level
+                    c.duplicate(parent=parent_catalog, depth=depth, data_points=data_points)
             except Catalog.DoesNotExist:
                 pass
         return Response(status=status.HTTP_201_CREATED, data={})
