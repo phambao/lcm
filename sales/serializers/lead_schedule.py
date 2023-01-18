@@ -293,16 +293,15 @@ class DailyLogSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context['request']
-        data = request.data
         user_create = user_update = request.user
-        tags = pop(data, 'tags', [])
-        to_do = pop(data, 'to_do', [])
-        data_custom_field = pop(data, 'custom_field', [])
-        lead_list = pop(data, 'lead_list', None)
+        tags = pop(validated_data, 'tags', [])
+        to_do = pop(validated_data, 'to_do', [])
+        data_custom_field = pop(validated_data, 'custom_field', [])
+        lead_list = pop(validated_data, 'lead_list', None)
 
         daily_log_create = lead_schedule.DailyLog.objects.create(
-            user_create=user_create, user_update=user_update, lead_list_id=lead_list,
-            **data
+            user_create=user_create, user_update=user_update, lead_list=lead_list,
+            **validated_data
         )
         tags_objects = TagSchedule.objects.filter(pk__in=[tag['id'] for tag in tags])
         todo_objects = ToDo.objects.filter(pk__in=[tmp['id'] for tmp in to_do])
