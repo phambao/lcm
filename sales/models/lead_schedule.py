@@ -283,8 +283,8 @@ class ScheduleDailyLogSetting(BaseModel):
     subs_vendors_is_notify = models.BooleanField(default=False)
     owner_is_share = models.BooleanField(default=False)
     owner_is_notify = models.BooleanField(default=False)
-    user = models.ForeignKey(get_user_model(), related_name='user_setting_schedule_daily_log',
-                             blank=True, on_delete=models.CASCADE, null=True)
+    user = models.OneToOneField(get_user_model(), related_name='user_setting_schedule_daily_log',
+                                blank=True, on_delete=models.CASCADE, null=True)
 
 
 class CustomFieldScheduleDailyLogSetting(BaseModel):
