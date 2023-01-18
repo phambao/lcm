@@ -139,7 +139,7 @@ class DailyLog(BaseModel):
     class Meta:
         db_table = 'schedule_daily_log'
 
-    date = models.DateField()
+    date = models.DateTimeField()
     tags = models.ManyToManyField(TagSchedule, related_name='daily_log_tags')
     to_do = models.ManyToManyField(ToDo, related_name='daily_log_tags')
     note = models.TextField(blank=True)
