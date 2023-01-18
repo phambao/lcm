@@ -18,7 +18,7 @@ from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachment
     CustomFieldScheduleDailyLogSetting, Messaging, ScheduleEventSetting, ScheduleEventPhaseSetting, DailyLogCustomField, \
     FileCheckListItems, FileCheckListItemsTemplate
 from ..serializers import lead_schedule
-from ..serializers.lead_schedule import ScheduleEventPhaseSettingSerializer
+from ..serializers.lead_schedule import ScheduleEventPhaseSettingSerializer, ScheduleDailyLogSettingSerializer
 
 
 class ScheduleAttachmentsGenericView(GenericViewSet):
@@ -675,3 +675,29 @@ def get_id_by_group(pk):
         rs.append(e.id)
         rs.extend(get_id_by_group(e.id))
     return rs
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def config_setting_daily_log(request):
+    if request.method == 'GET':
+        try:
+            default_daily_log = ScheduleDailyLogSetting.objects.get(user=request.user)
+        except ScheduleDailyLogSetting.DoesNotExist:
+            settings = {
+                "stamp_location": True,
+                "default_notes": "Progress:                                  "
+                                 "Issues:                                    "
+                                 "Client Conversations Had:                  ",
+                "internal_user_is_share": True,
+                "internal_user_is_notify": True,
+                "subs_vendors_is_share": True,
+                "subs_vendors_is_notify": True,
+                "owner_is_share": True,
+                "owner_is_notify": True,
+            }
+            default_daily_log = ScheduleDailyLogSetting.objects.create(user=request.user, **settings)
+        serializer = ScheduleDailyLogSettingSerializer(default_daily_log)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
