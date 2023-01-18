@@ -1,21 +1,24 @@
 import uuid
-from django.db.models.functions import Lower
-from django.contrib.auth import get_user_model
+
 from django.core.files.base import ContentFile
-from django.db.models import Subquery
+from django.db.models.functions import Lower
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
+from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework import permissions, status
 from rest_framework.viewsets import GenericViewSet
 
 from base.serializers.base import IDAndNameSerializer
+from base.utils import pop
 from ..models import LeadDetail
-from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, Messaging, DailyLog, \
+from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, DailyLog, \
     AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate, \
-    FileScheduleEvent, CustomFieldScheduleSetting
+    FileScheduleEvent, CustomFieldScheduleSetting, TodoCustomField, ScheduleToDoSetting, ScheduleDailyLogSetting, \
+    CustomFieldScheduleDailyLogSetting, Messaging, ScheduleEventSetting, ScheduleEventPhaseSetting, DailyLogCustomField, \
+    FileCheckListItems, FileCheckListItemsTemplate
 from ..serializers import lead_schedule
+from ..serializers.lead_schedule import ScheduleEventPhaseSettingSerializer
 
 
 class ScheduleAttachmentsGenericView(GenericViewSet):
@@ -251,6 +254,118 @@ class ToDoChecklistItemTemplateDetailGenericView(generics.RetrieveUpdateDestroyA
     permission_classes = [permissions.IsAuthenticated]
 
 
+class ToDoMessageCustomFieldGenericView(GenericViewSet):
+    serializer_class = lead_schedule.MessageAndCustomFieldToDoCreateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create_message_custom_field(self, request, **kwargs):
+        serializer = lead_schedule.MessageAndCustomFieldToDoCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        data_create = dict(serializer.validated_data)
+        pk_todo = data_create['todo']
+        todo = get_object_or_404(ToDo.objects.all(), pk=pk_todo)
+
+        data_message = data_create['message']
+        data_custom_field = data_create['custom_field']
+        data_create_messaging = list()
+        for message in data_message:
+            rs_message = Messaging(
+                message=message['message'],
+                to_do=todo,
+                user_create=user,
+                user_update=user
+            )
+            data_create_messaging.append(rs_message)
+        Messaging.objects.bulk_create(data_create_messaging)
+
+        data_create_custom_field = list()
+        for custom_field in data_custom_field:
+            temp = TodoCustomField(
+                custom_field=custom_field['custom_field'],
+                todo=todo,
+                label=custom_field['label'],
+                data_type=custom_field['data_type'],
+                required=custom_field['required'],
+                include_in_filters=custom_field['include_in_filters'],
+                display_order=custom_field['display_order'],
+                tool_tip_text=custom_field['tool_tip_text'],
+                show_owners=custom_field['show_owners'],
+                allow_permitted_sub=custom_field['allow_permitted_sub'],
+                value=custom_field['value'],
+                value_date=custom_field['value_date'],
+                value_checkbox=custom_field['value_checkbox'],
+                value_number=custom_field['value_number'],
+                user_create=user,
+                user_update=user,
+
+            )
+            data_create_custom_field.append(temp)
+        TodoCustomField.objects.bulk_create(data_create_custom_field)
+        messaging = Messaging.objects.filter(to_do=pk_todo).values()
+        rs_custom_field = TodoCustomField.objects.filter(todo=pk_todo).values()
+        data_rs = {
+            'todo': pk_todo,
+            'message': messaging,
+            'custom_field': rs_custom_field
+        }
+        rs = lead_schedule.MessageAndCustomFieldToDoCreateSerializer(
+            data_rs, context={'request': request}).data
+
+        return Response(status=status.HTTP_200_OK, data=rs)
+
+    def update_message_custom_field(self, request, **kwargs):
+        serializer = lead_schedule.MessageAndCustomFieldToDoCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        data_create = dict(serializer.validated_data)
+        pk_todo = data_create['todo']
+        todo = get_object_or_404(ToDo.objects.all(), pk=pk_todo)
+
+        data_message = data_create['message']
+        data_custom_field = data_create['custom_field']
+
+        for message in data_message:
+            data_message = lead_schedule.Messaging.objects.filter(pk=message['id'])
+            data_message.update(message=message['message'])
+
+        TodoCustomField.objects.filter(todo=pk_todo).delete()
+        data_create_custom_field = list()
+        for custom_field in data_custom_field:
+            temp = TodoCustomField(
+                custom_field=custom_field['custom_field'],
+                todo=todo,
+                label=custom_field['label'],
+                data_type=custom_field['data_type'],
+                required=custom_field['required'],
+                include_in_filters=custom_field['include_in_filters'],
+                display_order=custom_field['display_order'],
+                tool_tip_text=custom_field['tool_tip_text'],
+                show_owners=custom_field['show_owners'],
+                allow_permitted_sub=custom_field['allow_permitted_sub'],
+                value=custom_field['value'],
+                value_date=custom_field['value_date'],
+                value_checkbox=custom_field['value_checkbox'],
+                value_number=custom_field['value_number'],
+                user_create=user,
+                user_update=user,
+
+            )
+            data_create_custom_field.append(temp)
+        TodoCustomField.objects.bulk_create(data_create_custom_field)
+        messaging = Messaging.objects.filter(to_do=pk_todo).values()
+        rs_custom_field = TodoCustomField.objects.filter(todo=pk_todo).values()
+        data_rs = {
+            'todo': pk_todo,
+            'message': messaging,
+            'custom_field': rs_custom_field
+        }
+        rs = lead_schedule.MessageAndCustomFieldToDoCreateSerializer(
+            data_rs, context={'request': request}).data
+
+        return Response(status=status.HTTP_200_OK, data=rs)
+
+
 class ScheduleEventGenericView(generics.ListCreateAPIView):
     queryset = ScheduleEvent.objects.all()
     serializer_class = lead_schedule.ScheduleEventSerializer
@@ -263,15 +378,75 @@ class ScheduleEventDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleEventCustomFieldGenericView(generics.ListCreateAPIView):
+class ScheduleToDoCustomFieldGenericView(generics.ListCreateAPIView):
     queryset = CustomFieldScheduleSetting.objects.all()
     serializer_class = lead_schedule.CustomFieldScheduleSettingSerialized
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleEventCustomFieldDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleToDoCustomFieldDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomFieldScheduleSetting.objects.all()
     serializer_class = lead_schedule.CustomFieldScheduleSettingSerialized
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleToDoSettingGenericView(generics.ListCreateAPIView):
+    queryset = ScheduleToDoSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleToDoSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleToDoSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ScheduleToDoSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleToDoSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleDailyLogSettingGenericView(generics.ListCreateAPIView):
+    queryset = ScheduleDailyLogSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleDailyLogSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleDailyLogSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ScheduleDailyLogSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleDailyLogSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleDailyLogCustomFieldSettingGenericView(generics.ListCreateAPIView):
+    queryset = CustomFieldScheduleDailyLogSetting.objects.all()
+    serializer_class = lead_schedule.CustomFieldScheduleDailyLogSettingSerialized
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleDailyLogCustomFieldSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CustomFieldScheduleDailyLogSetting.objects.all()
+    serializer_class = lead_schedule.CustomFieldScheduleDailyLogSettingSerialized
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleEventSettingGenericView(generics.ListCreateAPIView):
+    queryset = ScheduleEventSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleEventSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleEventSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ScheduleEventSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleEventSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleEventPhaseSettingGenericView(generics.ListCreateAPIView):
+    queryset = ScheduleEventPhaseSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleEventPhaseSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleEventPhaseSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ScheduleEventPhaseSetting.objects.all()
+    serializer_class = lead_schedule.ScheduleEventPhaseSettingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
@@ -306,6 +481,17 @@ def get_checklist_template_by_todo(request, *args, **kwargs):
                 todo_id=pk_todo
             )
             checklist_item_template.assigned_to.add(*checklist_item.assigned_to.all())
+
+            data_file = FileCheckListItems.objects.filter(checklist_item=checklist_item.id)
+            file_checklist_item_template_create = list()
+            for file in data_file:
+                attachment_template = FileCheckListItemsTemplate(
+                    file=file.file,
+                    checklist_item_template=checklist_item_template,
+                    user_update=user_update
+                )
+                file_checklist_item_template_create.append(attachment_template)
+            FileCheckListItemsTemplate.objects.bulk_create(file_checklist_item_template_create)
         data_checklist = CheckListItemsTemplate.objects.filter(todo=pk_todo, to_do_checklist_template=None)
         data = lead_schedule.CheckListItemsTemplateSerializer(
             data_checklist, many=True, context={'request': request}).data
@@ -344,6 +530,24 @@ def select_checklist_template(request, *args, **kwargs):
             todo_id=pk_todo, **temp
         )
         checklist_item_template.assigned_to.add(*checklist.assigned_to.all())
+        data_file = FileCheckListItemsTemplate.objects.filter(checklist_item_template=checklist.id)
+        file_checklist_item_create = list()
+        file_checklist_item_template_create = list()
+        for file in data_file:
+            attachment = FileCheckListItems(
+                file=file.file,
+                checklist_item=checklist_item_create,
+                user_update=user_update
+            )
+            attachment_template = FileCheckListItemsTemplate(
+                file=file.file,
+                checklist_item_template=checklist_item_template,
+                user_update=user_update
+            )
+            file_checklist_item_create.append(attachment)
+            file_checklist_item_template_create.append(attachment_template)
+        FileCheckListItems.objects.bulk_create(file_checklist_item_create)
+        FileCheckListItemsTemplate.objects.bulk_create(file_checklist_item_template_create)
 
     rs_checklist = CheckListItems.objects.filter(to_do=pk_todo)
     rs = lead_schedule.ToDoChecklistItemSerializer(
@@ -365,6 +569,7 @@ def select_event_predecessors(request, *args, **kwargs):
 def select_event_link(request, *args, **kwargs):
     event_id = kwargs.get('pk')
     list_id = get_id_by_group(event_id)
+    list_id.append(event_id)
     rs = ScheduleEvent.objects.exclude(id__in=list_id).values('id', name=Lower('event_title'))
     # rs = ScheduleEvent.objects.exclude(id__in=list_id).annotate(
     #     name=Subquery(ScheduleEvent.objects.exclude(id__in=list_id).values('event_title')[:1])
@@ -380,6 +585,86 @@ def select_lead_list(request, *args, **kwargs):
     rs = LeadDetail.objects.all().values('id', name=Lower('lead_title'))
     rs = IDAndNameSerializer(
         rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=rs)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_custom_field(request, *args, **kwargs):
+    custom_field_id = kwargs.get('pk')
+    todo_list = request.data
+    temp = [data['id'] for data in todo_list]
+    custom_field_setting = CustomFieldScheduleSetting.objects.filter(id=custom_field_id)
+    todo_custom_field = TodoCustomField.objects.filter(todo__in=temp, custom_field=custom_field_id)
+    todo_custom_field.delete()
+    custom_field_setting.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_custom_field_daily_log(request, *args, **kwargs):
+    custom_field_id = kwargs.get('pk')
+    daily_log_list = request.data
+    temp = [data['id'] for data in daily_log_list]
+    custom_field_setting = CustomFieldScheduleDailyLogSetting.objects.filter(id=custom_field_id)
+    daily_log_custom_field = DailyLogCustomField.objects.filter(daily_log__in=temp, custom_field=custom_field_id)
+    daily_log_custom_field.delete()
+    custom_field_setting.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_phase(request, *args, **kwargs):
+    phase_id = kwargs.get('pk')
+    event_list = request.data
+    temp = [data['id'] for data in event_list]
+    phase_setting = ScheduleEventPhaseSetting.objects.filter(id=phase_id)
+    model_event_phase = ScheduleEvent.objects.filter(id__in=temp, phase_setting=phase_id)
+    update_list = []
+    for phase in model_event_phase:
+        phase.phase_label = None
+        phase.phase_display_order = None
+        phase.phase_color = None
+        phase.phase_setting = None
+        update_list.append(phase)
+    ScheduleEvent.objects.bulk_update(update_list, ['phase_label', 'phase_display_order', 'phase_color', 'user_create',
+                                                    'phase_setting', 'user_update'])
+    phase_setting.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def select_checklist_item_template(request, pk_template, pk_todo):
+    data_checklist = CheckListItemsTemplate.objects.filter(to_do_checklist_template=pk_template)
+    for checklist in data_checklist:
+        temp = dict()
+        temp['uuid'] = checklist.uuid
+        temp['parent_uuid'] = checklist.parent_uuid
+        temp['description'] = checklist.description
+        temp['is_check'] = checklist.is_check
+        temp['is_root'] = checklist.is_root
+
+        checklist_item_template = CheckListItemsTemplate.objects.create(
+            todo_id=pk_todo, **temp
+        )
+        checklist_item_template.assigned_to.add(*checklist.assigned_to.all())
+        data_file = FileCheckListItemsTemplate.objects.filter(checklist_item_template=checklist.id)
+        file_checklist_item_template_create = list()
+        for file in data_file:
+            attachment_template = FileCheckListItemsTemplate(
+                file=file.file,
+                checklist_item_template=checklist_item_template,
+
+            )
+            file_checklist_item_template_create.append(attachment_template)
+        FileCheckListItemsTemplate.objects.bulk_create(file_checklist_item_template_create)
+
+    rs_checklist = CheckListItems.objects.filter(to_do=pk_todo)
+    rs = lead_schedule.ToDoChecklistItemSerializer(
+        rs_checklist, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
 
 
