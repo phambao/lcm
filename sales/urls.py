@@ -126,7 +126,7 @@ url_schedule = [
     path('daily-logs/custom-field/', lead_schedule.ScheduleDailyLogCustomFieldSettingGenericView.as_view()),
     path('daily-logs/custom-field/<int:pk>/', lead_schedule.ScheduleDailyLogCustomFieldSettingDetailGenericView.as_view()),
     path('daily-logs/delete-custom-field/<int:pk>/', lead_schedule.delete_custom_field_daily_log),
-    path('daily-logs/default-value/', lead_schedule.config_setting_daily_log),
+    # path('daily-logs/default-value/', lead_schedule.config_setting_daily_log),
 
     # SCHEDULE EVENT
     path('schedule-event/', lead_schedule.ScheduleEventGenericView.as_view()),

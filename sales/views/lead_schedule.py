@@ -677,27 +677,36 @@ def get_id_by_group(pk):
     return rs
 
 
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def config_setting_daily_log(request):
-    if request.method == 'GET':
-        try:
-            default_daily_log = ScheduleDailyLogSetting.objects.get(user=request.user)
-        except ScheduleDailyLogSetting.DoesNotExist:
-            settings = {
-                "stamp_location": True,
-                "default_notes": "Progress:                                  "
-                                 "Issues:                                    "
-                                 "Client Conversations Had:                  ",
-                "internal_user_is_share": True,
-                "internal_user_is_notify": True,
-                "subs_vendors_is_share": True,
-                "subs_vendors_is_notify": True,
-                "owner_is_share": True,
-                "owner_is_notify": True,
-            }
-            default_daily_log = ScheduleDailyLogSetting.objects.create(user=request.user, **settings)
-        serializer = ScheduleDailyLogSettingSerializer(default_daily_log)
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
+# @api_view(['GET', 'PUT'])
+# @permission_classes([permissions.IsAuthenticated])
+# def config_setting_daily_log(request):
+#     if request.method == 'GET':
+#         try:
+#             default_daily_log = ScheduleDailyLogSetting.objects.get(user=request.user)
+#         except ScheduleDailyLogSetting.DoesNotExist:
+#             settings = {
+#                 "stamp_location": True,
+#                 "default_notes": "Progress:                                  "
+#                                  "Issues:                                    "
+#                                  "Client Conversations Had:                  ",
+#                 "internal_user_is_share": True,
+#                 "internal_user_is_notify": True,
+#                 "subs_vendors_is_share": True,
+#                 "subs_vendors_is_notify": True,
+#                 "owner_is_share": True,
+#                 "owner_is_notify": True,
+#             }
+#             default_daily_log = ScheduleDailyLogSetting.objects.create(user=request.user, **settings)
+#         serializer = ScheduleDailyLogSettingSerializer(default_daily_log)
+#         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    # if request.method == 'PUT':
+    #     config = ScheduleDailyLogSetting.objects.filter(user=request.user)
+    #     rs = request.data
+    #     config.update(**rs)
+    #     data_setting = config.first()
+    #     # serializer = ScheduleDailyLogSetting(data_setting)
+    #     data = ScheduleDailyLogSettingSerializer(
+    #         data_setting, context={'request': request}).data
+    #     return Response(status=status.HTTP_200_OK, data=data)
+    # return Response(status=status.HTTP_204_NO_CONTENT)
