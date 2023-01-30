@@ -139,7 +139,7 @@ class DailyLog(BaseModel):
     class Meta:
         db_table = 'schedule_daily_log'
 
-    date = models.DateField()
+    date = models.DateTimeField()
     tags = models.ManyToManyField(TagSchedule, related_name='daily_log_tags')
     to_do = models.ManyToManyField(ToDo, related_name='daily_log_tags')
     note = models.TextField(blank=True)
@@ -283,6 +283,8 @@ class ScheduleDailyLogSetting(BaseModel):
     subs_vendors_is_notify = models.BooleanField(default=False)
     owner_is_share = models.BooleanField(default=False)
     owner_is_notify = models.BooleanField(default=False)
+    user = models.OneToOneField(get_user_model(), related_name='user_setting_schedule_daily_log',
+                                blank=True, on_delete=models.CASCADE, null=True)
 
 
 class CustomFieldScheduleDailyLogSetting(BaseModel):

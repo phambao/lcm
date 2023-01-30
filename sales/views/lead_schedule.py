@@ -18,7 +18,7 @@ from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachment
     CustomFieldScheduleDailyLogSetting, Messaging, ScheduleEventSetting, ScheduleEventPhaseSetting, DailyLogCustomField, \
     FileCheckListItems, FileCheckListItemsTemplate
 from ..serializers import lead_schedule
-from ..serializers.lead_schedule import ScheduleEventPhaseSettingSerializer
+from ..serializers.lead_schedule import ScheduleEventPhaseSettingSerializer, ScheduleDailyLogSettingSerializer
 
 
 class ScheduleAttachmentsGenericView(GenericViewSet):
@@ -227,11 +227,13 @@ class CheckListItemDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
         checklist_item = CheckListItems.objects.get(pk=pk_checklist)
         uuid = checklist_item.uuid
         todo = checklist_item.to_do
-        checklist_item_children = CheckListItems.objects.filter(to_do=todo.id, parent_uuid=uuid)
+        checklist_item_children = get_id_by_parent_checklist(uuid)
+        checklist_item_template_children = get_id_by_parent_checklist_template(uuid)
+        checklist_item_children = CheckListItems.objects.filter(to_do=todo.id, id__in=checklist_item_children)
 
         checklist_item_template = CheckListItemsTemplate.objects.filter(todo=todo.id, uuid=uuid,
                                                                         to_do_checklist_template=None)
-        checklist_item_children_template = CheckListItemsTemplate.objects.filter(todo=todo.id, parent_uuid=uuid,
+        checklist_item_children_template = CheckListItemsTemplate.objects.filter(todo=todo.id, id__in=checklist_item_template_children,
                                                                                  to_do_checklist_template=None)
 
         checklist_item.delete()
@@ -675,3 +677,54 @@ def get_id_by_group(pk):
         rs.append(e.id)
         rs.extend(get_id_by_group(e.id))
     return rs
+
+
+def get_id_by_parent_checklist(pk):
+    rs = []
+    checklist = CheckListItems.objects.filter(parent_uuid=pk)
+    for e in checklist:
+        rs.append(e.id)
+        rs.extend(get_id_by_parent_checklist(e.uuid))
+    return rs
+
+
+def get_id_by_parent_checklist_template(pk):
+    rs = []
+    checklist = CheckListItemsTemplate.objects.filter(parent_uuid=pk)
+    for e in checklist:
+        rs.append(e.id)
+        rs.extend(get_id_by_parent_checklist_template(e.uuid))
+    return rs
+# @api_view(['GET', 'PUT'])
+# @permission_classes([permissions.IsAuthenticated])
+# def config_setting_daily_log(request):
+#     if request.method == 'GET':
+#         try:
+#             default_daily_log = ScheduleDailyLogSetting.objects.get(user=request.user)
+#         except ScheduleDailyLogSetting.DoesNotExist:
+#             settings = {
+#                 "stamp_location": True,
+#                 "default_notes": "Progress:                                  "
+#                                  "Issues:                                    "
+#                                  "Client Conversations Had:                  ",
+#                 "internal_user_is_share": True,
+#                 "internal_user_is_notify": True,
+#                 "subs_vendors_is_share": True,
+#                 "subs_vendors_is_notify": True,
+#                 "owner_is_share": True,
+#                 "owner_is_notify": True,
+#             }
+#             default_daily_log = ScheduleDailyLogSetting.objects.create(user=request.user, **settings)
+#         serializer = ScheduleDailyLogSettingSerializer(default_daily_log)
+#         return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+# if request.method == 'PUT':
+#     config = ScheduleDailyLogSetting.objects.filter(user=request.user)
+#     rs = request.data
+#     config.update(**rs)
+#     data_setting = config.first()
+#     # serializer = ScheduleDailyLogSetting(data_setting)
+#     data = ScheduleDailyLogSettingSerializer(
+#         data_setting, context={'request': request}).data
+#     return Response(status=status.HTTP_200_OK, data=data)
+# return Response(status=status.HTTP_204_NO_CONTENT)
