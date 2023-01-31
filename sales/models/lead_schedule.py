@@ -133,6 +133,10 @@ class Messaging(BaseModel):
 
     message = models.CharField(blank=True, max_length=128)
     to_do = models.ForeignKey(ToDo, on_delete=models.CASCADE, related_name='messaging')
+    show_owner = models.BooleanField(blank=True, null=True)
+    show_sub_vendors = models.BooleanField(blank=True, null=True)
+    notify = models.ManyToManyField(get_user_model(), related_name='message_todo_notify',
+                                    blank=True, null=True)
 
 
 class DailyLog(BaseModel):
@@ -234,6 +238,18 @@ class ScheduleEvent(BaseModel):
     phase_color = models.CharField(blank=True, max_length=128, null=True)
     phase_setting = models.ForeignKey(ScheduleEventPhaseSetting, blank=True, null=True,
                                       on_delete=models.SET_NULL, related_name='event_phase')
+
+
+class MessageEvent(BaseModel):
+    class Meta:
+        db_table = 'schedule_event_message'
+
+    event = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE, related_name='event_message')
+    comments = models.TextField()
+    show_owner = models.BooleanField(default=False, blank=True, null=True)
+    show_sub_vendors = models.BooleanField(default=False, blank=True, null=True)
+    notify = models.ManyToManyField(get_user_model(), related_name='message_vent_notify',
+                                    blank=True)
 
 
 # class ScheduleEventShiftHistory(BaseModel):
