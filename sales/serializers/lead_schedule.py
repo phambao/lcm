@@ -60,6 +60,7 @@ class MessagingSerializer(serializers.ModelSerializer):
         schedule_todo_message_create.notify.add(*notify_object)
         return schedule_todo_message_create
 
+
 class TagScheduleSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
 
