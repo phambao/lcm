@@ -66,6 +66,7 @@ class ToDoChecklistItemSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     assigned_to = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     file = serializers.FileField(required=False)
+    parent_uuid = serializers.UUIDField(required=False, allow_null=True)
 
     class Meta:
         model = lead_schedule.CheckListItems
