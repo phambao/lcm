@@ -136,13 +136,13 @@ class Messaging(BaseModel):
     show_owner = models.BooleanField(blank=True, null=True)
     show_sub_vendors = models.BooleanField(blank=True, null=True)
     notify = models.ManyToManyField(get_user_model(), related_name='message_todo_notify',
-                                    blank=True, null=True)
+                                    blank=True)
 
 
 class DailyLog(BaseModel):
     class Meta:
         db_table = 'schedule_daily_log'
-
+        ordering = ['-modified_date']
     date = models.DateTimeField()
     tags = models.ManyToManyField(TagSchedule, related_name='daily_log_tags')
     to_do = models.ManyToManyField(ToDo, related_name='daily_log_tags')
