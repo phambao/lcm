@@ -8,9 +8,13 @@ from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from rest_framework import filters as rf_filters
+from django_filters import rest_framework as filters
 
 from base.serializers.base import IDAndNameSerializer
 from base.utils import pop
+from ..filters.lead_list import ContactsFilter
+from ..filters.schedule import DailyLogFilter
 from ..models import LeadDetail
 from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, DailyLog, \
     AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate, \
@@ -197,6 +201,9 @@ class DailyLogGenericView(generics.ListCreateAPIView):
     queryset = DailyLog.objects.all()
     serializer_class = lead_schedule.DailyLogSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = DailyLogFilter
+    # search_fields = ['first_name', 'last_name', 'email', 'phone_contacts__phone_number']
 
 
 class DailyLogDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
