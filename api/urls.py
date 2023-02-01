@@ -13,9 +13,11 @@ urlpatterns = [
     path('users', UserList.as_view()),
 
     # For password reset
-    path('reset-password/', forgot_password, name='reset-password'),
-    path('check-code/', check_private_code, name='check-private-code'),
-    path('reset/', reset_password, name='reset-password'),
+    path('auth/', include([
+        path('reset-password/', forgot_password, name='reset-password'),
+        path('check-code/', check_private_code, name='check-private-code'),
+        path('reset/', reset_password, name='reset-password')
+    ])),
 
     path('reset_password/', auth_views.PasswordResetView.as_view(), name='reset_password'),
     path('reset_password_done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
