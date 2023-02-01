@@ -133,6 +133,10 @@ class Messaging(BaseModel):
 
     message = models.CharField(blank=True, max_length=128)
     to_do = models.ForeignKey(ToDo, on_delete=models.CASCADE, related_name='messaging')
+    show_owner = models.BooleanField(blank=True, null=True)
+    show_sub_vendors = models.BooleanField(blank=True, null=True)
+    notify = models.ManyToManyField(get_user_model(), related_name='message_todo_notify',
+                                    blank=True, null=True)
 
 
 class DailyLog(BaseModel):
@@ -236,6 +240,18 @@ class ScheduleEvent(BaseModel):
                                       on_delete=models.SET_NULL, related_name='event_phase')
 
 
+class MessageEvent(BaseModel):
+    class Meta:
+        db_table = 'schedule_event_message'
+
+    event = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE, related_name='event_message')
+    comments = models.TextField()
+    show_owner = models.BooleanField(default=False, blank=True, null=True)
+    show_sub_vendors = models.BooleanField(default=False, blank=True, null=True)
+    notify = models.ManyToManyField(get_user_model(), related_name='message_vent_notify',
+                                    blank=True)
+
+
 # class ScheduleEventShiftHistory(BaseModel):
 #     class Meta:
 #         db_table = 'schedule_event_phase'
@@ -277,12 +293,14 @@ class ScheduleDailyLogSetting(BaseModel):
 
     stamp_location = models.BooleanField(default=False)
     default_notes = models.TextField(blank=True, null=True)
-    internal_user_is_share = models.BooleanField(default=False)
-    internal_user_is_notify = models.BooleanField(default=False)
-    subs_vendors_is_share = models.BooleanField(default=False)
-    subs_vendors_is_notify = models.BooleanField(default=False)
-    owner_is_share = models.BooleanField(default=False)
-    owner_is_notify = models.BooleanField(default=False)
+    internal_user_share = models.BooleanField(default=False)
+    internal_user_notify = models.BooleanField(default=False)
+    sub_member_share = models.BooleanField(default=False)
+    sub_member_notify = models.BooleanField(default=False)
+    owner_share = models.BooleanField(default=False)
+    owner_notify = models.BooleanField(default=False)
+    private_share = models.BooleanField(default=False)
+    private_notify = models.BooleanField(default=False)
     user = models.OneToOneField(get_user_model(), related_name='user_setting_schedule_daily_log',
                                 blank=True, on_delete=models.CASCADE, null=True)
 

@@ -91,6 +91,7 @@ url_catalog = [
 url_schedule = [
     # TO_DO
     path('todo/', lead_schedule.SourceScheduleToDoGenericView.as_view()),
+    path('todo/message/', lead_schedule.ScheduleTodoMessageGenericView.as_view()),
     path('todo/<int:pk>/', lead_schedule.ScheduleDetailGenericView.as_view()),
     path('todo/message-custom-field/', lead_schedule.ToDoMessageCustomFieldGenericView.as_view({
         "post": "create_message_custom_field", "put": "update_message_custom_field"})),
@@ -133,6 +134,8 @@ url_schedule = [
     path('schedule-event/<int:pk>/', lead_schedule.ScheduleEventDetailGenericView.as_view()),
     path('select-schedule-event/', lead_schedule.select_event_predecessors),
     path('select-schedule-event-link/<int:pk>/', lead_schedule.select_event_link),
+    path('schedule-event/message/', lead_schedule.ScheduleEventMessageGenericView.as_view()),
+
     # FILE EVENT
     path('event/<int:pk_event>/attachments/', lead_schedule.AttachmentsEventGenericView.as_view({
         "post": "create_file", "get": "get_file"})),

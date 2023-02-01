@@ -40,10 +40,25 @@ class ScheduleAttachmentsSerializer(serializers.Serializer):
 
 class MessagingSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
+    notify = UserCustomSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_schedule.Messaging
-        fields = ('id', 'message')
+        fields = ('id', 'message', 'to_do', 'show_owner', 'show_sub_vendors', 'notify')
+
+    def create(self, validated_data):
+        request = self.context['request']
+        user_create = user_update = request.user
+        notify = pop(validated_data, 'notify', [])
+        to_do = pop(validated_data, 'to_do', None)
+        schedule_todo_message_create = lead_schedule.Messaging.objects.create(
+            user_create=user_create, user_update=user_update,
+            to_do=to_do,
+            **validated_data
+        )
+        notify_object = get_user_model().objects.filter(pk__in=[at['id'] for at in notify])
+        schedule_todo_message_create.notify.add(*notify_object)
+        return schedule_todo_message_create
 
 
 class TagScheduleSerializer(serializers.ModelSerializer):
@@ -288,6 +303,9 @@ class DailyLogSerializer(serializers.ModelSerializer):
         fields = ('id', 'date', 'tags', 'to_do', 'note', 'lead_list', 'internal_user_share', 'internal_user_notify',
                   'sub_member_share', 'sub_member_notify', 'owner_share', 'owner_notify', 'private_share',
                   'private_notify', 'custom_field')
+        kwargs = {'to_do': {'required': False},
+                  'tags': {'required': False},
+        }
 
     def create(self, validated_data):
         request = self.context['request']
@@ -557,8 +575,32 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         links = lead_schedule.ScheduleEvent.objects.filter(predecessor=data['id']).values()
+        message = lead_schedule.MessageEvent.objects.filter(event=data['id']).values()
         data['links'] = links
+        data['message'] = message
         return data
+
+
+class MessageEventSerialized(serializers.ModelSerializer):
+    notify = UserCustomSerializer(allow_null=True, required=False, many=True)
+
+    class Meta:
+        model = lead_schedule.MessageEvent
+        fields = ('event', 'comments', 'show_owner', 'show_sub_vendors', 'notify')
+
+    def create(self, validated_data):
+        request = self.context['request']
+        user_create = user_update = request.user
+        notify = pop(validated_data, 'notify', [])
+        event = pop(validated_data, 'event', None)
+        schedule_event_message_create = lead_schedule.MessageEvent.objects.create(
+            user_create=user_create, user_update=user_update,
+            event=event,
+            **validated_data
+        )
+        notify_object = get_user_model().objects.filter(pk__in=[at['id'] for at in notify])
+        schedule_event_message_create.notify.add(*notify_object)
+        return schedule_event_message_create
 
 
 class FieldSettingSerialized(serializers.Serializer):

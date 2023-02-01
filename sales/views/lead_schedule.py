@@ -16,7 +16,7 @@ from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachment
     AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate, \
     FileScheduleEvent, CustomFieldScheduleSetting, TodoCustomField, ScheduleToDoSetting, ScheduleDailyLogSetting, \
     CustomFieldScheduleDailyLogSetting, Messaging, ScheduleEventSetting, ScheduleEventPhaseSetting, DailyLogCustomField, \
-    FileCheckListItems, FileCheckListItemsTemplate
+    FileCheckListItems, FileCheckListItemsTemplate, MessageEvent
 from ..serializers import lead_schedule
 from ..serializers.lead_schedule import ScheduleEventPhaseSettingSerializer, ScheduleDailyLogSettingSerializer
 
@@ -187,6 +187,12 @@ class ScheduleCheckListItemDetailGenericView(generics.RetrieveUpdateDestroyAPIVi
     permission_classes = [permissions.IsAuthenticated]
 
 
+class ScheduleTodoMessageGenericView(generics.ListCreateAPIView):
+    queryset = Messaging.objects.all()
+    serializer_class = lead_schedule.MessagingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
 class DailyLogGenericView(generics.ListCreateAPIView):
     queryset = DailyLog.objects.all()
     serializer_class = lead_schedule.DailyLogSerializer
@@ -233,7 +239,8 @@ class CheckListItemDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
 
         checklist_item_template = CheckListItemsTemplate.objects.filter(todo=todo.id, uuid=uuid,
                                                                         to_do_checklist_template=None)
-        checklist_item_children_template = CheckListItemsTemplate.objects.filter(todo=todo.id, id__in=checklist_item_template_children,
+        checklist_item_children_template = CheckListItemsTemplate.objects.filter(todo=todo.id,
+                                                                                 id__in=checklist_item_template_children,
                                                                                  to_do_checklist_template=None)
 
         checklist_item.delete()
@@ -449,6 +456,12 @@ class ScheduleEventPhaseSettingGenericView(generics.ListCreateAPIView):
 class ScheduleEventPhaseSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ScheduleEventPhaseSetting.objects.all()
     serializer_class = lead_schedule.ScheduleEventPhaseSettingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleEventMessageGenericView(generics.ListCreateAPIView):
+    queryset = MessageEvent.objects.all()
+    serializer_class = lead_schedule.MessageEventSerialized
     permission_classes = [permissions.IsAuthenticated]
 
 
