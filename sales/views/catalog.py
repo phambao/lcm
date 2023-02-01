@@ -178,24 +178,32 @@ def add_multiple_level(request):
 @permission_classes([permissions.IsAuthenticated])
 def duplicate_catalogs(request, pk):
     """
-    Payload: [{"id": int, "depth": int, data_points: [id,...], descendant: [id,...]},...]
+    Payload: [{"id": int, "depth": int, data_points: [id,...], descendant: [id,...]},...] </br> or
+    {data_points: [id,...], descendant: [id,...], level: int}
     """
+
+    parent_catalog = get_object_or_404(Catalog, pk=pk)
+    # duplicate by level
     if isinstance(request.data, list):
-        parent_catalog = get_object_or_404(Catalog, pk=pk)
         for d in request.data:
             depth = int(d.get('depth', 0))
             data_points = d.get('data_points', [])
-            descendant = d.get('descendant', [])
             try:
                 c = Catalog.objects.get(pk=d.get('id'))
-                if descendant:
-                    c.duplicate_by_catalog(parent=parent_catalog, descendant=descendant,
-                                           data_points=data_points)
-                else:
-                    # duplicate by level
-                    c.duplicate(parent=parent_catalog, depth=depth, data_points=data_points)
+                c.duplicate(parent=parent_catalog, depth=depth, data_points=data_points)
             except Catalog.DoesNotExist:
                 pass
+
+    # manual duplicate
+    if isinstance(request.data, dict):
+        data_points = request.data.get('data_points', [])
+        descendant = request.data.get('descendant', [])
+        level = request.data.get('level', None)
+        parents = Catalog.objects.filter(pk__in=descendant, level_id=level)
+        for root in parents:
+            root.duplicate_by_catalog(parent=parent_catalog, descendant=descendant,
+                                      data_points=data_points)
+
         return Response(status=status.HTTP_201_CREATED, data={})
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
