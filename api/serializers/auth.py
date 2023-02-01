@@ -62,3 +62,24 @@ class LoginSerializer(serializers.Serializer):
         if user and user.is_active:
             return user
         raise serializers.ValidationError({'message': 'Login fail'})
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+
+class CheckCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    code = serializers.CharField(max_length=6, required=True)
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    token = serializers.CharField(max_length=128, required=True)
+    password1 = serializers.CharField(max_length=64, required=True)
+    password2 = serializers.CharField(max_length=64, required=True)
+
+    def validate(self, attrs):
+        if attrs['password1'] != attrs['password2']:
+            return serializers.ValidationError('password is not match!')
+        return attrs
