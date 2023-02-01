@@ -424,7 +424,6 @@ class ScheduleDailyLogSettingGenericView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-
 class ScheduleDailyLogSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ScheduleDailyLogSetting.objects.all()
     serializer_class = lead_schedule.ScheduleDailyLogSettingSerializer
