@@ -4,7 +4,8 @@ from django.contrib.auth.models import AbstractUser
 
 
 class User(AbstractUser):
-    pass
+    code = models.IntegerField(blank=True, null=True)
+    token = models.CharField(max_length=128, blank=True)
 
 
 class BaseModel(models.Model):
