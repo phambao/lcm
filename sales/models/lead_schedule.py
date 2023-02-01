@@ -293,12 +293,14 @@ class ScheduleDailyLogSetting(BaseModel):
 
     stamp_location = models.BooleanField(default=False)
     default_notes = models.TextField(blank=True, null=True)
-    internal_user_is_share = models.BooleanField(default=False)
-    internal_user_is_notify = models.BooleanField(default=False)
-    subs_vendors_is_share = models.BooleanField(default=False)
-    subs_vendors_is_notify = models.BooleanField(default=False)
-    owner_is_share = models.BooleanField(default=False)
-    owner_is_notify = models.BooleanField(default=False)
+    internal_user_share = models.BooleanField(default=False)
+    internal_user_notify = models.BooleanField(default=False)
+    sub_member_share = models.BooleanField(default=False)
+    sub_member_notify = models.BooleanField(default=False)
+    owner_share = models.BooleanField(default=False)
+    owner_notify = models.BooleanField(default=False)
+    private_share = models.BooleanField(default=False)
+    private_notify = models.BooleanField(default=False)
     user = models.OneToOneField(get_user_model(), related_name='user_setting_schedule_daily_log',
                                 blank=True, on_delete=models.CASCADE, null=True)
 
