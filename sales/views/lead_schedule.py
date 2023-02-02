@@ -478,7 +478,7 @@ def get_checklist_by_todo(request, *args, **kwargs):
     pk_todo = kwargs.get('pk_todo')
     get_object_or_404(ToDo.objects.all(), pk=pk_todo)
     data_checklist = CheckListItems.objects.filter(to_do=pk_todo)
-    data = lead_schedule.CheckListItemSerializer(
+    data = lead_schedule.ToDoChecklistItemSerializer(
         data_checklist, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=data)
 
