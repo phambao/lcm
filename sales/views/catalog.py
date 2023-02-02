@@ -178,8 +178,7 @@ def add_multiple_level(request):
 @permission_classes([permissions.IsAuthenticated])
 def duplicate_catalogs(request, pk):
     """
-    Payload: [{"id": int, "depth": int, data_points: [id,...], descendant: [id,...]},...] </br> or
-    {data_points: [id,...], descendant: [id,...], level: int}
+    Payload: [{"id": int, "depth": int, data_points: [id,...], descendant: [id,...]},...]
     """
 
     parent_catalog = get_object_or_404(Catalog, pk=pk)
@@ -193,16 +192,28 @@ def duplicate_catalogs(request, pk):
                 c.duplicate(parent=parent_catalog, depth=depth, data_points=data_points)
             except Catalog.DoesNotExist:
                 pass
+        return Response(status=status.HTTP_201_CREATED, data={})
+    return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    # manual duplicate
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def duplicate_catalogs_on_tree(request, pk):
+    """
+    Payload: {data_points: [id,...], descendant: [id,...], level: int}
+    """
+    parent_catalog = get_object_or_404(Catalog, pk=pk)
     if isinstance(request.data, dict):
         data_points = request.data.get('data_points', [])
         descendant = request.data.get('descendant', [])
         level = request.data.get('level', None)
         parents = Catalog.objects.filter(pk__in=descendant, level_id=level)
         for root in parents:
-            root.duplicate_by_catalog(parent=parent_catalog, descendant=descendant,
-                                      data_points=data_points)
+            try:
+                root.duplicate_by_catalog(parent=parent_catalog, descendant=descendant,
+                                          data_points=data_points)
+            except Catalog.DoesNotExist:
+                pass
 
         return Response(status=status.HTTP_201_CREATED, data={})
     return Response(status=status.HTTP_400_BAD_REQUEST)
