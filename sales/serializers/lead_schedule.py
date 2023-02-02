@@ -304,7 +304,7 @@ class DailyLogSerializer(serializers.ModelSerializer):
         model = lead_schedule.DailyLog
         fields = ('id', 'date', 'tags', 'to_dos', 'note', 'lead_list', 'internal_user_share', 'internal_user_notify',
                   'sub_member_share', 'sub_member_notify', 'owner_share', 'owner_notify', 'private_share',
-                  'private_notify', 'custom_field')
+                  'private_notify', 'custom_field', 'to_do', 'event')
         kwargs = {'to_dos': {'required': False},
                   'tags': {'required': False},
                   }
@@ -316,15 +316,18 @@ class DailyLogSerializer(serializers.ModelSerializer):
         to_dos = pop(validated_data, 'to_dos', [])
         data_custom_field = pop(validated_data, 'custom_field', [])
         lead_list = pop(validated_data, 'lead_list', None)
+        to_do = pop(validated_data, 'to_do', None)
+        event = pop(validated_data, 'event', None)
 
         daily_log_create = lead_schedule.DailyLog.objects.create(
             user_create=user_create, user_update=user_update, lead_list=lead_list,
+            to_do=to_do, event=event,
             **validated_data
         )
         tags_objects = TagSchedule.objects.filter(pk__in=[tag['id'] for tag in tags])
         todo_objects = ToDo.objects.filter(pk__in=[tmp['id'] for tmp in to_dos])
         daily_log_create.tags.add(*tags_objects)
-        daily_log_create.to_do.add(*todo_objects)
+        daily_log_create.to_dos.add(*todo_objects)
         data_insert = list()
         for custom_field in data_custom_field:
             temp = DailyLogCustomField(
@@ -507,25 +510,29 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
                   'time', 'viewing', 'notes', 'internal_notes', 'sub_notes', 'owner_notes', 'links',
                   'start_hour', 'end_hour', 'is_before', 'is_after', 'predecessor_id', 'type', 'lag_day',
                   'link_to_outside_calendar', 'tags', 'phase_label', 'phase_display_order', 'phase_color',
-                  'phase_setting')
+                  'phase_setting', 'todo', 'daily_log')
 
     def create(self, validated_data):
         request = self.context['request']
-        data = request.data
+        # data = request.data
         user_create = user_update = request.user
-        predecessor_id = pop(data, 'predecessor_id', None)
-        phase_setting = pop(data, 'phase_setting', None)
-        links = pop(data, 'links', [])
-        assigned_user = pop(data, 'assigned_user', [])
-        lead_list = pop(data, 'lead_list', None)
-        viewing = pop(data, 'viewing', [])
-        tags = pop(data, 'tags', [])
+        predecessor_id = pop(validated_data, 'predecessor_id', None)
+        phase_setting = pop(validated_data, 'phase_setting', None)
+        links = pop(validated_data, 'links', [])
+        assigned_user = pop(validated_data, 'assigned_user', [])
+        lead_list = pop(validated_data, 'lead_list', None)
+        viewing = pop(validated_data, 'viewing', [])
+        tags = pop(validated_data, 'tags', [])
+        todo = pop(validated_data, 'todo', None)
+        daily_log = pop(validated_data, 'daily_log', None)
         schedule_event_create = lead_schedule.ScheduleEvent.objects.create(
             user_create=user_create, user_update=user_update,
-            lead_list_id=lead_list,
-            predecessor_id=predecessor_id,
-            phase_setting_id=phase_setting,
-            **data
+            lead_list=lead_list,
+            predecessor=predecessor_id,
+            phase_setting=phase_setting,
+            todo=todo,
+            daily_log=daily_log,
+            **validated_data
         )
         user = get_user_model().objects.filter(pk__in=[at['id'] for at in assigned_user])
         view = get_user_model().objects.filter(pk__in=[at['id'] for at in viewing])
