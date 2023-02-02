@@ -214,8 +214,9 @@ def duplicate_catalogs_on_tree(request, pk):
                                           data_points=data_points)
             except Catalog.DoesNotExist:
                 pass
-
-        return Response(status=status.HTTP_201_CREATED, data={})
+        data = Catalog.objects.filter(pk__in=parent_catalog.get_all_descendant())
+        serializer = catalog.CatalogSerializer(data, many=True, context={'request': request})
+        return Response(status=status.HTTP_201_CREATED, data=serializer.data)
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
