@@ -298,14 +298,14 @@ class DailyLogSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     custom_field = DailyLogCustomFieldSerializer(required=False, many=True)
     tags = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
-    to_do = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
+    to_dos = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_schedule.DailyLog
-        fields = ('id', 'date', 'tags', 'to_do', 'note', 'lead_list', 'internal_user_share', 'internal_user_notify',
+        fields = ('id', 'date', 'tags', 'to_dos', 'note', 'lead_list', 'internal_user_share', 'internal_user_notify',
                   'sub_member_share', 'sub_member_notify', 'owner_share', 'owner_notify', 'private_share',
                   'private_notify', 'custom_field')
-        kwargs = {'to_do': {'required': False},
+        kwargs = {'to_dos': {'required': False},
                   'tags': {'required': False},
                   }
 
@@ -313,7 +313,7 @@ class DailyLogSerializer(serializers.ModelSerializer):
         request = self.context['request']
         user_create = user_update = request.user
         tags = pop(validated_data, 'tags', [])
-        to_do = pop(validated_data, 'to_do', [])
+        to_dos = pop(validated_data, 'to_dos', [])
         data_custom_field = pop(validated_data, 'custom_field', [])
         lead_list = pop(validated_data, 'lead_list', None)
 
@@ -322,7 +322,7 @@ class DailyLogSerializer(serializers.ModelSerializer):
             **validated_data
         )
         tags_objects = TagSchedule.objects.filter(pk__in=[tag['id'] for tag in tags])
-        todo_objects = ToDo.objects.filter(pk__in=[tmp['id'] for tmp in to_do])
+        todo_objects = ToDo.objects.filter(pk__in=[tmp['id'] for tmp in to_dos])
         daily_log_create.tags.add(*tags_objects)
         daily_log_create.to_do.add(*todo_objects)
         data_insert = list()

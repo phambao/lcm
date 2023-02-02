@@ -150,7 +150,7 @@ class DailyLog(BaseModel):
 
     date = models.DateTimeField()
     tags = models.ManyToManyField(TagSchedule, related_name='daily_log_tags')
-    to_do = models.ManyToManyField(ToDo, related_name='daily_log_to_do')
+    to_dos = models.ManyToManyField(ToDo, related_name='daily_log_to_dos')
     note = models.TextField(blank=True)
     lead_list = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='daily_log_lead_list')
     internal_user_share = models.BooleanField(default=False)
@@ -161,7 +161,7 @@ class DailyLog(BaseModel):
     owner_notify = models.BooleanField(default=False)
     private_share = models.BooleanField(default=False)
     private_notify = models.BooleanField(default=False)
-    to_do_id = models.ForeignKey(ToDo, on_delete=models.SET_NULL, related_name='daily_log_todo_id', null=True)
+    to_do = models.ForeignKey(ToDo, on_delete=models.SET_NULL, related_name='daily_log_todo_id', null=True)
     event = models.ForeignKey('ScheduleEvent', on_delete=models.SET_NULL, related_name='daily_log_event', null=True)
 
 
