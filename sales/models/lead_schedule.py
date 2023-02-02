@@ -57,6 +57,10 @@ class ToDo(BaseModel):
     lead_list = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='to_do_lead_list', blank=True,
                                   null=True)
     color = models.CharField(max_length=128, blank=True)
+    event = models.ForeignKey('ScheduleEvent', on_delete=models.SET_NULL, related_name='to_do_event', blank=True,
+                              null=True)
+    daily_log = models.ForeignKey('DailyLog', on_delete=models.SET_NULL, related_name='to_do_daily_log', blank=True,
+                                  null=True)
 
 
 class CheckListItems(BaseModel):
@@ -143,9 +147,10 @@ class DailyLog(BaseModel):
     class Meta:
         db_table = 'schedule_daily_log'
         ordering = ['-modified_date']
+
     date = models.DateTimeField()
     tags = models.ManyToManyField(TagSchedule, related_name='daily_log_tags')
-    to_do = models.ManyToManyField(ToDo, related_name='daily_log_tags')
+    to_do = models.ManyToManyField(ToDo, related_name='daily_log_to_do')
     note = models.TextField(blank=True)
     lead_list = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='daily_log_lead_list')
     internal_user_share = models.BooleanField(default=False)
@@ -156,6 +161,8 @@ class DailyLog(BaseModel):
     owner_notify = models.BooleanField(default=False)
     private_share = models.BooleanField(default=False)
     private_notify = models.BooleanField(default=False)
+    to_do_id = models.ForeignKey(ToDo, on_delete=models.SET_NULL, related_name='daily_log_todo_id', null=True)
+    event = models.ForeignKey('ScheduleEvent', on_delete=models.SET_NULL, related_name='daily_log_event', null=True)
 
 
 class DailyLogTemplateNotes(BaseModel):
@@ -238,7 +245,8 @@ class ScheduleEvent(BaseModel):
     phase_color = models.CharField(blank=True, max_length=128, null=True)
     phase_setting = models.ForeignKey(ScheduleEventPhaseSetting, blank=True, null=True,
                                       on_delete=models.SET_NULL, related_name='event_phase')
-
+    todo = models.ForeignKey(ToDo, on_delete=models.SET_NULL, related_name='schedule_event_to_do', blank=True, null=True)
+    daily_log = models.ForeignKey(DailyLog, on_delete=models.SET_NULL, related_name='schedule_event_daily_log', blank=True, null=True)
 
 class MessageEvent(BaseModel):
     class Meta:

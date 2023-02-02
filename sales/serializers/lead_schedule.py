@@ -220,10 +220,12 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         tags = pop(data, 'tags', [])
         assigned_to = pop(data, 'assigned_to', [])
         lead_list = pop(data, 'lead_list', None)
+        event = pop(data, 'event', None)
+        daily_log = pop(data, 'daily_log', None)
         data_todo = data
         todo_create = ToDo.objects.create(
             user_create=user_create, user_update=user_update,
-            lead_list_id=lead_list, **data_todo
+            lead_list_id=lead_list, event_id=event, daily_log_id=daily_log, **data_todo
         )
         tags_objects = TagSchedule.objects.filter(pk__in=[tag['id'] for tag in tags])
         user = get_user_model().objects.filter(pk__in=[at['id'] for at in assigned_to])
@@ -305,7 +307,7 @@ class DailyLogSerializer(serializers.ModelSerializer):
                   'private_notify', 'custom_field')
         kwargs = {'to_do': {'required': False},
                   'tags': {'required': False},
-        }
+                  }
 
     def create(self, validated_data):
         request = self.context['request']
@@ -402,7 +404,7 @@ class CheckListItemsTemplateSerializer(serializers.ModelSerializer, SerializerMi
         model = lead_schedule.CheckListItemsTemplate
         fields = (
             'id', 'parent_uuid', 'description', 'is_check', 'is_root', 'assigned_to', 'todo',
-            'to_do_checklist_template')
+            'to_do_checklist_template', 'uuid')
 
     def create(self, validated_data):
         request = self.context['request']
