@@ -245,8 +245,11 @@ class ScheduleEvent(BaseModel):
     phase_color = models.CharField(blank=True, max_length=128, null=True)
     phase_setting = models.ForeignKey(ScheduleEventPhaseSetting, blank=True, null=True,
                                       on_delete=models.SET_NULL, related_name='event_phase')
-    todo = models.ForeignKey(ToDo, on_delete=models.SET_NULL, related_name='schedule_event_to_do', blank=True, null=True)
-    daily_log = models.ForeignKey(DailyLog, on_delete=models.SET_NULL, related_name='schedule_event_daily_log', blank=True, null=True)
+    todo = models.ForeignKey(ToDo, on_delete=models.SET_NULL, related_name='schedule_event_to_do', blank=True,
+                             null=True)
+    daily_log = models.ForeignKey(DailyLog, on_delete=models.SET_NULL, related_name='schedule_event_daily_log',
+                                  blank=True, null=True)
+
 
 class MessageEvent(BaseModel):
     class Meta:
