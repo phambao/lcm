@@ -528,7 +528,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         schedule_event_create = lead_schedule.ScheduleEvent.objects.create(
             user_create=user_create, user_update=user_update,
             lead_list=lead_list,
-            predecessor=predecessor_id,
+            predecessor_id=predecessor_id,
             phase_setting=phase_setting,
             todo=todo,
             daily_log=daily_log,
