@@ -445,9 +445,7 @@ class CommentDailyLogSerializer(serializers.ModelSerializer):
         comment_daily_log = CommentDailyLog.objects.filter(pk=instance.pk)
         comment_daily_log.update(**data)
         comment_daily_log = comment_daily_log.first()
-        rs = AttachmentCommentDailyLog.objects.filter(comment=comment_daily_log)
-        a = 6
-        rs.delete()
+        AttachmentCommentDailyLog.objects.filter(comment=comment_daily_log).delete()
         file_comment_daily_log_create = []
         for file in files:
             file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
