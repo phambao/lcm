@@ -183,6 +183,24 @@ class AttachmentDailyLog(BaseModel):
     daily_log = models.ForeignKey(DailyLog, on_delete=models.CASCADE, related_name='attachment_daily_log_daily_log')
 
 
+class CommentDailyLog(BaseModel):
+    class Meta:
+        db_table = 'daily_log_comment'
+        ordering = ['-modified_date']
+
+    daily_log = models.ForeignKey(DailyLog, on_delete=models.CASCADE, related_name='comment_daily_log')
+    comment = models.TextField(blank=True)
+
+
+class AttachmentCommentDailyLog(BaseModel):
+    class Meta:
+        db_table = 'attachment_comment_daily_log'
+        ordering = ['-modified_date']
+
+    comment = models.ForeignKey(CommentDailyLog, on_delete=models.CASCADE, related_name='attachment_daily_log_comment')
+    file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
+
+
 class ScheduleEventSetting(BaseModel):
     class Meta:
         db_table = 'schedule_event_setting'
@@ -229,6 +247,7 @@ class ScheduleEvent(BaseModel):
     is_after = models.BooleanField(default=False, blank=True)
     viewing = models.ManyToManyField(get_user_model(), related_name='schedule_event_viewing',
                                      blank=True)
+    color = models.CharField(blank=True, max_length=128, null=True)
     notes = models.TextField(blank=True, null=True)
     internal_notes = models.TextField(blank=True, null=True)
     sub_notes = models.TextField(blank=True, null=True)
@@ -263,16 +282,37 @@ class MessageEvent(BaseModel):
                                     blank=True)
 
 
-# class ScheduleEventShiftHistory(BaseModel):
-#     class Meta:
-#         db_table = 'schedule_event_phase'
-#
-#     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='event_shift_history_user')
-#     start_day = models.DateTimeField(blank=True, null=True)
-#     start_day_after_change = models.DateTimeField(blank=True, null=True)
-#     end_day = models.DateTimeField(blank=True, null=True)
-#     end_day_after_change = models.DateTimeField(blank=True, null=True)
-#     slip = models.IntegerField(blank=True, null=True)
+class ShiftReason(BaseModel):
+    class Meta:
+        db_table = 'shift_reason'
+
+    title = models.CharField(max_length=64)
+
+
+class EventShiftReason(BaseModel):
+    class Meta:
+        db_table = 'event_shift_reason'
+
+    shift_reason = models.ForeignKey(ShiftReason, on_delete=models.CASCADE, related_name='event_shift')
+    shift_note = models.TextField()
+
+
+class ScheduleEventShift(BaseModel):
+    class Meta:
+        db_table = 'schedule_event_shift'
+
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='event_shift_history_user')
+    start_day = models.DateTimeField(blank=True, null=True)
+    start_day_after_change = models.DateTimeField(blank=True, null=True)
+    end_day = models.DateTimeField(blank=True, null=True)
+    end_day_after_change = models.DateTimeField(blank=True, null=True)
+    source = models.CharField(blank=True, max_length=128, null=True)
+    reason = models.ForeignKey(EventShiftReason, on_delete=models.SET_NULL, related_name='schedule_event_shift_reason',
+                               blank=True, null=True)
+    notes = models.TextField()
+    event = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE, related_name='shift_event')
+
+
 class FileScheduleEvent(BaseModel):
     class Meta:
         db_table = 'schedule_event_file'
