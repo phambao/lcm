@@ -13,7 +13,8 @@ from ..models import lead_schedule
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging, CheckListItemsTemplate, \
     TodoTemplateChecklistItem, DataType, ItemFieldDropDown, TodoCustomField, CustomFieldScheduleSetting, \
     CustomFieldScheduleDailyLogSetting, DailyLogCustomField, ItemFieldDropDownDailyLog, \
-    DataType, ItemFieldDropDown, ScheduleEventPhaseSetting, FileCheckListItems, FileCheckListItemsTemplate
+    DataType, ItemFieldDropDown, ScheduleEventPhaseSetting, FileCheckListItems, FileCheckListItemsTemplate, \
+    CommentDailyLog, AttachmentCommentDailyLog, ScheduleEventShift
 
 
 class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
@@ -395,7 +396,76 @@ class DailyLogSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         rs_custom_field = DailyLogCustomField.objects.filter(daily_log=data['id']).values()
+        comments = CommentDailyLog.objects.filter(daily_log=data['id'])
+        rs = CommentDailyLogSerializer(comments, many=True)
         data['custom_field'] = rs_custom_field
+        data['comments'] = rs.data
+        return data
+
+
+class CommentDailyLogSerializer(serializers.ModelSerializer):
+    file = serializers.FileField(required=False)
+
+    class Meta:
+        model = lead_schedule.CommentDailyLog
+        fields = ('daily_log', 'comment', 'file', 'id')
+
+    def create(self, validated_data):
+        request = self.context['request']
+        user_create = user_update = request.user
+        daily_log = pop(validated_data, 'daily_log', None)
+        file = pop(validated_data, 'file', [])
+        files = request.FILES.getlist('file')
+
+        comment_daily_log = CommentDailyLog.objects.create(
+            user_create=user_create, user_update=user_update,
+            daily_log=daily_log,
+            **validated_data
+        )
+        file_comment_daily_log_create = []
+        for file in files:
+            file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+            content_file = ContentFile(file.read(), name=file_name)
+            attachment = AttachmentCommentDailyLog(
+                file=content_file,
+                comment=comment_daily_log,
+                user_create=user_create
+            )
+            file_comment_daily_log_create.append(attachment)
+        AttachmentCommentDailyLog.objects.bulk_create(file_comment_daily_log_create)
+        return comment_daily_log
+
+    def update(self, instance, data):
+        request = self.context['request']
+        user_create = user_update = request.user
+        file = pop(data, 'file', [])
+        # daily_log = pop(data, 'daily_log', None)
+        files = request.FILES.getlist('file')
+
+        comment_daily_log = CommentDailyLog.objects.filter(pk=instance.pk)
+        comment_daily_log.update(**data)
+        comment_daily_log = comment_daily_log.first()
+        rs = AttachmentCommentDailyLog.objects.filter(comment=comment_daily_log)
+        a = 6
+        rs.delete()
+        file_comment_daily_log_create = []
+        for file in files:
+            file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+            content_file = ContentFile(file.read(), name=file_name)
+            attachment = AttachmentCommentDailyLog(
+                file=content_file,
+                comment=comment_daily_log,
+                user_create=user_create
+            )
+            file_comment_daily_log_create.append(attachment)
+        AttachmentCommentDailyLog.objects.bulk_create(file_comment_daily_log_create)
+        instance.refresh_from_db()
+        return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data_file = AttachmentCommentDailyLog.objects.filter(comment=data['id']).values()
+        data['files'] = data_file
         return data
 
 
@@ -497,12 +567,27 @@ class PredecessorsLinkSerializer(serializers.Serializer):
     lag_day = serializers.IntegerField(required=False)
 
 
+class ScheduleEventShiftReasonSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    class Meta:
+        model = lead_schedule.EventShiftReason
+        fields = ('shift_reason', 'shift_note', 'id')
+
+
+class ScheduleEventShiftSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.ScheduleEventShift
+        fields = ('user', 'start_day', 'start_day_after_change', 'end_day', 'end_day_after_change', 'source',
+                  'reason', 'notes')
+
+
 class ScheduleEventSerializer(serializers.ModelSerializer):
     links = PredecessorsLinkSerializer(required=False, many=True)
     predecessor_id = serializers.IntegerField(required=False, allow_null=True)
     viewing = UserCustomSerializer(allow_null=True, required=False, many=True)
     tags = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
     assigned_user = UserCustomSerializer(allow_null=True, required=False, many=True)
+    shift = ScheduleEventShiftSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_schedule.ScheduleEvent
@@ -510,7 +595,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
                   'time', 'viewing', 'notes', 'internal_notes', 'sub_notes', 'owner_notes', 'links',
                   'start_hour', 'end_hour', 'is_before', 'is_after', 'predecessor_id', 'type', 'lag_day',
                   'link_to_outside_calendar', 'tags', 'phase_label', 'phase_display_order', 'phase_color',
-                  'phase_setting', 'todo', 'daily_log')
+                  'phase_setting', 'todo', 'daily_log', 'color', 'shift')
 
     def create(self, validated_data):
         request = self.context['request']
@@ -525,6 +610,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         tags = pop(validated_data, 'tags', [])
         todo = pop(validated_data, 'todo', None)
         daily_log = pop(validated_data, 'daily_log', None)
+        shift = pop(validated_data, 'shift', [])
         schedule_event_create = lead_schedule.ScheduleEvent.objects.create(
             user_create=user_create, user_update=user_update,
             lead_list=lead_list,
@@ -548,6 +634,22 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
             schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=data['name_predecessors']['id'])
             schedule_event.update(**data_update)
 
+        data_create = []
+        for data_shift in shift:
+            temp = ScheduleEventShift(
+                user=data_shift['user'],
+                start_day=data_shift['start_day'],
+                start_day_after_change=data_shift['start_day_after_change'],
+                end_day=data_shift['end_day'],
+                end_day_after_change=data_shift['end_day_after_change'],
+                source=data_shift['source'],
+                reason=data_shift['reason'],
+                notes=data_shift['notes'],
+                event=schedule_event_create
+            )
+            data_create.append(temp)
+        ScheduleEventShift.objects.bulk_create(data_create)
+
         return schedule_event_create
 
     def update(self, instance, data):
@@ -556,6 +658,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         assigned_user = pop(data, 'assigned_user', [])
         viewing = pop(data, 'viewing', [])
         tags = pop(data, 'tags', [])
+        shift = pop(data, 'shift', [])
         data_schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=instance.pk)
         data_schedule_event.update(**data)
         schedule_event = data_schedule_event.first()
@@ -578,6 +681,22 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
             schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=data['name_predecessors']['id'])
             schedule_event.update(**data_update)
 
+        ScheduleEventShift.objects.filter(event=schedule_event).delete()
+        data_create = []
+        for data_shift in shift:
+            temp = ScheduleEventShift(
+                user=data_shift['user'],
+                start_day=data_shift['start_day'],
+                start_day_after_change=data_shift['start_day_after_change'],
+                end_day=data_shift['end_day'],
+                end_day_after_change=data_shift['end_day_after_change'],
+                source=data_shift['source'],
+                reason=data_shift['reason'],
+                notes=data_shift['notes'],
+                event=schedule_event
+            )
+            data_create.append(temp)
+        ScheduleEventShift.objects.bulk_create(data_create)
         instance.refresh_from_db()
         return instance
 
@@ -585,8 +704,10 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         links = lead_schedule.ScheduleEvent.objects.filter(predecessor=data['id']).values()
         message = lead_schedule.MessageEvent.objects.filter(event=data['id']).values()
+        shift = lead_schedule.ScheduleEventShift.objects.filter(event=data['id']).values()
         data['links'] = links
         data['message'] = message
+        data['shift'] = shift
         return data
 
 
@@ -610,6 +731,14 @@ class MessageEventSerialized(serializers.ModelSerializer):
         notify_object = get_user_model().objects.filter(pk__in=[at['id'] for at in notify])
         schedule_event_message_create.notify.add(*notify_object)
         return schedule_event_message_create
+
+
+class ShiftReasonSerialized(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = lead_schedule.ShiftReason
+        fields = ('title', 'id')
 
 
 class FieldSettingSerialized(serializers.Serializer):
