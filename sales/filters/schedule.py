@@ -17,11 +17,14 @@ class DailyLogFilter(filters.FilterSet):
     private_share = filters.BooleanFilter('private_share')
     private_notify = filters.BooleanFilter('private_notify')
     event = filters.ModelChoiceFilter(queryset=ScheduleEvent.objects.all())
+    # date = filters.DateRangeFilter(field_name='date', choices=CHOICES, filters=FILTERS)
+    start_day = filters.DateFilter(field_name='date', lookup_expr='gte')
+    end_day = filters.DateFilter(field_name='date', lookup_expr='lte')
 
     class Meta:
         model = DailyLog
         fields = ('lead_list', 'tags', 'to_dos', 'internal_user_share', 'internal_user_notify',
-                  'owner_share', 'owner_notify', 'private_share', 'private_notify', 'event')
+                  'owner_share', 'owner_notify', 'private_share', 'private_notify', 'event', 'start_day', 'end_day')
 
 
 class EventFilter(filters.FilterSet):
@@ -29,8 +32,8 @@ class EventFilter(filters.FilterSet):
     event_title = filters.CharFilter(field_name="event_title", lookup_expr='icontains')
     assigned_user = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
     reminder = filters.NumberFilter()
-    start_day = filters.DateFilter(field_name='start_date', lookup_expr='gte')
-    end_day = filters.DateFilter(field_name='end_date', lookup_expr='lte')
+    start_day = filters.DateFilter(field_name='start_day', lookup_expr='gte')
+    end_day = filters.DateFilter(field_name='end_day', lookup_expr='lte')
     start_hour = filters.DateTimeFilter(field_name='start_hour', lookup_expr='gte')
     end_hour = filters.DateTimeFilter(field_name='end_hour', lookup_expr='lte')
     is_before = filters.BooleanFilter('is_before')
@@ -51,6 +54,8 @@ class ToDoFilter(filters.FilterSet):
     title = filters.CharFilter(field_name="title", lookup_expr='icontains')
     priority = filters.ChoiceFilter(choices=Priority.choices)
     due_date = filters.DateRangeFilter(field_name='due_date', choices=CHOICES, filters=FILTERS)
+    start_day = filters.DateFilter(field_name='due_date', lookup_expr='gte')
+    end_day = filters.DateFilter(field_name='due_date', lookup_expr='lte')
     time_hour = filters.DateTimeFilter(field_name='time_hour')
     is_complete = filters.BooleanFilter('is_complete')
     sync_due_date = filters.DateTimeFilter(field_name='sync_due_date')
@@ -62,5 +67,5 @@ class ToDoFilter(filters.FilterSet):
 
     class Meta:
         model = ToDo
-        fields = ('lead_list', 'title', 'priority', 'due_date', 'time_hour',
+        fields = ('lead_list', 'title', 'priority', 'due_date', 'time_hour', 'start_day', 'end_day',
                   'is_complete', 'sync_due_date', 'reminder', 'assigned_to', 'tags', 'event', 'daily_log')
