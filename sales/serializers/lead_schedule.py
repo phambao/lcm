@@ -1,3 +1,4 @@
+import datetime
 import uuid
 
 from django.contrib.auth import get_user_model
@@ -560,7 +561,7 @@ class NamePredecessorsSerializer(serializers.Serializer):
 
 
 class PredecessorsLinkSerializer(serializers.Serializer):
-    name_predecessors = NamePredecessorsSerializer(allow_null=True, required=False)
+    predecessors = NamePredecessorsSerializer(allow_null=True, required=False)
     type = serializers.CharField(required=False)
     lag_day = serializers.IntegerField(required=False)
 
@@ -629,7 +630,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
             data_update['predecessor'] = schedule_event_create.id
             data_update['lag_day'] = data['lag_day']
             data_update['type'] = data['type']
-            schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=data['name_predecessors']['id'])
+            schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=data['predecessors']['id'])
             schedule_event.update(**data_update)
 
         data_create = []
@@ -671,13 +672,19 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         schedule_event.viewing.clear()
         schedule_event.viewing.add(*view)
         lead_schedule.ScheduleEvent.objects.filter(predecessor=instance.pk).update(predecessor=None)
-        for data in links:
+        for data_link in links:
             data_update = {}
             data_update['predecessor'] = instance.pk
-            data_update['lag_day'] = data['lag_day']
-            data_update['type'] = data['type']
-            schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=data['name_predecessors']['id'])
-            schedule_event.update(**data_update)
+            data_update['lag_day'] = data_link['lag_day']
+            data_update['type'] = data_link['type']
+            schedule_event_link = lead_schedule.ScheduleEvent.objects.filter(pk=data_link['predecessors']['id'])
+            schedule_event_link.update(**data_update)
+
+        data_update_children = self.get_data_update_by_group(instance.pk, data['start_day'], data['end_day'])
+        for data_update_link in data_update_children:
+            data_schedule_event_children = lead_schedule.ScheduleEvent.objects.filter(pk=data_update_link['id'])
+            data_update_link.pop('id')
+            data_schedule_event_children.update(**data_update_link)
 
         ScheduleEventShift.objects.filter(event=schedule_event).delete()
         data_create = []
@@ -707,6 +714,45 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         data['message'] = message
         data['shift'] = shift
         return data
+
+    def get_data_update_by_group(self, pk, start_day_parent, end_day_parent):
+        rs = []
+        event = lead_schedule.ScheduleEvent.objects.filter(predecessor=pk)
+        for e in event:
+            tmp = dict()
+            lag_day = e.lag_day
+            type_day = e.type
+            working_day = e.end_day - e.start_day
+            if type_day == 'finish_to_start':
+                start_day = self.date_by_adding_business_days(end_day_parent, lag_day, [])
+                end_day = self.date_by_adding_business_days(start_day, working_day.days, [])
+                tmp['start_day'] = start_day
+                tmp['end_day'] = end_day
+
+            elif type_day == 'start_to_start':
+                start_day = self.date_by_adding_business_days(start_day_parent, lag_day, [])
+                end_day = self.date_by_adding_business_days(start_day, working_day.days, [])
+                tmp['start_day'] = start_day
+                tmp['end_day'] = end_day
+
+            tmp['id'] = e.id
+            tmp['lag_day'] = e.lag_day
+            rs.append(tmp)
+            rs.extend(self.get_data_update_by_group(e.id, tmp['start_day'], tmp['end_day']))
+        return rs
+
+    def date_by_adding_business_days(self, from_date, add_days, holidays):
+        business_days_to_add = add_days
+        current_date = from_date
+        while business_days_to_add > 0:
+            current_date += datetime.timedelta(days=1)
+            weekday = current_date.weekday()
+            if weekday >= 5:  # sunday = 6
+                continue
+            if current_date in holidays:
+                continue
+            business_days_to_add -= 1
+        return current_date
 
 
 class MessageEventSerialized(serializers.ModelSerializer):
