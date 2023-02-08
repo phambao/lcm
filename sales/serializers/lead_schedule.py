@@ -708,7 +708,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         ScheduleEventShift.objects.bulk_create(data_create)
 
         for data_update_link in data_update_children:
-            schedule_event_parent = lead_schedule.ScheduleEvent.objects.filter(pk=data_update_link['predecessor'].id).first()
+            schedule_event_parent = lead_schedule.ScheduleEvent.objects.get(pk=data_update_link['predecessor'].id)
             data_schedule_event_children = lead_schedule.ScheduleEvent.objects.filter(pk=data_update_link['id'])
             data_create_shift = {
                 'start_day': data_update_link['start_day'],
