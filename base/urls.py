@@ -10,6 +10,7 @@ url_base = [
     path('location/',
          include([
              path('countries/', country_state_city.CountryList.as_view()),
+             path('mcountries/', country_state_city.CountryV2List.as_view()),
              path('countries/<int:pk_country>/states/',
                   country_state_city.CountryStateList.as_view()),
              path('countries/<int:pk_country>/states/<int:pk_state>/cities/',

@@ -1,8 +1,10 @@
-from ..models.country_state_city import Country, State, City, ZipCode
-from ..serializers import country_state_city
-
 from rest_framework import generics, permissions
 from rest_framework import filters as rf_filters
+from django_filters import rest_framework as filters
+
+from ..filters import CountryFilter
+from ..models.country_state_city import Country, State, City, ZipCode
+from ..serializers import country_state_city
 
 
 class CountryList(generics.ListAPIView):
@@ -10,6 +12,15 @@ class CountryList(generics.ListAPIView):
     serializer_class = country_state_city.CountrySerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = None
+
+
+class CountryV2List(generics.ListAPIView):
+    queryset = Country.objects.all()
+    serializer_class = country_state_city.CountrySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = CountryFilter
+    search_fields = ('name', )
 
 
 class CountryStateList(generics.ListAPIView):
