@@ -293,8 +293,10 @@ class EventShiftReason(BaseModel):
     class Meta:
         db_table = 'event_shift_reason'
 
-    shift_reason = models.ForeignKey(ShiftReason, on_delete=models.CASCADE, related_name='event_shift')
+    shift_reason = models.ForeignKey(ShiftReason, on_delete=models.SET_NULL, related_name='event_shift', blank=True, null=True)
     shift_note = models.TextField()
+    # event_shift = models.ForeignKey('ScheduleEventShift', on_delete=models.CASCADE,
+    #                                 related_name='schedule_event_shift_reason', blank=True, null=True)
 
 
 class ScheduleEventShift(BaseModel):
@@ -311,6 +313,7 @@ class ScheduleEventShift(BaseModel):
                                blank=True, null=True)
     notes = models.TextField()
     event = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE, related_name='shift_event')
+    is_direct = models.BooleanField(blank=True, null=True)
 
 
 class FileScheduleEvent(BaseModel):
