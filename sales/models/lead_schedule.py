@@ -372,7 +372,7 @@ class CustomFieldScheduleDailyLogSetting(BaseModel):
     show_owners = models.BooleanField(default=False)
     allow_permitted_sub = models.BooleanField(default=False)
     default_value = models.CharField(blank=True, max_length=128)
-    default_date = models.DateField(null=True, blank=True)
+    default_date = models.DateTimeField(null=True, blank=True)
     default_checkbox = models.BooleanField(null=True, blank=True)
     default_number = models.IntegerField(blank=True, null=True)
     daily_log_setting = models.ForeignKey(ScheduleDailyLogSetting, related_name='custom_filed_daily_log_setting',
@@ -400,7 +400,7 @@ class CustomFieldScheduleSetting(BaseModel):
     show_owners = models.BooleanField(default=False)
     allow_permitted_sub = models.BooleanField(default=False)
     default_value = models.CharField(blank=True, max_length=128)
-    default_date = models.DateField(null=True, blank=True)
+    default_date = models.DateTimeField(null=True, blank=True)
     default_checkbox = models.BooleanField(null=True, blank=True)
     default_number = models.IntegerField(blank=True, null=True)
     todo_setting = models.ForeignKey(ScheduleToDoSetting, related_name='custom_filed_to_do_setting',
@@ -440,7 +440,7 @@ class TodoCustomField(BaseModel):
     show_owners = models.BooleanField(default=False)
     allow_permitted_sub = models.BooleanField(default=False)
     value = models.CharField(blank=True, max_length=128, null=True)
-    value_date = models.DateField(null=True, blank=True)
+    value_date = models.DateTimeField(null=True, blank=True)
     value_checkbox = models.BooleanField(default=False, null=True, blank=True)
     value_number = models.IntegerField(default=0, blank=True, null=True)
     custom_field = models.ForeignKey(CustomFieldScheduleSetting, related_name='custom_filed_setting',
@@ -462,7 +462,7 @@ class DailyLogCustomField(BaseModel):
     show_owners = models.BooleanField(default=False)
     allow_permitted_sub = models.BooleanField(default=False)
     value = models.CharField(blank=True, max_length=128, null=True)
-    value_date = models.DateField(null=True, blank=True)
+    value_date = models.DateTimeField(null=True, blank=True)
     value_checkbox = models.BooleanField(default=False, null=True, blank=True)
     value_number = models.IntegerField(default=0, blank=True, null=True)
     custom_field = models.ForeignKey(CustomFieldScheduleDailyLogSetting, related_name='custom_filed_setting_daily_log',
