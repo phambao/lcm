@@ -325,20 +325,20 @@ class FileScheduleEvent(BaseModel):
 
 
 class DataType(models.TextChoices):
-    SINGLE_LINE_TEXT = 'single-line-text', 'SINGLE-LINE-TEXT'
-    MULTI_LINE_TEXT = 'multi-line text with expandable textbox', 'MULTI-LINE TEXT WITH EXPANDABLE TEXTBOX'
-    CHECKBOX = 'checkbox', 'CHECKBOX'
-    WHOLE_NUMBER = 'whole number', 'WHOLE NUMBER'
-    LIST_OF_USER_SINGLE_SELECT = 'list of User - Single Select', 'LIST OF USER - SINGLE SELECT'
-    LIST_OF_SUBS_VENDORS_SINGLE_SELECT = 'List of Subs/Vendors - Single Select', 'LIST OF SUBS/VENDORS-SINGLE SELECT'
-    DATE = 'date', 'DATE'
-    CURRENCY = 'currency', 'CURRENCY'
-    DROPDOWN = 'dropdown', 'DROPDOWN'
-    FILE = 'file', 'FILE',
-    MULTI_SELECT_DROPDOWN = 'Multi-Select-Dropdown', 'MULTI-SELECT-DROPDOWN'
-    LINK = 'link', 'LINK'
-    LIST_OF_USER_MULTI_SELECT = 'list of User - Multi Select', 'LIST OF USER - MULTI SELECT'
-    LIST_OF_SUBS_VENDORS_MULTI_SELECT = 'List of Subs/Vendors - Multi Select', 'LIST OF SUBS/VENDORS-MULTI SELECT'
+    SINGLE_LINE_TEXT = 'single_line_text', 'Single line text'
+    MULTI_LINE_TEXT = 'multi_line_text_with_expandable_textbox', 'Multi line text with expandable textbox'
+    CHECKBOX = 'checkbox', 'Checkbox'
+    WHOLE_NUMBER = 'whole_number', 'Whole_number'
+    LIST_OF_USER_SINGLE_SELECT = 'list_of_user_single_select', 'List of user single select'
+    LIST_OF_SUBS_VENDORS_SINGLE_SELECT = 'list_of_subs_vendors_single_select', 'List of subs vendors single select'
+    DATE = 'date', 'Date'
+    CURRENCY = 'currency', 'Currency'
+    DROPDOWN = 'dropdown', 'Dropdown'
+    FILE = 'file', 'File',
+    MULTI_SELECT_DROPDOWN = 'multi_select_dropdown', 'Multi select dropdown'
+    LINK = 'link', 'Link'
+    LIST_OF_USER_MULTI_SELECT = 'list_of_user_multi_select', 'list of user multi select'
+    LIST_OF_SUBS_VENDORS_MULTI_SELECT = 'list_of_subs_vendors_multi_select', 'list of subs vendors multi select'
 
 
 class ScheduleDailyLogSetting(BaseModel):
