@@ -833,16 +833,16 @@ class TextFieldSerialized(FieldSettingSerialized):
 
 
 class NumberFieldSerialized(FieldSettingSerialized):
-    default_value = serializers.IntegerField(required=False)
+    default_number = serializers.IntegerField(required=False)
 
 
 class CheckboxFieldSerialized(serializers.ModelSerializer):
-    default_value = serializers.BooleanField(default=False)
+    default_checkbox = serializers.BooleanField(default=False)
 
     class Meta:
         model = lead_schedule.CustomFieldScheduleSetting
         fields = ('label', 'data_type', 'include_in_filters', 'display_order', 'show_owners',
-                  'allow_permitted_sub', 'default_value')
+                  'allow_permitted_sub', 'default_checkbox')
 
 
 class ItemDropdownSerialized(serializers.Serializer):
@@ -879,7 +879,8 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
             DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
             DataType.MULTI_LINE_TEXT: TextFieldSerialized,
             DataType.CHECKBOX: CheckboxFieldSerialized,
-            DataType.DROPDOWN: DropdownFieldSerialized
+            DataType.DROPDOWN: DropdownFieldSerialized,
+            DataType.WHOLE_NUMBER: NumberFieldSerialized
         }
 
         data_serializers = item_types.get(validated_data['data_type'])
