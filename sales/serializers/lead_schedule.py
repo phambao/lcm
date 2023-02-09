@@ -1,4 +1,5 @@
 import datetime
+from datetime import timedelta
 import uuid
 
 from django.contrib.auth import get_user_model
@@ -660,8 +661,8 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         viewing = pop(data, 'viewing', [])
         tags = pop(data, 'tags', [])
         shift = pop(data, 'shift', [])
-        start_day_update = data['start_day']
-        end_day_update = data['end_day']
+        start_day_update = data['start_day'] + timedelta(hours=7)
+        end_day_update = data['end_day'] + timedelta(hours=7)
         data_schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=instance.pk)
         start_day = data_schedule_event.first().start_day
         end_day = data_schedule_event.first().end_day
@@ -688,8 +689,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
 
         data_update_children = []
         if start_day_update < start_day or start_day_update > start_day or end_day_update < end_day or end_day_update > end_day:
-            data_update_children = self.get_data_update_by_group(instance.pk, data['start_day'], data['end_day'])
-
+            data_update_children = self.get_data_update_by_group(instance.pk, start_day_update, end_day_update)
         ScheduleEventShift.objects.filter(event=schedule_event).delete()
         data_create = []
         for data_shift in shift:
