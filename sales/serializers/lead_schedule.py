@@ -1,4 +1,5 @@
 import datetime
+from datetime import timedelta
 import uuid
 
 from django.contrib.auth import get_user_model
@@ -577,7 +578,7 @@ class ScheduleEventShiftSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_schedule.ScheduleEventShift
         fields = ('user', 'start_day', 'start_day_after_change', 'end_day', 'end_day_after_change', 'source',
-                  'reason', 'notes')
+                  'notes', 'reason')
 
 
 class ScheduleEventSerializer(serializers.ModelSerializer):
@@ -653,12 +654,18 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
 
     def update(self, instance, data):
         # predecessor_id = pop(data, 'predecessor_id', None)
+        request = self.context['request']
+        user_create = user_update = request.user
         links = pop(data, 'links', [])
         assigned_user = pop(data, 'assigned_user', [])
         viewing = pop(data, 'viewing', [])
         tags = pop(data, 'tags', [])
         shift = pop(data, 'shift', [])
+        start_day_update = data['start_day'] + timedelta(hours=7)
+        end_day_update = data['end_day'] + timedelta(hours=7)
         data_schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=instance.pk)
+        start_day = data_schedule_event.first().start_day
+        end_day = data_schedule_event.first().end_day
         data_schedule_event.update(**data)
         schedule_event = data_schedule_event.first()
 
@@ -671,7 +678,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         schedule_event.assigned_user.add(*user)
         schedule_event.viewing.clear()
         schedule_event.viewing.add(*view)
-        lead_schedule.ScheduleEvent.objects.filter(predecessor=instance.pk).update(predecessor=None)
+        # lead_schedule.ScheduleEvent.objects.filter(predecessor=instance.pk).update(predecessor=None)
         for data_link in links:
             data_update = {}
             data_update['predecessor'] = instance.pk
@@ -680,12 +687,9 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
             schedule_event_link = lead_schedule.ScheduleEvent.objects.filter(pk=data_link['predecessors']['id'])
             schedule_event_link.update(**data_update)
 
-        data_update_children = self.get_data_update_by_group(instance.pk, data['start_day'], data['end_day'])
-        for data_update_link in data_update_children:
-            data_schedule_event_children = lead_schedule.ScheduleEvent.objects.filter(pk=data_update_link['id'])
-            data_update_link.pop('id')
-            data_schedule_event_children.update(**data_update_link)
-
+        data_update_children = []
+        if start_day_update < start_day or start_day_update > start_day or end_day_update < end_day or end_day_update > end_day:
+            data_update_children = self.get_data_update_by_group(instance.pk, start_day_update, end_day_update)
         ScheduleEventShift.objects.filter(event=schedule_event).delete()
         data_create = []
         for data_shift in shift:
@@ -702,6 +706,31 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
             )
             data_create.append(temp)
         ScheduleEventShift.objects.bulk_create(data_create)
+
+        for data_update_link in data_update_children:
+            schedule_event_parent = lead_schedule.ScheduleEvent.objects.get(pk=data_update_link['predecessor'].id)
+            data_schedule_event_children = lead_schedule.ScheduleEvent.objects.filter(pk=data_update_link['id'])
+            data_create_shift = {
+                'start_day': data_update_link['start_day'],
+                'start_day_after_change': data_update_link['start_day_shift'],
+                'end_day': data_update_link['start_day'],
+                'end_day_after_change': data_update_link['end_day_shift'],
+                'source': schedule_event_parent.event_title,
+                'is_direct': False
+            }
+            data_update = {
+                'start_day': data_update_link['start_day'],
+                'end_day': data_update_link['start_day'],
+            }
+            # data_update_link.pop('id')
+            data_schedule_event_children.update(**data_update)
+            data_schedule_event_children = data_schedule_event_children.first()
+            lead_schedule.ScheduleEventShift.objects.create(
+                user_create=user_create, user_update=user_update,
+                event=data_schedule_event_children,
+                user=user_create,
+                **data_create_shift
+            )
         instance.refresh_from_db()
         return instance
 
@@ -723,6 +752,8 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
             lag_day = e.lag_day
             type_day = e.type
             working_day = e.end_day - e.start_day
+            tmp['start_day_shift'] = e.start_day
+            tmp['end_day_shift'] = e.end_day
             if type_day == 'finish_to_start':
                 start_day = self.date_by_adding_business_days(end_day_parent, lag_day, [])
                 end_day = self.date_by_adding_business_days(start_day, working_day.days, [])
@@ -737,6 +768,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
 
             tmp['id'] = e.id
             tmp['lag_day'] = e.lag_day
+            tmp['predecessor'] = e.predecessor
             rs.append(tmp)
             rs.extend(self.get_data_update_by_group(e.id, tmp['start_day'], tmp['end_day']))
         return rs
@@ -801,16 +833,16 @@ class TextFieldSerialized(FieldSettingSerialized):
 
 
 class NumberFieldSerialized(FieldSettingSerialized):
-    default_value = serializers.IntegerField(required=False)
+    default_number = serializers.IntegerField(required=False)
 
 
 class CheckboxFieldSerialized(serializers.ModelSerializer):
-    default_value = serializers.BooleanField(default=False)
+    default_checkbox = serializers.BooleanField(default=False)
 
     class Meta:
         model = lead_schedule.CustomFieldScheduleSetting
         fields = ('label', 'data_type', 'include_in_filters', 'display_order', 'show_owners',
-                  'allow_permitted_sub', 'default_value')
+                  'allow_permitted_sub', 'default_checkbox')
 
 
 class ItemDropdownSerialized(serializers.Serializer):
@@ -847,7 +879,8 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
             DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
             DataType.MULTI_LINE_TEXT: TextFieldSerialized,
             DataType.CHECKBOX: CheckboxFieldSerialized,
-            DataType.DROPDOWN: DropdownFieldSerialized
+            DataType.DROPDOWN: DropdownFieldSerialized,
+            DataType.WHOLE_NUMBER: NumberFieldSerialized
         }
 
         data_serializers = item_types.get(validated_data['data_type'])
@@ -1119,6 +1152,7 @@ class ScheduleEventPhaseSettingSerializer(serializers.ModelSerializer):
             phase.user_create = user_create
             phase.user_update = user_update
             update_list.append(phase)
+
         lead_schedule.ScheduleEvent.objects.bulk_update(update_list,
                                                         ['phase_label', 'phase_display_order', 'phase_color',
                                                          'user_create',

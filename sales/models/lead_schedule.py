@@ -293,8 +293,10 @@ class EventShiftReason(BaseModel):
     class Meta:
         db_table = 'event_shift_reason'
 
-    shift_reason = models.ForeignKey(ShiftReason, on_delete=models.CASCADE, related_name='event_shift')
+    shift_reason = models.ForeignKey(ShiftReason, on_delete=models.SET_NULL, related_name='event_shift', blank=True, null=True)
     shift_note = models.TextField()
+    # event_shift = models.ForeignKey('ScheduleEventShift', on_delete=models.CASCADE,
+    #                                 related_name='schedule_event_shift_reason', blank=True, null=True)
 
 
 class ScheduleEventShift(BaseModel):
@@ -311,6 +313,7 @@ class ScheduleEventShift(BaseModel):
                                blank=True, null=True)
     notes = models.TextField()
     event = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE, related_name='shift_event')
+    is_direct = models.BooleanField(blank=True, null=True)
 
 
 class FileScheduleEvent(BaseModel):
@@ -322,20 +325,20 @@ class FileScheduleEvent(BaseModel):
 
 
 class DataType(models.TextChoices):
-    SINGLE_LINE_TEXT = 'single-line-text', 'SINGLE-LINE-TEXT'
-    MULTI_LINE_TEXT = 'multi-line text with expandable textbox', 'MULTI-LINE TEXT WITH EXPANDABLE TEXTBOX'
-    CHECKBOX = 'checkbox', 'CHECKBOX'
-    WHOLE_NUMBER = 'whole number', 'WHOLE NUMBER'
-    LIST_OF_USER_SINGLE_SELECT = 'list of User - Single Select', 'LIST OF USER - SINGLE SELECT'
-    LIST_OF_SUBS_VENDORS_SINGLE_SELECT = 'List of Subs/Vendors - Single Select', 'LIST OF SUBS/VENDORS-SINGLE SELECT'
-    DATE = 'date', 'DATE'
-    CURRENCY = 'currency', 'CURRENCY'
-    DROPDOWN = 'dropdown', 'DROPDOWN'
-    FILE = 'file', 'FILE',
-    MULTI_SELECT_DROPDOWN = 'Multi-Select-Dropdown', 'MULTI-SELECT-DROPDOWN'
-    LINK = 'link', 'LINK'
-    LIST_OF_USER_MULTI_SELECT = 'list of User - Multi Select', 'LIST OF USER - MULTI SELECT'
-    LIST_OF_SUBS_VENDORS_MULTI_SELECT = 'List of Subs/Vendors - Multi Select', 'LIST OF SUBS/VENDORS-MULTI SELECT'
+    SINGLE_LINE_TEXT = 'single_line_text', 'Single line text'
+    MULTI_LINE_TEXT = 'multi_line_text_with_expandable_textbox', 'Multi line text with expandable textbox'
+    CHECKBOX = 'checkbox', 'Checkbox'
+    WHOLE_NUMBER = 'whole_number', 'Whole_number'
+    LIST_OF_USER_SINGLE_SELECT = 'list_of_user_single_select', 'List of user single select'
+    LIST_OF_SUBS_VENDORS_SINGLE_SELECT = 'list_of_subs_vendors_single_select', 'List of subs vendors single select'
+    DATE = 'date', 'Date'
+    CURRENCY = 'currency', 'Currency'
+    DROPDOWN = 'dropdown', 'Dropdown'
+    FILE = 'file', 'File',
+    MULTI_SELECT_DROPDOWN = 'multi_select_dropdown', 'Multi select dropdown'
+    LINK = 'link', 'Link'
+    LIST_OF_USER_MULTI_SELECT = 'list_of_user_multi_select', 'list of user multi select'
+    LIST_OF_SUBS_VENDORS_MULTI_SELECT = 'list_of_subs_vendors_multi_select', 'list of subs vendors multi select'
 
 
 class ScheduleDailyLogSetting(BaseModel):
@@ -369,7 +372,7 @@ class CustomFieldScheduleDailyLogSetting(BaseModel):
     show_owners = models.BooleanField(default=False)
     allow_permitted_sub = models.BooleanField(default=False)
     default_value = models.CharField(blank=True, max_length=128)
-    default_date = models.DateField(null=True, blank=True)
+    default_date = models.DateTimeField(null=True, blank=True)
     default_checkbox = models.BooleanField(null=True, blank=True)
     default_number = models.IntegerField(blank=True, null=True)
     daily_log_setting = models.ForeignKey(ScheduleDailyLogSetting, related_name='custom_filed_daily_log_setting',
@@ -397,7 +400,7 @@ class CustomFieldScheduleSetting(BaseModel):
     show_owners = models.BooleanField(default=False)
     allow_permitted_sub = models.BooleanField(default=False)
     default_value = models.CharField(blank=True, max_length=128)
-    default_date = models.DateField(null=True, blank=True)
+    default_date = models.DateTimeField(null=True, blank=True)
     default_checkbox = models.BooleanField(null=True, blank=True)
     default_number = models.IntegerField(blank=True, null=True)
     todo_setting = models.ForeignKey(ScheduleToDoSetting, related_name='custom_filed_to_do_setting',
@@ -437,7 +440,7 @@ class TodoCustomField(BaseModel):
     show_owners = models.BooleanField(default=False)
     allow_permitted_sub = models.BooleanField(default=False)
     value = models.CharField(blank=True, max_length=128, null=True)
-    value_date = models.DateField(null=True, blank=True)
+    value_date = models.DateTimeField(null=True, blank=True)
     value_checkbox = models.BooleanField(default=False, null=True, blank=True)
     value_number = models.IntegerField(default=0, blank=True, null=True)
     custom_field = models.ForeignKey(CustomFieldScheduleSetting, related_name='custom_filed_setting',
@@ -459,7 +462,7 @@ class DailyLogCustomField(BaseModel):
     show_owners = models.BooleanField(default=False)
     allow_permitted_sub = models.BooleanField(default=False)
     value = models.CharField(blank=True, max_length=128, null=True)
-    value_date = models.DateField(null=True, blank=True)
+    value_date = models.DateTimeField(null=True, blank=True)
     value_checkbox = models.BooleanField(default=False, null=True, blank=True)
     value_number = models.IntegerField(default=0, blank=True, null=True)
     custom_field = models.ForeignKey(CustomFieldScheduleDailyLogSetting, related_name='custom_filed_setting_daily_log',

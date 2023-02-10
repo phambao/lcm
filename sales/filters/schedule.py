@@ -33,7 +33,7 @@ class EventFilter(filters.FilterSet):
     assigned_user = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
     reminder = filters.NumberFilter()
     start_day = filters.DateFilter(field_name='start_day', lookup_expr='gte')
-    end_day = filters.DateFilter(field_name='end_day', lookup_expr='lte')
+    end_day = filters.DateFilter(field_name='start_day', lookup_expr='lte')
     start_hour = filters.DateTimeFilter(field_name='start_hour', lookup_expr='gte')
     end_hour = filters.DateTimeFilter(field_name='end_hour', lookup_expr='lte')
     is_before = filters.BooleanFilter('is_before')
