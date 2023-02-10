@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from base.utils import pop
-from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry
+from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, TemplateName
 
 
 class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
@@ -80,3 +80,11 @@ class DataEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = DataEntry
         fields = ('id', 'name')
+
+
+class TemplateNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TemplateName
+        fields = '__all__'
+        extra_kwargs = {'user_create': {'read_only': True},
+                        'user_update': {'read_only': True}}

@@ -172,6 +172,8 @@ url_estimate = [
     path('formula-grouping/<int:pk>/', estimate.POFormulaGroupingDetail.as_view()),
     path('data-entry/', estimate.DataEntryList.as_view()),
     path('data-entry/<int:pk>/', estimate.DataEntryDetail.as_view()),
+    path('template-name/', estimate.TemplateNameList.as_view()),
+    path('template-name/<int:pk>/', estimate.TemplateNameDetail.as_view()),
 ]
 # URL Config
 url_config = [
