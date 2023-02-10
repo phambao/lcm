@@ -22,11 +22,6 @@ class DataEntry(BaseModel):
 
 class POFormula(BaseModel):
 
-    class FormulaType(models.IntegerChoices):
-        MATERIAL = 1, 'Material'
-        LABOR = 2, 'Labor'
-        RENTAL = 3, 'Rental'
-
     name = models.CharField(max_length=128)
     formula = models.CharField(max_length=256)
     text_formula = models.TextField(max_length=256)
