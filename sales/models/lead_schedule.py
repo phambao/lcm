@@ -276,7 +276,7 @@ class MessageEvent(BaseModel):
         db_table = 'schedule_event_message'
 
     event = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE, related_name='event_message')
-    comments = models.TextField()
+    message = models.TextField()
     show_owner = models.BooleanField(default=False, blank=True, null=True)
     show_sub_vendors = models.BooleanField(default=False, blank=True, null=True)
     notify = models.ManyToManyField(get_user_model(), related_name='message_vent_notify',
