@@ -917,7 +917,8 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
             DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
             DataType.MULTI_LINE_TEXT: TextFieldSerialized,
             DataType.CHECKBOX: CheckboxFieldSerialized,
-            DataType.DROPDOWN: DropdownFieldSerialized
+            DataType.DROPDOWN: DropdownFieldSerialized,
+            DataType.WHOLE_NUMBER: NumberFieldSerialized
         }
 
         data_serializers = item_types.get(data['data_type'])
@@ -987,7 +988,8 @@ class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
             DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
             DataType.MULTI_LINE_TEXT: TextFieldSerialized,
             DataType.CHECKBOX: CheckboxFieldSerialized,
-            DataType.DROPDOWN: DropdownFieldSerialized
+            DataType.DROPDOWN: DropdownFieldSerialized,
+            DataType.WHOLE_NUMBER: NumberFieldSerialized
         }
 
         data_serializers = item_types.get(validated_data['data_type'])
@@ -1024,7 +1026,8 @@ class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
             DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
             DataType.MULTI_LINE_TEXT: TextFieldSerialized,
             DataType.CHECKBOX: CheckboxFieldSerialized,
-            DataType.DROPDOWN: DropdownFieldSerialized
+            DataType.DROPDOWN: DropdownFieldSerialized,
+            DataType.WHOLE_NUMBER: NumberFieldSerialized
         }
 
         data_serializers = item_types.get(data['data_type'])
