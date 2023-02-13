@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 
 from api.models import BaseModel
+from base.models.config import Config
 from sales.models import LeadDetail
 
 
@@ -224,7 +225,7 @@ class ScheduleEventPhaseSetting(BaseModel):
     label = models.CharField(blank=True, max_length=128, null=True)
     display_order = models.IntegerField(blank=True, null=True)
     color = models.CharField(blank=True, max_length=128, null=True)
-    event_setting = models.ForeignKey(ScheduleEventSetting, related_name='schedule_event_setting_phase',
+    event_setting = models.ForeignKey(Config, related_name='schedule_event_setting_phase',
                                       null=True, blank=True, on_delete=models.SET_NULL)
 
 
@@ -361,7 +362,7 @@ class ScheduleDailyLogSetting(BaseModel):
 
 class CustomFieldScheduleDailyLogSetting(BaseModel):
     class Meta:
-        db_table = 'custom_field_schedule_daily_log'
+        db_table = 'custom_field_schedule_daily_log_setting'
 
     label = models.CharField(blank=True, max_length=128)
     data_type = models.CharField(max_length=128, choices=DataType.choices, default=DataType.SINGLE_LINE_TEXT)
@@ -375,7 +376,7 @@ class CustomFieldScheduleDailyLogSetting(BaseModel):
     default_date = models.DateTimeField(null=True, blank=True)
     default_checkbox = models.BooleanField(null=True, blank=True)
     default_number = models.IntegerField(blank=True, null=True)
-    daily_log_setting = models.ForeignKey(ScheduleDailyLogSetting, related_name='custom_filed_daily_log_setting',
+    daily_log_setting = models.ForeignKey(Config, related_name='custom_filed_daily_log_setting',
                                           null=True, blank=True, on_delete=models.SET_NULL)
 
 
@@ -389,7 +390,7 @@ class ScheduleToDoSetting(BaseModel):
 
 class CustomFieldScheduleSetting(BaseModel):
     class Meta:
-        db_table = 'custom_field_schedule_setting'
+        db_table = 'custom_field_schedule_todo_setting'
 
     label = models.CharField(blank=True, max_length=128)
     data_type = models.CharField(max_length=128, choices=DataType.choices, default=DataType.SINGLE_LINE_TEXT)
@@ -403,7 +404,7 @@ class CustomFieldScheduleSetting(BaseModel):
     default_date = models.DateTimeField(null=True, blank=True)
     default_checkbox = models.BooleanField(null=True, blank=True)
     default_number = models.IntegerField(blank=True, null=True)
-    todo_setting = models.ForeignKey(ScheduleToDoSetting, related_name='custom_filed_to_do_setting',
+    todo_setting = models.ForeignKey(Config, related_name='custom_filed_to_do_setting',
                                      null=True, blank=True, on_delete=models.SET_NULL)
 
 
