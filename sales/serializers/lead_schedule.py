@@ -792,7 +792,7 @@ class MessageEventSerialized(serializers.ModelSerializer):
 
     class Meta:
         model = lead_schedule.MessageEvent
-        fields = ('event', 'comments', 'show_owner', 'show_sub_vendors', 'notify')
+        fields = ('event', 'message', 'show_owner', 'show_sub_vendors', 'notify')
 
     def create(self, validated_data):
         request = self.context['request']
