@@ -748,7 +748,6 @@ def filter_event(request, *args, **kwargs):
     return Response(status=status.HTTP_200_OK, data=event)
 
 
-
 def get_id_by_group(pk):
     rs = []
     event = ScheduleEvent.objects.filter(predecessor=pk)
