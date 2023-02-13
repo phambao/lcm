@@ -16,5 +16,5 @@ python manage.py loaddata zipcode
 python manage.py loaddata lead_list
 python manage.py loaddata catalog
 
-python manage.py loaddata createcachetable
+python manage.py createcachetable
 ```
