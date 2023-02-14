@@ -307,7 +307,7 @@ class DailyLogSerializer(serializers.ModelSerializer):
         model = lead_schedule.DailyLog
         fields = ('id', 'date', 'tags', 'to_dos', 'note', 'lead_list', 'internal_user_share', 'internal_user_notify',
                   'sub_member_share', 'sub_member_notify', 'owner_share', 'owner_notify', 'private_share',
-                  'private_notify', 'custom_field', 'to_do', 'event')
+                  'private_notify', 'custom_field', 'to_do', 'event', 'title', 'color')
         kwargs = {'to_dos': {'required': False},
                   'tags': {'required': False},
                   }
@@ -913,18 +913,19 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
         todo_list = pop(data, 'todo_list', [])
         data_tool_tip_text = data['tool_tip_text']
         user_create = user_update = request.user
-        item_types = {
-            DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
-            DataType.MULTI_LINE_TEXT: TextFieldSerialized,
-            DataType.CHECKBOX: CheckboxFieldSerialized,
-            DataType.DROPDOWN: DropdownFieldSerialized,
-            DataType.WHOLE_NUMBER: NumberFieldSerialized
-        }
-
-        data_serializers = item_types.get(data['data_type'])
-        data_update = data_serializers(data=data)
-        data_update.is_valid(raise_exception=True)
-        data_update = dict(data_update.validated_data)
+        # item_types = {
+        #     DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
+        #     DataType.MULTI_LINE_TEXT: TextFieldSerialized,
+        #     DataType.CHECKBOX: CheckboxFieldSerialized,
+        #     DataType.DROPDOWN: DropdownFieldSerialized,
+        #     DataType.WHOLE_NUMBER: NumberFieldSerialized
+        # }
+        #
+        # data_serializers = item_types.get(data['data_type'])
+        # data_update = data_serializers(data=data)
+        # data_update.is_valid(raise_exception=True)
+        # data_update = dict(data_update.validated_data)
+        data_update = data
         data_custom_field = lead_schedule.CustomFieldScheduleSetting.objects.filter(pk=instance.pk)
         data_custom_field.update(**data_update)
         custom_field_setting = data_custom_field.first()
@@ -1022,18 +1023,19 @@ class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
         daily_log_list = pop(data, 'daily_log_list', [])
         data_tool_tip_text = data['tool_tip_text']
         user_create = user_update = request.user
-        item_types = {
-            DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
-            DataType.MULTI_LINE_TEXT: TextFieldSerialized,
-            DataType.CHECKBOX: CheckboxFieldSerialized,
-            DataType.DROPDOWN: DropdownFieldSerialized,
-            DataType.WHOLE_NUMBER: NumberFieldSerialized
-        }
-
-        data_serializers = item_types.get(data['data_type'])
-        data_update = data_serializers(data=data)
-        data_update.is_valid(raise_exception=True)
-        data_update = dict(data_update.validated_data)
+        # item_types = {
+        #     DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
+        #     DataType.MULTI_LINE_TEXT: TextFieldSerialized,
+        #     DataType.CHECKBOX: CheckboxFieldSerialized,
+        #     DataType.DROPDOWN: DropdownFieldSerialized,
+        #     DataType.WHOLE_NUMBER: NumberFieldSerialized
+        # }
+        #
+        # data_serializers = item_types.get(data['data_type'])
+        # data_update = data_serializers(data=data)
+        # data_update.is_valid(raise_exception=True)
+        # data_update = dict(data_update.validated_data)
+        data_update = data
         data_custom_field = lead_schedule.CustomFieldScheduleDailyLogSetting.objects.filter(pk=instance.pk)
         data_custom_field.update(**data_update)
         custom_field_setting = data_custom_field.first()
