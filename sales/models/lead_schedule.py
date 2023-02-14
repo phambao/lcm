@@ -149,6 +149,8 @@ class DailyLog(BaseModel):
         db_table = 'schedule_daily_log'
         ordering = ['-modified_date']
 
+    title = models.CharField(blank=True, null=True, max_length=128)
+    color = models.CharField(blank=True, null=True, max_length=128)
     date = models.DateTimeField()
     tags = models.ManyToManyField(TagSchedule, related_name='daily_log_tags')
     to_dos = models.ManyToManyField(ToDo, related_name='daily_log_to_dos')
@@ -363,7 +365,7 @@ class ScheduleDailyLogSetting(BaseModel):
 class CustomFieldScheduleDailyLogSetting(BaseModel):
     class Meta:
         db_table = 'custom_field_schedule_daily_log_setting'
-
+        ordering = ['display_order']
     label = models.CharField(blank=True, max_length=128)
     data_type = models.CharField(max_length=128, choices=DataType.choices, default=DataType.SINGLE_LINE_TEXT)
     required = models.BooleanField(default=False)
@@ -391,7 +393,7 @@ class ScheduleToDoSetting(BaseModel):
 class CustomFieldScheduleSetting(BaseModel):
     class Meta:
         db_table = 'custom_field_schedule_todo_setting'
-
+        ordering = ['display_order']
     label = models.CharField(blank=True, max_length=128)
     data_type = models.CharField(max_length=128, choices=DataType.choices, default=DataType.SINGLE_LINE_TEXT)
     required = models.BooleanField(default=False)
