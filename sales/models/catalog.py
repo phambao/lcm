@@ -154,10 +154,31 @@ class Catalog(BaseModel):
         catalog = Catalog.objects.get(pk=pk)
         catalog.children.add(self)
 
+    def get_unique_name(self, parent):
+        """
+        Assume that category like a folder, we prevent the same name in that folder
+        """
+        try:
+            names = Catalog.objects.filter(parents=parent, level=self.level).values_list('name', flat=True)
+        except AttributeError:
+            return ''
+        name = self.name
+        if name not in names:
+            return name
+        i = 1
+        while name in names:
+            if name.split(' ')[-1].isdigit():
+                name = ' '.join(name.split(' ')[:-1]) + ' ' + str(i)
+            else:
+                name = name + f' {i}'
+            i += 1
+        return name
+
     def clone(self, parent=None, data_points=[]):
         c = copy.copy(self)
         c.id = None
         c.sequence = self.sequence + 1
+        c.name = c.get_unique_name(parent) or self.get_unique_name(parent)
         c.save()
         if parent:
             c.parents.add(parent)
