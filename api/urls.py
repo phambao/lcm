@@ -2,7 +2,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from knox import views as knox_views
 
-from api.views.auth import SignInAPI, SignUpAPI, MainUser, UserList
+from api.views.auth import SignInAPI, SignUpAPI, MainUser, UserList, forgot_password, check_private_code, reset_password
 
 urlpatterns = [
     # For authenticate
@@ -13,6 +13,12 @@ urlpatterns = [
     path('users', UserList.as_view()),
 
     # For password reset
+    path('auth/', include([
+        path('reset-password/', forgot_password, name='reset-password'),
+        path('check-code/', check_private_code, name='check-private-code'),
+        path('reset/', reset_password, name='reset-password')
+    ])),
+
     path('reset_password/', auth_views.PasswordResetView.as_view(), name='reset_password'),
     path('reset_password_done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),

@@ -180,23 +180,43 @@ def duplicate_catalogs(request, pk):
     """
     Payload: [{"id": int, "depth": int, data_points: [id,...], descendant: [id,...]},...]
     """
+
+    parent_catalog = get_object_or_404(Catalog, pk=pk)
+    # duplicate by level
     if isinstance(request.data, list):
-        parent_catalog = get_object_or_404(Catalog, pk=pk)
         for d in request.data:
             depth = int(d.get('depth', 0))
             data_points = d.get('data_points', [])
-            descendant = d.get('descendant', [])
             try:
                 c = Catalog.objects.get(pk=d.get('id'))
-                if descendant:
-                    c.duplicate_by_catalog(parent=parent_catalog, descendant=descendant,
-                                           data_points=data_points)
-                else:
-                    # duplicate by level
-                    c.duplicate(parent=parent_catalog, depth=depth, data_points=data_points)
+                c.duplicate(parent=parent_catalog, depth=depth, data_points=data_points)
             except Catalog.DoesNotExist:
                 pass
         return Response(status=status.HTTP_201_CREATED, data={})
+    return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def duplicate_catalogs_on_tree(request, pk):
+    """
+    Payload: {data_points: [id,...], descendant: [id,...], level: int}
+    """
+    parent_catalog = get_object_or_404(Catalog, pk=pk)
+    if isinstance(request.data, dict):
+        data_points = request.data.get('data_points', [])
+        descendant = request.data.get('descendant', [])
+        level = request.data.get('level', None)
+        parents = Catalog.objects.filter(pk__in=descendant, level_id=level)
+        for root in parents:
+            try:
+                root.duplicate_by_catalog(parent=parent_catalog, descendant=descendant,
+                                          data_points=data_points)
+            except Catalog.DoesNotExist:
+                pass
+        data = Catalog.objects.filter(pk__in=parent_catalog.get_all_descendant())
+        serializer = catalog.CatalogSerializer(data, many=True, context={'request': request})
+        return Response(status=status.HTTP_201_CREATED, data=serializer.data)
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 

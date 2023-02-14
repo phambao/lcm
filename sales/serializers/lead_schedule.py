@@ -1,3 +1,5 @@
+import datetime
+from datetime import timedelta
 import uuid
 
 from django.contrib.auth import get_user_model
@@ -13,7 +15,8 @@ from ..models import lead_schedule
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging, CheckListItemsTemplate, \
     TodoTemplateChecklistItem, DataType, ItemFieldDropDown, TodoCustomField, CustomFieldScheduleSetting, \
     CustomFieldScheduleDailyLogSetting, DailyLogCustomField, ItemFieldDropDownDailyLog, \
-    DataType, ItemFieldDropDown, ScheduleEventPhaseSetting, FileCheckListItems, FileCheckListItemsTemplate
+    DataType, ItemFieldDropDown, ScheduleEventPhaseSetting, FileCheckListItems, FileCheckListItemsTemplate, \
+    CommentDailyLog, AttachmentCommentDailyLog, ScheduleEventShift
 
 
 class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
@@ -40,10 +43,25 @@ class ScheduleAttachmentsSerializer(serializers.Serializer):
 
 class MessagingSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
+    notify = UserCustomSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_schedule.Messaging
-        fields = ('id', 'message')
+        fields = ('id', 'message', 'to_do', 'show_owner', 'show_sub_vendors', 'notify')
+
+    def create(self, validated_data):
+        request = self.context['request']
+        user_create = user_update = request.user
+        notify = pop(validated_data, 'notify', [])
+        to_do = pop(validated_data, 'to_do', None)
+        schedule_todo_message_create = lead_schedule.Messaging.objects.create(
+            user_create=user_create, user_update=user_update,
+            to_do=to_do,
+            **validated_data
+        )
+        notify_object = get_user_model().objects.filter(pk__in=[at['id'] for at in notify])
+        schedule_todo_message_create.notify.add(*notify_object)
+        return schedule_todo_message_create
 
 
 class TagScheduleSerializer(serializers.ModelSerializer):
@@ -205,10 +223,12 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         tags = pop(data, 'tags', [])
         assigned_to = pop(data, 'assigned_to', [])
         lead_list = pop(data, 'lead_list', None)
+        event = pop(data, 'event', None)
+        daily_log = pop(data, 'daily_log', None)
         data_todo = data
         todo_create = ToDo.objects.create(
             user_create=user_create, user_update=user_update,
-            lead_list_id=lead_list, **data_todo
+            lead_list_id=lead_list, event_id=event, daily_log_id=daily_log, **data_todo
         )
         tags_objects = TagSchedule.objects.filter(pk__in=[tag['id'] for tag in tags])
         user = get_user_model().objects.filter(pk__in=[at['id'] for at in assigned_to])
@@ -281,30 +301,36 @@ class DailyLogSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     custom_field = DailyLogCustomFieldSerializer(required=False, many=True)
     tags = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
-    to_do = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
+    to_dos = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_schedule.DailyLog
-        fields = ('id', 'date', 'tags', 'to_do', 'note', 'lead_list', 'internal_user_share', 'internal_user_notify',
+        fields = ('id', 'date', 'tags', 'to_dos', 'note', 'lead_list', 'internal_user_share', 'internal_user_notify',
                   'sub_member_share', 'sub_member_notify', 'owner_share', 'owner_notify', 'private_share',
-                  'private_notify', 'custom_field')
+                  'private_notify', 'custom_field', 'to_do', 'event')
+        kwargs = {'to_dos': {'required': False},
+                  'tags': {'required': False},
+                  }
 
     def create(self, validated_data):
         request = self.context['request']
         user_create = user_update = request.user
         tags = pop(validated_data, 'tags', [])
-        to_do = pop(validated_data, 'to_do', [])
+        to_dos = pop(validated_data, 'to_dos', [])
         data_custom_field = pop(validated_data, 'custom_field', [])
         lead_list = pop(validated_data, 'lead_list', None)
+        to_do = pop(validated_data, 'to_do', None)
+        event = pop(validated_data, 'event', None)
 
         daily_log_create = lead_schedule.DailyLog.objects.create(
             user_create=user_create, user_update=user_update, lead_list=lead_list,
+            to_do=to_do, event=event,
             **validated_data
         )
         tags_objects = TagSchedule.objects.filter(pk__in=[tag['id'] for tag in tags])
-        todo_objects = ToDo.objects.filter(pk__in=[tmp['id'] for tmp in to_do])
+        todo_objects = ToDo.objects.filter(pk__in=[tmp['id'] for tmp in to_dos])
         daily_log_create.tags.add(*tags_objects)
-        daily_log_create.to_do.add(*todo_objects)
+        daily_log_create.to_dos.add(*todo_objects)
         data_insert = list()
         for custom_field in data_custom_field:
             temp = DailyLogCustomField(
@@ -372,7 +398,74 @@ class DailyLogSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         rs_custom_field = DailyLogCustomField.objects.filter(daily_log=data['id']).values()
+        comments = CommentDailyLog.objects.filter(daily_log=data['id'])
+        rs = CommentDailyLogSerializer(comments, many=True)
         data['custom_field'] = rs_custom_field
+        data['comments'] = rs.data
+        return data
+
+
+class CommentDailyLogSerializer(serializers.ModelSerializer):
+    file = serializers.FileField(required=False)
+
+    class Meta:
+        model = lead_schedule.CommentDailyLog
+        fields = ('daily_log', 'comment', 'file', 'id')
+
+    def create(self, validated_data):
+        request = self.context['request']
+        user_create = user_update = request.user
+        daily_log = pop(validated_data, 'daily_log', None)
+        file = pop(validated_data, 'file', [])
+        files = request.FILES.getlist('file')
+
+        comment_daily_log = CommentDailyLog.objects.create(
+            user_create=user_create, user_update=user_update,
+            daily_log=daily_log,
+            **validated_data
+        )
+        file_comment_daily_log_create = []
+        for file in files:
+            file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+            content_file = ContentFile(file.read(), name=file_name)
+            attachment = AttachmentCommentDailyLog(
+                file=content_file,
+                comment=comment_daily_log,
+                user_create=user_create
+            )
+            file_comment_daily_log_create.append(attachment)
+        AttachmentCommentDailyLog.objects.bulk_create(file_comment_daily_log_create)
+        return comment_daily_log
+
+    def update(self, instance, data):
+        request = self.context['request']
+        user_create = user_update = request.user
+        file = pop(data, 'file', [])
+        # daily_log = pop(data, 'daily_log', None)
+        files = request.FILES.getlist('file')
+
+        comment_daily_log = CommentDailyLog.objects.filter(pk=instance.pk)
+        comment_daily_log.update(**data)
+        comment_daily_log = comment_daily_log.first()
+        AttachmentCommentDailyLog.objects.filter(comment=comment_daily_log).delete()
+        file_comment_daily_log_create = []
+        for file in files:
+            file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+            content_file = ContentFile(file.read(), name=file_name)
+            attachment = AttachmentCommentDailyLog(
+                file=content_file,
+                comment=comment_daily_log,
+                user_create=user_create
+            )
+            file_comment_daily_log_create.append(attachment)
+        AttachmentCommentDailyLog.objects.bulk_create(file_comment_daily_log_create)
+        instance.refresh_from_db()
+        return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data_file = AttachmentCommentDailyLog.objects.filter(comment=data['id']).values()
+        data['files'] = data_file
         return data
 
 
@@ -384,7 +477,7 @@ class CheckListItemsTemplateSerializer(serializers.ModelSerializer, SerializerMi
         model = lead_schedule.CheckListItemsTemplate
         fields = (
             'id', 'parent_uuid', 'description', 'is_check', 'is_root', 'assigned_to', 'todo',
-            'to_do_checklist_template')
+            'to_do_checklist_template', 'uuid')
 
     def create(self, validated_data):
         request = self.context['request']
@@ -469,9 +562,23 @@ class NamePredecessorsSerializer(serializers.Serializer):
 
 
 class PredecessorsLinkSerializer(serializers.Serializer):
-    name_predecessors = NamePredecessorsSerializer(allow_null=True, required=False)
+    predecessors = NamePredecessorsSerializer(allow_null=True, required=False)
     type = serializers.CharField(required=False)
     lag_day = serializers.IntegerField(required=False)
+
+
+class ScheduleEventShiftReasonSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    class Meta:
+        model = lead_schedule.EventShiftReason
+        fields = ('shift_reason', 'shift_note', 'id')
+
+
+class ScheduleEventShiftSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.ScheduleEventShift
+        fields = ('user', 'start_day', 'start_day_after_change', 'end_day', 'end_day_after_change', 'source',
+                  'notes', 'reason')
 
 
 class ScheduleEventSerializer(serializers.ModelSerializer):
@@ -480,6 +587,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
     viewing = UserCustomSerializer(allow_null=True, required=False, many=True)
     tags = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
     assigned_user = UserCustomSerializer(allow_null=True, required=False, many=True)
+    shift = ScheduleEventShiftSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_schedule.ScheduleEvent
@@ -487,25 +595,30 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
                   'time', 'viewing', 'notes', 'internal_notes', 'sub_notes', 'owner_notes', 'links',
                   'start_hour', 'end_hour', 'is_before', 'is_after', 'predecessor_id', 'type', 'lag_day',
                   'link_to_outside_calendar', 'tags', 'phase_label', 'phase_display_order', 'phase_color',
-                  'phase_setting')
+                  'phase_setting', 'todo', 'daily_log', 'color', 'shift')
 
     def create(self, validated_data):
         request = self.context['request']
-        data = request.data
+        # data = request.data
         user_create = user_update = request.user
-        predecessor_id = pop(data, 'predecessor_id', None)
-        phase_setting = pop(data, 'phase_setting', None)
-        links = pop(data, 'links', [])
-        assigned_user = pop(data, 'assigned_user', [])
-        lead_list = pop(data, 'lead_list', None)
-        viewing = pop(data, 'viewing', [])
-        tags = pop(data, 'tags', [])
+        predecessor_id = pop(validated_data, 'predecessor_id', None)
+        phase_setting = pop(validated_data, 'phase_setting', None)
+        links = pop(validated_data, 'links', [])
+        assigned_user = pop(validated_data, 'assigned_user', [])
+        lead_list = pop(validated_data, 'lead_list', None)
+        viewing = pop(validated_data, 'viewing', [])
+        tags = pop(validated_data, 'tags', [])
+        todo = pop(validated_data, 'todo', None)
+        daily_log = pop(validated_data, 'daily_log', None)
+        shift = pop(validated_data, 'shift', [])
         schedule_event_create = lead_schedule.ScheduleEvent.objects.create(
             user_create=user_create, user_update=user_update,
-            lead_list_id=lead_list,
+            lead_list=lead_list,
             predecessor_id=predecessor_id,
-            phase_setting_id=phase_setting,
-            **data
+            phase_setting=phase_setting,
+            todo=todo,
+            daily_log=daily_log,
+            **validated_data
         )
         user = get_user_model().objects.filter(pk__in=[at['id'] for at in assigned_user])
         view = get_user_model().objects.filter(pk__in=[at['id'] for at in viewing])
@@ -518,18 +631,41 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
             data_update['predecessor'] = schedule_event_create.id
             data_update['lag_day'] = data['lag_day']
             data_update['type'] = data['type']
-            schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=data['name_predecessors']['id'])
+            schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=data['predecessors']['id'])
             schedule_event.update(**data_update)
+
+        data_create = []
+        for data_shift in shift:
+            temp = ScheduleEventShift(
+                user=data_shift['user'],
+                start_day=data_shift['start_day'],
+                start_day_after_change=data_shift['start_day_after_change'],
+                end_day=data_shift['end_day'],
+                end_day_after_change=data_shift['end_day_after_change'],
+                source=data_shift['source'],
+                reason=data_shift['reason'],
+                notes=data_shift['notes'],
+                event=schedule_event_create
+            )
+            data_create.append(temp)
+        ScheduleEventShift.objects.bulk_create(data_create)
 
         return schedule_event_create
 
     def update(self, instance, data):
         # predecessor_id = pop(data, 'predecessor_id', None)
+        request = self.context['request']
+        user_create = user_update = request.user
         links = pop(data, 'links', [])
         assigned_user = pop(data, 'assigned_user', [])
         viewing = pop(data, 'viewing', [])
         tags = pop(data, 'tags', [])
+        shift = pop(data, 'shift', [])
+        start_day_update = data['start_day'] + timedelta(hours=7)
+        end_day_update = data['end_day'] + timedelta(hours=7)
         data_schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=instance.pk)
+        start_day = data_schedule_event.first().start_day
+        end_day = data_schedule_event.first().end_day
         data_schedule_event.update(**data)
         schedule_event = data_schedule_event.first()
 
@@ -542,23 +678,143 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         schedule_event.assigned_user.add(*user)
         schedule_event.viewing.clear()
         schedule_event.viewing.add(*view)
-        lead_schedule.ScheduleEvent.objects.filter(predecessor=instance.pk).update(predecessor=None)
-        for data in links:
+        # lead_schedule.ScheduleEvent.objects.filter(predecessor=instance.pk).update(predecessor=None)
+        for data_link in links:
             data_update = {}
             data_update['predecessor'] = instance.pk
-            data_update['lag_day'] = data['lag_day']
-            data_update['type'] = data['type']
-            schedule_event = lead_schedule.ScheduleEvent.objects.filter(pk=data['name_predecessors']['id'])
-            schedule_event.update(**data_update)
+            data_update['lag_day'] = data_link['lag_day']
+            data_update['type'] = data_link['type']
+            schedule_event_link = lead_schedule.ScheduleEvent.objects.filter(pk=data_link['predecessors']['id'])
+            schedule_event_link.update(**data_update)
 
+        data_update_children = []
+        if start_day_update < start_day or start_day_update > start_day or end_day_update < end_day or end_day_update > end_day:
+            data_update_children = self.get_data_update_by_group(instance.pk, start_day_update, end_day_update)
+        ScheduleEventShift.objects.filter(event=schedule_event).delete()
+        data_create = []
+        for data_shift in shift:
+            temp = ScheduleEventShift(
+                user=data_shift['user'],
+                start_day=data_shift['start_day'],
+                start_day_after_change=data_shift['start_day_after_change'],
+                end_day=data_shift['end_day'],
+                end_day_after_change=data_shift['end_day_after_change'],
+                source=data_shift['source'],
+                reason=data_shift['reason'],
+                notes=data_shift['notes'],
+                event=schedule_event
+            )
+            data_create.append(temp)
+        ScheduleEventShift.objects.bulk_create(data_create)
+
+        for data_update_link in data_update_children:
+            schedule_event_parent = lead_schedule.ScheduleEvent.objects.get(pk=data_update_link['predecessor'].id)
+            data_schedule_event_children = lead_schedule.ScheduleEvent.objects.filter(pk=data_update_link['id'])
+            data_create_shift = {
+                'start_day': data_update_link['start_day'],
+                'start_day_after_change': data_update_link['start_day_shift'],
+                'end_day': data_update_link['start_day'],
+                'end_day_after_change': data_update_link['end_day_shift'],
+                'source': schedule_event_parent.event_title,
+                'is_direct': False
+            }
+            data_update = {
+                'start_day': data_update_link['start_day'],
+                'end_day': data_update_link['start_day'],
+            }
+            # data_update_link.pop('id')
+            data_schedule_event_children.update(**data_update)
+            data_schedule_event_children = data_schedule_event_children.first()
+            lead_schedule.ScheduleEventShift.objects.create(
+                user_create=user_create, user_update=user_update,
+                event=data_schedule_event_children,
+                user=user_create,
+                **data_create_shift
+            )
         instance.refresh_from_db()
         return instance
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         links = lead_schedule.ScheduleEvent.objects.filter(predecessor=data['id']).values()
+        message = lead_schedule.MessageEvent.objects.filter(event=data['id']).values()
+        shift = lead_schedule.ScheduleEventShift.objects.filter(event=data['id']).values()
         data['links'] = links
+        data['message'] = message
+        data['shift'] = shift
         return data
+
+    def get_data_update_by_group(self, pk, start_day_parent, end_day_parent):
+        rs = []
+        event = lead_schedule.ScheduleEvent.objects.filter(predecessor=pk)
+        for e in event:
+            tmp = dict()
+            lag_day = e.lag_day
+            type_day = e.type
+            working_day = e.end_day - e.start_day
+            tmp['start_day_shift'] = e.start_day
+            tmp['end_day_shift'] = e.end_day
+            if type_day == 'finish_to_start':
+                start_day = self.date_by_adding_business_days(end_day_parent, lag_day, [])
+                end_day = self.date_by_adding_business_days(start_day, working_day.days, [])
+                tmp['start_day'] = start_day
+                tmp['end_day'] = end_day
+
+            elif type_day == 'start_to_start':
+                start_day = self.date_by_adding_business_days(start_day_parent, lag_day, [])
+                end_day = self.date_by_adding_business_days(start_day, working_day.days, [])
+                tmp['start_day'] = start_day
+                tmp['end_day'] = end_day
+
+            tmp['id'] = e.id
+            tmp['lag_day'] = e.lag_day
+            tmp['predecessor'] = e.predecessor
+            rs.append(tmp)
+            rs.extend(self.get_data_update_by_group(e.id, tmp['start_day'], tmp['end_day']))
+        return rs
+
+    def date_by_adding_business_days(self, from_date, add_days, holidays):
+        business_days_to_add = add_days
+        current_date = from_date
+        while business_days_to_add > 0:
+            current_date += datetime.timedelta(days=1)
+            weekday = current_date.weekday()
+            if weekday >= 5:  # sunday = 6
+                continue
+            if current_date in holidays:
+                continue
+            business_days_to_add -= 1
+        return current_date
+
+
+class MessageEventSerialized(serializers.ModelSerializer):
+    notify = UserCustomSerializer(allow_null=True, required=False, many=True)
+
+    class Meta:
+        model = lead_schedule.MessageEvent
+        fields = ('event', 'message', 'show_owner', 'show_sub_vendors', 'notify')
+
+    def create(self, validated_data):
+        request = self.context['request']
+        user_create = user_update = request.user
+        notify = pop(validated_data, 'notify', [])
+        event = pop(validated_data, 'event', None)
+        schedule_event_message_create = lead_schedule.MessageEvent.objects.create(
+            user_create=user_create, user_update=user_update,
+            event=event,
+            **validated_data
+        )
+        notify_object = get_user_model().objects.filter(pk__in=[at['id'] for at in notify])
+        schedule_event_message_create.notify.add(*notify_object)
+        return schedule_event_message_create
+
+
+class ShiftReasonSerialized(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = lead_schedule.ShiftReason
+        fields = ('title', 'id')
 
 
 class FieldSettingSerialized(serializers.Serializer):
@@ -577,16 +833,16 @@ class TextFieldSerialized(FieldSettingSerialized):
 
 
 class NumberFieldSerialized(FieldSettingSerialized):
-    default_value = serializers.IntegerField(required=False)
+    default_number = serializers.IntegerField(required=False)
 
 
 class CheckboxFieldSerialized(serializers.ModelSerializer):
-    default_value = serializers.BooleanField(default=False)
+    default_checkbox = serializers.BooleanField(default=False)
 
     class Meta:
         model = lead_schedule.CustomFieldScheduleSetting
         fields = ('label', 'data_type', 'include_in_filters', 'display_order', 'show_owners',
-                  'allow_permitted_sub', 'default_value')
+                  'allow_permitted_sub', 'default_checkbox')
 
 
 class ItemDropdownSerialized(serializers.Serializer):
@@ -623,7 +879,8 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
             DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
             DataType.MULTI_LINE_TEXT: TextFieldSerialized,
             DataType.CHECKBOX: CheckboxFieldSerialized,
-            DataType.DROPDOWN: DropdownFieldSerialized
+            DataType.DROPDOWN: DropdownFieldSerialized,
+            DataType.WHOLE_NUMBER: NumberFieldSerialized
         }
 
         data_serializers = item_types.get(validated_data['data_type'])
@@ -660,7 +917,8 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
             DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
             DataType.MULTI_LINE_TEXT: TextFieldSerialized,
             DataType.CHECKBOX: CheckboxFieldSerialized,
-            DataType.DROPDOWN: DropdownFieldSerialized
+            DataType.DROPDOWN: DropdownFieldSerialized,
+            DataType.WHOLE_NUMBER: NumberFieldSerialized
         }
 
         data_serializers = item_types.get(data['data_type'])
@@ -730,7 +988,8 @@ class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
             DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
             DataType.MULTI_LINE_TEXT: TextFieldSerialized,
             DataType.CHECKBOX: CheckboxFieldSerialized,
-            DataType.DROPDOWN: DropdownFieldSerialized
+            DataType.DROPDOWN: DropdownFieldSerialized,
+            DataType.WHOLE_NUMBER: NumberFieldSerialized
         }
 
         data_serializers = item_types.get(validated_data['data_type'])
@@ -767,7 +1026,8 @@ class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
             DataType.SINGLE_LINE_TEXT: TextFieldSerialized,
             DataType.MULTI_LINE_TEXT: TextFieldSerialized,
             DataType.CHECKBOX: CheckboxFieldSerialized,
-            DataType.DROPDOWN: DropdownFieldSerialized
+            DataType.DROPDOWN: DropdownFieldSerialized,
+            DataType.WHOLE_NUMBER: NumberFieldSerialized
         }
 
         data_serializers = item_types.get(data['data_type'])
@@ -895,6 +1155,7 @@ class ScheduleEventPhaseSettingSerializer(serializers.ModelSerializer):
             phase.user_create = user_create
             phase.user_update = user_update
             update_list.append(phase)
+
         lead_schedule.ScheduleEvent.objects.bulk_update(update_list,
                                                         ['phase_label', 'phase_display_order', 'phase_color',
                                                          'user_create',

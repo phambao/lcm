@@ -2,6 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django_filters import rest_framework as filters
 
 from base.models.config import Search, Column, Config, GridSetting
+from base.models.country_state_city import Country
 
 
 class CountryStateCityBaseFilter:
@@ -59,3 +60,9 @@ class ConfigFilter(filters.FilterSet):
     class Meta:
         model = Config
         fields = ('content_type',)
+
+
+class CountryFilter(filters.FilterSet):
+    class Meta:
+        model = Country
+        fields = ('name',)

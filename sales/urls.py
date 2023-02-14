@@ -77,6 +77,7 @@ url_catalog = [
     path('list/<int:pk>/list/', catalog.get_catalog_list),
     path('list/ancestors/', catalog.get_catalog_ancestors),
     path('list/<int:pk>/copy/', catalog.duplicate_catalogs),
+    path('list/<int:pk>/copy-tree/', catalog.duplicate_catalogs_on_tree),
     path('list/delete/', catalog.delete_catalogs),
     path('cost-tables/', catalog.CostTableList.as_view()),
     path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
@@ -91,6 +92,7 @@ url_catalog = [
 url_schedule = [
     # TO_DO
     path('todo/', lead_schedule.SourceScheduleToDoGenericView.as_view()),
+    path('todo/message/', lead_schedule.ScheduleTodoMessageGenericView.as_view()),
     path('todo/<int:pk>/', lead_schedule.ScheduleDetailGenericView.as_view()),
     path('todo/message-custom-field/', lead_schedule.ToDoMessageCustomFieldGenericView.as_view({
         "post": "create_message_custom_field", "put": "update_message_custom_field"})),
@@ -100,6 +102,9 @@ url_schedule = [
     # TAG
     path('tags/', lead_schedule.TagScheduleGenericView.as_view()),
     path('tags/<int:pk>/', lead_schedule.TagScheduleDetailGenericView.as_view()),
+    # SHIFT REASON
+    path('shift-reason/', lead_schedule.ScheduleShiftReasonGenericView.as_view()),
+    path('shift-reason/<int:pk>/', lead_schedule.ScheduleShiftReasonDetailGenericView.as_view()),
     # CHECKLIST ITEM
     path('checklist-item/', lead_schedule.CheckListItemGenericView.as_view()),
     path('checklist-item/<int:pk>/', lead_schedule.CheckListItemDetailGenericView.as_view()),
@@ -114,6 +119,8 @@ url_schedule = [
     # DAILY LOGS
     path('daily-logs/', lead_schedule.DailyLogGenericView.as_view()),
     path('daily-logs/<int:pk>/', lead_schedule.DailyLogDetailGenericView.as_view()),
+    path('daily-logs/comment/', lead_schedule.DaiLyLogCommentGenericView.as_view()),
+    path('daily-logs/comment/<int:pk>/', lead_schedule.DaiLyLogCommentDetailGenericView.as_view()),
     # FILE DAILY LOG
     path('daily-logs/<int:pk_daily_log>/attachments/', lead_schedule.AttachmentsDailyLogGenericView.as_view({
         "post": "create_file", "get": "get_file"})),
@@ -130,9 +137,14 @@ url_schedule = [
 
     # SCHEDULE EVENT
     path('schedule-event/', lead_schedule.ScheduleEventGenericView.as_view()),
+    path('schedule-event/filter/', lead_schedule.filter_event),
     path('schedule-event/<int:pk>/', lead_schedule.ScheduleEventDetailGenericView.as_view()),
     path('select-schedule-event/', lead_schedule.select_event_predecessors),
     path('select-schedule-event-link/<int:pk>/', lead_schedule.select_event_link),
+    path('schedule-event/message/', lead_schedule.ScheduleEventMessageGenericView.as_view()),
+    path('schedule-event/shift/reason/', lead_schedule.ScheduleEventShiftReasonGenericView.as_view()),
+    path('schedule-event/shift/reason/<int:pk>/', lead_schedule.ScheduleEventShiftReasonDetailGenericView.as_view()),
+
     # FILE EVENT
     path('event/<int:pk_event>/attachments/', lead_schedule.AttachmentsEventGenericView.as_view({
         "post": "create_file", "get": "get_file"})),
@@ -156,6 +168,12 @@ url_schedule = [
 url_estimate = [
     path('po-formula/', estimate.POFormulaList.as_view()),
     path('po-formula/<int:pk>/', estimate.POFormulaDetail.as_view()),
+    path('formula-grouping/', estimate.POFormulaGroupingList.as_view()),
+    path('formula-grouping/<int:pk>/', estimate.POFormulaGroupingDetail.as_view()),
+    path('data-entry/', estimate.DataEntryList.as_view()),
+    path('data-entry/<int:pk>/', estimate.DataEntryDetail.as_view()),
+    path('template-name/', estimate.TemplateNameList.as_view()),
+    path('template-name/<int:pk>/', estimate.TemplateNameDetail.as_view()),
 ]
 # URL Config
 url_config = [
