@@ -5,10 +5,12 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import generics, permissions, status
 from django_filters import rest_framework as filters
 
+from api.serializers.base import ActivityLogSerializer
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter
 from ..models.config import Column, Search, Config, GridSetting
 from ..serializers.base import ContentTypeSerializer
 from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer
+from api.models import ActivityLog
 
 
 class ContentTypeList(generics.ListAPIView):
@@ -154,3 +156,17 @@ def config_view(request, model):
         serializer = ConfigSerializer(config)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ActivityLogList(generics.ListCreateAPIView):
+    queryset = ActivityLog.objects.all()
+    serializer_class = ActivityLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    # filter_backends = (filters.DjangoFilterBackend,)
+    # filterset_class = SearchFilter
+
+
+class ActivityLogDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ActivityLog.objects.all()
+    serializer_class = ActivityLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
