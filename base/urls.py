@@ -26,6 +26,8 @@ url_base = [
     path('grid-setting/', base.GridSettingListView.as_view()),
     path('grid-setting/<int:pk>/', base.GridSettingDetailGenericView.as_view()),
     path('config/<str:model>/', base.config_view),
+    path('logs/', base.ActivityLogList.as_view()),
+    path('logs/<int:pk>/', base.ActivityLogDetail.as_view()),
 ]
 
 # Create schema view for Swagger ------------------------------------------------

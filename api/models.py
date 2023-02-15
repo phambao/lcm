@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 from .middleware import get_request
 
@@ -28,3 +30,31 @@ class BaseModel(models.Model):
             self.user_create = request.user
         return super(BaseModel, self).save(force_insert=force_insert, force_update=force_update,
                                            using=using, update_fields=update_fields)
+
+
+class Action(models.IntegerChoices):
+    CREATE = 1, 'Create'
+    UPDATE = 2, 'Update'
+    DELETE = 3, 'Delete'
+
+
+class ActivityLog(BaseModel):
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    action = models.IntegerField(choices=Action.choices, blank=True, default=Action.CREATE)
+    last_state = models.JSONField(default=dict, blank=True)
+    next_state = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
+
+    def get_action_name(self):
+        if self.action == Action.CREATE:
+            return 'Create'
+        if self.action == Action.UPDATE:
+            return 'Update'
+        return 'Delete'
