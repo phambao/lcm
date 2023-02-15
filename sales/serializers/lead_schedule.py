@@ -16,7 +16,7 @@ from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging,
     TodoTemplateChecklistItem, DataType, ItemFieldDropDown, TodoCustomField, CustomFieldScheduleSetting, \
     CustomFieldScheduleDailyLogSetting, DailyLogCustomField, ItemFieldDropDownDailyLog, \
     DataType, ItemFieldDropDown, ScheduleEventPhaseSetting, FileCheckListItems, FileCheckListItemsTemplate, \
-    CommentDailyLog, AttachmentCommentDailyLog, ScheduleEventShift
+    CommentDailyLog, AttachmentCommentDailyLog, ScheduleEventShift, Attachments
 
 
 class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
@@ -266,6 +266,8 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         data['messaging'] = rs_messaging
         rs_custom_field = TodoCustomField.objects.filter(todo=data['id']).values()
         data['custom_field'] = rs_custom_field
+        files = Attachments.objects.filter(to_do=data['id']).values()
+        data['files'] = files
         return data
 
 
@@ -279,6 +281,7 @@ class ToDoCustomField(serializers.ModelSerializer):
 
 class MessageAndCustomFieldToDoCreateSerializer(serializers.Serializer):
     todo = serializers.IntegerField(required=False)
+
     custom_field = ToDoCustomField(required=False, many=True)
     message = MessagingSerializer(required=False, many=True)
 
