@@ -126,13 +126,13 @@ class ToDoChecklistItemSerializer(serializers.ModelSerializer):
                 file=content_file,
                 checklist_item=checklist_item_create,
                 user_create=user_create,
-                file_name=file.name
+                name=file.name
             )
             attachment_template = FileCheckListItemsTemplate(
                 file=content_file,
                 checklist_item_template=checklist_item_template,
                 user_create=user_create,
-                file_name=file.name
+                name=file.name
             )
             file_checklist_item_create.append(attachment)
             file_checklist_item_template_create.append(attachment_template)
@@ -180,13 +180,13 @@ class ToDoChecklistItemSerializer(serializers.ModelSerializer):
                 file=content_file,
                 checklist_item=checklist_item,
                 user_update=user_update,
-                file_name=file.name
+                name=file.name
             )
             attachment_template = FileCheckListItemsTemplate(
                 file=content_file,
                 checklist_item_template=checklist_item_template,
                 user_update=user_update,
-                file_name=file.name
+                name=file.name
             )
             file_checklist_item_create.append(attachment)
             file_checklist_item_template_create.append(attachment_template)
@@ -440,7 +440,7 @@ class CommentDailyLogSerializer(serializers.ModelSerializer):
                 file=content_file,
                 comment=comment_daily_log,
                 user_create=user_create,
-                file_name=file.name
+                name=file.name
             )
             file_comment_daily_log_create.append(attachment)
         AttachmentCommentDailyLog.objects.bulk_create(file_comment_daily_log_create)
@@ -465,7 +465,7 @@ class CommentDailyLogSerializer(serializers.ModelSerializer):
                 file=content_file,
                 comment=comment_daily_log,
                 user_create=user_create,
-                file_name=file.name
+                name=file.name
             )
             file_comment_daily_log_create.append(attachment)
         AttachmentCommentDailyLog.objects.bulk_create(file_comment_daily_log_create)
