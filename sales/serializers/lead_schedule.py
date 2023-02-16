@@ -125,12 +125,14 @@ class ToDoChecklistItemSerializer(serializers.ModelSerializer):
             attachment = FileCheckListItems(
                 file=content_file,
                 checklist_item=checklist_item_create,
-                user_create=user_create
+                user_create=user_create,
+                file_name=file.name
             )
             attachment_template = FileCheckListItemsTemplate(
                 file=content_file,
                 checklist_item_template=checklist_item_template,
-                user_create=user_create
+                user_create=user_create,
+                file_name=file.name
             )
             file_checklist_item_create.append(attachment)
             file_checklist_item_template_create.append(attachment_template)
@@ -177,12 +179,14 @@ class ToDoChecklistItemSerializer(serializers.ModelSerializer):
             attachment = FileCheckListItems(
                 file=content_file,
                 checklist_item=checklist_item,
-                user_update=user_update
+                user_update=user_update,
+                file_name=file.name
             )
             attachment_template = FileCheckListItemsTemplate(
                 file=content_file,
                 checklist_item_template=checklist_item_template,
-                user_update=user_update
+                user_update=user_update,
+                file_name=file.name
             )
             file_checklist_item_create.append(attachment)
             file_checklist_item_template_create.append(attachment_template)
@@ -358,7 +362,8 @@ class DailyLogSerializer(serializers.ModelSerializer):
         return daily_log_create
 
     def update(self, instance, data):
-        to_do = pop(data, 'to_do', [])
+        to_dos = pop(data, 'to_dos', [])
+        to_do = pop(data, 'to_do', None)
         daily_log_tags = pop(data, 'tags', [])
         data_custom_field = pop(data, 'custom_field', [])
         daily_log = lead_schedule.DailyLog.objects.filter(pk=instance.pk)
@@ -371,9 +376,9 @@ class DailyLogSerializer(serializers.ModelSerializer):
         daily_log.tags.add(*tags_objects)
 
         # to_do
-        todo_objects = ToDo.objects.filter(pk__in=[tmp['id'] for tmp in to_do])
-        daily_log.to_do.clear()
-        daily_log.to_do.add(*todo_objects)
+        todo_objects = ToDo.objects.filter(pk__in=[tmp['id'] for tmp in to_dos])
+        daily_log.to_dos.clear()
+        daily_log.to_dos.add(*todo_objects)
         DailyLogCustomField.objects.filter(daily_log=instance.pk).delete()
         data_insert = list()
         for custom_field in data_custom_field:
@@ -434,7 +439,8 @@ class CommentDailyLogSerializer(serializers.ModelSerializer):
             attachment = AttachmentCommentDailyLog(
                 file=content_file,
                 comment=comment_daily_log,
-                user_create=user_create
+                user_create=user_create,
+                file_name=file.name
             )
             file_comment_daily_log_create.append(attachment)
         AttachmentCommentDailyLog.objects.bulk_create(file_comment_daily_log_create)
@@ -458,7 +464,8 @@ class CommentDailyLogSerializer(serializers.ModelSerializer):
             attachment = AttachmentCommentDailyLog(
                 file=content_file,
                 comment=comment_daily_log,
-                user_create=user_create
+                user_create=user_create,
+                file_name=file.name
             )
             file_comment_daily_log_create.append(attachment)
         AttachmentCommentDailyLog.objects.bulk_create(file_comment_daily_log_create)
@@ -572,6 +579,7 @@ class PredecessorsLinkSerializer(serializers.Serializer):
 
 class ScheduleEventShiftReasonSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
+
     class Meta:
         model = lead_schedule.EventShiftReason
         fields = ('shift_reason', 'shift_note', 'id')
