@@ -121,7 +121,7 @@ class FileCheckListItemsTemplate(BaseModel):
 
     file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
     checklist_item_template = models.ForeignKey(CheckListItemsTemplate, on_delete=models.CASCADE,
-                                                related_name='file_check_list'),
+                                                related_name='file_check_list', null=True, blank=True)
     name = models.CharField(blank=True, max_length=128, null=True)
 
 
