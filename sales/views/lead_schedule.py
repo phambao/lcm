@@ -52,7 +52,7 @@ class ScheduleAttachmentsGenericView(GenericViewSet):
                 file=content_file,
                 to_do=todo,
                 user_create=user,
-                file_name=file.name
+                name=file.name
             )
             attachment_create.append(attachment)
 
@@ -96,7 +96,7 @@ class AttachmentsDailyLogGenericView(GenericViewSet):
                 file=content_file,
                 daily_log=daily_log,
                 user_create=user,
-                file_name=file.name
+                name=file.name
             )
             attachment_create.append(attachment)
 
@@ -140,7 +140,7 @@ class AttachmentsEventGenericView(GenericViewSet):
                 file=content_file,
                 event=data_event,
                 user_create=user,
-                file_name=file.name
+                name=file.name
             )
             attachment_create.append(attachment)
 
