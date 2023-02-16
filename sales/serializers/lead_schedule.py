@@ -293,7 +293,7 @@ class MessageAndCustomFieldToDoCreateSerializer(serializers.Serializer):
 class DailyLogNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_schedule.DailyLogTemplateNotes
-        fields = ('title', 'notes')
+        fields = ('id', 'title', 'notes')
 
 
 class DailyLogCustomFieldSerializer(serializers.ModelSerializer):
