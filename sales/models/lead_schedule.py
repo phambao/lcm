@@ -85,6 +85,7 @@ class FileCheckListItems(BaseModel):
 
     file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
     checklist_item = models.ForeignKey(CheckListItems, on_delete=models.CASCADE, related_name='file_check_list')
+    file_name = models.CharField(blank=True, max_length=128, null=True)
 
 
 class TodoTemplateChecklistItem(BaseModel):
@@ -120,7 +121,8 @@ class FileCheckListItemsTemplate(BaseModel):
 
     file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
     checklist_item_template = models.ForeignKey(CheckListItemsTemplate, on_delete=models.CASCADE,
-                                                related_name='file_check_list')
+                                                related_name='file_check_list'),
+    file_name = models.CharField(blank=True, max_length=128, null=True)
 
 
 class Attachments(BaseModel):
@@ -130,6 +132,7 @@ class Attachments(BaseModel):
 
     file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
     to_do = models.ForeignKey(ToDo, on_delete=models.CASCADE, related_name='attachments')
+    file_name = models.CharField(blank=True, max_length=128, null=True)
 
 
 class Messaging(BaseModel):
@@ -184,6 +187,7 @@ class AttachmentDailyLog(BaseModel):
 
     file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
     daily_log = models.ForeignKey(DailyLog, on_delete=models.CASCADE, related_name='attachment_daily_log_daily_log')
+    file_name = models.CharField(blank=True, max_length=128, null=True)
 
 
 class CommentDailyLog(BaseModel):
@@ -202,6 +206,7 @@ class AttachmentCommentDailyLog(BaseModel):
 
     comment = models.ForeignKey(CommentDailyLog, on_delete=models.CASCADE, related_name='attachment_daily_log_comment')
     file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
+    file_name = models.CharField(blank=True, max_length=128, null=True)
 
 
 class ScheduleEventSetting(BaseModel):
@@ -296,8 +301,9 @@ class EventShiftReason(BaseModel):
     class Meta:
         db_table = 'event_shift_reason'
 
-    shift_reason = models.ForeignKey(ShiftReason, on_delete=models.SET_NULL, related_name='event_shift', blank=True, null=True)
-    shift_note = models.TextField()
+    shift_reason = models.ForeignKey(ShiftReason, on_delete=models.SET_NULL, related_name='event_shift', blank=True,
+                                     null=True)
+    shift_note = models.TextField(blank=True, null=True)
     # event_shift = models.ForeignKey('ScheduleEventShift', on_delete=models.CASCADE,
     #                                 related_name='schedule_event_shift_reason', blank=True, null=True)
 
@@ -325,6 +331,7 @@ class FileScheduleEvent(BaseModel):
 
     file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
     event = models.ForeignKey(ScheduleEvent, on_delete=models.CASCADE, related_name='event_file')
+    file_name = models.CharField(blank=True, max_length=128, null=True)
 
 
 class DataType(models.TextChoices):
@@ -366,6 +373,7 @@ class CustomFieldScheduleDailyLogSetting(BaseModel):
     class Meta:
         db_table = 'custom_field_schedule_daily_log_setting'
         ordering = ['display_order']
+
     label = models.CharField(blank=True, max_length=128)
     data_type = models.CharField(max_length=128, choices=DataType.choices, default=DataType.SINGLE_LINE_TEXT)
     required = models.BooleanField(default=False)
@@ -394,6 +402,7 @@ class CustomFieldScheduleSetting(BaseModel):
     class Meta:
         db_table = 'custom_field_schedule_todo_setting'
         ordering = ['display_order']
+
     label = models.CharField(blank=True, max_length=128)
     data_type = models.CharField(max_length=128, choices=DataType.choices, default=DataType.SINGLE_LINE_TEXT)
     required = models.BooleanField(default=False)

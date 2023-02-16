@@ -48,11 +48,11 @@ class ScheduleAttachmentsGenericView(GenericViewSet):
         for file in files:
             file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
             content_file = ContentFile(file.read(), name=file_name)
-
             attachment = Attachments(
                 file=content_file,
                 to_do=todo,
-                user_create=user
+                user_create=user,
+                file_name=file.name
             )
             attachment_create.append(attachment)
 
@@ -95,7 +95,8 @@ class AttachmentsDailyLogGenericView(GenericViewSet):
             attachment = AttachmentDailyLog(
                 file=content_file,
                 daily_log=daily_log,
-                user_create=user
+                user_create=user,
+                file_name=file.name
             )
             attachment_create.append(attachment)
 
@@ -138,7 +139,8 @@ class AttachmentsEventGenericView(GenericViewSet):
             attachment = FileScheduleEvent(
                 file=content_file,
                 event=data_event,
-                user_create=user
+                user_create=user,
+                file_name=file.name
             )
             attachment_create.append(attachment)
 
