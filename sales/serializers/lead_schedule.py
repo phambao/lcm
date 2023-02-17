@@ -713,6 +713,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
                 source=data_shift['source'],
                 reason=data_shift['reason'],
                 notes=data_shift['notes'],
+                is_direct=data_shift['is_direct'],
                 event=schedule_event
             )
             data_create.append(temp)
