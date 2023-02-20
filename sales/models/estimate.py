@@ -3,6 +3,10 @@ from django.db import models
 from api.models import BaseModel
 
 
+class UnitLibrary(BaseModel):
+    name = models.CharField(max_length=128)
+
+
 class TemplateName(BaseModel):
 
     class EstimateTemplateName(models.IntegerChoices):
