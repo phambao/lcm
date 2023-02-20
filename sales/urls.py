@@ -174,6 +174,8 @@ url_estimate = [
     path('data-entry/<int:pk>/', estimate.DataEntryDetail.as_view()),
     path('template-name/', estimate.TemplateNameList.as_view()),
     path('template-name/<int:pk>/', estimate.TemplateNameDetail.as_view()),
+    path('unit-library/', estimate.UnitLibraryList.as_view()),
+    path('unit-library/<int:pk>/', estimate.UnitLibraryDetail.as_view()),
 ]
 # URL Config
 url_config = [
