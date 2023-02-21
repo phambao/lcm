@@ -1,18 +1,38 @@
 from rest_framework import serializers
 
+from base.serializers.base import IDAndNameSerializer
 from base.utils import pop
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, TemplateName, \
     UnitLibrary
 
 
+class DataEntrySerializer(serializers.ModelSerializer):
+    unit = IDAndNameSerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = DataEntry
+        fields = ('id', 'name', 'value', 'unit')
+
+    def create(self, validated_data):
+        unit = pop(validated_data, 'unit', {})
+        validated_data['unit_id'] = unit.get('id', None)
+        return super(DataEntrySerializer, self).create(validated_data)
+
+    def update(self, instance, validated_data):
+        unit = pop(validated_data, 'unit', {})
+        validated_data['unit_id'] = unit.get('id', None)
+        return super().update(instance, validated_data)
+
+
 class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
+    data_entry = DataEntrySerializer(allow_null=True, required=False)
+
     class Meta:
         model = POFormulaToDataEntry
-        fields = ('id', 'value', 'data_entry', 'data_entry')
+        fields = ('id', 'value', 'data_entry',)
 
     def to_representation(self, instance):
         data = super(POFormulaToDataEntrySerializer, self).to_representation(instance)
-        data['name'] = instance.data_entry.name
         return data
 
 
@@ -75,12 +95,6 @@ class POFormulaGroupingSerializer(serializers.ModelSerializer):
             data.append(POFormula(**po_formula))
         POFormula.objects.bulk_create(data)
         return super(POFormulaGroupingSerializer, self).update(instance, validated_data)
-
-
-class DataEntrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DataEntry
-        fields = ('id', 'name')
 
 
 class TemplateNameSerializer(serializers.ModelSerializer):
