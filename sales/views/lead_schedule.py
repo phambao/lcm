@@ -794,7 +794,7 @@ def get_id_by_parent_checklist_template(pk):
 def delete_file_todo_checklist_item(request, *args, **kwargs):
     file_id = kwargs.get('pk')
     pk_checklist = kwargs.get('pk_checklist')
-    checklist_item = lead_schedule.CheckListItems.objects.filter(pk=pk_checklist).first()
+    checklist_item = lead_schedule.CheckListItems.objects.get(pk=pk_checklist)
     checklist_item_template = lead_schedule.CheckListItemsTemplate.objects.filter(todo=checklist_item.to_do,
                                                                                   uuid=checklist_item.uuid,
                                                                                   to_do_checklist_template=None).first()
