@@ -22,6 +22,9 @@ class TemplateName(BaseModel):
 
 class DataEntry(BaseModel):
     name = models.CharField(max_length=128)
+    value = models.CharField(max_length=32, blank=True)
+    unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.SET_NULL,
+                             blank=True, null=True, related_name='data_entries')
 
 
 class POFormula(BaseModel):
