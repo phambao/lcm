@@ -289,6 +289,18 @@ class ToDoChecklistItemTemplateDetailGenericView(generics.RetrieveUpdateDestroyA
     permission_classes = [permissions.IsAuthenticated]
 
 
+class TemplateChecklistItemGenericView(generics.ListCreateAPIView):
+    queryset = CheckListItemsTemplate.objects.all()
+    serializer_class = lead_schedule.CheckListItemsTemplateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class TemplateChecklistItemDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CheckListItemsTemplate.objects.all()
+    serializer_class = lead_schedule.CheckListItemsTemplateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
 class ToDoMessageCustomFieldGenericView(GenericViewSet):
     serializer_class = lead_schedule.MessageAndCustomFieldToDoCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -775,3 +787,85 @@ def get_id_by_parent_checklist_template(pk):
         rs.append(e.id)
         rs.extend(get_id_by_parent_checklist_template(e.uuid))
     return rs
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_file_todo_checklist_item(request, *args, **kwargs):
+    file_id = kwargs.get('pk')
+    pk_checklist = kwargs.get('pk_checklist')
+    checklist_item = lead_schedule.CheckListItems.objects.filter(pk=pk_checklist).first()
+    checklist_item_template = lead_schedule.CheckListItemsTemplate.objects.filter(todo=checklist_item.to_do,
+                                                                                  uuid=checklist_item.uuid,
+                                                                                  to_do_checklist_template=None).first()
+    file_checklist = FileCheckListItems.objects.filter(pk=file_id)
+    file_checklist_template = FileCheckListItemsTemplate.objects.filter(
+        checklist_item_template=checklist_item_template.id)
+    file_checklist.delete()
+    file_checklist_template.delete()
+
+    data_file = FileCheckListItems.objects.filter(checklist_item=checklist_item.id)
+    file_checklist_item_template_create = list()
+    for file in data_file:
+        attachment_template = FileCheckListItemsTemplate(
+            file=file.file,
+            checklist_item_template=checklist_item_template,
+            name=file.name
+        )
+        file_checklist_item_template_create.append(attachment_template)
+    FileCheckListItemsTemplate.objects.bulk_create(file_checklist_item_template_create)
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_file_todo(request, *args, **kwargs):
+    file_id = kwargs.get('pk')
+    data_attachments = Attachments.objects.filter(pk=file_id)
+    data_attachments.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_file_daily_log(request, *args, **kwargs):
+    file_id = kwargs.get('pk')
+    data_attachments = AttachmentDailyLog.objects.filter(pk=file_id)
+    data_attachments.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_file_event(request, *args, **kwargs):
+    file_id = kwargs.get('pk')
+    data_attachments = FileScheduleEvent.objects.filter(pk=file_id)
+    data_attachments.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_file_checklist_template(request, *args, **kwargs):
+    file_id = kwargs.get('pk')
+    data_attachments = FileCheckListItemsTemplate.objects.filter(pk=file_id)
+    data_attachments.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# @api_view(['GET'])
+# @permission_classes([permissions.IsAuthenticated])
+# def get_file_to_checklist(request, *args, **kwargs):
+#     pk_checklist = kwargs.get('pk_checklist')
+#     data_attachments = FileCheckListItems.objects.filter(checklist_item=pk_checklist)
+#     files = lead_schedule.ScheduleEventSerializer(
+#         data_attachments, many=True, context={'request': request}).data
+#     return Response(status=status.HTTP_200_OK, data=event)
+#
+#
+# @api_view(['GET'])
+# @permission_classes([permissions.IsAuthenticated])
+# def get_file_to_checklist_template(request, *args, **kwargs):
+#     pk_checklist_template = kwargs.get('pk_checklist')
+#     data_attachments = FileCheckListItemsTemplate.objects.filter(checklist_item_template=pk_checklist_template)
+#     return Response(status=status.HTTP_204_NO_CONTENT)

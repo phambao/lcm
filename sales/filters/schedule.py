@@ -18,8 +18,8 @@ class DailyLogFilter(filters.FilterSet):
     private_notify = filters.BooleanFilter('private_notify')
     event = filters.ModelChoiceFilter(queryset=ScheduleEvent.objects.all())
     # date = filters.DateRangeFilter(field_name='date', choices=CHOICES, filters=FILTERS)
-    start_day = filters.DateFilter(field_name='date', lookup_expr='gte')
-    end_day = filters.DateFilter(field_name='date', lookup_expr='lte')
+    start_day = filters.DateTimeFilter(field_name='date', lookup_expr='gte')
+    end_day = filters.DateTimeFilter(field_name='date', lookup_expr='lte')
 
     class Meta:
         model = DailyLog
@@ -54,8 +54,8 @@ class ToDoFilter(filters.FilterSet):
     title = filters.CharFilter(field_name="title", lookup_expr='icontains')
     priority = filters.ChoiceFilter(choices=Priority.choices)
     due_date = filters.DateRangeFilter(field_name='due_date', choices=CHOICES, filters=FILTERS)
-    start_day = filters.DateFilter(field_name='due_date', lookup_expr='gte')
-    end_day = filters.DateFilter(field_name='due_date', lookup_expr='lte')
+    start_day = filters.DateTimeFilter(field_name='due_date', lookup_expr='gte')
+    end_day = filters.DateTimeFilter(field_name='due_date', lookup_expr='lte')
     time_hour = filters.DateTimeFilter(field_name='time_hour')
     is_complete = filters.BooleanFilter('is_complete')
     sync_due_date = filters.DateTimeFilter(field_name='sync_due_date')
