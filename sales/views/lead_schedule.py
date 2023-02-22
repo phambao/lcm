@@ -41,8 +41,8 @@ class ScheduleAttachmentsGenericView(GenericViewSet):
         user = request.user
         pk_todo = self.kwargs.get('pk_todo')
         todo = get_object_or_404(ToDo.objects.all(), pk=self.kwargs['pk_todo'])
-        data_attachments = Attachments.objects.filter(to_do=pk_todo)
-        data_attachments.delete()
+        # data_attachments = Attachments.objects.filter(to_do=pk_todo)
+        # data_attachments.delete()
         files = request.FILES.getlist('file')
         attachment_create = list()
         for file in files:
@@ -85,8 +85,8 @@ class AttachmentsDailyLogGenericView(GenericViewSet):
         user = request.user
         pk_daily_log = self.kwargs.get('pk_daily_log')
         daily_log = get_object_or_404(DailyLog.objects.all(), pk=self.kwargs['pk_daily_log'])
-        data_attachments = AttachmentDailyLog.objects.filter(daily_log=pk_daily_log)
-        data_attachments.delete()
+        # data_attachments = AttachmentDailyLog.objects.filter(daily_log=pk_daily_log)
+        # data_attachments.delete()
         files = request.FILES.getlist('file')
         attachment_create = list()
         for file in files:
@@ -129,8 +129,8 @@ class AttachmentsEventGenericView(GenericViewSet):
         user = request.user
         pk_event = self.kwargs.get('pk_event')
         data_event = get_object_or_404(ScheduleEvent.objects.all(), pk=self.kwargs['pk_event'])
-        data_attachments = FileScheduleEvent.objects.filter(event=pk_event)
-        data_attachments.delete()
+        # data_attachments = FileScheduleEvent.objects.filter(event=pk_event)
+        # data_attachments.delete()
         files = request.FILES.getlist('file')
         attachment_create = list()
         for file in files:
