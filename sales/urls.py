@@ -99,6 +99,9 @@ url_schedule = [
     # FILE
     path('todo/<int:pk_todo>/attachments/', lead_schedule.ScheduleAttachmentsGenericView.as_view({
         "post": "create_file", "get": "get_file"})),
+
+    path('todo/checklist-item/<int:pk_checklist>/file/<int:pk>/', lead_schedule.delete_file_todo_checklist_item),
+    path('todo/file/<int:pk>/', lead_schedule.delete_file_todo),
     # TAG
     path('tags/', lead_schedule.TagScheduleGenericView.as_view()),
     path('tags/<int:pk>/', lead_schedule.TagScheduleDetailGenericView.as_view()),
@@ -110,6 +113,10 @@ url_schedule = [
     path('checklist-item/<int:pk>/', lead_schedule.CheckListItemDetailGenericView.as_view()),
     path('todo/<int:pk_todo>/checklist-item/', lead_schedule.get_checklist_by_todo),
     path('todo/<int:pk_todo>/checklist-item/template/', lead_schedule.get_checklist_template_by_todo),
+    path('checklist-item/template/', lead_schedule.TemplateChecklistItemGenericView.as_view()),
+    path('checklist-item/template/<int:pk>/', lead_schedule.TemplateChecklistItemDetailGenericView.as_view()),
+    path('checklist-item/template/file/<int:pk>/', lead_schedule.delete_file_checklist_template),
+
 
     # TEMPLATE CHECKLIST ITEM
     path('todo/checklist-item/template/', lead_schedule.ToDoChecklistItemTemplateGenericView.as_view()),
@@ -124,6 +131,7 @@ url_schedule = [
     # FILE DAILY LOG
     path('daily-logs/<int:pk_daily_log>/attachments/', lead_schedule.AttachmentsDailyLogGenericView.as_view({
         "post": "create_file", "get": "get_file"})),
+    path('daily-logs/file/<int:pk>/', lead_schedule.delete_file_daily_log),
     # TEMPLATE NOTE DAILY LOG
     path('daily-logs/template/', lead_schedule.DailyLogTemplateNoteGenericView.as_view()),
     path('daily-logs/template/<int:pk>/', lead_schedule.DailyLogTemplateNoteDetailGenericView.as_view()),
@@ -148,6 +156,7 @@ url_schedule = [
     # FILE EVENT
     path('event/<int:pk_event>/attachments/', lead_schedule.AttachmentsEventGenericView.as_view({
         "post": "create_file", "get": "get_file"})),
+    path('event/file/<int:pk>/', lead_schedule.delete_file_event),
     # SETTING EVENT
     path('schedule-event/setting/', lead_schedule.ScheduleEventSettingGenericView.as_view()),
     path('schedule-event/setting/<int:pk>/', lead_schedule.ScheduleEventSettingDetailGenericView.as_view()),

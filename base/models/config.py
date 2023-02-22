@@ -11,6 +11,7 @@ class Column(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True, blank=True)
     is_public = models.BooleanField(default=False, blank=True)
+    is_active = models.BooleanField(default=False, blank=True)
 
 
 class Search(models.Model):
