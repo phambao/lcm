@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -170,3 +171,14 @@ class ActivityLogDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = ActivityLog.objects.all()
     serializer_class = ActivityLogSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+@api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def active_column(request, pk):
+    column = get_object_or_404(Column, pk=pk, user=request.user)
+    Column.objects.filter(is_active=True, user=request.user).update(is_active=False)
+    column.is_active = True
+    column.save()
+    serializer = ColumnSerializer(column)
+    return Response(status=status.HTTP_200_OK, data=serializer.data)

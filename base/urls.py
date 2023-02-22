@@ -23,6 +23,7 @@ url_base = [
     path('search/<int:pk>/', base.SearchLeadDetailGenericView.as_view()),
     path('column/', base.ColumnLeadGenericView.as_view()),
     path('column/<int:pk>/', base.ColumnLeadDetailGenericView.as_view()),
+    path('column/<int:pk>/active/', base.active_column),
     path('grid-setting/', base.GridSettingListView.as_view()),
     path('grid-setting/<int:pk>/', base.GridSettingDetailGenericView.as_view()),
     path('config/<str:model>/', base.config_view),
