@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
@@ -10,6 +9,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
+from base.tasks import celery_send_mail
 from ..serializers.auth import UserSerializer, RegisterSerializer, LoginSerializer, User, \
     ForgotPasswordSerializer, CheckCodeSerializer, ChangePasswordSerializer
 
@@ -75,7 +75,7 @@ def forgot_password(request):
         user = get_user_model().objects.get(email=email)
         user.code = get_random_string(length=6, allowed_chars='1234567890')
         user.save()
-        send_mail('Change password', user.code, settings.EMAIL_HOST_USER, [email], fail_silently=False)
+        celery_send_mail.delay('Change password', user.code, settings.EMAIL_HOST_USER, [email], False)
     except get_user_model().DoesNotExist:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"email": "Email is not in the system"})
     return Response(status=status.HTTP_200_OK)
