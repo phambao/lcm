@@ -32,6 +32,7 @@ class ColumnFilter(filters.FilterSet):
     content_type = filters.ModelChoiceFilter(queryset=ContentType.objects.all())
     model = filters.CharFilter(field_name='content_type__model', lookup_expr='exact')
     is_public = filters.BooleanFilter(field_name='is_public', method='get_public')
+    is_active = filters.BooleanFilter(field_name='is_active')
 
     class Meta:
         model = Column

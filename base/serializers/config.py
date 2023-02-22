@@ -8,7 +8,9 @@ class ColumnSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Column
-        fields = ('id', 'name', 'params', 'content_type', 'user', 'model', 'is_public', 'hidden_params')
+        fields = ('id', 'name', 'params', 'content_type', 'user', 'model', 'is_public',
+                  'hidden_params', 'is_active')
+        extra_kwargs = {'is_active': {'read_only': True}}
 
 
 class SearchSerializer(serializers.ModelSerializer):
