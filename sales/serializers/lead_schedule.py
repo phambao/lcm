@@ -419,7 +419,7 @@ class CommentDailyLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = lead_schedule.CommentDailyLog
-        fields = ('daily_log', 'comment', 'file', 'id')
+        fields = ('daily_log', 'comment', 'file', 'id', 'user_create', 'user_update')
 
     def create(self, validated_data):
         request = self.context['request']
