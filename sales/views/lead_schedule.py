@@ -853,19 +853,15 @@ def delete_file_checklist_template(request, *args, **kwargs):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# @api_view(['GET'])
-# @permission_classes([permissions.IsAuthenticated])
-# def get_file_to_checklist(request, *args, **kwargs):
-#     pk_checklist = kwargs.get('pk_checklist')
-#     data_attachments = FileCheckListItems.objects.filter(checklist_item=pk_checklist)
-#     files = lead_schedule.ScheduleEventSerializer(
-#         data_attachments, many=True, context={'request': request}).data
-#     return Response(status=status.HTTP_200_OK, data=event)
-#
-#
-# @api_view(['GET'])
-# @permission_classes([permissions.IsAuthenticated])
-# def get_file_to_checklist_template(request, *args, **kwargs):
-#     pk_checklist_template = kwargs.get('pk_checklist')
-#     data_attachments = FileCheckListItemsTemplate.objects.filter(checklist_item_template=pk_checklist_template)
-#     return Response(status=status.HTTP_204_NO_CONTENT)
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_event(request):
+    """
+        DELETE: delete multiple event
+    """
+
+    if request.method == 'DELETE':
+        ids = request.data
+        event = ScheduleEvent.objects.filter(id__in=ids)
+        event.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
