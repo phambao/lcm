@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -205,3 +206,7 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool, default=False)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', cast=bool, default=False)
+
+CELERY_IP = config('CELERY_IP', default='')
+CELERY_PORT = config('CELERY_PORT', default='')
+CELERY_DATABASE = config('CELERY_DATABASE', default='')
