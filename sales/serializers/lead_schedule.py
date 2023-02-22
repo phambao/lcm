@@ -561,8 +561,21 @@ class CheckListItemsTemplateSerializer(serializers.ModelSerializer, SerializerMi
         instance.refresh_from_db()
         return instance
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data_file = FileCheckListItemsTemplate.objects.filter(checklist_item_template=data['id'])
+        data['assigned_to'] = UserCustomSerializer(instance.assigned_to.all(), many=True).data
+        data['files'] = FileCheckListItemsTemplateSerializer(data_file, many=True).data
+        return data
+
 
 PASS_FIELDS = ['user_create', 'user_update', 'to_do_checklist_template']
+
+
+class FileCheckListItemsTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.FileCheckListItemsTemplate
+        fields = '__all__'
 
 
 class ToDoCheckListItemsTemplateSerializer(serializers.ModelSerializer):
@@ -605,6 +618,12 @@ class ToDoCheckListItemsTemplateSerializer(serializers.ModelSerializer):
 
         instance.refresh_from_db()
         return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        checklist_item = lead_schedule.CheckListItemsTemplate.objects.filter(to_do_checklist_template=data['id'])
+        data['check_list'] = CheckListItemsTemplateSerializer(checklist_item, many=True).data
+        return data
 
 
 class NamePredecessorsSerializer(serializers.Serializer):
