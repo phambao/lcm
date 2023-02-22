@@ -606,6 +606,12 @@ class ToDoCheckListItemsTemplateSerializer(serializers.ModelSerializer):
         instance.refresh_from_db()
         return instance
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        checklist_item = lead_schedule.CheckListItemsTemplate.objects.filter(to_do_checklist_template=data['id'])
+        data['check_list'] = CheckListItemsTemplateSerializer(checklist_item, many=True).data
+        return data
+
 
 class NamePredecessorsSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)
