@@ -92,6 +92,7 @@ url_catalog = [
 url_schedule = [
     # TO_DO
     path('todo/', lead_schedule.SourceScheduleToDoGenericView.as_view()),
+    path('todo/delete/', lead_schedule.delete_todo),
     path('todo/message/', lead_schedule.ScheduleTodoMessageGenericView.as_view()),
     path('todo/<int:pk>/', lead_schedule.ScheduleDetailGenericView.as_view()),
     path('todo/message-custom-field/', lead_schedule.ToDoMessageCustomFieldGenericView.as_view({
@@ -125,6 +126,8 @@ url_schedule = [
     path('todo/<int:pk_todo>/other-template/<int:pk_template>/', lead_schedule.select_checklist_template),
     # DAILY LOGS
     path('daily-logs/', lead_schedule.DailyLogGenericView.as_view()),
+    path('daily-logs/delete/', lead_schedule.delete_daily_log),
+    path('daily-logs/template/delete/', lead_schedule.delete_template_daily_log),
     path('daily-logs/<int:pk>/', lead_schedule.DailyLogDetailGenericView.as_view()),
     path('daily-logs/comment/', lead_schedule.DaiLyLogCommentGenericView.as_view()),
     path('daily-logs/comment/<int:pk>/', lead_schedule.DaiLyLogCommentDetailGenericView.as_view()),

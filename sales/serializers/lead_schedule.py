@@ -315,7 +315,7 @@ class DailyLogSerializer(serializers.ModelSerializer):
         model = lead_schedule.DailyLog
         fields = ('id', 'date', 'tags', 'to_dos', 'note', 'lead_list', 'internal_user_share', 'internal_user_notify',
                   'sub_member_share', 'sub_member_notify', 'owner_share', 'owner_notify', 'private_share',
-                  'private_notify', 'custom_field', 'to_do', 'event', 'title', 'color')
+                  'private_notify', 'custom_field', 'to_do', 'event', 'title', 'color', 'user_create', 'user_update')
         kwargs = {'to_dos': {'required': False},
                   'tags': {'required': False},
                   }
