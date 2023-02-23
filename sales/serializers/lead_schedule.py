@@ -415,18 +415,18 @@ class DailyLogSerializer(serializers.ModelSerializer):
 
 
 class CommentDailyLogSerializer(serializers.ModelSerializer):
-    file = serializers.FileField(required=False)
+    files = serializers.FileField(required=False)
 
     class Meta:
         model = lead_schedule.CommentDailyLog
-        fields = ('daily_log', 'comment', 'file', 'id', 'user_create', 'user_update')
+        fields = ('daily_log', 'comment', 'files', 'id', 'user_create', 'user_update')
 
     def create(self, validated_data):
         request = self.context['request']
         user_create = user_update = request.user
         daily_log = pop(validated_data, 'daily_log', None)
-        file = pop(validated_data, 'file', [])
-        files = request.FILES.getlist('file')
+        data_file = pop(validated_data, 'files', [])
+        files = request.FILES.getlist('files')
 
         comment_daily_log = CommentDailyLog.objects.create(
             user_create=user_create, user_update=user_update,
@@ -450,9 +450,9 @@ class CommentDailyLogSerializer(serializers.ModelSerializer):
     def update(self, instance, data):
         request = self.context['request']
         user_create = user_update = request.user
-        file = pop(data, 'file', [])
+        data_file = pop(data, 'files', [])
         # daily_log = pop(data, 'daily_log', None)
-        files = request.FILES.getlist('file')
+        files = request.FILES.getlist('files')
 
         comment_daily_log = CommentDailyLog.objects.filter(pk=instance.pk)
         comment_daily_log.update(**data)
