@@ -865,3 +865,45 @@ def delete_event(request):
         event = ScheduleEvent.objects.filter(id__in=ids)
         event.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_todo(request):
+    """
+        DELETE: delete multiple to_do
+    """
+
+    if request.method == 'DELETE':
+        ids = request.data
+        todo = ToDo.objects.filter(id__in=ids)
+        todo.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_daily_log(request):
+    """
+        DELETE: delete multiple daily log
+    """
+
+    if request.method == 'DELETE':
+        ids = request.data
+        daily_log = DailyLog.objects.filter(id__in=ids)
+        daily_log.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_template_daily_log(request):
+    """
+        DELETE: delete multiple daily log template
+    """
+
+    if request.method == 'DELETE':
+        ids = request.data
+        daily_log_template = DailyLogTemplateNotes.objects.filter(id__in=ids)
+        daily_log_template.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)

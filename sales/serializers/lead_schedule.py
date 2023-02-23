@@ -315,7 +315,7 @@ class DailyLogSerializer(serializers.ModelSerializer):
         model = lead_schedule.DailyLog
         fields = ('id', 'date', 'tags', 'to_dos', 'note', 'lead_list', 'internal_user_share', 'internal_user_notify',
                   'sub_member_share', 'sub_member_notify', 'owner_share', 'owner_notify', 'private_share',
-                  'private_notify', 'custom_field', 'to_do', 'event', 'title', 'color')
+                  'private_notify', 'custom_field', 'to_do', 'event', 'title', 'color', 'user_create', 'user_update')
         kwargs = {'to_dos': {'required': False},
                   'tags': {'required': False},
                   }
@@ -415,18 +415,18 @@ class DailyLogSerializer(serializers.ModelSerializer):
 
 
 class CommentDailyLogSerializer(serializers.ModelSerializer):
-    file = serializers.FileField(required=False)
+    files = serializers.FileField(required=False)
 
     class Meta:
         model = lead_schedule.CommentDailyLog
-        fields = ('daily_log', 'comment', 'file', 'id', 'user_create', 'user_update')
+        fields = ('daily_log', 'comment', 'files', 'id', 'user_create', 'user_update')
 
     def create(self, validated_data):
         request = self.context['request']
         user_create = user_update = request.user
         daily_log = pop(validated_data, 'daily_log', None)
-        file = pop(validated_data, 'file', [])
-        files = request.FILES.getlist('file')
+        data_file = pop(validated_data, 'files', [])
+        files = request.FILES.getlist('files')
 
         comment_daily_log = CommentDailyLog.objects.create(
             user_create=user_create, user_update=user_update,
@@ -450,9 +450,9 @@ class CommentDailyLogSerializer(serializers.ModelSerializer):
     def update(self, instance, data):
         request = self.context['request']
         user_create = user_update = request.user
-        file = pop(data, 'file', [])
+        data_file = pop(data, 'files', [])
         # daily_log = pop(data, 'daily_log', None)
-        files = request.FILES.getlist('file')
+        files = request.FILES.getlist('files')
 
         comment_daily_log = CommentDailyLog.objects.filter(pk=instance.pk)
         comment_daily_log.update(**data)
