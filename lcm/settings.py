@@ -202,9 +202,9 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool, default=False)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', cast=bool, default=False)
 
-CELERY_IP = config('CELERY_IP', default='')
-CELERY_PORT = config('CELERY_PORT', default='')
-CELERY_DATABASE = config('CELERY_DATABASE', default='')
+REDIS_HOST = config('REDIS_HOST', default='localhost')
+REDIS_PORT = config('REDIS_PORT', default='6379')
+REDIS_CELERY_DATABASE = config('REDIS_CELERY_DATABASE', default='0')
 
 USE_DEBUG_TOOLBAR = config('USE_DEBUG_TOOLBAR', cast=bool, default=False)
 
