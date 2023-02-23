@@ -15,6 +15,7 @@ python manage.py loaddata cities
 python manage.py loaddata zipcode
 python manage.py loaddata lead_list
 python manage.py loaddata catalog
-
 python manage.py createcachetable
+
+celery -A lcm worker --pool=solo --loglevel=info
 ```
