@@ -580,18 +580,18 @@ class FileCheckListItemsTemplateSerializer(serializers.ModelSerializer):
 
 class ToDoCheckListItemsTemplateSerializer(serializers.ModelSerializer):
     template_name = serializers.CharField(allow_null=True)
-    todo = serializers.IntegerField(allow_null=True)
+    to_do = serializers.IntegerField(allow_null=True)
 
     class Meta:
         model = lead_schedule.TodoTemplateChecklistItem
-        fields = ('id', 'template_name', 'todo')
+        fields = ('id', 'template_name', 'to_do')
 
     def create(self, validated_data):
         request = self.context['request']
         data = request.data
         user_create = user_update = request.user
 
-        todo = pop(data, 'todo', None)
+        todo = pop(data, 'to_do', None)
 
         template_to_do_checklist = lead_schedule.TodoTemplateChecklistItem.objects.create(
             user_create=user_create,
@@ -612,6 +612,7 @@ class ToDoCheckListItemsTemplateSerializer(serializers.ModelSerializer):
     def update(self, instance, data):
         request = self.context['request']
         user_create = user_update = request.user
+        todo = pop(data, 'to_do', None)
         # checklist_item = pop(data, 'checklist_item', [])
         to_do_checklist_template = lead_schedule.TodoTemplateChecklistItem.objects.filter(pk=instance.pk)
         to_do_checklist_template.update(**data)
