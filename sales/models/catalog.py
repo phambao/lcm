@@ -213,3 +213,8 @@ class Catalog(BaseModel):
             children = Catalog.objects.filter(parents__id=self.pk, id__in=descendant)
             for child in children:
                 child.duplicate_by_catalog(parent=c, descendant=descendant, data_points=data_points)
+
+    def get_ancestor_linked_description(self):
+        catalogs = self.get_ancestors()
+        data_points = DataPoint.objects.filter(catalog__in=catalogs)
+        return data_points
