@@ -34,8 +34,7 @@ class POFormula(BaseModel):
     text_formula = models.TextField(max_length=256)
     type = models.ForeignKey('sales.Catalog', null=True, blank=True,
                              on_delete=models.SET_NULL, related_name='formulas')
-    group = models.ForeignKey('sales.POFormulaGrouping', null=True, blank=True,
-                              on_delete=models.CASCADE, related_name='po_formula_groupings')
+    groups = models.ManyToManyField('sales.POFormulaGrouping', blank=True, related_name='formulas')
     related_formulas = models.ManyToManyField('self', related_name='used_by', symmetrical=False, blank=True)
 
 

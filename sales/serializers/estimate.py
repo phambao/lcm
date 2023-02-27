@@ -12,6 +12,7 @@ class DataEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = DataEntry
         fields = ('id', 'name', 'value', 'unit')
+        extra_kwargs = {'id': {'read_only': False}}
 
     def create(self, validated_data):
         unit = pop(validated_data, 'unit', {})
@@ -41,7 +42,7 @@ def create_po_formula_to_data_entry(instance, data_entries):
     for data_entry in data_entries:
         try:
             data.append(POFormulaToDataEntry(po_formula_id=instance.pk,
-                                             data_entry=data_entry['data_entry'],
+                                             data_entry_id=data_entry.get('data_entry', {}).get('id', None),
                                              value=data_entry['value']))
         except KeyError:
             pass
@@ -53,7 +54,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormula
-        fields = ('id', 'name', 'formula', 'text_formula', 'type', 'group', 'self_data_entries')
+        fields = ('id', 'name', 'formula', 'text_formula', 'type', 'groups', 'self_data_entries')
 
     def create(self, validated_data):
         data_entries = pop(validated_data, 'self_data_entries', [])
@@ -69,7 +70,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
 
 class POFormulaGroupingSerializer(serializers.ModelSerializer):
-    po_formula_groupings = POFormulaSerializer('group', many=True,
+    po_formula_groupings = POFormulaSerializer('groups', many=True,
                                                allow_null=True, required=False)
 
     class Meta:

@@ -155,6 +155,15 @@ def get_catalog_ancestors(request):
     return Response(status=status.HTTP_200_OK, data=data)
 
 
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_datapoint_by_catalog(request, pk):
+    c = Catalog.objects.get(id=pk)
+    serializer = catalog.DataPointSerializer(c.get_ancestor_linked_description(),
+                                             many=True, context={'request': request})
+    return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def add_multiple_level(request):
