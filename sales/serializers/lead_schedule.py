@@ -650,7 +650,7 @@ class ScheduleEventShiftSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_schedule.ScheduleEventShift
         fields = ('user', 'start_day', 'start_day_after_change', 'end_day', 'end_day_after_change', 'source',
-                  'notes', 'reason')
+                  'notes', 'reason', 'is_direct')
 
 
 class ScheduleEventSerializer(serializers.ModelSerializer):
