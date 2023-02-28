@@ -71,6 +71,7 @@ url_leads = [
 url_catalog = [
     path('list/', catalog.CatalogList.as_view(), name='catalogs'),
     path('list/<int:pk>/', catalog.CatalogDetail.as_view()),
+    path('list/<int:pk>/data-points/', catalog.get_datapoint_by_catalog),
     path('list/<int:pk>/children/', catalog.get_catalog_children),
     # path('list/<int:pk>/levels/', catalog.get_catalog_levels), temporarily removed
     path('list/<int:pk>/tree/', catalog.get_catalog_tree),
