@@ -53,7 +53,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -138,11 +138,6 @@ DEFAULT_RENDERER_CLASSES = [
     'rest_framework.renderers.JSONRenderer',
 ]
 
-if DEBUG:
-    DEFAULT_RENDERER_CLASSES.append(
-        'rest_framework.renderers.BrowsableAPIRenderer',
-    )
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES':
         (
@@ -210,3 +205,21 @@ EMAIL_USE_SSL = config('EMAIL_USE_SSL', cast=bool, default=False)
 CELERY_IP = config('CELERY_IP', default='')
 CELERY_PORT = config('CELERY_PORT', default='')
 CELERY_DATABASE = config('CELERY_DATABASE', default='')
+
+USE_DEBUG_TOOLBAR = config('USE_DEBUG_TOOLBAR', cast=bool, default=False)
+
+if DEBUG:
+
+    DEFAULT_RENDERER_CLASSES.append(
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    )
+
+if USE_DEBUG_TOOLBAR:
+
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE.insert(2, "debug_toolbar.middleware.DebugToolbarMiddleware")
+    INTERNAL_IPS = [
+        # ...
+        "127.0.0.1",
+        # ...
+    ]
