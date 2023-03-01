@@ -15,7 +15,10 @@ PASS_FIELDS = ['user_create', 'user_update', 'lead']
 
 
 class LeadDetailList(generics.ListCreateAPIView):
-    queryset = LeadDetail.objects.all()
+    queryset = LeadDetail.objects.all().prefetch_related('activities', 'contacts', 'contacts__phone_contacts',
+                                                         'project_types', 'salesperson', 'sources', 'tags',
+                                                         'photos',
+                                                         ).select_related('city', 'state', 'country')
     serializer_class = lead_list.LeadDetailCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
