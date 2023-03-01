@@ -160,7 +160,7 @@ class AttachmentsEventGenericView(GenericViewSet):
 
 
 class SourceScheduleToDoGenericView(generics.ListCreateAPIView):
-    queryset = ToDo.objects.all()
+    queryset = ToDo.objects.all().prefetch_related('tags', 'assigned_to')
     serializer_class = lead_schedule.ToDoCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -205,7 +205,7 @@ class ScheduleTodoMessageGenericView(generics.ListCreateAPIView):
 
 
 class DailyLogGenericView(generics.ListCreateAPIView):
-    queryset = DailyLog.objects.all()
+    queryset = DailyLog.objects.all().prefetch_related('tags', 'to_dos')
     serializer_class = lead_schedule.DailyLogSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -414,7 +414,7 @@ class ToDoMessageCustomFieldGenericView(GenericViewSet):
 
 
 class ScheduleEventGenericView(generics.ListCreateAPIView):
-    queryset = ScheduleEvent.objects.all()
+    queryset = ScheduleEvent.objects.all().prefetch_related('assigned_user', 'viewing', 'tags')
     serializer_class = lead_schedule.ScheduleEventSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)

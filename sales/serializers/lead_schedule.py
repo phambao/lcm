@@ -411,6 +411,9 @@ class DailyLogSerializer(serializers.ModelSerializer):
         rs = CommentDailyLogSerializer(comments, many=True)
         data['custom_field'] = rs_custom_field
         data['comments'] = rs.data
+        # comment = instance.comment_daily_log.all()
+        # rs = CommentDailyLogSerializer(comment, many=True)
+        # data['comments'] = rs.data
         return data
 
 
