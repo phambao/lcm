@@ -12,7 +12,7 @@ class DataEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = DataEntry
         fields = ('id', 'name', 'value', 'unit')
-        extra_kwargs = {'id': {'read_only': False}}
+        extra_kwargs = {'id': {'read_only': False, 'required': False}}
 
     def create(self, validated_data):
         unit = pop(validated_data, 'unit', {})
@@ -40,10 +40,17 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
 def create_po_formula_to_data_entry(instance, data_entries):
     data = []
     for data_entry in data_entries:
+        params = {"po_formula_id": instance.pk, "value": data_entry['value']}
         try:
-            data.append(POFormulaToDataEntry(po_formula_id=instance.pk,
-                                             data_entry_id=data_entry.get('data_entry', {}).get('id', None),
-                                             value=data_entry['value']))
+            data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
+            if data_entry_pk:
+                params["data_entry_id"] = data_entry_pk
+            else:
+                data_entry_params = data_entry.get('data_entry', {})
+                unit = pop(data_entry_params, 'unit', {})
+                data_entry_params['unit_id'] = unit.get('id')
+                params["data_entry_id"] = DataEntry.objects.create(**data_entry_params).pk
+            data.append(POFormulaToDataEntry(**params))
         except KeyError:
             pass
     POFormulaToDataEntry.objects.bulk_create(data)
