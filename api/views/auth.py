@@ -1,6 +1,7 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from django.conf import settings
+from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
 from knox.models import AuthToken
@@ -75,7 +76,10 @@ def forgot_password(request):
         user = get_user_model().objects.get(email=email)
         user.code = get_random_string(length=6, allowed_chars='1234567890')
         user.save()
-        celery_send_mail.delay('Change password', user.code, settings.EMAIL_HOST_USER, [email], False)
+        content = render_to_string('auth/reset-password-otp.html', {'username': user.get_username(),
+                                                                    'otp': user.code})
+        celery_send_mail.delay(f'Reset Your Password for {user.get_username()}',
+                               content, settings.EMAIL_HOST_USER, [email], False)
     except get_user_model().DoesNotExist:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"email": "Email is not in the system"})
     return Response(status=status.HTTP_200_OK)
