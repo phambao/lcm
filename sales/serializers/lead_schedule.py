@@ -796,8 +796,8 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
                 'is_direct': False
             }
             data_update = {
-                'start_day': data_update_link['start_day_shift'],
-                'end_day': data_update_link['end_day_shift'],
+                'start_day': data_update_link['start_day'],
+                'end_day': data_update_link['end_day'],
             }
             # data_update_link.pop('id')
             data_schedule_event_children.update(**data_update)
