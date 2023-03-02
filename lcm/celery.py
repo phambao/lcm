@@ -7,8 +7,8 @@ from django.conf import settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lcm.settings')
 
 app = Celery('lcm',
-             broker=f'redis://{settings.CELERY_IP}:{settings.CELERY_PORT}/{settings.CELERY_DATABASE}',
-             backend=f'redis://{settings.CELERY_IP}:{settings.CELERY_PORT}/{settings.CELERY_DATABASE}')
+             broker=f'redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_CELERY_DATABASE}',
+             backend=f'redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_CELERY_DATABASE}')
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.

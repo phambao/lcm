@@ -12,7 +12,7 @@ from ..serializers import catalog
 
 
 class CatalogList(generics.ListCreateAPIView):
-    queryset = Catalog.objects.all()
+    queryset = Catalog.objects.all().prefetch_related('data_points', 'parents')
     serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -21,7 +21,7 @@ class CatalogList(generics.ListCreateAPIView):
 
 
 class CatalogDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Catalog.objects.all()
+    queryset = Catalog.objects.all().prefetch_related('data_points', 'parents')
     serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -126,7 +126,7 @@ def get_catalog_tree(request, pk):
 def get_catalog_list(request, pk):
     catalog_obj = get_object_or_404(Catalog, pk=pk)
     catalog_ids = catalog_obj.get_all_descendant()
-    catalogs = Catalog.objects.filter(pk__in=catalog_ids)
+    catalogs = Catalog.objects.filter(pk__in=catalog_ids).prefetch_related('data_points', 'parents')
     serializer = catalog.CatalogSerializer(catalogs, many=True)
     return Response(status=status.HTTP_200_OK, data=serializer.data)
 
