@@ -787,16 +787,17 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
             schedule_event_parent = lead_schedule.ScheduleEvent.objects.get(pk=data_update_link['predecessor'].id)
             data_schedule_event_children = lead_schedule.ScheduleEvent.objects.filter(pk=data_update_link['id'])
             data_create_shift = {
-                'start_day': data_update_link['start_day'],
-                'start_day_after_change': data_update_link['start_day_shift'],
-                'end_day': data_update_link['start_day'],
-                'end_day_after_change': data_update_link['end_day_shift'],
+                'start_day': data_update_link['start_day_shift'],
+                # 'start_day_after_change': data_update_link['start_day_shift'],
+                'start_day_after_change': data_update_link['start_day'],
+                'end_day': data_update_link['end_day_shift'],
+                'end_day_after_change': data_update_link['end_day'],
                 'source': schedule_event_parent.event_title,
                 'is_direct': False
             }
             data_update = {
-                'start_day': data_update_link['start_day'],
-                'end_day': data_update_link['start_day'],
+                'start_day': data_update_link['start_day_shift'],
+                'end_day': data_update_link['end_day_shift'],
             }
             # data_update_link.pop('id')
             data_schedule_event_children.update(**data_update)
