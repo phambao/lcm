@@ -4,7 +4,6 @@ services:
   api:
     build: .
     restart: 'always'
-    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
     ports:
@@ -13,8 +12,18 @@ services:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_CELERY_DATABASE=${REDIS_CELERY_DATABASE}
     depends_on:
       - db
+      - cache
+
+  cache:
+    image: redis:alpine
+    restart: always
+    volumes: 
+      - ./data/cache:/data
 
   db:
     image: postgres:14
