@@ -147,6 +147,15 @@ class Messaging(BaseModel):
                                     blank=True)
 
 
+class FileMessageToDo(BaseModel):
+    class Meta:
+        db_table = 'file_todo_messaging'
+
+    message_todo = models.ForeignKey(Messaging, on_delete=models.CASCADE, null=True, related_name='todo_message_file')
+    file = models.CharField(blank=True, max_length=128, null=True)
+    name = models.CharField(blank=True, max_length=128, null=True)
+
+
 class DailyLog(BaseModel):
     class Meta:
         db_table = 'schedule_daily_log'
@@ -185,7 +194,7 @@ class AttachmentDailyLog(BaseModel):
         db_table = 'attachment_daily_log'
         ordering = ['-modified_date']
 
-    file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
+    file = models.CharField(blank=True, max_length=128, null=True)
     daily_log = models.ForeignKey(DailyLog, on_delete=models.CASCADE, related_name='attachment_daily_log_daily_log')
     name = models.CharField(blank=True, max_length=128, null=True)
 
@@ -197,6 +206,10 @@ class CommentDailyLog(BaseModel):
 
     daily_log = models.ForeignKey(DailyLog, on_delete=models.CASCADE, related_name='comment_daily_log')
     comment = models.TextField(blank=True)
+    show_owner = models.BooleanField(blank=True, null=True)
+    show_sub_vendors = models.BooleanField(blank=True, null=True)
+    notify = models.ManyToManyField(get_user_model(), related_name='comment_daily_log_notify',
+                                    blank=True)
 
 
 class AttachmentCommentDailyLog(BaseModel):
@@ -204,7 +217,7 @@ class AttachmentCommentDailyLog(BaseModel):
         db_table = 'attachment_comment_daily_log'
         ordering = ['-modified_date']
 
-    comment = models.ForeignKey(CommentDailyLog, on_delete=models.CASCADE, related_name='attachment_daily_log_comment')
+    comment = models.ForeignKey(CommentDailyLog, on_delete=models.CASCADE, null=True, related_name='attachment_daily_log_comment')
     file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
     name = models.CharField(blank=True, max_length=128, null=True)
 
@@ -288,6 +301,15 @@ class MessageEvent(BaseModel):
     show_sub_vendors = models.BooleanField(default=False, blank=True, null=True)
     notify = models.ManyToManyField(get_user_model(), related_name='message_vent_notify',
                                     blank=True)
+
+
+class FileMessageEvent(BaseModel):
+    class Meta:
+        db_table = 'file_event_messaging'
+
+    message_event = models.ForeignKey(MessageEvent, on_delete=models.CASCADE, null=True, related_name='file_message_event')
+    file = models.CharField(blank=True, max_length=128, null=True)
+    name = models.CharField(blank=True, max_length=128, null=True)
 
 
 class ShiftReason(BaseModel):

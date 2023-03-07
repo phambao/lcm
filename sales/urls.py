@@ -3,6 +3,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from base.views.base import FileMessageTodoGenericView
 from sales.views import lead_list, catalog, lead_schedule, estimate
 from api.views.upload_file import FileUploadView
 
@@ -95,12 +96,16 @@ url_schedule = [
     path('todo/', lead_schedule.SourceScheduleToDoGenericView.as_view()),
     path('todo/delete/', lead_schedule.delete_todo),
     path('todo/message/', lead_schedule.ScheduleTodoMessageGenericView.as_view()),
+    path('todo/message/<int:pk>/', lead_schedule.ScheduleTodoMessageDetailGenericView.as_view()),
     path('todo/<int:pk>/', lead_schedule.ScheduleDetailGenericView.as_view()),
     path('todo/message-custom-field/', lead_schedule.ToDoMessageCustomFieldGenericView.as_view({
         "post": "create_message_custom_field", "put": "update_message_custom_field"})),
     # FILE
     path('todo/<int:pk_todo>/attachments/', lead_schedule.ScheduleAttachmentsGenericView.as_view({
         "post": "create_file", "get": "get_file"})),
+
+    # path('todo/message/attachments/', lead_schedule.FileMessageTodoGenericView.as_view({
+    #     "post": "create_file", "get": "get_file"})),
 
     path('todo/checklist-item/<int:pk_checklist>/file/<int:pk>/', lead_schedule.delete_file_todo_checklist_item),
     path('todo/file/<int:pk>/', lead_schedule.delete_file_todo),
@@ -155,6 +160,7 @@ url_schedule = [
     path('select-schedule-event/', lead_schedule.select_event_predecessors),
     path('select-schedule-event-link/<int:pk>/', lead_schedule.select_event_link),
     path('schedule-event/message/', lead_schedule.ScheduleEventMessageGenericView.as_view()),
+    path('schedule-event/message/<int:pk>/', lead_schedule.ScheduleEventMessageDetailGenericView.as_view()),
     path('schedule-event/shift/reason/', lead_schedule.ScheduleEventShiftReasonGenericView.as_view()),
     path('schedule-event/shift/reason/<int:pk>/', lead_schedule.ScheduleEventShiftReasonDetailGenericView.as_view()),
 
@@ -194,6 +200,8 @@ url_estimate = [
 # URL Config
 url_config = [
     path('options-lead-list/', lead_schedule.select_lead_list),
+    path('file/', FileMessageTodoGenericView.as_view({
+        "post": "create_file"})),
 ]
 # DEFINE PATH FOR SALES APP -----------------------------------------------------
 url_sales = [
