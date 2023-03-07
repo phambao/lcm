@@ -45,5 +45,5 @@ class FileBuilder365(BaseModel):
     class Meta:
         db_table = 'file_builder365'
 
-    file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
+    file = models.FileField(upload_to='%Y/%m/%d/')
     name = models.CharField(blank=True, max_length=128)

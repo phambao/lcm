@@ -152,7 +152,7 @@ class FileMessageToDo(BaseModel):
         db_table = 'file_todo_messaging'
 
     message_todo = models.ForeignKey(Messaging, on_delete=models.CASCADE, null=True, related_name='todo_message_file')
-    file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
+    file = models.CharField(blank=True, max_length=128, null=True)
     name = models.CharField(blank=True, max_length=128, null=True)
 
 
@@ -194,7 +194,7 @@ class AttachmentDailyLog(BaseModel):
         db_table = 'attachment_daily_log'
         ordering = ['-modified_date']
 
-    file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
+    file = models.CharField(blank=True, max_length=128, null=True)
     daily_log = models.ForeignKey(DailyLog, on_delete=models.CASCADE, related_name='attachment_daily_log_daily_log')
     name = models.CharField(blank=True, max_length=128, null=True)
 
@@ -308,7 +308,7 @@ class FileMessageEvent(BaseModel):
         db_table = 'file_event_messaging'
 
     message_event = models.ForeignKey(MessageEvent, on_delete=models.CASCADE, null=True, related_name='file_message_event')
-    file = models.FileField(upload_to='sales/schedule/%Y/%m/%d/')
+    file = models.CharField(blank=True, max_length=128, null=True)
     name = models.CharField(blank=True, max_length=128, null=True)
 
 
