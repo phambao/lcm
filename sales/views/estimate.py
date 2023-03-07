@@ -2,9 +2,9 @@ from rest_framework import generics, permissions
 from django_filters import rest_framework as filters
 
 from sales.filters.estimate import TemplateNameFilter
-from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, TemplateName, UnitLibrary
+from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, TemplateName, UnitLibrary, DescriptionLibrary
 from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
-    TemplateNameSerializer, UnitLibrarySerializer
+    TemplateNameSerializer, UnitLibrarySerializer, DescriptionLibrarySerializer
 
 
 class POFormulaList(generics.ListCreateAPIView):
@@ -66,4 +66,16 @@ class UnitLibraryList(generics.ListCreateAPIView):
 class UnitLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = UnitLibrary.objects.all()
     serializer_class = UnitLibrarySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class DescriptionLibraryList(generics.ListCreateAPIView):
+    queryset = DescriptionLibrary.objects.all()
+    serializer_class = DescriptionLibrarySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class DescriptionLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = DescriptionLibrary.objects.all()
+    serializer_class = DescriptionLibrarySerializer
     permission_classes = [permissions.IsAuthenticated]

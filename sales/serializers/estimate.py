@@ -3,7 +3,7 @@ from rest_framework import serializers
 from base.serializers.base import IDAndNameSerializer
 from base.utils import pop, activity_log
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, TemplateName, \
-    UnitLibrary
+    UnitLibrary, DescriptionLibrary
 
 
 class DataEntrySerializer(serializers.ModelSerializer):
@@ -120,3 +120,9 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
     class Meta:
         model = UnitLibrary
         fields = ('id', 'name',)
+
+
+class DescriptionLibrarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DescriptionLibrary
+        fields = ('id', 'name', 'description',)

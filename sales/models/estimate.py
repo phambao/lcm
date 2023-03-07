@@ -57,3 +57,8 @@ class POFormulaToDataEntry(BaseModel):
 
 class POFormulaGrouping(BaseModel):
     name = models.CharField(max_length=128)
+
+
+class DescriptionLibrary(BaseModel):
+    name = models.CharField(max_length=128)
+    description = models.TextField(blank=True)
