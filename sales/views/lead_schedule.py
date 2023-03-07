@@ -22,7 +22,8 @@ from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachment
     AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate, \
     FileScheduleEvent, CustomFieldScheduleSetting, TodoCustomField, ScheduleToDoSetting, ScheduleDailyLogSetting, \
     CustomFieldScheduleDailyLogSetting, Messaging, ScheduleEventSetting, ScheduleEventPhaseSetting, DailyLogCustomField, \
-    FileCheckListItems, FileCheckListItemsTemplate, MessageEvent, CommentDailyLog, EventShiftReason, ShiftReason
+    FileCheckListItems, FileCheckListItemsTemplate, MessageEvent, CommentDailyLog, EventShiftReason, ShiftReason, \
+    FileMessageToDo
 from ..serializers import lead_schedule
 from ..serializers.lead_schedule import ScheduleEventPhaseSettingSerializer, ScheduleDailyLogSettingSerializer
 
@@ -159,8 +160,51 @@ class AttachmentsEventGenericView(GenericViewSet):
         return Response(status=status.HTTP_200_OK, data=data)
 
 
+# class FileMessageTodoGenericView(GenericViewSet):
+#     serializer_class = lead_schedule.FileMesageTodoSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+#
+#     # def get_queryset(self):
+#     #     get_object_or_404(Messaging.objects.all(), pk=self.kwargs['pk_message'])
+#     #     return FileMessageToDo.objects.filter(message_todo=self.kwargs['pk_message'])
+#
+#     def create_file(self, request, **kwargs):
+#         serializer = lead_schedule.FileMesageTodoSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         user = request.user
+#         # pk_message = self.kwargs.get('pk_message')
+#         # data_message = get_object_or_404(Messaging.objects.all(), pk=self.kwargs['pk_message'])
+#         # data_attachments = FileScheduleEvent.objects.filter(event=pk_event)
+#         # data_attachments.delete()
+#         files = request.FILES.getlist('file')
+#         attachment_create = list()
+#         for file in files:
+#             file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+#             content_file = ContentFile(file.read(), name=file_name)
+#             attachment = FileMessageToDo(
+#                 file=content_file,
+#                 user_create=user,
+#                 name=file.name
+#             )
+#             attachment_create.append(attachment)
+#
+#         attachments = FileMessageToDo.objects.bulk_create(attachment_create)
+#
+#         # attachments = FileMessageToDo.objects.filter(event=pk_message)
+#         data = lead_schedule.FileMessageToDoSerializer(
+#             attachments, many=True, context={'request': request}).data
+#         return Response(status=status.HTTP_200_OK, data=data)
+#
+#     def get_file(self, request, **kwargs):
+#         get_object_or_404(ScheduleEvent.objects.all(), pk=self.kwargs['pk_event'])
+#         data_file = FileScheduleEvent.objects.filter(event=self.kwargs['pk_event'])
+#         data = lead_schedule.FileMesageTodoSerializer(
+#             data_file, many=True, context={'request': request}).data
+#         return Response(status=status.HTTP_200_OK, data=data)
+
+
 class SourceScheduleToDoGenericView(generics.ListCreateAPIView):
-    queryset = ToDo.objects.all().prefetch_related('tags', 'assigned_to')
+    queryset = ToDo.objects.all().prefetch_related('tags', 'assigned_to', 'check_list')
     serializer_class = lead_schedule.ToDoCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -169,7 +213,7 @@ class SourceScheduleToDoGenericView(generics.ListCreateAPIView):
 
 
 class ScheduleDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ToDo.objects.all()
+    queryset = ToDo.objects.all().prefetch_related('tags', 'assigned_to', 'check_list')
     serializer_class = lead_schedule.ToDoCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -199,7 +243,13 @@ class ScheduleCheckListItemDetailGenericView(generics.RetrieveUpdateDestroyAPIVi
 
 
 class ScheduleTodoMessageGenericView(generics.ListCreateAPIView):
-    queryset = Messaging.objects.all()
+    queryset = Messaging.objects.all().prefetch_related('todo_message_file')
+    serializer_class = lead_schedule.MessagingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleTodoMessageDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Messaging.objects.all().prefetch_related('todo_message_file')
     serializer_class = lead_schedule.MessagingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -232,13 +282,13 @@ class DailyLogTemplateNoteDetailGenericView(generics.RetrieveUpdateDestroyAPIVie
 
 
 class DaiLyLogCommentGenericView(generics.ListCreateAPIView):
-    queryset = CommentDailyLog.objects.all()
+    queryset = CommentDailyLog.objects.all().prefetch_related('attachment_daily_log_comment')
     serializer_class = lead_schedule.CommentDailyLogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
 class DaiLyLogCommentDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = CommentDailyLog.objects.all()
+    queryset = CommentDailyLog.objects.all().prefetch_related('attachment_daily_log_comment')
     serializer_class = lead_schedule.CommentDailyLogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -525,7 +575,13 @@ class ScheduleEventPhaseSettingDetailGenericView(generics.RetrieveUpdateDestroyA
 
 
 class ScheduleEventMessageGenericView(generics.ListCreateAPIView):
-    queryset = MessageEvent.objects.all()
+    queryset = MessageEvent.objects.all().prefetch_related('file_message_event')
+    serializer_class = lead_schedule.MessageEventSerialized
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ScheduleEventMessageDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MessageEvent.objects.all().prefetch_related('file_message_event')
     serializer_class = lead_schedule.MessageEventSerialized
     permission_classes = [permissions.IsAuthenticated]
 
