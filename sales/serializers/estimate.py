@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from api.models import Action
 from base.serializers.base import IDAndNameSerializer
 from base.utils import pop, activity_log
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, TemplateName, \
@@ -62,7 +61,8 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormula
-        fields = ('id', 'name', 'formula', 'text_formula', 'type', 'groups', 'self_data_entries')
+        fields = ('id', 'name', 'formula', 'text_formula', 'type', 'groups', 'self_data_entries',
+                  'description', 'quantity', 'markup', 'charge', 'material', 'unit', 'show_color')
 
     def create(self, validated_data):
         data_entries = pop(validated_data, 'self_data_entries', [])
