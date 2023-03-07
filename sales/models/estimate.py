@@ -12,7 +12,10 @@ class TemplateName(BaseModel):
     class EstimateTemplateName(models.IntegerChoices):
         ESTIMATE_TEMPLATE = 1, 'Estimate Template'
         FORMULA_CENTER = 2, 'Formula Center'
-        LIBRARY = 3, 'Library'
+        ASSEMBLE = 3, 'Assemble'
+        DESCRIPTION = 4, 'Description'
+        DATA_ENTRY = 5, 'Data Entry'
+        UNIT = 6, 'Unit'
 
     name = models.CharField(max_length=128)
     parent = models.ForeignKey('sales.TemplateName', on_delete=models.SET_NULL,
@@ -30,12 +33,19 @@ class DataEntry(BaseModel):
 class POFormula(BaseModel):
 
     name = models.CharField(max_length=128)
+    description = models.CharField(max_length=128, blank=True)
+    show_color = models.BooleanField(default=False)
     formula = models.CharField(max_length=256)
     text_formula = models.TextField(max_length=256)
     type = models.ForeignKey('sales.Catalog', null=True, blank=True,
                              on_delete=models.SET_NULL, related_name='formulas')
     groups = models.ManyToManyField('sales.POFormulaGrouping', blank=True, related_name='formulas')
     related_formulas = models.ManyToManyField('self', related_name='used_by', symmetrical=False, blank=True)
+    quantity = models.CharField(max_length=64, blank=True)
+    markup = models.CharField(max_length=64, blank=True)
+    charge = models.CharField(max_length=64, blank=True)
+    material = models.CharField(max_length=8, blank=True)
+    unit = models.CharField(max_length=8, blank=True)
 
 
 class POFormulaToDataEntry(BaseModel):
