@@ -198,6 +198,7 @@ url_estimate = [
     path('unit-library/<int:pk>/', estimate.UnitLibraryDetail.as_view()),
     path('description-library/', estimate.DescriptionLibraryList.as_view()),
     path('description-library/<int:pk>/', estimate.DescriptionLibraryDetail.as_view()),
+    path('linked-descriptions/', estimate.get_linked_descriptions),
 ]
 # URL Config
 url_config = [

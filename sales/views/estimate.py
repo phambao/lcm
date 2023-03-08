@@ -1,10 +1,13 @@
 from rest_framework import generics, permissions
 from django_filters import rest_framework as filters
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import LimitOffsetPagination
 
 from sales.filters.estimate import TemplateNameFilter
+from sales.models import DataPoint
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, TemplateName, UnitLibrary, DescriptionLibrary
 from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
-    TemplateNameSerializer, UnitLibrarySerializer, DescriptionLibrarySerializer
+    TemplateNameSerializer, UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer
 
 
 class POFormulaList(generics.ListCreateAPIView):
@@ -79,3 +82,20 @@ class DescriptionLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = DescriptionLibrary.objects.all()
     serializer_class = DescriptionLibrarySerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_linked_descriptions(request):
+    """
+    Get linked description from estimate and catalog
+    """
+    dl = DescriptionLibrary.objects.all()
+    dp = DataPoint.objects.all()
+    paginator = LimitOffsetPagination()
+    estimate_result = paginator.paginate_queryset(dl, request)
+    catalog_result = paginator.paginate_queryset(dp, request)
+    estimate_serializer = LinkedDescriptionSerializer(estimate_result, many=True)
+    catalog_serializer = LinkedDescriptionSerializer(catalog_result, many=True)
+    estimate_serializer.data.extend(catalog_serializer.data)
+    return paginator.get_paginated_response(estimate_serializer.data)
