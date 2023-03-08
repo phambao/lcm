@@ -17,11 +17,14 @@ class DataEntrySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         unit = pop(validated_data, 'unit', {})
         validated_data['unit_id'] = unit.get('id', None)
-        return super(DataEntrySerializer, self).create(validated_data)
+        instance = super().create(validated_data)
+        activity_log(DataEntry, instance, 1, DataEntrySerializer, {})
+        return instance
 
     def update(self, instance, validated_data):
         unit = pop(validated_data, 'unit', {})
         validated_data['unit_id'] = unit.get('id', None)
+        activity_log(DataEntry, instance, 2, DataEntrySerializer, {})
         return super().update(instance, validated_data)
 
 
@@ -121,8 +124,26 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
         model = UnitLibrary
         fields = ('id', 'name',)
 
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+        activity_log(UnitLibrary, instance, 1, UnitLibrarySerializer, {})
+        return instance
+
+    def update(self, instance, validated_data):
+        activity_log(UnitLibrary, instance, 2, UnitLibrarySerializer, {})
+        return super().update(instance, validated_data)
+
 
 class DescriptionLibrarySerializer(serializers.ModelSerializer):
     class Meta:
         model = DescriptionLibrary
         fields = ('id', 'name', 'description',)
+
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+        activity_log(DescriptionLibrary, instance, 1, DescriptionLibrarySerializer, {})
+        return instance
+
+    def update(self, instance, validated_data):
+        activity_log(DescriptionLibrary, instance, 2, DescriptionLibrarySerializer, {})
+        return super().update(instance, validated_data)
