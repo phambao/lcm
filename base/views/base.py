@@ -1,3 +1,6 @@
+import uuid
+
+from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
@@ -5,11 +8,15 @@ from rest_framework.response import Response
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import generics, permissions, status
 from django_filters import rest_framework as filters
+from rest_framework.viewsets import GenericViewSet
 
 from api.serializers.base import ActivityLogSerializer
+from sales.models.lead_schedule import FileMessageToDo
+from sales.serializers import lead_schedule
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter
-from ..models.config import Column, Search, Config, GridSetting
-from ..serializers.base import ContentTypeSerializer
+from ..models.config import Column, Search, Config, GridSetting, FileBuilder365
+from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerializer, \
+    FileBuilder365ResSerializer
 from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer
 from api.models import ActivityLog
 
@@ -182,3 +189,38 @@ def active_column(request, pk):
     column.save()
     serializer = ColumnSerializer(column)
     return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+
+class FileMessageTodoGenericView(GenericViewSet):
+    serializer_class = FileBuilder365ReqSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create_file(self, request, **kwargs):
+        serializer = FileBuilder365ReqSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        files = request.FILES.getlist('file')
+        attachment_create = list()
+        for file in files:
+            file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+            content_file = ContentFile(file.read(), name=file_name)
+            attachment = FileBuilder365(
+                file=content_file,
+                user_create=user,
+                user_update=user,
+                name=file.name
+            )
+            attachment_create.append(attachment)
+
+        attachments = FileBuilder365.objects.bulk_create(attachment_create)
+
+        data = FileBuilder365ResSerializer(
+            attachments, many=True, context={'request': request}).data
+        return Response(status=status.HTTP_200_OK, data=data)
+
+    # def get_file(self, request, **kwargs):
+    #     get_object_or_404(ScheduleEvent.objects.all(), pk=self.kwargs['pk_event'])
+    #     data_file = FileBuilder365.objects.filter(event=self.kwargs['pk_event'])
+    #     data = lead_schedule.FileMesageTodoSerializer(
+    #         data_file, many=True, context={'request': request}).data
+    #     return Response(status=status.HTTP_200_OK, data=data)

@@ -17,7 +17,7 @@ from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging,
     TodoTemplateChecklistItem, DataType, ItemFieldDropDown, TodoCustomField, CustomFieldScheduleSetting, \
     CustomFieldScheduleDailyLogSetting, DailyLogCustomField, ItemFieldDropDownDailyLog, \
     DataType, ItemFieldDropDown, ScheduleEventPhaseSetting, FileCheckListItems, FileCheckListItemsTemplate, \
-    CommentDailyLog, AttachmentCommentDailyLog, ScheduleEventShift, Attachments
+    CommentDailyLog, AttachmentCommentDailyLog, ScheduleEventShift, Attachments, FileMessageToDo, FileMessageEvent
 
 
 class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
@@ -42,27 +42,87 @@ class ScheduleAttachmentsSerializer(serializers.Serializer):
     file = serializers.FileField()
 
 
+class FileMessageToDoSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    file = serializers.CharField(required=False)
+
+    class Meta:
+        model = lead_schedule.FileMessageToDo
+        fields = ('id', 'message_todo', 'file', 'name')
+
+
 class MessagingSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     notify = UserCustomSerializer(allow_null=True, required=False, many=True)
+    files = FileMessageToDoSerializer(allow_null=True, required=False, many=True)
 
     class Meta:
         model = lead_schedule.Messaging
-        fields = ('id', 'message', 'to_do', 'show_owner', 'show_sub_vendors', 'notify')
+        fields = ('id', 'message', 'to_do', 'show_owner', 'show_sub_vendors', 'notify', 'files', 'user_create',
+                  'user_update')
 
     def create(self, validated_data):
         request = self.context['request']
         user_create = user_update = request.user
         notify = pop(validated_data, 'notify', [])
         to_do = pop(validated_data, 'to_do', None)
+        files = pop(validated_data, 'files', [])
+        # files = request.FILES.getlist('files')
+
         schedule_todo_message_create = lead_schedule.Messaging.objects.create(
             user_create=user_create, user_update=user_update,
             to_do=to_do,
             **validated_data
         )
+        file_message_todo_create = []
+        for file in files:
+            # file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+            # content_file = ContentFile(file.read(), name=file_name)
+            attachment = FileMessageToDo(
+                file=file['file'],
+                message_todo=schedule_todo_message_create,
+                user_create=user_create,
+                name=file['name']
+            )
+            file_message_todo_create.append(attachment)
+        FileMessageToDo.objects.bulk_create(file_message_todo_create)
         notify_object = get_user_model().objects.filter(pk__in=[at['id'] for at in notify])
         schedule_todo_message_create.notify.add(*notify_object)
         return schedule_todo_message_create
+
+    def update(self, instance, data):
+        request = self.context['request']
+        user_create = user_update = request.user
+        notify = pop(data, 'notify', [])
+        to_do = pop(data, 'to_do', None)
+        files = pop(data, 'files', [])
+        # files = request.FILES.getlist('files')
+
+        schedule_todo_message = lead_schedule.Messaging.objects.filter(pk=instance.pk)
+        schedule_todo_message.update(**data)
+        schedule_todo_message = schedule_todo_message.first()
+        notify_object = get_user_model().objects.filter(pk__in=[at['id'] for at in notify])
+        schedule_todo_message.notify.add(*notify_object)
+        FileMessageToDo.objects.filter(message_todo=schedule_todo_message).delete()
+        file_message_todo_create = []
+        for file in files:
+            attachment = FileMessageToDo(
+                file=file['file'],
+                message_todo=schedule_todo_message,
+                user_create=user_create,
+                name=file['name']
+            )
+            file_message_todo_create.append(attachment)
+        FileMessageToDo.objects.bulk_create(file_message_todo_create)
+
+        return schedule_todo_message
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        file = instance.todo_message_file.all()
+        rs = FileMessageToDoSerializer(file, many=True)
+        data['files'] = rs.data
+        return data
 
 
 class TagScheduleSerializer(serializers.ModelSerializer):
@@ -265,8 +325,10 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        rs_checklist = CheckListItems.objects.filter(to_do=data['id']).values()
+        # rs_checklist = CheckListItems.objects.filter(to_do=data['id']).values()
+        rs_checklist = ToDoChecklistItemSerializer(instance.check_list.all(), many=True).data
         data['check_list'] = rs_checklist
+
         rs_messaging = Messaging.objects.filter(to_do=data['id']).values()
         data['messaging'] = rs_messaging
         rs_custom_field = TodoCustomField.objects.filter(todo=data['id']).values()
@@ -417,34 +479,69 @@ class DailyLogSerializer(serializers.ModelSerializer):
         return data
 
 
+class FileCommentDailyLogSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    file = serializers.CharField(required=False)
+
+    class Meta:
+        model = lead_schedule.AttachmentCommentDailyLog
+        fields = '__all__'
+
+
 class CommentDailyLogSerializer(serializers.ModelSerializer):
-    files = serializers.FileField(required=False)
+    id = serializers.IntegerField(required=False)
+    files = FileCommentDailyLogSerializer(allow_null=True, required=False, many=True)
+    notify = UserCustomSerializer(allow_null=True, required=False, many=True)
+
+    # show_sub_vendors = serializers.CharField(required=False)
+    # show_owner = serializers.CharField(required=False)
 
     class Meta:
         model = lead_schedule.CommentDailyLog
-        fields = ('daily_log', 'comment', 'files', 'id', 'user_create', 'user_update')
+        fields = ('daily_log', 'comment', 'files', 'id', 'user_create', 'user_update', 'show_owner', 'show_sub_vendors',
+                  'notify')
 
     def create(self, validated_data):
         request = self.context['request']
         user_create = user_update = request.user
         daily_log = pop(validated_data, 'daily_log', None)
-        data_file = pop(validated_data, 'files', [])
-        files = request.FILES.getlist('files')
+        notify = pop(validated_data, 'notify', [])
+        files = pop(validated_data, 'files', [])
+        # files = request.FILES.getlist('files')
+
+        # if notify:
+        #     notify = eval(notify)
+        # else:
+        #     notify = []
+        #
+        # if show_owner == 'True':
+        #     show_owner = True
+        #
+        # elif show_owner == 'False':
+        #     show_owner = False
+        #
+        # if show_sub_vendors == 'True':
+        #     show_sub_vendors = True
+        #
+        # elif show_sub_vendors == 'False':
+        #     show_sub_vendors = False
 
         comment_daily_log = CommentDailyLog.objects.create(
             user_create=user_create, user_update=user_update,
             daily_log=daily_log,
             **validated_data
         )
+        notify_object = get_user_model().objects.filter(pk__in=[at['id'] for at in notify])
+        comment_daily_log.notify.add(*notify_object)
         file_comment_daily_log_create = []
         for file in files:
-            file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
-            content_file = ContentFile(file.read(), name=file_name)
+            # file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+            # content_file = ContentFile(file.read(), name=file_name)
             attachment = AttachmentCommentDailyLog(
-                file=content_file,
+                file=file['file'],
                 comment=comment_daily_log,
                 user_create=user_create,
-                name=file.name
+                name=file['name']
             )
             file_comment_daily_log_create.append(attachment)
         AttachmentCommentDailyLog.objects.bulk_create(file_comment_daily_log_create)
@@ -453,23 +550,27 @@ class CommentDailyLogSerializer(serializers.ModelSerializer):
     def update(self, instance, data):
         request = self.context['request']
         user_create = user_update = request.user
-        data_file = pop(data, 'files', [])
+        files = pop(data, 'files', [])
+        notify = pop(data, 'notify', [])
         # daily_log = pop(data, 'daily_log', None)
-        files = request.FILES.getlist('files')
+        # files = request.FILES.getlist('files')
 
         comment_daily_log = CommentDailyLog.objects.filter(pk=instance.pk)
         comment_daily_log.update(**data)
+        notify_object = get_user_model().objects.filter(pk__in=[at['id'] for at in notify])
         comment_daily_log = comment_daily_log.first()
+        comment_daily_log.notify.clear()
+        comment_daily_log.notify.add(*notify_object)
         AttachmentCommentDailyLog.objects.filter(comment=comment_daily_log).delete()
         file_comment_daily_log_create = []
         for file in files:
-            file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
-            content_file = ContentFile(file.read(), name=file_name)
+            # file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+            # content_file = ContentFile(file.read(), name=file_name)
             attachment = AttachmentCommentDailyLog(
-                file=content_file,
+                file=file['file'],
                 comment=comment_daily_log,
                 user_create=user_create,
-                name=file.name
+                name=file['name']
             )
             file_comment_daily_log_create.append(attachment)
         AttachmentCommentDailyLog.objects.bulk_create(file_comment_daily_log_create)
@@ -478,8 +579,9 @@ class CommentDailyLogSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data_file = AttachmentCommentDailyLog.objects.filter(comment=data['id']).values()
-        data['files'] = data_file
+        file = instance.attachment_daily_log_comment.all()
+        rs = FileCommentDailyLogSerializer(file, many=True)
+        data['files'] = rs.data
         return data
 
 
@@ -864,26 +966,86 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         return current_date
 
 
+class FileMessageEventSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    file = serializers.CharField(required=False)
+
+    class Meta:
+        model = lead_schedule.FileMessageEvent
+        fields = ('id', 'message_event', 'file', 'name')
+
+
 class MessageEventSerialized(serializers.ModelSerializer):
     notify = UserCustomSerializer(allow_null=True, required=False, many=True)
+    files = FileMessageToDoSerializer(allow_null=True, required=False, many=True)
+
+    # show_sub_vendors = serializers.CharField(required=False)
+    # show_owner = serializers.CharField(required=False)
 
     class Meta:
         model = lead_schedule.MessageEvent
-        fields = ('event', 'message', 'show_owner', 'show_sub_vendors', 'notify')
+        fields = ('event', 'message', 'show_owner', 'show_sub_vendors', 'notify', 'files')
 
     def create(self, validated_data):
         request = self.context['request']
         user_create = user_update = request.user
         notify = pop(validated_data, 'notify', [])
         event = pop(validated_data, 'event', None)
+        files = pop(validated_data, 'files', [])
         schedule_event_message_create = lead_schedule.MessageEvent.objects.create(
             user_create=user_create, user_update=user_update,
             event=event,
             **validated_data
         )
+        file_message_event_create = []
+        for file in files:
+            # file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+            # content_file = ContentFile(file.read(), name=file_name)
+            attachment = FileMessageEvent(
+                file=file['file'],
+                message_event=schedule_event_message_create,
+                user_create=user_create,
+                name=file['name']
+            )
+            file_message_event_create.append(attachment)
+        FileMessageEvent.objects.bulk_create(file_message_event_create)
         notify_object = get_user_model().objects.filter(pk__in=[at['id'] for at in notify])
         schedule_event_message_create.notify.add(*notify_object)
         return schedule_event_message_create
+
+    def update(self, instance, data):
+        request = self.context['request']
+        user_create = user_update = request.user
+        notify = pop(data, 'notify', [])
+        event = pop(data, 'event', None)
+        files = pop(data, 'files', [])
+        # files = request.FILES.getlist('files')
+
+        schedule_event_message = lead_schedule.MessageEvent.objects.filter(pk=instance.pk)
+        schedule_event_message.update(**data)
+        schedule_event_message = schedule_event_message.first()
+        notify_object = get_user_model().objects.filter(pk__in=[at['id'] for at in notify])
+        schedule_event_message.notify.add(*notify_object)
+        FileMessageEvent.objects.filter(message_event=schedule_event_message).delete()
+        file_message_event_create = []
+        for file in files:
+            attachment = FileMessageEvent(
+                file=file['file'],
+                message_event=schedule_event_message,
+                user_create=user_create,
+                name=file['name']
+            )
+            file_message_event_create.append(attachment)
+        FileMessageEvent.objects.bulk_create(file_message_event_create)
+
+        return schedule_event_message
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        file = instance.file_message_event.all()
+        rs = FileMessageEventSerializer(file, many=True)
+        data['files'] = rs.data
+        return data
 
 
 class ShiftReasonSerialized(serializers.ModelSerializer):
@@ -1252,4 +1414,8 @@ class FileChecklistSerializer(ScheduleAttachmentsSerializer):
 
 
 class AttachmentsEventSerializer(ScheduleAttachmentsSerializer):
+    pass
+
+
+class FileMesageTodoSerializer(ScheduleAttachmentsSerializer):
     pass
