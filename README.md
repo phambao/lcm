@@ -18,4 +18,5 @@ python manage.py loaddata catalog
 python manage.py createcachetable
 
 celery -A lcm worker --pool=solo --loglevel=info
+flower -A lcm
 ```
