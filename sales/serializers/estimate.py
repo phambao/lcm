@@ -152,3 +152,12 @@ class DescriptionLibrarySerializer(serializers.ModelSerializer):
 class LinkedDescriptionSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     linked_description = serializers.CharField()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['id'] = str(data['id'])
+        if isinstance(instance, DescriptionLibrary):
+            data['id'] = 'estimate:' + data['id']
+        else:
+            data['id'] = 'catalog:' + data['id']
+        return data
