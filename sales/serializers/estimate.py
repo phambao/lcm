@@ -158,6 +158,8 @@ class LinkedDescriptionSerializer(serializers.Serializer):
         data['id'] = str(data['id'])
         if isinstance(instance, DescriptionLibrary):
             data['id'] = 'estimate:' + data['id']
+            data['name'] = instance.name
         else:
             data['id'] = 'catalog:' + data['id']
+            data['name'] = instance.catalog.name + '-' + str(instance.pk)
         return data
