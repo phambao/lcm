@@ -329,7 +329,8 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         rs_checklist = ToDoChecklistItemSerializer(instance.check_list.all(), many=True).data
         data['check_list'] = rs_checklist
 
-        rs_messaging = Messaging.objects.filter(to_do=data['id']).values()
+        # rs_messaging = Messaging.objects.filter(to_do=data['id']).values()
+        rs_messaging = MessagingSerializer(instance.messaging.all(), many=True).data
         data['messaging'] = rs_messaging
         rs_custom_field = TodoCustomField.objects.filter(todo=data['id']).values()
         data['custom_field'] = rs_custom_field
@@ -916,7 +917,8 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         links = lead_schedule.ScheduleEvent.objects.filter(predecessor=data['id']).values()
-        message = lead_schedule.MessageEvent.objects.filter(event=data['id']).values()
+        message = MessageEventSerialized(instance.event_message.all(), many=True).data
+        # message = lead_schedule.MessageEvent.objects.filter(event=data['id']).values()
         shift = lead_schedule.ScheduleEventShift.objects.filter(event=data['id']).values()
         data['links'] = links
         data['message'] = message
