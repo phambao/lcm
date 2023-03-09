@@ -65,7 +65,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
     class Meta:
         model = POFormula
         fields = ('id', 'name', 'formula', 'text_formula', 'type', 'groups', 'self_data_entries',
-                  'description', 'quantity', 'markup', 'charge', 'material', 'unit', 'show_color')
+                  'linked_description', 'quantity', 'markup', 'charge', 'material', 'unit', 'show_color')
 
     def create(self, validated_data):
         data_entries = pop(validated_data, 'self_data_entries', [])
@@ -137,7 +137,7 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
 class DescriptionLibrarySerializer(serializers.ModelSerializer):
     class Meta:
         model = DescriptionLibrary
-        fields = ('id', 'name', 'description',)
+        fields = ('id', 'name', 'linked_description',)
 
     def create(self, validated_data):
         instance = super().create(validated_data)
@@ -147,3 +147,17 @@ class DescriptionLibrarySerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         activity_log(DescriptionLibrary, instance, 2, DescriptionLibrarySerializer, {})
         return super().update(instance, validated_data)
+
+
+class LinkedDescriptionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    linked_description = serializers.CharField()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['id'] = str(data['id'])
+        if isinstance(instance, DescriptionLibrary):
+            data['id'] = 'estimate:' + data['id']
+        else:
+            data['id'] = 'catalog:' + data['id']
+        return data

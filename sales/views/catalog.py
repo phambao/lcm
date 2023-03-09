@@ -62,7 +62,11 @@ class CatalogLevelDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        catalog = get_object_or_404(Catalog.objects.all(), pk=self.kwargs['pk_catalog'])
+        try:
+            catalog = get_object_or_404(Catalog.objects.all(), pk=self.kwargs['pk_catalog'])
+        except KeyError:
+            # When swagger call this view, that doesn't pass param pk_catalog
+            return CatalogLevel.objects.all()
         return catalog.all_levels.all()
 
 
