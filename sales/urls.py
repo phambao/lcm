@@ -196,6 +196,10 @@ url_estimate = [
     path('template-name/<int:pk>/', estimate.TemplateNameDetail.as_view()),
     path('unit-library/', estimate.UnitLibraryList.as_view()),
     path('unit-library/<int:pk>/', estimate.UnitLibraryDetail.as_view()),
+    path('description-library/', estimate.DescriptionLibraryList.as_view()),
+    path('description-library/<int:pk>/', estimate.DescriptionLibraryDetail.as_view()),
+    path('linked-descriptions/', estimate.get_linked_descriptions),
+    path('linked-descriptions/<str:pk>/', estimate.get_linked_description),
 ]
 # URL Config
 url_config = [

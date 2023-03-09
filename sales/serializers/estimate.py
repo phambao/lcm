@@ -3,7 +3,7 @@ from rest_framework import serializers
 from base.serializers.base import IDAndNameSerializer
 from base.utils import pop, activity_log
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, TemplateName, \
-    UnitLibrary
+    UnitLibrary, DescriptionLibrary
 
 
 class DataEntrySerializer(serializers.ModelSerializer):
@@ -17,11 +17,14 @@ class DataEntrySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         unit = pop(validated_data, 'unit', {})
         validated_data['unit_id'] = unit.get('id', None)
-        return super(DataEntrySerializer, self).create(validated_data)
+        instance = super().create(validated_data)
+        activity_log(DataEntry, instance, 1, DataEntrySerializer, {})
+        return instance
 
     def update(self, instance, validated_data):
         unit = pop(validated_data, 'unit', {})
         validated_data['unit_id'] = unit.get('id', None)
+        activity_log(DataEntry, instance, 2, DataEntrySerializer, {})
         return super().update(instance, validated_data)
 
 
@@ -62,7 +65,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
     class Meta:
         model = POFormula
         fields = ('id', 'name', 'formula', 'text_formula', 'type', 'groups', 'self_data_entries',
-                  'description', 'quantity', 'markup', 'charge', 'material', 'unit', 'show_color')
+                  'linked_description', 'quantity', 'markup', 'charge', 'material', 'unit', 'show_color')
 
     def create(self, validated_data):
         data_entries = pop(validated_data, 'self_data_entries', [])
@@ -120,3 +123,43 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
     class Meta:
         model = UnitLibrary
         fields = ('id', 'name',)
+
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+        activity_log(UnitLibrary, instance, 1, UnitLibrarySerializer, {})
+        return instance
+
+    def update(self, instance, validated_data):
+        activity_log(UnitLibrary, instance, 2, UnitLibrarySerializer, {})
+        return super().update(instance, validated_data)
+
+
+class DescriptionLibrarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DescriptionLibrary
+        fields = ('id', 'name', 'linked_description',)
+
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+        activity_log(DescriptionLibrary, instance, 1, DescriptionLibrarySerializer, {})
+        return instance
+
+    def update(self, instance, validated_data):
+        activity_log(DescriptionLibrary, instance, 2, DescriptionLibrarySerializer, {})
+        return super().update(instance, validated_data)
+
+
+class LinkedDescriptionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    linked_description = serializers.CharField()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['id'] = str(data['id'])
+        if isinstance(instance, DescriptionLibrary):
+            data['id'] = 'estimate:' + data['id']
+            data['name'] = instance.name
+        else:
+            data['id'] = 'catalog:' + data['id']
+            data['name'] = instance.catalog.name + '-' + str(instance.pk)
+        return data

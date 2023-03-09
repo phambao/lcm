@@ -33,7 +33,7 @@ class DataEntry(BaseModel):
 class POFormula(BaseModel):
 
     name = models.CharField(max_length=128)
-    description = models.CharField(max_length=128, blank=True)
+    linked_description = models.CharField(max_length=128, blank=True)
     show_color = models.BooleanField(default=False)
     formula = models.CharField(max_length=256)
     text_formula = models.TextField(max_length=256)
@@ -57,3 +57,8 @@ class POFormulaToDataEntry(BaseModel):
 
 class POFormulaGrouping(BaseModel):
     name = models.CharField(max_length=128)
+
+
+class DescriptionLibrary(BaseModel):
+    name = models.CharField(max_length=128)
+    linked_description = models.TextField(blank=True)
