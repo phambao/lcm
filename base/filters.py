@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django_filters import rest_framework as filters
 
+from api.models import ActivityLog
 from base.models.config import Search, Column, Config, GridSetting
 from base.models.country_state_city import Country
 
@@ -67,3 +68,9 @@ class CountryFilter(filters.FilterSet):
     class Meta:
         model = Country
         fields = ('name',)
+
+
+class ActivityLogFilter(filters.FilterSet):
+    class Meta:
+        model = ActivityLog
+        fields = ('content_type', 'object_id', 'user_create')

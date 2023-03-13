@@ -16,4 +16,4 @@ class SerializerMixin:
 class ActivityLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityLog
-        fields = ('id', 'action', 'last_state', 'next_state', 'content_type', 'object_id', 'user_create')
+        fields = ('id', 'action', 'last_state', 'next_state', 'content_type', 'object_id', 'user_create', 'created_date')

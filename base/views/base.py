@@ -13,7 +13,7 @@ from rest_framework.viewsets import GenericViewSet
 from api.serializers.base import ActivityLogSerializer
 from sales.models.lead_schedule import FileMessageToDo
 from sales.serializers import lead_schedule
-from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter
+from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter
 from ..models.config import Column, Search, Config, GridSetting, FileBuilder365
 from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerializer, \
     FileBuilder365ResSerializer
@@ -167,11 +167,11 @@ def config_view(request, model):
 
 
 class ActivityLogList(generics.ListCreateAPIView):
-    queryset = ActivityLog.objects.all()
+    queryset = ActivityLog.objects.all().order_by('-created_date')
     serializer_class = ActivityLogSerializer
     permission_classes = [permissions.IsAuthenticated]
-    # filter_backends = (filters.DjangoFilterBackend,)
-    # filterset_class = SearchFilter
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = ActivityLogFilter
 
 
 class ActivityLogDetail(generics.RetrieveUpdateDestroyAPIView):
