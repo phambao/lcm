@@ -1,17 +1,12 @@
 from rest_framework import serializers
-from django.contrib.contenttypes.models import ContentType
 
 from base.serializers.base import IDAndNameSerializer
 from base.utils import pop, activity_log
+from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE,\
+    UNIT_LIBRARY_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE
 from sales.models import DataPoint
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, TemplateName, \
     UnitLibrary, DescriptionLibrary
-
-
-PO_FORMULA_CONTENT_TYPE = ContentType.objects.get_for_model(POFormula).pk
-DATA_ENTRY_CONTENT_TYPE = ContentType.objects.get_for_model(DataEntry).pk
-UNIT_LIBRARY_CONTENT_TYPE = ContentType.objects.get_for_model(UnitLibrary).pk
-DESCRIPTION_LIBRARY_CONTENT_TYPE = ContentType.objects.get_for_model(DescriptionLibrary).pk
 
 
 class LinkedDescriptionSerializer(serializers.Serializer):
