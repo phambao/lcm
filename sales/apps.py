@@ -12,8 +12,8 @@ class SalesConfig(AppConfig):
 
     def ready(self):
         from django.contrib.contenttypes.models import ContentType
+        from django.db.utils import ProgrammingError
         from sales.models.estimate import POFormula, DataEntry, UnitLibrary, DescriptionLibrary
-        from psycopg2.errors import UndefinedTable
 
         global PO_FORMULA_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE,\
             UNIT_LIBRARY_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE
@@ -22,5 +22,5 @@ class SalesConfig(AppConfig):
             DATA_ENTRY_CONTENT_TYPE = ContentType.objects.get_for_model(DataEntry).pk
             UNIT_LIBRARY_CONTENT_TYPE = ContentType.objects.get_for_model(UnitLibrary).pk
             DESCRIPTION_LIBRARY_CONTENT_TYPE = ContentType.objects.get_for_model(DescriptionLibrary).pk
-        except UndefinedTable:
+        except ProgrammingError:
             """Ignore when no table in db, only used for testing"""
