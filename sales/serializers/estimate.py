@@ -2,6 +2,8 @@ from rest_framework import serializers
 
 from base.serializers.base import IDAndNameSerializer
 from base.utils import pop, activity_log
+from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE,\
+    UNIT_LIBRARY_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE
 from sales.models import DataPoint
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, TemplateName, \
     UnitLibrary, DescriptionLibrary
@@ -43,6 +45,11 @@ class DataEntrySerializer(serializers.ModelSerializer):
         validated_data['unit_id'] = unit.get('id', None)
         activity_log(DataEntry, instance, 2, DataEntrySerializer, {})
         return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['content_type'] = DATA_ENTRY_CONTENT_TYPE
+        return data
 
 
 class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
@@ -107,6 +114,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
             else:
                 linked_description = DataPoint.objects.get(pk=pk)
             data['linked_description'] = LinkedDescriptionSerializer(linked_description).data
+        data['content_type'] = PO_FORMULA_CONTENT_TYPE
         return data
 
 
@@ -161,6 +169,11 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
         activity_log(UnitLibrary, instance, 2, UnitLibrarySerializer, {})
         return super().update(instance, validated_data)
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['content_type'] = UNIT_LIBRARY_CONTENT_TYPE
+        return data
+
 
 class DescriptionLibrarySerializer(serializers.ModelSerializer):
     class Meta:
@@ -175,3 +188,8 @@ class DescriptionLibrarySerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         activity_log(DescriptionLibrary, instance, 2, DescriptionLibrarySerializer, {})
         return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['content_type'] = DESCRIPTION_LIBRARY_CONTENT_TYPE
+        return data
