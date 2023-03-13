@@ -2,8 +2,25 @@ from rest_framework import serializers
 
 from base.serializers.base import IDAndNameSerializer
 from base.utils import pop, activity_log
+from sales.models import DataPoint
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, TemplateName, \
     UnitLibrary, DescriptionLibrary
+
+
+class LinkedDescriptionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    linked_description = serializers.CharField()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['id'] = str(data['id'])
+        if isinstance(instance, DescriptionLibrary):
+            data['id'] = 'estimate:' + data['id']
+            data['name'] = instance.name
+        else:
+            data['id'] = 'catalog:' + data['id']
+            data['name'] = instance.catalog.name + '-' + str(instance.pk)
+        return data
 
 
 class DataEntrySerializer(serializers.ModelSerializer):
@@ -64,7 +81,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormula
-        fields = ('id', 'name', 'formula', 'text_formula', 'type', 'groups', 'self_data_entries',
+        fields = ('id', 'name', 'formula', 'type', 'groups', 'self_data_entries',
                   'linked_description', 'quantity', 'markup', 'charge', 'material', 'unit', 'show_color')
 
     def create(self, validated_data):
@@ -80,6 +97,17 @@ class POFormulaSerializer(serializers.ModelSerializer):
         create_po_formula_to_data_entry(instance, data_entries)
         activity_log(POFormula, instance, 2, POFormulaSerializer, {})
         return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if 'catalog' in data['linked_description'] or 'estimate' in data['linked_description']:
+            pk = data['linked_description'].split(':')[1]
+            if 'estimate' in data['linked_description']:
+                linked_description = DescriptionLibrary.objects.get(pk=pk)
+            else:
+                linked_description = DataPoint.objects.get(pk=pk)
+            data['linked_description'] = LinkedDescriptionSerializer(linked_description).data
+        return data
 
 
 class POFormulaGroupingSerializer(serializers.ModelSerializer):
@@ -147,19 +175,3 @@ class DescriptionLibrarySerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         activity_log(DescriptionLibrary, instance, 2, DescriptionLibrarySerializer, {})
         return super().update(instance, validated_data)
-
-
-class LinkedDescriptionSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    linked_description = serializers.CharField()
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['id'] = str(data['id'])
-        if isinstance(instance, DescriptionLibrary):
-            data['id'] = 'estimate:' + data['id']
-            data['name'] = instance.name
-        else:
-            data['id'] = 'catalog:' + data['id']
-            data['name'] = instance.catalog.name + '-' + str(instance.pk)
-        return data
