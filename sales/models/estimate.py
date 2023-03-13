@@ -5,7 +5,7 @@ from api.models import BaseModel
 
 class UnitLibrary(BaseModel):
     name = models.CharField(max_length=128)
-    description = models.TextField(default='')
+    description = models.TextField(default='', blank=True)
 
 
 class TemplateName(BaseModel):

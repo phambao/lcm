@@ -79,6 +79,7 @@ url_catalog = [
     path('list/<int:pk>/list/', catalog.get_catalog_list),
     path('list/ancestors/', catalog.get_catalog_ancestors),
     path('list/<int:pk>/copy/', catalog.duplicate_catalogs),
+    path('list/<int:pk>/materials/', catalog.get_materials),
     path('list/<int:pk>/copy-tree/', catalog.duplicate_catalogs_on_tree),
     path('list/delete/', catalog.delete_catalogs),
     path('cost-tables/', catalog.CostTableList.as_view()),
