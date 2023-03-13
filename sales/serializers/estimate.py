@@ -158,7 +158,7 @@ class TemplateNameSerializer(serializers.ModelSerializer):
 class UnitLibrarySerializer(serializers.ModelSerializer):
     class Meta:
         model = UnitLibrary
-        fields = ('id', 'name',)
+        fields = ('id', 'name', 'description', 'created_date', 'modified_date', 'user_create', 'user_update')
 
     def create(self, validated_data):
         instance = super().create(validated_data)
