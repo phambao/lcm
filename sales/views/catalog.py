@@ -299,5 +299,25 @@ def get_materials(request, pk):
     """
     Get cost table from ancestor catalog
     """
+    data = [
+        {
+            "id": "id1",
+            "unit": "Kg",
+            "cost": 200,
+            "name": "Kilogram"
+        },
+        {
+            "id": "id2",
+            "unit": "m",
+            "cost": 400,
+            "name": "Meter"
+        },
+        {
+            "id": "id3",
+            "unit": "second",
+            "cost": 600,
+            "name": "Second"
+        }
+    ]
 
-    return
+    return Response(status=status.HTTP_200_OK, data=data)

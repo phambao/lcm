@@ -71,6 +71,8 @@ class CountryFilter(filters.FilterSet):
 
 
 class ActivityLogFilter(filters.FilterSet):
+    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='gt')
+
     class Meta:
         model = ActivityLog
-        fields = ('content_type', 'object_id', 'user_create')
+        fields = ('content_type', 'object_id', 'user_create', 'created_date')
