@@ -1,5 +1,4 @@
 from django.apps import AppConfig
-from django.contrib.contenttypes.models import ContentType
 
 PO_FORMULA_CONTENT_TYPE = None
 DATA_ENTRY_CONTENT_TYPE = None
@@ -12,6 +11,7 @@ class SalesConfig(AppConfig):
     name = 'sales'
 
     def ready(self):
+        from django.contrib.contenttypes.models import ContentType
         from sales.models.estimate import POFormula, DataEntry, UnitLibrary, DescriptionLibrary
 
         global PO_FORMULA_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE,\
