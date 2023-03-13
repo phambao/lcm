@@ -291,3 +291,13 @@ def swap_level(request, pk_catalog):
             transaction.set_rollback(True)
             raise e
     return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_materials(request, pk):
+    """
+    Get cost table from ancestor catalog
+    """
+
+    return

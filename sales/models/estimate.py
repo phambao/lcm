@@ -35,8 +35,7 @@ class POFormula(BaseModel):
     name = models.CharField(max_length=128)
     linked_description = models.CharField(max_length=128, blank=True)
     show_color = models.BooleanField(default=False)
-    formula = models.CharField(max_length=256)
-    text_formula = models.TextField(max_length=256)
+    formula = models.TextField()
     type = models.ForeignKey('sales.Catalog', null=True, blank=True,
                              on_delete=models.SET_NULL, related_name='formulas')
     groups = models.ManyToManyField('sales.POFormulaGrouping', blank=True, related_name='formulas')
