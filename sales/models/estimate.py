@@ -45,7 +45,8 @@ class POFormula(BaseModel):
     markup = models.CharField(max_length=64, blank=True)
     charge = models.CharField(max_length=64, blank=True)
     material = models.CharField(max_length=8, blank=True)
-    unit = models.CharField(max_length=8, blank=True)
+    unit = models.CharField(max_length=32, blank=True)
+    cost = models.IntegerField(blank=True, default=0)
 
 
 class POFormulaToDataEntry(BaseModel):
@@ -57,6 +58,7 @@ class POFormulaToDataEntry(BaseModel):
 
 class POFormulaGrouping(BaseModel):
     name = models.CharField(max_length=128)
+    is_assemble = models.BooleanField(default=False)  # group or assemble
 
 
 class DescriptionLibrary(BaseModel):

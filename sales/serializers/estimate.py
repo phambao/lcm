@@ -88,7 +88,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormula
-        fields = ('id', 'name', 'formula', 'type', 'groups', 'self_data_entries',
+        fields = ('id', 'name', 'formula', 'type', 'groups', 'self_data_entries', 'cost',
                   'linked_description', 'quantity', 'markup', 'charge', 'material', 'unit', 'show_color')
 
     def create(self, validated_data):
