@@ -7,9 +7,11 @@ from rest_framework.response import Response
 
 from sales.filters.estimate import TemplateNameFilter
 from sales.models import DataPoint
-from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, TemplateName, UnitLibrary, DescriptionLibrary
+from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, TemplateName, UnitLibrary, \
+    DescriptionLibrary, Assemble
 from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
-    TemplateNameSerializer, UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer
+    TemplateNameSerializer, UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, \
+    AssembleSerializer
 
 
 class POFormulaList(generics.ListCreateAPIView):
@@ -83,6 +85,18 @@ class DescriptionLibraryList(generics.ListCreateAPIView):
 class DescriptionLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = DescriptionLibrary.objects.all()
     serializer_class = DescriptionLibrarySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class AssembleList(generics.ListCreateAPIView):
+    queryset = Assemble.objects.all()
+    serializer_class = AssembleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class AssembleDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Assemble.objects.all()
+    serializer_class = AssembleSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
