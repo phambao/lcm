@@ -45,7 +45,7 @@ class SignInAPI(generics.GenericAPIView):
         })
 
 
-class MainUser(generics.RetrieveAPIView):
+class MainUser(generics.RetrieveUpdateAPIView):
     permission_classes = [
         permissions.IsAuthenticated
     ]
@@ -61,7 +61,6 @@ class UserList(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['username', 'email']
-
 
 @api_view(['POST'])
 def forgot_password(request):

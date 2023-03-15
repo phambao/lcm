@@ -10,13 +10,16 @@ from .middleware import get_request
 class User(AbstractUser):
     code = models.IntegerField(blank=True, null=True)
     token = models.CharField(max_length=128, blank=True)
+    image = models.CharField(max_length=128, blank=True, null=True)
 
 
 class BaseModel(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
-    user_create = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='%(class)s_user_create', null=True, blank=True)
-    user_update = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='%(class)s_user_update', null=True, blank=True)
+    user_create = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='%(class)s_user_create',
+                                    null=True, blank=True)
+    user_update = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='%(class)s_user_update',
+                                    null=True, blank=True)
 
     class Meta:
         abstract = True
@@ -39,7 +42,6 @@ class Action(models.IntegerChoices):
 
 
 class ActivityLog(BaseModel):
-
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
