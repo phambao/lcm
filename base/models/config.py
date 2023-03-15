@@ -47,3 +47,11 @@ class FileBuilder365(BaseModel):
 
     file = models.FileField(upload_to='%Y/%m/%d/')
     name = models.CharField(blank=True, max_length=128)
+
+
+class ImageUser(BaseModel):
+    class Meta:
+        db_table = 'image_user'
+
+    image = models.ImageField(upload_to='%Y/%m/%d/')
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True, blank=True)
