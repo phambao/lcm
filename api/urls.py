@@ -9,8 +9,9 @@ urlpatterns = [
     path('register', SignUpAPI.as_view()),
     path('login', SignInAPI.as_view()),
     path('logoutall/', knox_views.LogoutAllView.as_view(), name='knox_logoutall'),
-    path('user', MainUser.as_view()),
+    path('user/<int:pk>/', MainUser.as_view()),
     path('users', UserList.as_view()),
+
 
     # For password reset
     path('auth/', include([

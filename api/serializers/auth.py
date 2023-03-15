@@ -9,7 +9,13 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'last_name', 'first_name')
+        fields = ('id', 'email', 'username', 'last_name', 'first_name', 'image')
+
+    def update(self, instance, data):
+        data_user = User.objects.filter(pk=instance.pk)
+        data_user.update(**data)
+        instance.refresh_from_db()
+        return instance
 
     def to_representation(self, instance):
         data = super(UserSerializer, self).to_representation(instance)

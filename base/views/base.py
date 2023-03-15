@@ -14,11 +14,11 @@ from api.serializers.base import ActivityLogSerializer
 from sales.models.lead_schedule import FileMessageToDo
 from sales.serializers import lead_schedule
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter
-from ..models.config import Column, Search, Config, GridSetting, FileBuilder365, ImageUser
+from ..models.config import Column, Search, Config, GridSetting, FileBuilder365
 from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerializer, \
-    FileBuilder365ResSerializer, ImageUserSerializer
+    FileBuilder365ResSerializer
 from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer
-from api.models import ActivityLog
+from api.models import ActivityLog, User
 
 
 class ContentTypeList(generics.ListAPIView):
@@ -226,7 +226,3 @@ class FileMessageTodoGenericView(GenericViewSet):
     #     return Response(status=status.HTTP_200_OK, data=data)
 
 
-class ImageUserGenericView(generics.ListCreateAPIView):
-    queryset = ImageUser.objects.all()
-    serializer_class = ImageUserSerializer
-    permission_classes = [permissions.IsAuthenticated]

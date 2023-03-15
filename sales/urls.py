@@ -3,7 +3,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from base.views.base import FileMessageTodoGenericView, ImageUserGenericView
+from base.views.base import FileMessageTodoGenericView
 from sales.views import lead_list, catalog, lead_schedule, estimate
 from api.views.upload_file import FileUploadView
 
@@ -207,7 +207,6 @@ url_config = [
     path('options-lead-list/', lead_schedule.select_lead_list),
     path('file/', FileMessageTodoGenericView.as_view({
         "post": "create_file"})),
-    path('user/<int:pk_user>/image/', ImageUserGenericView.as_view()),
 ]
 # DEFINE PATH FOR SALES APP -----------------------------------------------------
 url_sales = [
