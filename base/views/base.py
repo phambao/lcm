@@ -11,7 +11,6 @@ from django_filters import rest_framework as filters
 from rest_framework.viewsets import GenericViewSet
 
 from api.serializers.base import ActivityLogSerializer
-
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter
 from ..models.config import Column, Search, Config, GridSetting, FileBuilder365
 from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerializer, \
