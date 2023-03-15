@@ -11,14 +11,13 @@ from django_filters import rest_framework as filters
 from rest_framework.viewsets import GenericViewSet
 
 from api.serializers.base import ActivityLogSerializer
-from sales.models.lead_schedule import FileMessageToDo
-from sales.serializers import lead_schedule
+
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter
 from ..models.config import Column, Search, Config, GridSetting, FileBuilder365
 from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerializer, \
     FileBuilder365ResSerializer
 from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer
-from api.models import ActivityLog, User
+from api.models import ActivityLog
 
 
 class ContentTypeList(generics.ListAPIView):
@@ -217,12 +216,5 @@ class FileMessageTodoGenericView(GenericViewSet):
         data = FileBuilder365ResSerializer(
             attachments, many=True, context={'request': request}).data
         return Response(status=status.HTTP_200_OK, data=data)
-
-    # def get_file(self, request, **kwargs):
-    #     get_object_or_404(ScheduleEvent.objects.all(), pk=self.kwargs['pk_event'])
-    #     data_file = FileBuilder365.objects.filter(event=self.kwargs['pk_event'])
-    #     data = lead_schedule.FileMesageTodoSerializer(
-    #         data_file, many=True, context={'request': request}).data
-    #     return Response(status=status.HTTP_200_OK, data=data)
 
 
