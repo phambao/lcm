@@ -137,7 +137,12 @@ class LeadContactDetailsViewSet(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return LeadDetail.objects.get(pk=self.kwargs['pk_lead']).contacts.all()
+        try:
+            qs = LeadDetail.objects.get(pk=self.kwargs['pk_lead']).contacts.all()
+            return qs
+        except KeyError:
+            pass
+        return Contact.objects.all()
 
 
 class PhoneOfContactsDetailViewSet(generics.RetrieveUpdateDestroyAPIView):

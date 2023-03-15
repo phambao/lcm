@@ -6,7 +6,7 @@ from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE
     UNIT_LIBRARY_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE
 from sales.models import DataPoint
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, TemplateName, \
-    UnitLibrary, DescriptionLibrary
+    UnitLibrary, DescriptionLibrary, Assemble
 
 
 class LinkedDescriptionSerializer(serializers.Serializer):
@@ -88,8 +88,9 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormula
-        fields = ('id', 'name', 'formula', 'type', 'groups', 'self_data_entries', 'cost',
+        fields = ('id', 'name', 'formula', 'group', 'self_data_entries', 'cost',
                   'linked_description', 'quantity', 'markup', 'charge', 'material', 'unit', 'show_color')
+        extra_kwargs = {'id': {'read_only': False, 'required': False}}
 
     def create(self, validated_data):
         data_entries = pop(validated_data, 'self_data_entries', [])
@@ -119,31 +120,42 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
 
 class POFormulaGroupingSerializer(serializers.ModelSerializer):
-    po_formula_groupings = POFormulaSerializer('groups', many=True,
-                                               allow_null=True, required=False)
+    group_formulas = POFormulaSerializer('group', many=True, allow_null=True, required=False)
 
     class Meta:
         model = POFormulaGrouping
-        fields = ('id', 'name', 'po_formula_groupings')
+        fields = ('id', 'name', 'group_formulas')
 
     def create(self, validated_data):
-        po_formulas = pop(validated_data, 'po_formula_groupings', [])
+        po_formulas = pop(validated_data, 'group_formulas', [])
         instance = super().create(validated_data)
-        data = []
+        po_pk = []
         for po_formula in po_formulas:
-            po_formula['group'] = instance
-            data.append(POFormula(**po_formula))
-        POFormula.objects.bulk_create(data)
+            pk = po_formula.get('id', None)
+            if pk:
+                po_pk.append(pk)
+            else:
+                po_formula['group'] = instance.pk
+                po = POFormulaSerializer(data=po_formula)
+                po.is_valid(raise_exception=True)
+                po.save()
+        POFormula.objects.filter(id__in=po_pk).update(group=instance)
         return instance
 
     def update(self, instance, validated_data):
-        po_formulas = pop(validated_data, 'po_formula_groupings', [])
-        instance.po_formula_groupings.all().delete()
-        data = []
+        po_formulas = pop(validated_data, 'group_formulas', [])
+        instance.group_formulas.all().update(group=None)
+        po_pk = []
         for po_formula in po_formulas:
-            po_formula['group'] = instance
-            data.append(POFormula(**po_formula))
-        POFormula.objects.bulk_create(data)
+            pk = po_formula.get('id', None)
+            if pk:
+                po_pk.append(pk)
+            else:
+                po_formula['group'] = instance.pk
+                po = POFormulaSerializer(data=po_formula)
+                po.is_valid(raise_exception=True)
+                po.save()
+        POFormula.objects.filter(id__in=po_pk).update(group=instance)
         return super(POFormulaGroupingSerializer, self).update(instance, validated_data)
 
 
@@ -193,3 +205,15 @@ class DescriptionLibrarySerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         data['content_type'] = DESCRIPTION_LIBRARY_CONTENT_TYPE
         return data
+
+
+class AssembleSerializer(serializers.ModelSerializer):
+    assemble_formulas = POFormulaSerializer('assemble', many=True, required=False)
+
+    class Meta:
+        model = Assemble
+        fields = ('id', 'name', 'created_date', 'modified_date', 'user_create', 'user_update', 'assemble_formulas')
+        extra_kwargs = {'created_date': {'read_only': True},
+                        'modified_date': {'read_only': True},
+                        'user_create': {'read_only': True},
+                        'user_update': {'read_only': True}}
