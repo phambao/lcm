@@ -1,3 +1,6 @@
+import uuid
+
+from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_filters import rest_framework as filters
@@ -10,6 +13,7 @@ from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilt
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, Photos, ContactTypeName, \
     ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead
 from ..serializers import lead_list
+from ..serializers.lead_list import PhotoSerializer
 
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
 
@@ -319,3 +323,25 @@ def link_contacts_to_lead(request, pk_lead):
         data = lead_list.ContactsSerializer(
             contacts_to_link, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def upload_multiple_photo(request, pk_lead):
+    try:
+        files = request.FILES.getlist('files')
+    except KeyError:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={"message": "File not found"})
+    photo_id = []
+    for file in files:
+        file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
+        content_file = ContentFile(file.read(), name=file_name)
+
+        # is needed to bulk_create?
+        photo = Photos.objects.create(photo=content_file, user_create=request.user,
+                                      user_update=request.user, lead_id=pk_lead)
+        photo_id.append(photo.id)
+    photos = Photos.objects.filter(pk__in=photo_id)
+    serializer = PhotoSerializer(photos, many=True)
+
+    return Response(serializer.data)

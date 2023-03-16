@@ -52,6 +52,7 @@ url_leads = [
     ])),
     # Photos
     path('leads/<int:pk_lead>/photos/', lead_list.LeadPhotosViewSet.as_view()),
+    path('leads/<int:pk_lead>/mphotos/', lead_list.upload_multiple_photo),
     path('leads/<int:pk_lead>/photos/<int:pk>/',
          lead_list.LeadPhotosDetailViewSet.as_view()),
     # Project type
