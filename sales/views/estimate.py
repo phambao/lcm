@@ -15,13 +15,13 @@ from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSer
 
 
 class POFormulaList(generics.ListCreateAPIView):
-    queryset = POFormula.objects.all().prefetch_related('self_data_entries')
+    queryset = POFormula.objects.filter(group=None, assemble=None).prefetch_related('self_data_entries')
     serializer_class = POFormulaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
 class POFormulaDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = POFormula.objects.all()
+    queryset = POFormula.objects.all().prefetch_related('self_data_entries')
     serializer_class = POFormulaSerializer
     permission_classes = [permissions.IsAuthenticated]
 

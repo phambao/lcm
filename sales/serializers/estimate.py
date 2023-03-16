@@ -88,9 +88,10 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormula
-        fields = ('id', 'name', 'formula', 'group', 'self_data_entries', 'cost',
+        fields = ('id', 'name', 'formula', 'group', 'self_data_entries', 'cost', 'is_show', 'assemble', 'created_from',
                   'linked_description', 'quantity', 'markup', 'charge', 'material', 'unit', 'show_color')
-        extra_kwargs = {'id': {'read_only': False, 'required': False}}
+        extra_kwargs = {'id': {'read_only': False, 'required': False},
+                        'is_show': {'read_only': True}}
 
     def create(self, validated_data):
         data_entries = pop(validated_data, 'self_data_entries', [])
@@ -126,9 +127,7 @@ class POFormulaGroupingSerializer(serializers.ModelSerializer):
         model = POFormulaGrouping
         fields = ('id', 'name', 'group_formulas')
 
-    def create(self, validated_data):
-        po_formulas = pop(validated_data, 'group_formulas', [])
-        instance = super().create(validated_data)
+    def add_relation_po_formula(self, po_formulas, instance):
         po_pk = []
         for po_formula in po_formulas:
             pk = po_formula.get('id', None)
@@ -136,26 +135,24 @@ class POFormulaGroupingSerializer(serializers.ModelSerializer):
                 po_pk.append(pk)
             else:
                 po_formula['group'] = instance.pk
+                po_formula['is_show'] = True
                 po = POFormulaSerializer(data=po_formula)
                 po.is_valid(raise_exception=True)
                 po.save()
-        POFormula.objects.filter(id__in=po_pk).update(group=instance)
+        return po_pk
+
+    def create(self, validated_data):
+        po_formulas = pop(validated_data, 'group_formulas', [])
+        instance = super().create(validated_data)
+        po_pk = self.add_relation_po_formula(po_formulas, instance)
+        POFormula.objects.filter(id__in=po_pk, group=None).update(group=instance)
         return instance
 
     def update(self, instance, validated_data):
         po_formulas = pop(validated_data, 'group_formulas', [])
         instance.group_formulas.all().update(group=None)
-        po_pk = []
-        for po_formula in po_formulas:
-            pk = po_formula.get('id', None)
-            if pk:
-                po_pk.append(pk)
-            else:
-                po_formula['group'] = instance.pk
-                po = POFormulaSerializer(data=po_formula)
-                po.is_valid(raise_exception=True)
-                po.save()
-        POFormula.objects.filter(id__in=po_pk).update(group=instance)
+        po_pk = self.add_relation_po_formula(po_formulas, instance)
+        POFormula.objects.filter(id__in=po_pk, group=None).update(group=instance)
         return super(POFormulaGroupingSerializer, self).update(instance, validated_data)
 
 
@@ -208,7 +205,7 @@ class DescriptionLibrarySerializer(serializers.ModelSerializer):
 
 
 class AssembleSerializer(serializers.ModelSerializer):
-    assemble_formulas = POFormulaSerializer('assemble', many=True, required=False)
+    assemble_formulas = POFormulaSerializer('assemble', many=True, required=False, allow_null=True)
 
     class Meta:
         model = Assemble
@@ -217,3 +214,30 @@ class AssembleSerializer(serializers.ModelSerializer):
                         'modified_date': {'read_only': True},
                         'user_create': {'read_only': True},
                         'user_update': {'read_only': True}}
+
+    def create_po_formula(self, po_formulas, instance):
+        for po_formula in po_formulas:
+            po_formula['assemble'] = instance.pk
+            po_formula['is_show'] = False
+            created_from = po_formula.get('created_from')
+            if created_from:
+                po_formula['created_from'] = created_from.pk
+            else:
+                po_formula['created_from'] = po_formula['id']
+            del po_formula['group']
+            del po_formula['id']
+            po = POFormulaSerializer(data=po_formula)
+            po.is_valid(raise_exception=True)
+            po.save()
+
+    def create(self, validated_data):
+        po_formulas = pop(validated_data, 'assemble_formulas', [])
+        instance = super().create(validated_data)
+        self.create_po_formula(po_formulas, instance)
+        return instance
+
+    def update(self, instance, validated_data):
+        po_formulas = pop(validated_data, 'assemble_formulas', [])
+        instance.assemble_formulas.all().delete()
+        self.create_po_formula(po_formulas, instance)
+        return super().update(instance, validated_data)
