@@ -38,10 +38,10 @@ class POFormula(BaseModel):
     show_color = models.BooleanField(default=False)
     formula = models.TextField()
     group = models.ForeignKey('sales.POFormulaGrouping', blank=True, related_name='group_formulas', null=True, on_delete=models.SET_NULL)
-    assemble = models.ForeignKey('sales.POFormulaGrouping', blank=True, related_name='assemble_formulas', null=True, on_delete=models.SET_NULL)
+    assemble = models.ForeignKey('sales.Assemble', blank=True, related_name='assemble_formulas', null=True, on_delete=models.SET_NULL)
     related_formulas = models.ManyToManyField('self', related_name='used_by', symmetrical=False, blank=True)
     created_from = models.ForeignKey('self', related_name='clones', null=True, blank=True, on_delete=models.SET_NULL)
-    is_show = models.BooleanField(default=False)  # Only show formula page
+    is_show = models.BooleanField(default=True, blank=True)  # Only show formula page
     quantity = models.CharField(max_length=64, blank=True)
     markup = models.CharField(max_length=64, blank=True)
     charge = models.CharField(max_length=64, blank=True)
