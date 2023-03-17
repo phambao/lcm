@@ -34,7 +34,7 @@ class DataEntry(BaseModel):
 class POFormula(BaseModel):
 
     name = models.CharField(max_length=128)
-    linked_description = models.CharField(max_length=128, blank=True)
+    linked_description = models.TextField(blank=True, default='')
     show_color = models.BooleanField(default=False)
     formula = models.TextField()
     group = models.ForeignKey('sales.POFormulaGrouping', blank=True, related_name='group_formulas', null=True, on_delete=models.SET_NULL)
@@ -54,7 +54,7 @@ class POFormulaToDataEntry(BaseModel):
     data_entry = models.ForeignKey(DataEntry, on_delete=models.CASCADE, blank=True, null=True)
     po_formula = models.ForeignKey(POFormula, on_delete=models.CASCADE, blank=True,
                                    null=True, related_name='self_data_entries')
-    value = models.CharField(max_length=32, blank=True)
+    value = models.CharField(verbose_name='Default Value', max_length=32, blank=True)
 
 
 class POFormulaGrouping(BaseModel):
@@ -67,4 +67,4 @@ class Assemble(BaseModel):
 
 class DescriptionLibrary(BaseModel):
     name = models.CharField(max_length=128)
-    linked_description = models.TextField(blank=True)
+    linked_description = models.TextField(verbose_name='Description', blank=True)
