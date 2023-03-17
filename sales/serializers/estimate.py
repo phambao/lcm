@@ -109,13 +109,20 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if 'catalog' in data['linked_description'] or 'estimate' in data['linked_description']:
-            pk = data['linked_description'].split(':')[1]
-            if 'estimate' in data['linked_description']:
-                linked_description = DescriptionLibrary.objects.get(pk=pk)
-            else:
-                linked_description = DataPoint.objects.get(pk=pk)
-            data['linked_description'] = LinkedDescriptionSerializer(linked_description).data
+        linked_descriptions = []
+        try:
+            linked_descriptions = eval(data['linked_description'])
+        except:
+            pass
+        data['linked_description'] = []
+        for linked_description in linked_descriptions:
+            if 'catalog' in linked_description or 'estimate' in linked_description:
+                pk = linked_description.split(':')[1]
+                if 'estimate' in linked_description:
+                    linked_description = DescriptionLibrary.objects.get(pk=pk)
+                else:
+                    linked_description = DataPoint.objects.get(pk=pk)
+                data['linked_description'].append(LinkedDescriptionSerializer(linked_description).data)
         data['content_type'] = PO_FORMULA_CONTENT_TYPE
         return data
 
