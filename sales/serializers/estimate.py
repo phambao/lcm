@@ -116,13 +116,15 @@ class POFormulaSerializer(serializers.ModelSerializer):
             pass
         data['linked_description'] = []
         for linked_description in linked_descriptions:
-            if 'catalog' in linked_description or 'estimate' in linked_description:
-                pk = linked_description.split(':')[1]
-                if 'estimate' in linked_description:
-                    linked_description = DescriptionLibrary.objects.get(pk=pk)
-                else:
-                    linked_description = DataPoint.objects.get(pk=pk)
-                data['linked_description'].append(LinkedDescriptionSerializer(linked_description).data)
+            if isinstance(linked_description, dict):
+                linked_description = linked_description.get('id', '')
+                if 'catalog' in linked_description or 'estimate' in linked_description:
+                    pk = linked_description.split(':')[1]
+                    if 'estimate' in linked_description:
+                        linked_description = DescriptionLibrary.objects.get(pk=pk)
+                    else:
+                        linked_description = DataPoint.objects.get(pk=pk)
+                    data['linked_description'].append(LinkedDescriptionSerializer(linked_description).data)
         data['content_type'] = PO_FORMULA_CONTENT_TYPE
         return data
 
