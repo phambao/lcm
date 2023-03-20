@@ -5,7 +5,7 @@ from base.utils import pop, activity_log
 from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE,\
     UNIT_LIBRARY_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE
 from sales.models import DataPoint
-from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, TemplateName, \
+from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, \
     UnitLibrary, DescriptionLibrary, Assemble
 
 
@@ -163,14 +163,6 @@ class POFormulaGroupingSerializer(serializers.ModelSerializer):
         po_pk = self.add_relation_po_formula(po_formulas, instance)
         POFormula.objects.filter(id__in=po_pk, group=None).update(group=instance)
         return super(POFormulaGroupingSerializer, self).update(instance, validated_data)
-
-
-class TemplateNameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TemplateName
-        fields = '__all__'
-        extra_kwargs = {'user_create': {'read_only': True},
-                        'user_update': {'read_only': True}}
 
 
 class UnitLibrarySerializer(serializers.ModelSerializer):
