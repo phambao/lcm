@@ -5,13 +5,11 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
-from sales.filters.estimate import TemplateNameFilter
 from sales.models import DataPoint
-from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, TemplateName, UnitLibrary, \
+from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, UnitLibrary, \
     DescriptionLibrary, Assemble
 from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
-    TemplateNameSerializer, UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, \
-    AssembleSerializer
+    UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, AssembleSerializer
 
 
 class POFormulaList(generics.ListCreateAPIView):
@@ -47,20 +45,6 @@ class DataEntryList(generics.ListCreateAPIView):
 class DataEntryDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = DataEntry.objects.all()
     serializer_class = DataEntrySerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class TemplateNameList(generics.ListCreateAPIView):
-    queryset = TemplateName.objects.all()
-    serializer_class = TemplateNameSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = (filters.DjangoFilterBackend,)
-    filterset_class = TemplateNameFilter
-
-
-class TemplateNameDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = TemplateName.objects.all()
-    serializer_class = TemplateNameSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 

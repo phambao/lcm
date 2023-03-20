@@ -194,8 +194,6 @@ url_estimate = [
     path('formula-grouping/<int:pk>/', estimate.POFormulaGroupingDetail.as_view()),
     path('data-entry/', estimate.DataEntryList.as_view()),
     path('data-entry/<int:pk>/', estimate.DataEntryDetail.as_view()),
-    path('template-name/', estimate.TemplateNameList.as_view()),
-    path('template-name/<int:pk>/', estimate.TemplateNameDetail.as_view()),
     path('unit-library/', estimate.UnitLibraryList.as_view()),
     path('unit-library/<int:pk>/', estimate.UnitLibraryDetail.as_view()),
     path('description-library/', estimate.DescriptionLibraryList.as_view()),
