@@ -1,12 +1,12 @@
 from rest_framework import serializers
 
 from base.serializers.base import IDAndNameSerializer
-from base.utils import pop, activity_log
+from base.utils import pop, activity_log, extra_kwargs_for_base_model
 from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE,\
     UNIT_LIBRARY_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE
 from sales.models import DataPoint
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, \
-    UnitLibrary, DescriptionLibrary, Assemble
+    UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate
 
 
 class LinkedDescriptionSerializer(serializers.Serializer):
@@ -242,3 +242,41 @@ class AssembleSerializer(serializers.ModelSerializer):
         instance.assemble_formulas.all().delete()
         self.create_po_formula(po_formulas, instance)
         return super().update(instance, validated_data)
+
+
+class EstimateTemplateSerializer(serializers.ModelSerializer):
+    assembles = AssembleSerializer(many=True, required=False, allow_null=True,)
+
+    class Meta:
+        model = EstimateTemplate
+        fields = '__all__'
+        extra_kwargs = extra_kwargs_for_base_model()
+
+    def create_assembles(self, assembles):
+        pk_assembles = []
+        for assemble in assembles:
+            for po in assemble.get('assemble_formulas', []):
+                if po.get('assemble'):
+                    po['assemble'] = po['assemble'].pk
+                if po.get('created_from'):
+                    po['created_from'] = po['created_from'].pk
+            serializer = AssembleSerializer(data=assemble)
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save()
+            pk_assembles.append(obj.pk)
+        return pk_assembles
+
+    def create(self, validated_data):
+        assembles = pop(validated_data, 'assembles', [])
+        pk_assembles = self.create_assembles(assembles)
+        instance = super().create(validated_data)
+        instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
+        return instance
+
+    def update(self, instance, validated_data):
+        assembles = pop(validated_data, 'assembles', [])
+        pk_assembles = self.create_assembles(assembles)
+        instance = super().update(instance, validated_data)
+        instance.assembles.all().delete()
+        instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
+        return instance
