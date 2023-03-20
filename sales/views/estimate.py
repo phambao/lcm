@@ -7,9 +7,10 @@ from rest_framework.response import Response
 
 from sales.models import DataPoint
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, UnitLibrary, \
-    DescriptionLibrary, Assemble
+    DescriptionLibrary, Assemble, EstimateTemplate
 from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
-    UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, AssembleSerializer
+    UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, AssembleSerializer, \
+    EstimateTemplateSerializer
 
 
 class POFormulaList(generics.ListCreateAPIView):
@@ -73,7 +74,7 @@ class DescriptionLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AssembleList(generics.ListCreateAPIView):
-    queryset = Assemble.objects.all()
+    queryset = Assemble.objects.filter(estimate_templates=None)
     serializer_class = AssembleSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -81,6 +82,18 @@ class AssembleList(generics.ListCreateAPIView):
 class AssembleDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Assemble.objects.all()
     serializer_class = AssembleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class EstimateTemplateList(generics.ListCreateAPIView):
+    queryset = EstimateTemplate.objects.all()
+    serializer_class = EstimateTemplateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class EstimateTemplateDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = EstimateTemplate.objects.all()
+    serializer_class = EstimateTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 

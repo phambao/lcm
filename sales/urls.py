@@ -200,6 +200,8 @@ url_estimate = [
     path('description-library/<int:pk>/', estimate.DescriptionLibraryDetail.as_view()),
     path('assemble/', estimate.AssembleList.as_view()),
     path('assemble/<int:pk>/', estimate.AssembleDetail.as_view()),
+    path('estimate-template/', estimate.EstimateTemplateList.as_view()),
+    path('estimate-template/<int:pk>/', estimate.EstimateTemplateDetail.as_view()),
     path('linked-descriptions/', estimate.get_linked_descriptions),
     path('linked-descriptions/<str:pk>/', estimate.get_linked_description),
 ]

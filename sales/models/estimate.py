@@ -52,3 +52,9 @@ class Assemble(BaseModel):
 class DescriptionLibrary(BaseModel):
     name = models.CharField(max_length=128)
     linked_description = models.TextField(verbose_name='Description', blank=True)
+
+
+class EstimateTemplate(BaseModel):
+    name = models.CharField(max_length=128)
+    assembles = models.ManyToManyField(Assemble, related_name='estimate_templates', blank=True)
+    contact_description = models.TextField(blank=True, default='')
