@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 from api.models import BaseModel
 
@@ -9,10 +10,16 @@ class UnitLibrary(BaseModel):
 
 
 class DataEntry(BaseModel):
+
+    class TypeChoice(models.IntegerChoices):
+        TYPE_IN = 0, 'Type In'
+        DROPDOWN = 1, 'Dropdown'
+
     name = models.CharField(max_length=128)
-    value = models.CharField(max_length=32, blank=True)
     unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.SET_NULL,
                              blank=True, null=True, related_name='data_entries')
+    type = models.IntegerField(choices=TypeChoice.choices, default=TypeChoice.TYPE_IN)
+    dropdown = ArrayField(models.JSONField(), default=list)
 
 
 class POFormula(BaseModel):

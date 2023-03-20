@@ -30,7 +30,7 @@ class DataEntrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataEntry
-        fields = ('id', 'name', 'value', 'unit')
+        fields = ('id', 'name', 'unit', 'dropdown', 'type')
         extra_kwargs = {'id': {'read_only': False, 'required': False}}
 
     def create(self, validated_data):
