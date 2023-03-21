@@ -209,7 +209,8 @@ class AssembleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Assemble
-        fields = ('id', 'name', 'created_date', 'modified_date', 'user_create', 'user_update', 'assemble_formulas')
+        fields = ('id', 'name', 'created_date', 'modified_date', 'user_create', 'user_update',
+                  'assemble_formulas', 'description')
         extra_kwargs = {'created_date': {'read_only': True},
                         'modified_date': {'read_only': True},
                         'user_create': {'read_only': True},
@@ -292,4 +293,23 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ESTIMATE_TEMPLATE_CONTENT_TYPE
+        return data
+
+
+class TaggingSerializer(serializers.Serializer):
+    """
+    Tagging for PO formula or Data point in Catalog
+    """
+    id = serializers.IntegerField()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if isinstance(instance, POFormula):
+            data['display'] = instance.name
+            data['value'] = instance.charge
+        if isinstance(instance, DataPoint):
+            data['display'] = instance.catalog.name
+            if instance.unit:
+                data['display'] = instance.unit.name
+            data['value'] = instance.value
         return data

@@ -10,7 +10,7 @@ from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, UnitL
     DescriptionLibrary, Assemble, EstimateTemplate
 from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
     UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, AssembleSerializer, \
-    EstimateTemplateSerializer
+    EstimateTemplateSerializer, TaggingSerializer
 
 
 class POFormulaList(generics.ListCreateAPIView):
@@ -126,3 +126,19 @@ def get_linked_description(request, pk):
         obj = get_object_or_404(DataPoint.objects.all(), pk=pk.split(':')[1])
     serializer = LinkedDescriptionSerializer(obj)
     return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_tag_formula(request):
+    formulas = POFormula.objects.all()
+    serializer = TaggingSerializer(formulas, many=True)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_tag_data_point(request):
+    formulas = DataPoint.objects.all()
+    serializer = TaggingSerializer(formulas, many=True)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
