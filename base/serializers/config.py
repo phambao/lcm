@@ -1,6 +1,7 @@
+import re
 from rest_framework import serializers
 
-from ..models.config import Column, Search, Config, GridSetting
+from ..models.config import Column, Search, Config, GridSetting, Company
 
 
 class ColumnSerializer(serializers.ModelSerializer):
@@ -41,3 +42,15 @@ class GridSettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = GridSetting
         fields = ('id', 'name', 'params', 'content_type', 'user', 'model', 'is_public', 'hidden_params')
+
+
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = '__all__'
+
+    def validate(self, validated_data):
+        email_pattern = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+        if bool(email_pattern.match(validated_data['email'])) is False:
+            raise serializers.ValidationError('email error')
+        return validated_data

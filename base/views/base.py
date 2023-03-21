@@ -12,10 +12,11 @@ from rest_framework.viewsets import GenericViewSet
 
 from api.serializers.base import ActivityLogSerializer
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter
-from ..models.config import Column, Search, Config, GridSetting, FileBuilder365
+from ..models.config import Column, Search, Config, GridSetting, FileBuilder365, Company
 from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerializer, \
     FileBuilder365ResSerializer
-from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer
+from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer, \
+    CompanySerializer
 from api.models import ActivityLog
 
 
@@ -138,6 +139,18 @@ class GridSettingListView(generics.ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
+class CompanyListView(generics.ListCreateAPIView):
+    queryset = Company.objects.all()
+    serializer_class = CompanySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class CompanyDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Company.objects.all()
+    serializer_class = CompanySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
 @api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated])
 def config_view(request, model):
@@ -215,5 +228,3 @@ class FileMessageTodoGenericView(GenericViewSet):
         data = FileBuilder365ResSerializer(
             attachments, many=True, context={'request': request}).data
         return Response(status=status.HTTP_200_OK, data=data)
-
-
