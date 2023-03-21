@@ -11,15 +11,11 @@ class UnitLibrary(BaseModel):
 
 class DataEntry(BaseModel):
 
-    class TypeChoice(models.IntegerChoices):
-        TYPE_IN = 0, 'Type In'
-        DROPDOWN = 1, 'Dropdown'
-
     name = models.CharField(max_length=128)
     unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.SET_NULL,
                              blank=True, null=True, related_name='data_entries')
-    type = models.IntegerField(choices=TypeChoice.choices, default=TypeChoice.TYPE_IN)
-    dropdown = ArrayField(models.JSONField(), default=list)
+    is_dropdown = models.BooleanField(default=False)
+    dropdown = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
 
 class POFormula(BaseModel):
@@ -39,6 +35,8 @@ class POFormula(BaseModel):
     material = models.CharField(max_length=8, blank=True)
     unit = models.CharField(max_length=32, blank=True)
     cost = models.IntegerField(blank=True, default=0)
+    attachments = ArrayField(models.CharField(max_length=64, null=True, blank=True), default=list, blank=True)
+    catalog_links = models.ManyToManyField('sales.Catalog', related_name='formulas', blank=True)
 
 
 class POFormulaToDataEntry(BaseModel):
