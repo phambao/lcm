@@ -35,7 +35,6 @@ class POFormula(BaseModel):
     material = models.CharField(max_length=8, blank=True)
     unit = models.CharField(max_length=32, blank=True)
     cost = models.IntegerField(blank=True, default=0)
-    attachments = ArrayField(models.CharField(max_length=64, null=True, blank=True), default=list, blank=True)
     catalog_links = models.ManyToManyField('sales.Catalog', related_name='formulas', blank=True)
 
 
@@ -64,3 +63,10 @@ class EstimateTemplate(BaseModel):
     name = models.CharField(max_length=128)
     assembles = models.ManyToManyField(Assemble, related_name='estimate_templates', blank=True)
     contact_description = models.TextField(blank=True, default='')
+
+
+class DataView(BaseModel):
+    name = models.CharField(verbose_name='Formula Name', max_length=128)
+    formula = models.TextField(verbose_name='Formula')
+    estimate_template = models.ForeignKey('sales.EstimateTemplate', on_delete=models.CASCADE, related_name='data_views',
+                                          null=True, blank=True)
