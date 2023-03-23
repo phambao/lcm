@@ -61,7 +61,7 @@ class Company(models.Model):
     state = models.ForeignKey('base.State', on_delete=models.SET_NULL,
                               related_name='company_states', null=True, blank=True)
     zip_code = models.CharField(verbose_name='Zip Code', max_length=6, blank=True)
-    division = models.ManyToManyField('Division', related_name='company_division')
+    size = models.IntegerField(null=True, blank=True)
     tax = models.CharField(blank=True, max_length=128)
     business_phone = models.CharField(blank=True, max_length=11)
     cell_phone = models.CharField(blank=True, max_length=11)
@@ -81,3 +81,4 @@ class Division(BaseModel):
         db_table = 'division'
 
     name = models.CharField(max_length=128)
+    company = models.ForeignKey(Company, on_delete=models.SET_NULL, related_name='division_company', null=True, blank=True)
