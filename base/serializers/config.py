@@ -1,7 +1,10 @@
 import re
 from rest_framework import serializers
 
-from ..models.config import Column, Search, Config, GridSetting, Company
+from ..models.config import Column, Search, Config, GridSetting, Company, Division
+from ..utils import pop
+
+from base.serializers import base
 
 
 class ColumnSerializer(serializers.ModelSerializer):
@@ -45,12 +48,43 @@ class GridSettingSerializer(serializers.ModelSerializer):
 
 
 class CompanySerializer(serializers.ModelSerializer):
+    division = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
+
     class Meta:
         model = Company
-        fields = '__all__'
+        fields = ('id', 'logo', 'company_name', 'address', 'city', 'state', 'zip_code', 'division', 'tax',
+                  'business_phone', 'cell_phone', 'fax', 'email', 'cell_mail', 'created_date', 'modified_date')
 
-    def validate(self, validated_data):
-        email_pattern = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-        if bool(email_pattern.match(validated_data['email'])) is False:
-            raise serializers.ValidationError('email error')
-        return validated_data
+    def create(self, validated_data):
+        request = self.context['request']
+        user_create = user_update = request.user
+        division = pop(validated_data, 'division', [])
+
+        company_create = Company.objects.create(
+            user_create=user_create, user_update=user_update,
+            **validated_data
+        )
+
+        division_objects = Division.objects.filter(pk__in=[data['id'] for data in division])
+        company_create.division.add(*division_objects)
+
+        return company_create
+
+    def update(self, instance, data):
+        division = pop(data, 'division', [])
+        company_update = Company.objects.filter(pk=instance.pk)
+        company_update.update(**data)
+        company_update = company_update.first()
+
+        division_objects = Division.objects.filter(pk__in=[data['id'] for data in division])
+        company_update.division.clear()
+        company_update.division.add(*division_objects)
+
+        instance.refresh_from_db()
+        return instance
+
+
+class DivisionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Division
+        fields = '__all__'
