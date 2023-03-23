@@ -190,7 +190,7 @@ def config_view(request, model):
 
 
 class ActivityLogList(generics.ListCreateAPIView):
-    queryset = ActivityLog.objects.all().order_by('-created_date')
+    queryset = ActivityLog.objects.all().order_by('-created_date').prefetch_related('user_create')
     serializer_class = ActivityLogSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend,)

@@ -57,7 +57,7 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormulaToDataEntry
-        fields = ('id', 'value', 'data_entry',)
+        fields = ('id', 'value', 'data_entry', 'index')
 
     def to_representation(self, instance):
         data = super(POFormulaToDataEntrySerializer, self).to_representation(instance)
@@ -67,7 +67,7 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
 def create_po_formula_to_data_entry(instance, data_entries):
     data = []
     for data_entry in data_entries:
-        params = {"po_formula_id": instance.pk, "value": data_entry['value']}
+        params = {"po_formula_id": instance.pk, "value": data_entry['value'], 'index': data_entry['index']}
         try:
             data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
             if data_entry_pk:
@@ -124,6 +124,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
                     else:
                         linked_description = DataPoint.objects.get(pk=pk)
                     data['linked_description'].append(LinkedDescriptionSerializer(linked_description).data)
+        data['linked_description'] = str(data['linked_description'])
         data['content_type'] = PO_FORMULA_CONTENT_TYPE
         return data
 
@@ -290,6 +291,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         assembles = pop(validated_data, 'assembles', [])
         data_views = pop(validated_data, 'data_views', [])
+
         pk_assembles = self.create_assembles(assembles)
         instance = super().create(validated_data)
         self.create_data_view(data_views, instance)
@@ -301,9 +303,11 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
         assembles = pop(validated_data, 'assembles', [])
         data_views = pop(validated_data, 'data_views', [])
         pk_assembles = self.create_assembles(assembles)
+
         instance = super().update(instance, validated_data)
         instance.data_views.all().delete()
         self.create_data_view(data_views, instance)
+
         instance.assembles.all().delete()
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
         activity_log(EstimateTemplate, instance, 2, EstimateTemplateSerializer, {})

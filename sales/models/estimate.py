@@ -36,6 +36,7 @@ class POFormula(BaseModel):
     unit = models.CharField(max_length=32, blank=True)
     cost = models.IntegerField(blank=True, default=0)
     catalog_links = models.ManyToManyField('sales.Catalog', related_name='formulas', blank=True)
+    formula_mentions = models.CharField(blank=True, max_length=256)
 
 
 class POFormulaToDataEntry(BaseModel):
@@ -43,6 +44,7 @@ class POFormulaToDataEntry(BaseModel):
     po_formula = models.ForeignKey(POFormula, on_delete=models.CASCADE, blank=True,
                                    null=True, related_name='self_data_entries')
     value = models.CharField(verbose_name='Default Value', max_length=32, blank=True)
+    index = models.IntegerField(blank=True, default=0)
 
 
 class POFormulaGrouping(BaseModel):
