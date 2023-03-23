@@ -29,6 +29,11 @@ url_base = [
     path('config/<str:model>/', base.config_view),
     path('logs/', base.ActivityLogList.as_view()),
     path('logs/<int:pk>/', base.ActivityLogDetail.as_view()),
+    path('company/', base.CompanyListView.as_view()),
+    path('company/<int:pk>/', base.CompanyDetailGenericView.as_view()),
+    path('company/division/', base.DivisionListView.as_view()),
+    path('company/division/<int:pk>/', base.DivisionDetailGenericView.as_view()),
+
 ]
 
 # Create schema view for Swagger ------------------------------------------------

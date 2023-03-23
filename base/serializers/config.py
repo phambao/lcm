@@ -1,6 +1,10 @@
+import re
 from rest_framework import serializers
 
-from ..models.config import Column, Search, Config, GridSetting
+from ..models.config import Column, Search, Config, GridSetting, Company, Division
+from ..utils import pop
+
+from base.serializers import base
 
 
 class ColumnSerializer(serializers.ModelSerializer):
@@ -41,3 +45,34 @@ class GridSettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = GridSetting
         fields = ('id', 'name', 'params', 'content_type', 'user', 'model', 'is_public', 'hidden_params')
+
+
+class CompanySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Company
+        fields = ('id', 'logo', 'company_name', 'address', 'city', 'state', 'zip_code', 'tax', 'size',
+                  'business_phone', 'cell_phone', 'fax', 'email', 'cell_mail', 'created_date', 'modified_date',
+                  'user_create', 'user_update')
+
+    # def create(self, validated_data):
+    #     request = self.context['request']
+    #     user_create = user_update = request.user
+    #
+    #     company_create = Company.objects.create(
+    #         user_create=user_create, user_update=user_update,
+    #         **validated_data
+    #     )
+    #     return company_create
+    #
+    # def update(self, instance, data):
+    #     company_update = Company.objects.filter(pk=instance.pk)
+    #     company_update.update(**data)
+    #     instance.refresh_from_db()
+    #     return instance
+
+
+class DivisionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Division
+        fields = '__all__'
