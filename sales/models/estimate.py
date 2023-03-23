@@ -32,11 +32,14 @@ class POFormula(BaseModel):
     quantity = models.CharField(max_length=64, blank=True)
     markup = models.CharField(max_length=64, blank=True)
     charge = models.CharField(max_length=64, blank=True)
-    material = models.CharField(max_length=8, blank=True)
+    material = models.CharField(max_length=32, blank=True)
     unit = models.CharField(max_length=32, blank=True)
     cost = models.IntegerField(blank=True, default=0)
     catalog_links = models.ManyToManyField('sales.Catalog', related_name='formulas', blank=True)
     formula_mentions = models.CharField(blank=True, max_length=256)
+    gross_profit = models.CharField(max_length=32, blank=True)
+    description_of_formula = models.TextField(blank=True)
+    formula_scenario = models.BooleanField(default=False)
 
 
 class POFormulaToDataEntry(BaseModel):

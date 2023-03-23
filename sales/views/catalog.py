@@ -1,5 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
+from django.db.models import Value
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from rest_framework import generics, permissions, status, filters as rf_filters
@@ -299,25 +300,22 @@ def get_materials(request, pk):
     """
     Get cost table from ancestor catalog
     """
-    data = [
-        {
-            "id": "id1",
-            "unit": "Kg",
-            "cost": 200,
-            "name": "Kilogram"
-        },
-        {
-            "id": "id2",
-            "unit": "m",
-            "cost": 400,
-            "name": "Meter"
-        },
-        {
-            "id": "id3",
-            "unit": "second",
-            "cost": 600,
-            "name": "Second"
-        }
-    ]
-
+    c = get_object_or_404(Catalog.objects.all(), pk=pk)
+    children = Catalog.objects.filter(
+        pk__in=c.get_all_descendant()
+    ).difference(Catalog.objects.filter(c_table=Value('{}'))).values('id', 'c_table')
+    data = []
+    for child in children:
+        try:
+            c_table = child['c_table']
+            header = c_table['header']
+            for i, d in enumerate(c_table['data']):
+                data.append({
+                    "id": f'{child["id"]}:{i}',
+                    header[0]: d[0],
+                    header[1]: d[1],
+                    header[2]: d[2],
+                })
+        except:
+            pass
     return Response(status=status.HTTP_200_OK, data=data)
