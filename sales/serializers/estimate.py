@@ -2,11 +2,11 @@ from rest_framework import serializers
 
 from base.serializers.base import IDAndNameSerializer
 from base.utils import pop, activity_log, extra_kwargs_for_base_model
-from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE,\
-    UNIT_LIBRARY_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE
+from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE, \
+    UNIT_LIBRARY_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE, ESTIMATE_TEMPLATE_CONTENT_TYPE, ASSEMBLE_CONTENT_TYPE
 from sales.models import DataPoint
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, \
-    UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate
+    UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView
 
 
 class LinkedDescriptionSerializer(serializers.Serializer):
@@ -30,7 +30,7 @@ class DataEntrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataEntry
-        fields = ('id', 'name', 'unit', 'dropdown', 'type')
+        fields = ('id', 'name', 'unit', 'dropdown', 'is_dropdown')
         extra_kwargs = {'id': {'read_only': False, 'required': False}}
 
     def create(self, validated_data):
@@ -88,10 +88,9 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormula
-        fields = ('id', 'name', 'formula', 'group', 'self_data_entries', 'cost', 'is_show', 'assemble', 'created_from',
-                  'linked_description', 'quantity', 'markup', 'charge', 'material', 'unit', 'show_color')
-        extra_kwargs = {'id': {'read_only': False, 'required': False},
-                        'is_show': {'read_only': True}}
+        fields = '__all__'
+        extra_kwargs = {**{'id': {'read_only': False, 'required': False},
+                        'is_show': {'read_only': True}}, **extra_kwargs_for_base_model()}
 
     def create(self, validated_data):
         data_entries = pop(validated_data, 'self_data_entries', [])
@@ -210,7 +209,8 @@ class AssembleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Assemble
-        fields = ('id', 'name', 'created_date', 'modified_date', 'user_create', 'user_update', 'assemble_formulas')
+        fields = ('id', 'name', 'created_date', 'modified_date', 'user_create', 'user_update',
+                  'assemble_formulas', 'description')
         extra_kwargs = {'created_date': {'read_only': True},
                         'modified_date': {'read_only': True},
                         'user_create': {'read_only': True},
@@ -235,17 +235,31 @@ class AssembleSerializer(serializers.ModelSerializer):
         po_formulas = pop(validated_data, 'assemble_formulas', [])
         instance = super().create(validated_data)
         self.create_po_formula(po_formulas, instance)
+        activity_log(Assemble, instance, 1, AssembleSerializer, {})
         return instance
 
     def update(self, instance, validated_data):
         po_formulas = pop(validated_data, 'assemble_formulas', [])
         instance.assemble_formulas.all().delete()
         self.create_po_formula(po_formulas, instance)
+        activity_log(Assemble, instance, 2, AssembleSerializer, {})
         return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['content_type'] = ASSEMBLE_CONTENT_TYPE
+        return data
+
+
+class DataViewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DataView
+        fields = ('id', 'formula', 'name', 'estimate_template')
 
 
 class EstimateTemplateSerializer(serializers.ModelSerializer):
     assembles = AssembleSerializer(many=True, required=False, allow_null=True,)
+    data_views = DataViewSerializer('estimate_template', many=True, required=False, allow_null=True)
 
     class Meta:
         model = EstimateTemplate
@@ -266,17 +280,55 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
             pk_assembles.append(obj.pk)
         return pk_assembles
 
+    def create_data_view(self, data_views, instance):
+        for data_view in data_views:
+            data_view['estimate_template'] = instance.pk
+            serializer = DataViewSerializer(data=data_view)
+            serializer.is_valid()
+            serializer.save()
+
     def create(self, validated_data):
         assembles = pop(validated_data, 'assembles', [])
+        data_views = pop(validated_data, 'data_views', [])
         pk_assembles = self.create_assembles(assembles)
         instance = super().create(validated_data)
+        self.create_data_view(data_views, instance)
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
+        activity_log(EstimateTemplate, instance, 1, EstimateTemplateSerializer, {})
         return instance
 
     def update(self, instance, validated_data):
         assembles = pop(validated_data, 'assembles', [])
+        data_views = pop(validated_data, 'data_views', [])
         pk_assembles = self.create_assembles(assembles)
         instance = super().update(instance, validated_data)
+        instance.data_views.all().delete()
+        self.create_data_view(data_views, instance)
         instance.assembles.all().delete()
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
+        activity_log(EstimateTemplate, instance, 2, EstimateTemplateSerializer, {})
         return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['content_type'] = ESTIMATE_TEMPLATE_CONTENT_TYPE
+        return data
+
+
+class TaggingSerializer(serializers.Serializer):
+    """
+    Tagging for PO formula or Data point in Catalog
+    """
+    id = serializers.IntegerField()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if isinstance(instance, POFormula):
+            data['display'] = instance.name
+            data['value'] = instance.charge
+        if isinstance(instance, DataPoint):
+            data['display'] = instance.catalog.name
+            if instance.unit:
+                data['display'] = instance.unit.name
+            data['value'] = instance.value
+        return data

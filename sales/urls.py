@@ -204,6 +204,8 @@ url_estimate = [
     path('estimate-template/<int:pk>/', estimate.EstimateTemplateDetail.as_view()),
     path('linked-descriptions/', estimate.get_linked_descriptions),
     path('linked-descriptions/<str:pk>/', estimate.get_linked_description),
+    path('tag-formula/', estimate.get_tag_formula),
+    path('tag-catalog/', estimate.get_tag_data_point),
 ]
 # URL Config
 url_config = [
