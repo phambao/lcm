@@ -218,3 +218,14 @@ class Catalog(BaseModel):
         catalogs = self.get_ancestors()
         data_points = DataPoint.objects.filter(catalog__in=catalogs)
         return data_points
+
+    def get_material(self, material):
+        """
+        Parameters:
+            material: "catalog_id:row_index"
+        """
+        pk_catalog, row_index = material.split(':')
+        pk_catalog, row_index = int(pk_catalog), int(row_index)
+        d = self.c_table['data'][row_index]
+        header = self.c_table['header']
+        return {**{header[i]: d[i] for i in range(len(header))}, **{"id": f'{self.pk}:{row_index}'}}

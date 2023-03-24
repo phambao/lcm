@@ -310,12 +310,7 @@ def get_materials(request, pk):
             c_table = child['c_table']
             header = c_table['header']
             for i, d in enumerate(c_table['data']):
-                data.append({
-                    "id": f'{child["id"]}:{i}',
-                    header[0]: d[0],
-                    header[1]: d[1],
-                    header[2]: d[2],
-                })
+                data.append({**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child["id"]}:{i}'}})
         except:
-            pass
+            """Some old data is not valid"""
     return Response(status=status.HTTP_200_OK, data=data)

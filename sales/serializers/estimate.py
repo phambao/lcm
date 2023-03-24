@@ -4,7 +4,7 @@ from base.serializers.base import IDAndNameSerializer
 from base.utils import pop, activity_log, extra_kwargs_for_base_model
 from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE, \
     UNIT_LIBRARY_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE, ESTIMATE_TEMPLATE_CONTENT_TYPE, ASSEMBLE_CONTENT_TYPE
-from sales.models import DataPoint
+from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, \
     UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView
 
@@ -125,6 +125,15 @@ class POFormulaSerializer(serializers.ModelSerializer):
                         linked_description = DataPoint.objects.get(pk=pk)
                     data['linked_description'].append(LinkedDescriptionSerializer(linked_description).data)
         data['linked_description'] = str(data['linked_description'])
+
+        if ':' in data['material']:
+            pk_catalog, row_index = data['material'].split(':')
+            catalog = Catalog.objects.get(pk=pk_catalog)
+            data['material'] = catalog.get_material(data['material'])
+            ancestor = catalog.parents.first()
+            data['catalog_ancestor'] = {'id': ancestor.id,
+                                        'name': ancestor.name}
+
         data['content_type'] = PO_FORMULA_CONTENT_TYPE
         return data
 
