@@ -240,3 +240,12 @@ class FileMessageTodoGenericView(GenericViewSet):
         data = FileBuilder365ResSerializer(
             attachments, many=True, context={'request': request}).data
         return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_models(request, content_type):
+    ids = request.data
+    model = ContentType.objects.get_for_id(content_type)
+    deleted_data = model.model_class().objects.filter(pk__in=ids).delete()
+    return Response(status=status.HTTP_204_NO_CONTENT, data=deleted_data)

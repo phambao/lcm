@@ -39,7 +39,7 @@ class POFormula(BaseModel):
     formula_mentions = models.CharField(blank=True, max_length=256)
     gross_profit = models.CharField(max_length=32, blank=True)
     description_of_formula = models.TextField(blank=True)
-    formula_scenario = models.BooleanField(default=False)
+    formula_scenario = models.TextField(blank=True)
 
 
 class POFormulaToDataEntry(BaseModel):
