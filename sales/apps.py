@@ -13,6 +13,9 @@ class SalesConfig(AppConfig):
     name = 'sales'
 
     def ready(self):
+        """
+        Content type is already cache, so no need to do this
+        """
         from django.contrib.contenttypes.models import ContentType
         from django.db.utils import ProgrammingError
         from sales.models.estimate import POFormula, DataEntry, UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate

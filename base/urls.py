@@ -33,7 +33,7 @@ url_base = [
     path('company/<int:pk>/', base.CompanyDetailGenericView.as_view()),
     path('company/division/', base.DivisionListView.as_view()),
     path('company/division/<int:pk>/', base.DivisionDetailGenericView.as_view()),
-
+    path('delete/<int:content_type>/', base.delete_models),
 ]
 
 # Create schema view for Swagger ------------------------------------------------
