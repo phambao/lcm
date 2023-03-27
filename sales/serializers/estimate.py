@@ -128,11 +128,14 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
         if ':' in data['material']:
             pk_catalog, row_index = data['material'].split(':')
-            catalog = Catalog.objects.get(pk=pk_catalog)
-            data['material'] = catalog.get_material(data['material'])
-            ancestor = catalog.parents.first()
-            data['catalog_ancestor'] = {'id': ancestor.id,
-                                        'name': ancestor.name}
+            try:
+                catalog = Catalog.objects.get(pk=pk_catalog)
+                data['material'] = catalog.get_material(data['material'])
+                ancestor = catalog.get_ancestors()[-1]
+                ancestor = ancestor.parents.first().parents.first()
+                data['catalog_ancestor'] = ancestor.pk
+            except Catalog.DoesNotExist:
+                pass
 
         data['content_type'] = PO_FORMULA_CONTENT_TYPE
         return data
