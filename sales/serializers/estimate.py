@@ -57,7 +57,7 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormulaToDataEntry
-        fields = ('id', 'value', 'data_entry', 'index')
+        fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value')
 
     def to_representation(self, instance):
         data = super(POFormulaToDataEntrySerializer, self).to_representation(instance)
@@ -67,7 +67,8 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
 def create_po_formula_to_data_entry(instance, data_entries):
     data = []
     for data_entry in data_entries:
-        params = {"po_formula_id": instance.pk, "value": data_entry['value'], 'index': data_entry['index']}
+        params = {"po_formula_id": instance.pk, "value": data_entry['value'], 'index': data_entry['index'],
+                  'dropdown_value': data_entry['dropdown_value']}
         try:
             data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
             if data_entry_pk:
@@ -134,7 +135,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
                 ancestor = catalog.get_ancestors()[-1]
                 ancestor = ancestor.parents.first().parents.first()
                 data['catalog_ancestor'] = ancestor.pk
-            except Catalog.DoesNotExist:
+            except (Catalog.DoesNotExist, IndexError):
                 pass
 
         data['content_type'] = PO_FORMULA_CONTENT_TYPE
