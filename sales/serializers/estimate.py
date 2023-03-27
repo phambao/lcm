@@ -67,8 +67,8 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
 def create_po_formula_to_data_entry(instance, data_entries):
     data = []
     for data_entry in data_entries:
-        params = {"po_formula_id": instance.pk, "value": data_entry['value'], 'index': data_entry['index'],
-                  'dropdown_value': data_entry['dropdown_value']}
+        params = {"po_formula_id": instance.pk, "value": data_entry['value'], 'index': data_entry.get('index'),
+                  'dropdown_value': data_entry.get('dropdown_value', '')}
         try:
             data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
             if data_entry_pk:
@@ -136,7 +136,9 @@ class POFormulaSerializer(serializers.ModelSerializer):
                 ancestor = ancestor.parents.first().parents.first()
                 data['catalog_ancestor'] = ancestor.pk
             except (Catalog.DoesNotExist, IndexError):
-                pass
+                data['catalog_ancestor'] = None
+        else:
+            data['catalog_ancestor'] = None
 
         data['content_type'] = PO_FORMULA_CONTENT_TYPE
         return data
