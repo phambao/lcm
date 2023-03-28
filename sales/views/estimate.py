@@ -14,7 +14,7 @@ from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSer
 
 
 class POFormulaList(generics.ListCreateAPIView):
-    queryset = POFormula.objects.filter(group=None, assemble=None).prefetch_related('self_data_entries')
+    queryset = POFormula.objects.filter(group=None, assemble=None).prefetch_related('self_data_entries').order_by('-modified_date')
     serializer_class = POFormulaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -26,7 +26,7 @@ class POFormulaDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class POFormulaGroupingList(generics.ListCreateAPIView):
-    queryset = POFormulaGrouping.objects.all()
+    queryset = POFormulaGrouping.objects.all().order_by('-modified_date')
     serializer_class = POFormulaGroupingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -38,7 +38,7 @@ class POFormulaGroupingDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class DataEntryList(generics.ListCreateAPIView):
-    queryset = DataEntry.objects.all()
+    queryset = DataEntry.objects.all().order_by('-modified_date')
     serializer_class = DataEntrySerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -50,7 +50,7 @@ class DataEntryDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class UnitLibraryList(generics.ListCreateAPIView):
-    queryset = UnitLibrary.objects.all()
+    queryset = UnitLibrary.objects.all().order_by('-modified_date')
     serializer_class = UnitLibrarySerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -62,7 +62,7 @@ class UnitLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class DescriptionLibraryList(generics.ListCreateAPIView):
-    queryset = DescriptionLibrary.objects.all()
+    queryset = DescriptionLibrary.objects.all().order_by('-modified_date')
     serializer_class = DescriptionLibrarySerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -74,7 +74,7 @@ class DescriptionLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AssembleList(generics.ListCreateAPIView):
-    queryset = Assemble.objects.filter(estimate_templates=None)
+    queryset = Assemble.objects.filter(estimate_templates=None).order_by('-modified_date')
     serializer_class = AssembleSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -86,7 +86,7 @@ class AssembleDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class EstimateTemplateList(generics.ListCreateAPIView):
-    queryset = EstimateTemplate.objects.all()
+    queryset = EstimateTemplate.objects.all().order_by('-modified_date')
     serializer_class = EstimateTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -141,4 +141,14 @@ def get_tag_formula(request):
 def get_tag_data_point(request):
     formulas = DataPoint.objects.all()
     serializer = TaggingSerializer(formulas, many=True)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def unlink_group(request):
+    ids = request.data
+    formulas = POFormula.objects.filter(id__in=ids)
+    formulas.update(group=None)
+    serializer = POFormulaSerializer(formulas, many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
