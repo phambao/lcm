@@ -191,6 +191,7 @@ url_estimate = [
     path('po-formula/', estimate.POFormulaList.as_view()),
     path('po-formula/<int:pk>/', estimate.POFormulaDetail.as_view()),
     path('formula-grouping/', estimate.POFormulaGroupingList.as_view()),
+    path('formula-grouping/unlink/', estimate.unlink_group),
     path('formula-grouping/<int:pk>/', estimate.POFormulaGroupingDetail.as_view()),
     path('data-entry/', estimate.DataEntryList.as_view()),
     path('data-entry/<int:pk>/', estimate.DataEntryDetail.as_view()),

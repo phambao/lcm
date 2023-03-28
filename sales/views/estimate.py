@@ -142,3 +142,13 @@ def get_tag_data_point(request):
     formulas = DataPoint.objects.all()
     serializer = TaggingSerializer(formulas, many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def unlink_group(request):
+    ids = request.data
+    formulas = POFormula.objects.filter(id__in=ids)
+    formulas.update(group=None)
+    serializer = POFormulaSerializer(formulas, many=True)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
