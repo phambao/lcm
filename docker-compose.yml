@@ -19,14 +19,6 @@ services:
       - db
       - cache
 
-  flower:
-    image: mher/flower:0.9.7
-    command: ['flower', '--broker=redis://cache:${REDIS_PORT}']
-    ports:
-      - 5555:5555
-    depends_on:
-      - cache
-
   cache:
     image: redis:alpine
     restart: always
