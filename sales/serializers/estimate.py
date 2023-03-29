@@ -127,15 +127,15 @@ class POFormulaSerializer(serializers.ModelSerializer):
                     data['linked_description'].append(LinkedDescriptionSerializer(linked_description).data)
         data['linked_description'] = str(data['linked_description'])
 
-        if ':' in data['material']:
-            pk_catalog, row_index = data['material'].split(':')
+        if data['material']:
             try:
+                primary_key = eval(data['material'])
+                pk_catalog, row_index = primary_key.get('id').split(':')
                 catalog = Catalog.objects.get(pk=pk_catalog)
-                data['material'] = catalog.get_material(data['material'])
                 ancestor = catalog.get_ancestors()[-1]
                 ancestor = ancestor.parents.first().parents.first()
                 data['catalog_ancestor'] = ancestor.pk
-            except (Catalog.DoesNotExist, IndexError):
+            except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError):
                 data['catalog_ancestor'] = None
         else:
             data['catalog_ancestor'] = None
