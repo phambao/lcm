@@ -296,21 +296,28 @@ def swap_level(request, pk_catalog):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
-def get_materials(request, pk):
+def get_materials(request):
     """
     Get cost table from ancestor catalog
     """
-    c = get_object_or_404(Catalog.objects.all(), pk=pk)
-    children = Catalog.objects.filter(
-        pk__in=c.get_all_descendant()
-    ).difference(Catalog.objects.filter(c_table=Value('{}'))).values('id', 'c_table')
+    search_query = {'c_table__name__icontains': request.GET.get('search', '')}
+    filter_query = request.GET.get('catalog', None)
+    if filter_query:
+        c = get_object_or_404(Catalog.objects.all(), pk=filter_query)
+        children = Catalog.objects.filter(
+            pk__in=c.get_all_descendant()
+        )
+    else:
+        children = Catalog.objects.all()
+    children = children.filter(**search_query).difference(Catalog.objects.filter(c_table=Value('{}'))).values('id', 'c_table')
     data = []
     for child in children:
         try:
             c_table = child['c_table']
             header = c_table['header']
             for i, d in enumerate(c_table['data']):
-                data.append({**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child["id"]}:{i}'}})
+                data.append({**{header[j]: d[j] for j in range(len(header))},
+                             **{"id": f'{child["id"]}:{i}'}})
         except:
             """Some old data is not valid"""
     return Response(status=status.HTTP_200_OK, data=data)
