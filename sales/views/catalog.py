@@ -300,7 +300,7 @@ def get_materials(request):
     """
     Get cost table from ancestor catalog
     """
-    search_query = {'c_table__name__icontains': request.GET.get('search', '')}
+    search_query = {'c_table__Name__icontains': request.GET.get('search', '')}
     filter_query = request.GET.get('catalog', None)
     if filter_query:
         c = get_object_or_404(Catalog.objects.all(), pk=filter_query)
