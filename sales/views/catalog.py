@@ -312,8 +312,11 @@ def get_materials(request):
     data = []
     for child in children:
         try:
-            ancestor = child.get_ancestors()[-1]
-            levels = [i.name for i in ancestor.parents.first().get_ordered_levels()]
+            try:
+                ancestor = child.get_ancestors()[-1]
+                levels = [i.name for i in ancestor.parents.first().get_ordered_levels()]
+            except:
+                levels = []
             c_table = child['c_table']
             header = c_table['header']
             for i, d in enumerate(c_table['data']):
