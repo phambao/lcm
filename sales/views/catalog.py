@@ -308,15 +308,21 @@ def get_materials(request):
         )
     else:
         children = Catalog.objects.all()
-    children = children.difference(Catalog.objects.filter(c_table=Value('{}'))).values('id', 'c_table')
+    children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
     data = []
     for child in children:
         try:
-            c_table = child['c_table']
+            try:
+                ancestor = child.get_ancestors()[-1]
+                levels = [i.name for i in ancestor.parents.first().get_ordered_levels()]
+            except:
+                levels = []
+            c_table = child.c_table
             header = c_table['header']
             for i, d in enumerate(c_table['data']):
-                data.append({**{header[j]: d[j] for j in range(len(header))},
-                             **{"id": f'{child["id"]}:{i}'}})
+                content = {**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child.pk}:{i}'},
+                           'levels': levels}
+                data.append(content)
         except:
             """Some old data is not valid"""
     return Response(status=status.HTTP_200_OK, data=data)
