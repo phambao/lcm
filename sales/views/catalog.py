@@ -312,11 +312,14 @@ def get_materials(request):
     data = []
     for child in children:
         try:
+            ancestor = child.get_ancestors()[-1]
+            levels = [i.name for i in ancestor.parents.first().get_ordered_levels()]
             c_table = child['c_table']
             header = c_table['header']
             for i, d in enumerate(c_table['data']):
-                data.append({**{header[j]: d[j] for j in range(len(header))},
-                             **{"id": f'{child["id"]}:{i}'}})
+                content = {**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child["id"]}:{i}'},
+                           'levels': levels}
+                data.append(content)
         except:
             """Some old data is not valid"""
     return Response(status=status.HTTP_200_OK, data=data)
