@@ -135,7 +135,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
                 ancestor = catalog.get_ancestors()[-1]
                 ancestor = ancestor.parents.first().parents.first()
                 data['catalog_ancestor'] = ancestor.pk
-            except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError):
+            except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError, AttributeError):
                 data['catalog_ancestor'] = None
         else:
             data['catalog_ancestor'] = None
