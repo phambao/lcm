@@ -5,6 +5,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
+from sales.filters.estimate import FormulaFilter
 from sales.models import DataPoint
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, UnitLibrary, \
     DescriptionLibrary, Assemble, EstimateTemplate
@@ -14,9 +15,11 @@ from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSer
 
 
 class POFormulaList(generics.ListCreateAPIView):
-    queryset = POFormula.objects.filter(group=None, assemble=None).prefetch_related('self_data_entries').order_by('-modified_date')
+    queryset = POFormula.objects.all().prefetch_related('self_data_entries').order_by('-modified_date')
     serializer_class = POFormulaSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend, )
+    filterset_class = FormulaFilter
 
 
 class POFormulaDetail(generics.RetrieveUpdateDestroyAPIView):
