@@ -330,6 +330,13 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        levels = {}
+        for material in data['catalog_links']:
+            pk_catalog, row_index = material.split(':')
+            catalog = Catalog.objects.get(pk=pk_catalog)
+            ancestor = catalog.get_ancestors()[-1]
+            levels[material] = [i.name for i in ancestor.parents.first().get_ordered_levels()]
+        data['levels'] = levels
         data['content_type'] = ESTIMATE_TEMPLATE_CONTENT_TYPE
         return data
 

@@ -69,6 +69,7 @@ class EstimateTemplate(BaseModel):
     name = models.CharField(max_length=128)
     assembles = models.ManyToManyField(Assemble, related_name='estimate_templates', blank=True)
     contact_description = models.TextField(blank=True, default='')
+    catalog_links = ArrayField(models.CharField(max_length=128, blank=True, default=''), default=list, blank=True)
 
 
 class DataView(BaseModel):
