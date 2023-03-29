@@ -308,7 +308,7 @@ def get_materials(request):
         )
     else:
         children = Catalog.objects.all()
-    children = children.difference(Catalog.objects.filter(c_table=Value('{}'))).values('id', 'c_table')
+    children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
     data = []
     for child in children:
         try:
@@ -317,10 +317,10 @@ def get_materials(request):
                 levels = [i.name for i in ancestor.parents.first().get_ordered_levels()]
             except:
                 levels = []
-            c_table = child['c_table']
+            c_table = child.c_table
             header = c_table['header']
             for i, d in enumerate(c_table['data']):
-                content = {**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child["id"]}:{i}'},
+                content = {**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child.pk}:{i}'},
                            'levels': levels}
                 data.append(content)
         except:
