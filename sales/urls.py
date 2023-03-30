@@ -158,6 +158,7 @@ url_schedule = [
     path('schedule-event/', lead_schedule.ScheduleEventGenericView.as_view()),
     path('schedule-events/delete/', lead_schedule.delete_event),
     path('schedule-event/filter/', lead_schedule.filter_event),
+    path('schedule-event/filter-day/', lead_schedule.get_event_of_day),
     path('schedule-event/<int:pk>/', lead_schedule.ScheduleEventDetailGenericView.as_view()),
     path('select-schedule-event/', lead_schedule.select_event_predecessors),
     path('select-schedule-event-link/<int:pk>/', lead_schedule.select_event_link),
