@@ -828,7 +828,8 @@ def get_event_of_day(request, *args, **kwargs):
     delta = end_of_day - time_obj
     end_day = time_obj + delta
     end_day = end_day.strftime('%Y-%m-%d %H:%M:%S')
-    rs_event = ScheduleEvent.objects.filter(Q(start_day__gte=start_day, end_day__lte=end_day))
+
+    rs_event = ScheduleEvent.objects.filter(Q(start_day__lte=start_day, end_day__gte=end_day))
     event = lead_schedule.ScheduleEventSerializer(
         rs_event, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=event)
