@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
 from base.serializers.base import IDAndNameSerializer
@@ -178,6 +179,11 @@ class POFormulaGroupingSerializer(serializers.ModelSerializer):
         po_pk = self.add_relation_po_formula(po_formulas, instance)
         POFormula.objects.filter(id__in=po_pk, group=None).update(group=instance)
         return super(POFormulaGroupingSerializer, self).update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['content_type'] = ContentType.objects.get_for_model(POFormulaGrouping).pk
+        return data
 
 
 class UnitLibrarySerializer(serializers.ModelSerializer):
