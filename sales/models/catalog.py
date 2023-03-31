@@ -130,16 +130,24 @@ class Catalog(BaseModel):
         catalogs.delete()
         return super(Catalog, self).delete(*args, **kwargs)
 
-    def get_ancestors(self, get_parent=False):
+    def get_ancestors(self):
         ancester = [self]
         try:
             parent = self.parents.all()[0]
         except IndexError:
             return []
-        if self.level or get_parent:
+        if self.level:
             ancester.extend(parent.get_ancestors())
         else:
             return []
+        return ancester
+
+    def get_ancestor_ignore_level(self):
+        ancester = [self]
+        if not self.parents.all():
+            return ancester
+        parent = self.parents.first()
+        ancester.extend(parent.get_ancestors())
         return ancester
 
     def get_ordered_levels(self):
