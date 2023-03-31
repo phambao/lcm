@@ -818,6 +818,25 @@ def filter_event(request, *args, **kwargs):
     return Response(status=status.HTTP_200_OK, data=event)
 
 
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_event_of_day(request, *args, **kwargs):
+    data = request.query_params
+    start_day = datetime.strptime(data['day'], '%Y-%m-%d %H:%M:%S')
+    time_obj = datetime.strptime(data['day'], '%Y-%m-%d %H:%M:%S')
+    end_of_day = time_obj.replace(hour=23, minute=59, second=59, microsecond=999999)
+    delta = end_of_day - time_obj
+    end_day = time_obj + delta
+
+    rs_event = ScheduleEvent.objects.filter(Q(start_day__startswith=start_day.date(), end_day__gte=end_day)
+                                            | Q(start_day__lte=start_day, end_day__startswith=end_day.date())
+                                            | Q(start_day__lte=start_day, end_day__gte=end_day)
+                                            )
+    event = lead_schedule.ScheduleEventSerializer(
+        rs_event, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=event)
+
+
 def get_id_by_group(pk):
     rs = []
     event = ScheduleEvent.objects.filter(predecessor=pk)
