@@ -142,13 +142,13 @@ class Catalog(BaseModel):
             return []
         return ancester
 
-    def get_ancestor_ignore_level(self):
-        ancester = [self]
-        if not self.parents.all():
-            return ancester
-        parent = self.parents.first()
-        ancester.extend(parent.get_ancestors())
-        return ancester
+    def get_full_ancestor(self):
+        ancestor = self.get_ancestors()
+        first_ancestor = ancestor[0]
+        ancestor.insert(0, ancestor.parents.first())
+        first_ancestor = ancestor[0]
+        ancestor.insert(0, ancestor.parents.first())
+        return ancestor
 
     def get_ordered_levels(self):
         """
