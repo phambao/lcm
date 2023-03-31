@@ -130,13 +130,13 @@ class Catalog(BaseModel):
         catalogs.delete()
         return super(Catalog, self).delete(*args, **kwargs)
 
-    def get_ancestors(self):
+    def get_ancestors(self, get_parent=False):
         ancester = [self]
         try:
             parent = self.parents.all()[0]
         except IndexError:
             return []
-        if self.level:
+        if self.level or get_parent:
             ancester.extend(parent.get_ancestors())
         else:
             return []

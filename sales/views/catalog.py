@@ -314,7 +314,7 @@ def get_materials(request):
     for child in children:
         try:
             try:
-                levels = [CatalogSerializer(c).data for c in child.get_ancestors()]
+                levels = [CatalogSerializer(c).data for c in child.get_ancestors(get_parent=True)[::-1]]
             except:
                 levels = []
             c_table = child.c_table
