@@ -144,10 +144,10 @@ class Catalog(BaseModel):
 
     def get_full_ancestor(self):
         ancestor = self.get_ancestors()
-        first_ancestor = ancestor[0]
-        ancestor.insert(0, first_ancestor.parents.first())
-        first_ancestor = ancestor[0]
-        ancestor.insert(0, first_ancestor.parents.first())
+        first_ancestor = ancestor[-1]
+        ancestor.append(first_ancestor.parents.first())
+        first_ancestor = ancestor[-1]
+        ancestor.append(first_ancestor.parents.first())
         return ancestor
 
     def get_ordered_levels(self):
