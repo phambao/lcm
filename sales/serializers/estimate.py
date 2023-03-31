@@ -8,6 +8,7 @@ from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE
 from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, \
     UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView
+from sales.serializers.catalog import CatalogSerializer
 
 
 class LinkedDescriptionSerializer(serializers.Serializer):
@@ -133,13 +134,16 @@ class POFormulaSerializer(serializers.ModelSerializer):
                 primary_key = eval(data['material'])
                 pk_catalog, row_index = primary_key.get('id').split(':')
                 catalog = Catalog.objects.get(pk=pk_catalog)
-                ancestor = catalog.get_ancestors()[-1]
-                ancestor = ancestor.parents.first().parents.first()
+                ancestors = catalog.get_full_ancestor()
+                ancestor = ancestors[-1]
                 data['catalog_ancestor'] = ancestor.pk
+                data['catalog_link'] = [CatalogSerializer(c).data for c in ancestors[::-1]]
             except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError, AttributeError):
                 data['catalog_ancestor'] = None
+                data['catalog_link'] = []
         else:
             data['catalog_ancestor'] = None
+            data['catalog_link'] = []
 
         data['content_type'] = PO_FORMULA_CONTENT_TYPE
         return data
@@ -336,13 +340,6 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        levels = {}
-        for material in data['catalog_links']:
-            pk_catalog, row_index = material.split(':')
-            catalog = Catalog.objects.get(pk=pk_catalog)
-            ancestor = catalog.get_ancestors()[-1]
-            levels[material] = [i.name for i in ancestor.parents.first().get_ordered_levels()]
-        data['levels'] = levels
         data['content_type'] = ESTIMATE_TEMPLATE_CONTENT_TYPE
         return data
 
