@@ -26,9 +26,10 @@ def activity_log(model, instance, action, serializer, next_state):
         next_state: dict
     """
     content_type = ContentType.objects.get_for_model(model)
-    data = serializer(instance).data
+    # disable logging data temporarily
+    # data = serializer(instance).data
     ActivityLog.objects.create(content_type=content_type, content_object=instance, object_id=instance.pk,
-                               action=action, last_state=data, next_state=next_state)
+                               action=action, last_state={}, next_state=next_state)
 
 
 def extra_kwargs_for_base_model():
