@@ -381,6 +381,7 @@ class TaggingSerializer(serializers.Serializer):
         if isinstance(instance, POFormula):
             data['display'] = instance.name
             data['value'] = instance.charge
+            data['ancestors'] = [CatalogEstimateSerializer(c).data for c in instance.get_link_catalog_by_material()]
         if isinstance(instance, DataPoint):
             data['display'] = instance.catalog.name
             if instance.unit:
