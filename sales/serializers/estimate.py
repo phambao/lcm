@@ -8,7 +8,7 @@ from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE
 from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, \
     UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView
-from sales.serializers.catalog import CatalogSerializer
+from sales.serializers.catalog import CatalogSerializer, CatalogEstimateSerializer
 
 
 class LinkedDescriptionSerializer(serializers.Serializer):
@@ -29,21 +29,40 @@ class LinkedDescriptionSerializer(serializers.Serializer):
 
 class DataEntrySerializer(serializers.ModelSerializer):
     unit = IDAndNameSerializer(required=False, allow_null=True)
+    material_selections = CatalogEstimateSerializer('data_entries', many=True, required=False, allow_null=True)
 
     class Meta:
         model = DataEntry
-        fields = ('id', 'name', 'unit', 'dropdown', 'is_dropdown')
+        fields = ('id', 'name', 'unit', 'dropdown', 'is_dropdown', 'is_material_selection', 'material_selections')
         extra_kwargs = {'id': {'read_only': False, 'required': False}}
+
+    def set_material(self, material_selections):
+        catalog_pks = []
+        for material_selection in material_selections:
+            catalog_pks.append(material_selection.get('id'))
+        catalogs = Catalog.objects.filter(pk__in=catalog_pks)
+        return catalogs
 
     def create(self, validated_data):
         unit = pop(validated_data, 'unit', {})
+        material_selections = pop(validated_data, 'material_selections', {})
         validated_data['unit_id'] = unit.get('id', None)
         instance = super().create(validated_data)
+
+        catalogs = self.set_material(material_selections)
+        instance.material_selections.add(*catalogs)
+
         activity_log(DataEntry, instance, 1, DataEntrySerializer, {})
         return instance
 
     def update(self, instance, validated_data):
         unit = pop(validated_data, 'unit', {})
+        material_selections = pop(validated_data, 'material_selections', {})
+
+        instance.material_selections.clear()
+        catalogs = self.set_material(material_selections)
+        instance.material_selections.add(*catalogs)
+
         validated_data['unit_id'] = unit.get('id', None)
         activity_log(DataEntry, instance, 2, DataEntrySerializer, {})
         return super().update(instance, validated_data)
@@ -51,6 +70,13 @@ class DataEntrySerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = DATA_ENTRY_CONTENT_TYPE
+        data['ancestors'] = []
+        if data['material_selections']:
+            parent = Catalog.objects.get(pk=data['material_selections'][0].get('id'))
+            parent = parent.parents.first()
+            data['ancestors'].append(CatalogEstimateSerializer(parent).data)
+            parent = parent.parents.first()
+            data['ancestors'].append(CatalogEstimateSerializer(parent).data)
         return data
 
 

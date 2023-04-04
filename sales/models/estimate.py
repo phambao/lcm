@@ -16,6 +16,9 @@ class DataEntry(BaseModel):
                              blank=True, null=True, related_name='data_entries')
     is_dropdown = models.BooleanField(default=False)
     dropdown = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
+    is_material_selection = models.BooleanField(default=False, blank=True, null=True)
+    material_selections = models.ManyToManyField('sales.Catalog', blank=True,
+                                                 related_name='data_entries', symmetrical=False)
 
 
 class POFormula(BaseModel):
