@@ -387,4 +387,10 @@ class TaggingSerializer(serializers.Serializer):
             if instance.unit:
                 data['display'] = instance.unit.name
             data['value'] = instance.value
+            ancestors = []
+            try:
+                ancestors = instance.catalog.get_full_ancestor()
+            except IndexError:
+                """If data point is in the first category's level"""
+            data['ancestors'] = [CatalogEstimateSerializer(c).data for c in ancestors]
         return data
