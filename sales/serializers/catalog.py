@@ -136,3 +136,10 @@ class CatalogLevelModelSerializer(serializers.ModelSerializer, SerializerMixin):
             if num_levels > 0 and not parent:
                 raise ValidationError('parent must have a value')
         return attrs
+
+
+class CatalogEstimateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Catalog
+        fields = ('id', 'name')
+        extra_kwargs = {'id': {'read_only': False, 'required': False}}
