@@ -41,7 +41,7 @@ class ReminderType(models.IntegerChoices):
 class ToDo(BaseModel):
     class Meta:
         db_table = 'to_do'
-
+        ordering = ['-modified_date']
     # To Do information
     title = models.CharField(max_length=128)
     priority = models.CharField(max_length=128, choices=Priority.choices, default=Priority.HIGH)
@@ -252,6 +252,7 @@ class ScheduleEventPhaseSetting(BaseModel):
 class ScheduleEvent(BaseModel):
     class Meta:
         db_table = 'schedule_event'
+        ordering = ['-modified_date']
 
     lead_list = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='schedule_event_lead_list')
     event_title = models.CharField(blank=True, max_length=128)
