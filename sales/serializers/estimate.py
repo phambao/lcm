@@ -70,13 +70,14 @@ class DataEntrySerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = DATA_ENTRY_CONTENT_TYPE
-        data['ancestors'] = []
+        data['catalog'] = {}
+        data['category'] = {}
         if data['material_selections']:
             parent = Catalog.objects.get(pk=data['material_selections'][0].get('id'))
             parent = parent.parents.first()
-            data['ancestors'].append(CatalogEstimateSerializer(parent).data)
+            data['category'] = CatalogEstimateSerializer(parent).data
             parent = parent.parents.first()
-            data['ancestors'].append(CatalogEstimateSerializer(parent).data)
+            data['catalog'] = CatalogEstimateSerializer(parent).data
         return data
 
 
