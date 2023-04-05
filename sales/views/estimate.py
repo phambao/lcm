@@ -5,7 +5,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
-from sales.filters.estimate import FormulaFilter
+from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter
 from sales.models import DataPoint
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, UnitLibrary, \
     DescriptionLibrary, Assemble, EstimateTemplate
@@ -92,6 +92,8 @@ class EstimateTemplateList(generics.ListCreateAPIView):
     queryset = EstimateTemplate.objects.all().order_by('-modified_date')
     serializer_class = EstimateTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend, )
+    filterset_class =EstimateTemplateFilter
 
 
 class EstimateTemplateDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -142,8 +144,8 @@ def get_tag_formula(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_tag_data_point(request):
-    formulas = DataPoint.objects.all()
-    serializer = TaggingSerializer(formulas, many=True)
+    data_points = DataPoint.objects.all()
+    serializer = TaggingSerializer(data_points, many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 

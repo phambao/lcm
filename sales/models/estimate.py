@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
 from api.models import BaseModel
+from sales.models import Catalog
 
 
 class UnitLibrary(BaseModel):
@@ -43,6 +44,19 @@ class POFormula(BaseModel):
     gross_profit = models.CharField(max_length=32, blank=True)
     description_of_formula = models.TextField(blank=True)
     formula_scenario = models.TextField(blank=True)
+
+    def parse_material(self):
+        primary_key = eval(self.material)
+        pk_catalog, row_index = primary_key.get('id').split(':')
+        return pk_catalog, row_index
+
+    def get_link_catalog_by_material(self):
+        try:
+            pk_catalog, _ = self.parse_material()
+            catalog = Catalog.objects.get(pk=pk_catalog)
+            return catalog.get_full_ancestor()
+        except:
+            return []
 
 
 class POFormulaToDataEntry(BaseModel):
