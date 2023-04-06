@@ -164,7 +164,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
                 ancestors = catalog.get_full_ancestor()
                 ancestor = ancestors[-1]
                 data['catalog_ancestor'] = ancestor.pk
-                data['catalog_link'] = [CatalogSerializer(c).data for c in ancestors[::-1]]
+                data['catalog_link'] = [CatalogEstimateSerializer(c).data for c in ancestors[::-1]]
             except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError, AttributeError):
                 data['catalog_ancestor'] = None
                 data['catalog_link'] = []
