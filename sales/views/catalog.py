@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from ..filters.catalog import CatalogFilter
+from ..models import DataEntry
 from ..models.catalog import Catalog, CostTable, CatalogLevel, DataPointUnit
 from ..serializers import catalog
 from ..serializers.catalog import CatalogSerializer
@@ -295,21 +296,7 @@ def swap_level(request, pk_catalog):
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def get_materials(request):
-    """
-    Get cost table from ancestor catalog
-    """
-    filter_query = request.GET.get('catalog', None)
-    if filter_query:
-        c = get_object_or_404(Catalog.objects.all(), pk=filter_query)
-        children = Catalog.objects.filter(
-            pk__in=c.get_all_descendant()
-        )
-    else:
-        children = Catalog.objects.all()
-    children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
+def parse_c_table(children):
     data = []
     for child in children:
         try:
@@ -326,4 +313,23 @@ def get_materials(request):
                 data.append(content)
         except:
             """Some old data is not valid"""
+    return data
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_materials(request):
+    """
+    Get cost table from ancestor catalog
+    """
+    filter_query = request.GET.get('catalog', None)
+    if filter_query:
+        c = get_object_or_404(Catalog.objects.all(), pk=filter_query)
+        children = Catalog.objects.filter(
+            pk__in=c.get_all_descendant()
+        )
+    else:
+        children = Catalog.objects.all()
+    children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
+    data = parse_c_table(children)
     return Response(status=status.HTTP_200_OK, data=data)

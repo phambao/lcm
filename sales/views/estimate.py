@@ -1,3 +1,4 @@
+from django.db.models import Value
 from rest_framework import generics, permissions, status
 from django_filters import rest_framework as filters
 from rest_framework.decorators import api_view, permission_classes
@@ -6,12 +7,13 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
 from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter
-from sales.models import DataPoint
+from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, UnitLibrary, \
     DescriptionLibrary, Assemble, EstimateTemplate
 from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
     UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, AssembleSerializer, \
     EstimateTemplateSerializer, TaggingSerializer
+from sales.views.catalog import parse_c_table
 
 
 class POFormulaList(generics.ListCreateAPIView):
@@ -157,3 +159,16 @@ def unlink_group(request):
     formulas.update(group=None)
     serializer = POFormulaSerializer(formulas, many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_material_by_data_entry(request, pk):
+    de = DataEntry.objects.get(pk=pk)
+    categories = de.material_selections.all()
+    children = Catalog.objects.none()
+    for category in categories:
+        children |= Catalog.objects.filter(pk__in=category.get_all_descendant())
+    children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
+    data = parse_c_table(children)
+    return Response(status=status.HTTP_200_OK, data=data)
