@@ -141,5 +141,5 @@ class CatalogLevelModelSerializer(serializers.ModelSerializer, SerializerMixin):
 class CatalogEstimateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Catalog
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'level', 'level_index')
         extra_kwargs = {'id': {'read_only': False, 'required': False}}
