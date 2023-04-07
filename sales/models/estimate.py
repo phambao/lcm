@@ -66,6 +66,7 @@ class POFormulaToDataEntry(BaseModel):
     value = models.CharField(verbose_name='Default Value', max_length=32, blank=True)
     index = models.IntegerField(blank=True, default=0, null=True)
     dropdown_value = models.JSONField(blank=True, default=dict)
+    material_value = models.JSONField(blank=True, default=dict)
 
 
 class POFormulaGrouping(BaseModel):

@@ -86,7 +86,7 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormulaToDataEntry
-        fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value')
+        fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value')
 
     def to_representation(self, instance):
         data = super(POFormulaToDataEntrySerializer, self).to_representation(instance)
@@ -97,7 +97,8 @@ def create_po_formula_to_data_entry(instance, data_entries):
     data = []
     for data_entry in data_entries:
         params = {"po_formula_id": instance.pk, "value": data_entry['value'], 'index': data_entry.get('index'),
-                  'dropdown_value': data_entry.get('dropdown_value', '')}
+                  'dropdown_value': data_entry.get('dropdown_value', ''),
+                  'material_value': data_entry.get('material_value', '')}
         try:
             data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
             if data_entry_pk:
