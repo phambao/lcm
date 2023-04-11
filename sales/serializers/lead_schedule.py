@@ -805,6 +805,8 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         schedule_event_create.assigned_user.add(*user)
         schedule_event_create.viewing.add(*view)
         for data in links:
+            if predecessor_id == data['predecessors']['id']:
+                raise serializers.ValidationError('predecessors already exist')
             data_update = {}
             data_update['predecessor'] = schedule_event_create.id
             data_update['lag_day'] = data['lag_day']
@@ -856,8 +858,10 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         schedule_event.assigned_user.add(*user)
         schedule_event.viewing.clear()
         schedule_event.viewing.add(*view)
-        # lead_schedule.ScheduleEvent.objects.filter(predecessor=instance.pk).update(predecessor=None)
+        lead_schedule.ScheduleEvent.objects.filter(predecessor=instance.pk).update(predecessor=None)
         for data_link in links:
+            if data['predecessor_id'] == data_link['predecessors']['id']:
+                raise serializers.ValidationError('predecessors already exist')
             data_update = {}
             data_update['predecessor'] = instance.pk
             data_update['lag_day'] = data_link['lag_day']
