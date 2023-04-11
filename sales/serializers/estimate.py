@@ -70,13 +70,14 @@ class DataEntrySerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = DATA_ENTRY_CONTENT_TYPE
-        data['ancestors'] = []
+        data['catalog'] = {}
+        data['category'] = {}
         if data['material_selections']:
             parent = Catalog.objects.get(pk=data['material_selections'][0].get('id'))
             parent = parent.parents.first()
-            data['ancestors'].append(CatalogEstimateSerializer(parent).data)
+            data['category'] = CatalogEstimateSerializer(parent).data
             parent = parent.parents.first()
-            data['ancestors'].append(CatalogEstimateSerializer(parent).data)
+            data['catalog'] = CatalogEstimateSerializer(parent).data
         return data
 
 
@@ -85,7 +86,7 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormulaToDataEntry
-        fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value')
+        fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value')
 
     def to_representation(self, instance):
         data = super(POFormulaToDataEntrySerializer, self).to_representation(instance)
@@ -96,7 +97,8 @@ def create_po_formula_to_data_entry(instance, data_entries):
     data = []
     for data_entry in data_entries:
         params = {"po_formula_id": instance.pk, "value": data_entry['value'], 'index': data_entry.get('index'),
-                  'dropdown_value': data_entry.get('dropdown_value', '')}
+                  'dropdown_value': data_entry.get('dropdown_value', ''),
+                  'material_value': data_entry.get('material_value', '')}
         try:
             data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
             if data_entry_pk:
@@ -163,7 +165,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
                 ancestors = catalog.get_full_ancestor()
                 ancestor = ancestors[-1]
                 data['catalog_ancestor'] = ancestor.pk
-                data['catalog_link'] = [CatalogSerializer(c).data for c in ancestors[::-1]]
+                data['catalog_link'] = [CatalogEstimateSerializer(c).data for c in ancestors[::-1]]
             except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError, AttributeError):
                 data['catalog_ancestor'] = None
                 data['catalog_link'] = []
@@ -381,9 +383,16 @@ class TaggingSerializer(serializers.Serializer):
         if isinstance(instance, POFormula):
             data['display'] = instance.name
             data['value'] = instance.charge
+            data['ancestors'] = [CatalogEstimateSerializer(c).data for c in instance.get_link_catalog_by_material()]
         if isinstance(instance, DataPoint):
             data['display'] = instance.catalog.name
             if instance.unit:
                 data['display'] = instance.unit.name
             data['value'] = instance.value
+            ancestors = []
+            try:
+                ancestors = instance.catalog.get_full_ancestor()
+            except IndexError:
+                """If data point is in the first category's level"""
+            data['ancestors'] = [CatalogEstimateSerializer(c).data for c in ancestors]
         return data
