@@ -8,6 +8,8 @@ from sales.views import lead_list, catalog, lead_schedule, estimate
 from api.views.upload_file import FileUploadView
 
 # Define Path for Contacts -----------------------------------------------------
+from sales.views.proposal import ProposalTemplateGenericView
+
 url_contacts = [
     path('contacts/', lead_list.ContactsViewSet.as_view()),
     path('contacts/<int:pk>/', lead_list.ContactsDetailViewSet.as_view()),
@@ -209,6 +211,10 @@ url_estimate = [
     path('tag-formula/', estimate.get_tag_formula),
     path('tag-catalog/', estimate.get_tag_data_point),
 ]
+# URL Proposal
+url_proposal = [
+    path('template/', ProposalTemplateGenericView.as_view()),
+]
 # URL Config
 url_config = [
     path('options-lead-list/', lead_schedule.select_lead_list),
@@ -224,6 +230,7 @@ url_sales = [
     path('catalog/', include(url_catalog)),
     path('schedule/', include(url_schedule)),
     path('estimate/', include(url_estimate)),
+    path('proposal/', include(url_proposal)),
 ]
 
 schema_view_sales = get_schema_view(
@@ -238,7 +245,8 @@ schema_view_sales = get_schema_view(
         path('api/sales/lead-list/', include(url_leads)),
         path('api/sales/catalog/', include(url_catalog)),
         path('api/sales/schedule/', include(url_schedule)),
-        path('api/sales/estimate/', include(url_estimate))
+        path('api/sales/estimate/', include(url_estimate)),
+        path('api/sales/proposal/', include(url_estimate))
     ],
     public=True,
     permission_classes=[permissions.AllowAny],
