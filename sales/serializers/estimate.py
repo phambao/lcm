@@ -86,19 +86,19 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormulaToDataEntry
-        fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value')
+        fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value', 'copies_from')
 
     def to_representation(self, instance):
         data = super(POFormulaToDataEntrySerializer, self).to_representation(instance)
         return data
 
 
-def create_po_formula_to_data_entry(instance, data_entries):
+def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
     data = []
     for data_entry in data_entries:
         params = {"po_formula_id": instance.pk, "value": data_entry['value'], 'index': data_entry.get('index'),
-                  'dropdown_value': data_entry.get('dropdown_value', ''),
-                  'material_value': data_entry.get('material_value', '')}
+                  'dropdown_value': data_entry.get('dropdown_value', ''), 'estimate_template_id': estimate_id,
+                  'material_value': data_entry.get('material_value', ''), 'copies_from': data_entry.get('copies_from')}
         try:
             data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
             if data_entry_pk:
@@ -314,6 +314,7 @@ class DataViewSerializer(serializers.ModelSerializer):
 class EstimateTemplateSerializer(serializers.ModelSerializer):
     assembles = AssembleSerializer(many=True, required=False, allow_null=True,)
     data_views = DataViewSerializer('estimate_template', many=True, required=False, allow_null=True)
+    data_entries = POFormulaToDataEntrySerializer('estimate_template', many=True, required=False, allow_null=True)
 
     class Meta:
         model = EstimateTemplate
@@ -344,9 +345,11 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         assembles = pop(validated_data, 'assembles', [])
         data_views = pop(validated_data, 'data_views', [])
+        data_entries = pop(validated_data, 'data_entries', [])
 
         pk_assembles = self.create_assembles(assembles)
         instance = super().create(validated_data)
+        create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk)
         self.create_data_view(data_views, instance)
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
         activity_log(EstimateTemplate, instance, 1, EstimateTemplateSerializer, {})
@@ -355,6 +358,10 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         assembles = pop(validated_data, 'assembles', [])
         data_views = pop(validated_data, 'data_views', [])
+        data_entries = pop(validated_data, 'data_entries', [])
+
+        instance.data_entries.all().delete()
+        create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk)
         pk_assembles = self.create_assembles(assembles)
 
         instance = super().update(instance, validated_data)

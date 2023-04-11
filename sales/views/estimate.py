@@ -1,12 +1,12 @@
 from django.db.models import Value
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, filters as rf_filters
 from django_filters import rest_framework as filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
-from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter
+from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter, AssembleFilter
 from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, UnitLibrary, \
     DescriptionLibrary, Assemble, EstimateTemplate
@@ -82,6 +82,9 @@ class AssembleList(generics.ListCreateAPIView):
     queryset = Assemble.objects.filter(estimate_templates=None).order_by('-modified_date')
     serializer_class = AssembleSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = AssembleFilter
+    search_fields = ('name', 'description')
 
 
 class AssembleDetail(generics.RetrieveUpdateDestroyAPIView):
