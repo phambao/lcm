@@ -160,49 +160,6 @@ class AttachmentsEventGenericView(GenericViewSet):
         return Response(status=status.HTTP_200_OK, data=data)
 
 
-# class FileMessageTodoGenericView(GenericViewSet):
-#     serializer_class = lead_schedule.FileMesageTodoSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-#
-#     # def get_queryset(self):
-#     #     get_object_or_404(Messaging.objects.all(), pk=self.kwargs['pk_message'])
-#     #     return FileMessageToDo.objects.filter(message_todo=self.kwargs['pk_message'])
-#
-#     def create_file(self, request, **kwargs):
-#         serializer = lead_schedule.FileMesageTodoSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         user = request.user
-#         # pk_message = self.kwargs.get('pk_message')
-#         # data_message = get_object_or_404(Messaging.objects.all(), pk=self.kwargs['pk_message'])
-#         # data_attachments = FileScheduleEvent.objects.filter(event=pk_event)
-#         # data_attachments.delete()
-#         files = request.FILES.getlist('file')
-#         attachment_create = list()
-#         for file in files:
-#             file_name = uuid.uuid4().hex + '.' + file.name.split('.')[-1]
-#             content_file = ContentFile(file.read(), name=file_name)
-#             attachment = FileMessageToDo(
-#                 file=content_file,
-#                 user_create=user,
-#                 name=file.name
-#             )
-#             attachment_create.append(attachment)
-#
-#         attachments = FileMessageToDo.objects.bulk_create(attachment_create)
-#
-#         # attachments = FileMessageToDo.objects.filter(event=pk_message)
-#         data = lead_schedule.FileMessageToDoSerializer(
-#             attachments, many=True, context={'request': request}).data
-#         return Response(status=status.HTTP_200_OK, data=data)
-#
-#     def get_file(self, request, **kwargs):
-#         get_object_or_404(ScheduleEvent.objects.all(), pk=self.kwargs['pk_event'])
-#         data_file = FileScheduleEvent.objects.filter(event=self.kwargs['pk_event'])
-#         data = lead_schedule.FileMesageTodoSerializer(
-#             data_file, many=True, context={'request': request}).data
-#         return Response(status=status.HTTP_200_OK, data=data)
-
-
 class SourceScheduleToDoGenericView(generics.ListCreateAPIView):
     queryset = ToDo.objects.all().prefetch_related('tags', 'assigned_to', 'check_list', 'messaging')
     serializer_class = lead_schedule.ToDoCreateSerializer

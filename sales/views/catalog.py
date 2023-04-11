@@ -28,6 +28,18 @@ class CatalogDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def delete(self, request, *args, **kwargs):
+        pk_catalog = kwargs.get('pk')
+        data_catalog = catalog.Catalog.objects.filter(id=pk_catalog).first()
+        c_table = data_catalog.c_table
+        parent_catalog = data_catalog.parents.first()
+        children_catalog = catalog.Catalog.objects.filter(parents=parent_catalog.id).count()
+        if children_catalog <= 1:
+            parent_catalog.c_table = c_table
+            parent_catalog.save()
+
+        return super().delete(request, *args, **kwargs)
+
 
 class CostTableList(generics.ListCreateAPIView):
     queryset = CostTable.objects.all()

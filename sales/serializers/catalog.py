@@ -11,7 +11,6 @@ true = True
 
 
 class DataPointUnitSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = catalog.DataPointUnit
         fields = ('id', 'name')
@@ -34,7 +33,7 @@ class CatalogSerializer(serializers.ModelSerializer):
     class Meta:
         model = catalog.Catalog
         fields = ('id', 'name', 'parents', 'parent', 'sequence', 'cost_table', 'icon',
-                  'is_ancestor', 'level', 'data_points', 'level_index', 'c_table', 
+                  'is_ancestor', 'level', 'data_points', 'level_index', 'c_table',
                   'created_date', 'modified_date', 'user_create', 'user_update'
                   )
         extra_kwargs = {'icon': {'required': False,
@@ -56,6 +55,10 @@ class CatalogSerializer(serializers.ModelSerializer):
             if catalog.Catalog.objects.filter(parents__id=parent, name__exact=validated_data['name']).exists():
                 raise ValidationError({'name': 'Name has been exist.'})
             validated_data['parents'] = [parent]
+            data_catalog_parent = catalog.Catalog.objects.filter(id=parent).first()
+            validated_data['c_table'] = data_catalog_parent.c_table
+            data_catalog_parent.c_table = dict()
+            data_catalog_parent.save()
         instance = super().create(validated_data)
         instance.user_create = self.context['request'].user
         instance.created_date = timezone.now()
@@ -64,7 +67,7 @@ class CatalogSerializer(serializers.ModelSerializer):
             unit = data_point.pop('unit')
             catalog.DataPoint.objects.create(catalog=instance, **data_point, unit_id=unit.get('id'))
         return instance
-    
+
     def update(self, instance, validated_data):
         data_points = validated_data.pop('data_points', '[]')
         if data_points:
@@ -80,7 +83,8 @@ class CatalogSerializer(serializers.ModelSerializer):
         instance.modified_date = timezone.now()
         instance.save()
         catalog.DataPoint.objects.bulk_create(
-            [catalog.DataPoint(catalog=instance, unit_id=data_point.pop('unit').get('id'), **data_point) for data_point in data_points]
+            [catalog.DataPoint(catalog=instance, unit_id=data_point.pop('unit').get('id'), **data_point) for data_point
+             in data_points]
         )
         return instance
 
