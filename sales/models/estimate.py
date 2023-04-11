@@ -67,6 +67,9 @@ class POFormulaToDataEntry(BaseModel):
     index = models.IntegerField(blank=True, default=0, null=True)
     dropdown_value = models.JSONField(blank=True, default=dict)
     material_value = models.JSONField(blank=True, default=dict)
+    estimate_template = models.ForeignKey('sales.EstimateTemplate', on_delete=models.CASCADE,
+                                          blank=True, null=True, related_name='data_entries')
+    copies_from = ArrayField(models.IntegerField(blank=True), default=list, blank=True, null=True)
 
 
 class POFormulaGrouping(BaseModel):
