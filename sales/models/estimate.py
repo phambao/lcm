@@ -44,6 +44,7 @@ class POFormula(BaseModel):
     gross_profit = models.CharField(max_length=32, blank=True)
     description_of_formula = models.TextField(blank=True)
     formula_scenario = models.TextField(blank=True)
+    material_data_entry = models.JSONField(blank=True, default=dict, null=True)
 
     def parse_material(self):
         primary_key = eval(self.material)
