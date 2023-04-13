@@ -31,10 +31,36 @@ class FormulaFilter(filters.FilterSet):
                   'user_create', 'user_update')
 
 
+class GroupFormulaFilter(filters.FilterSet):
+
+    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='gt')
+    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='gt')
+    name = filters.CharFilter(field_name='group_formulas__name', lookup_expr='icontains')
+    formula = filters.CharFilter(field_name='group_formulas__formula', lookup_expr='icontains')
+    quantity = filters.CharFilter(field_name='group_formulas__quantity', lookup_expr='icontains')
+    markup = filters.CharFilter(field_name='group_formulas__markup', lookup_expr='icontains')
+    charge = filters.CharFilter(field_name='group_formulas__charge', lookup_expr='icontains')
+    material = filters.CharFilter(field_name='group_formulas__material', lookup_expr='icontains')
+    unit = filters.CharFilter(field_name='group_formulas__unit', lookup_expr='icontains')
+    gross_profit = filters.CharFilter(field_name='group_formulas__gross_profit', lookup_expr='icontains')
+    description_of_formula = filters.CharFilter(field_name='group_formulas__description_of_formula', lookup_expr='icontains')
+    formula_scenario = filters.CharFilter(field_name='group_formulas__formula_scenario', lookup_expr='icontains')
+    cost = filters.NumberFilter(field_name='group_formulas__cost', lookup_expr='gt')
+    user_create = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
+    user_update = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
+
+    class Meta:
+        model = POFormulaGrouping
+        fields = ('quantity', 'name', 'created_date', 'modified_date', 'markup',
+                  'charge', 'material', 'unit', 'cost', 'gross_profit', 'description_of_formula', 'formula_scenario',
+                  'user_create', 'user_update')
+
+
 class EstimateTemplateFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
     created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='gt')
     modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='gt')
+
     class Meta:
         model = EstimateTemplate
         fields = ('name', 'created_date', 'modified_date')
