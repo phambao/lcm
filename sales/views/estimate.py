@@ -17,9 +17,7 @@ from sales.views.catalog import parse_c_table
 
 
 class POFormulaList(generics.ListCreateAPIView):
-    queryset = POFormula.objects.filter(is_show=True).prefetch_related('self_data_entries').select_related('assemble',
-                                                                                                           'group').order_by(
-        '-modified_date')
+    queryset = POFormula.objects.all().prefetch_related('self_data_entries').select_related('assemble', 'group').order_by('-modified_date')
     serializer_class = POFormulaSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend,)
