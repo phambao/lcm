@@ -50,7 +50,7 @@ class GroupFormulaFilter(filters.FilterSet):
 
     class Meta:
         model = POFormulaGrouping
-        fields = ('quantity', 'name', 'created_date', 'modified_date', 'markup',
+        fields = ('quantity', 'name', 'formula', 'created_date', 'modified_date', 'markup',
                   'charge', 'material', 'unit', 'cost', 'gross_profit', 'description_of_formula', 'formula_scenario',
                   'user_create', 'user_update')
 
