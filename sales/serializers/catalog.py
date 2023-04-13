@@ -4,10 +4,8 @@ from rest_framework.exceptions import ValidationError
 
 from api.serializers.base import SerializerMixin
 from base.serializers.base import IDAndNameSerializer
+from base.constants import true, null, false
 from ..models import catalog, Catalog
-
-false = False
-true = True
 
 
 class DataPointUnitSerializer(serializers.ModelSerializer):
