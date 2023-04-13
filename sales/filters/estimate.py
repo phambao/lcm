@@ -22,6 +22,7 @@ class FormulaFilter(filters.FilterSet):
     cost = filters.NumberFilter(field_name='cost', lookup_expr='gt')
     user_create = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
     user_update = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
+    is_show = filters.BooleanFilter(field_name='is_show', lookup_expr='isnull', exclude=True)
 
     class Meta:
         model = POFormula
