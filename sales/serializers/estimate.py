@@ -121,8 +121,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
     class Meta:
         model = POFormula
         fields = '__all__'
-        extra_kwargs = {**{'id': {'read_only': False, 'required': False},
-                        'is_show': {'read_only': True}}, **extra_kwargs_for_base_model()}
+        extra_kwargs = {**{'id': {'read_only': False, 'required': False}}, **extra_kwargs_for_base_model()}
 
     def create(self, validated_data):
         data_entries = pop(validated_data, 'self_data_entries', [])
