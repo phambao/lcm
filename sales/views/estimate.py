@@ -6,7 +6,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
-from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter, AssembleFilter
+from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter, AssembleFilter, GroupFormulaFilter
 from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, UnitLibrary, \
     DescriptionLibrary, Assemble, EstimateTemplate
@@ -17,10 +17,12 @@ from sales.views.catalog import parse_c_table
 
 
 class POFormulaList(generics.ListCreateAPIView):
-    queryset = POFormula.objects.filter(is_show=True).prefetch_related('self_data_entries').select_related('assemble', 'group').order_by('-modified_date')
+    queryset = POFormula.objects.filter(is_show=True).prefetch_related('self_data_entries').select_related('assemble',
+                                                                                                           'group').order_by(
+        '-modified_date')
     serializer_class = POFormulaSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = (filters.DjangoFilterBackend, )
+    filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = FormulaFilter
 
 
@@ -31,9 +33,11 @@ class POFormulaDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class POFormulaGroupingList(generics.ListCreateAPIView):
-    queryset = POFormulaGrouping.objects.all().order_by('-modified_date')
+    queryset = POFormulaGrouping.objects.all().order_by('-modified_date').distinct()
     serializer_class = POFormulaGroupingSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = GroupFormulaFilter
 
 
 class POFormulaGroupingDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -97,8 +101,8 @@ class EstimateTemplateList(generics.ListCreateAPIView):
     queryset = EstimateTemplate.objects.all().order_by('-modified_date')
     serializer_class = EstimateTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = (filters.DjangoFilterBackend, )
-    filterset_class =EstimateTemplateFilter
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = EstimateTemplateFilter
 
 
 class EstimateTemplateDetail(generics.RetrieveUpdateDestroyAPIView):
