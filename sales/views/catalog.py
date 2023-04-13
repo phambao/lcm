@@ -11,7 +11,7 @@ from ..filters.catalog import CatalogFilter
 from ..models import DataEntry
 from ..models.catalog import Catalog, CostTable, CatalogLevel, DataPointUnit
 from ..serializers import catalog
-from ..serializers.catalog import CatalogSerializer
+from ..serializers.catalog import CatalogSerializer, CatalogEstimateSerializer
 
 
 class CatalogList(generics.ListCreateAPIView):
@@ -314,7 +314,7 @@ def parse_c_table(children):
         try:
             try:
                 ancestor = child.get_full_ancestor()
-                levels = [CatalogSerializer(c).data for c in ancestor[::-1]]
+                levels = [CatalogEstimateSerializer(c).data for c in ancestor[::-1]]
             except:
                 levels = []
             c_table = child.c_table
