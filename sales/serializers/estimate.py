@@ -2,6 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
 from base.serializers.base import IDAndNameSerializer
+from base.constants import true, null, false
 from base.utils import pop, activity_log, extra_kwargs_for_base_model
 from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE, \
     UNIT_LIBRARY_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE, ESTIMATE_TEMPLATE_CONTENT_TYPE, ASSEMBLE_CONTENT_TYPE
