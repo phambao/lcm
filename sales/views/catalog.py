@@ -33,10 +33,11 @@ class CatalogDetail(generics.RetrieveUpdateDestroyAPIView):
         data_catalog = catalog.Catalog.objects.filter(id=pk_catalog).first()
         c_table = data_catalog.c_table
         parent_catalog = data_catalog.parents.first()
-        children_catalog = catalog.Catalog.objects.filter(parents=parent_catalog.id).count()
-        if children_catalog <= 1:
-            parent_catalog.c_table = c_table
-            parent_catalog.save()
+        if parent_catalog:
+            children_catalog = catalog.Catalog.objects.filter(parents=parent_catalog.id).count()
+            if children_catalog <= 1:
+                parent_catalog.c_table = c_table
+                parent_catalog.save()
 
         return super().delete(request, *args, **kwargs)
 
