@@ -1,4 +1,8 @@
-from django.db.models import Value
+from datetime import timedelta
+
+from django.utils.timezone import now
+from django.db.models import Value, Q, Subquery
+from django_filters.filters import _truncate
 from rest_framework import generics, permissions, status, filters as rf_filters
 from django_filters import rest_framework as filters
 from rest_framework.decorators import api_view, permission_classes
@@ -17,7 +21,9 @@ from sales.views.catalog import parse_c_table
 
 
 class POFormulaList(generics.ListCreateAPIView):
-    queryset = POFormula.objects.all().prefetch_related('self_data_entries').select_related('assemble', 'group').order_by('-modified_date')
+    queryset = POFormula.objects.all().prefetch_related('self_data_entries').select_related('assemble',
+                                                                                            'group').order_by(
+        '-modified_date')
     serializer_class = POFormulaSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend,)
@@ -107,6 +113,65 @@ class EstimateTemplateDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = EstimateTemplate.objects.all()
     serializer_class = EstimateTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def filter_group_fo_to_fo(request):
+    q = Q()
+    temp = request.query_params.dict()
+    data_filter = {
+        "today": {
+                "%s__year" % 'modified_date': now().year,
+                "%s__month" % 'modified_date': now().month,
+                "%s__day" % 'modified_date': now().day,
+        },
+        "yesterday": {
+                "%s__gte" % 'modified_date': now() - timedelta(days=1),
+                "%s__lt" % 'modified_date': now(),
+        },
+        "past-7-days": {
+                "%s__gte" % 'modified_date': _truncate(now() - timedelta(days=7)),
+                "%s__lt" % 'modified_date': _truncate(now() + timedelta(days=1)),
+        },
+        "past-14-days": {
+                "%s__gte" % 'modified_date': _truncate(now() - timedelta(days=14)),
+                "%s__lt" % 'modified_date': _truncate(now() + timedelta(days=1)),
+        },
+        "past-30-days": {
+                "%s__gte" % 'modified_date': _truncate(now() - timedelta(days=30)),
+                "%s__lt" % 'modified_date': _truncate(now() + timedelta(days=1)),
+        },
+        "past-45-days": {
+                "%s__gte" % 'modified_date': _truncate(now() - timedelta(days=45)),
+                "%s__lt" % 'modified_date': _truncate(now() + timedelta(days=1)),
+        },
+        "past-90-days": {
+                "%s__gte" % 'modified_date': _truncate(now() - timedelta(days=90)),
+                "%s__lt" % 'modified_date': _truncate(now() + timedelta(days=1)),
+        },
+    }
+    for data in temp:
+        if data == 'modified_date' and temp['modified_date'] != str():
+            q &= Q(**data_filter[temp['modified_date']])
+        if data != 'cost' and data != 'limit' and data != 'offset' and data != 'modified_date' and data != 'created_date':
+            q &= Q(**{f'{data}__icontains': temp[data]})
+        if data == 'cost' and temp[data] != str():
+            q &= Q(cost__gt=temp[data])
+
+    formula_queryset = POFormula.objects.filter(q)
+
+    grouping_queryset = POFormulaGrouping.objects.filter(
+        group_formulas__in=Subquery(formula_queryset.values('pk'))
+    ).order_by('-modified_date').distinct().values()
+
+    for data in grouping_queryset:
+        po = POFormula.objects.filter(Q(group_id=data['id']) & q).values()
+        data['group_formulas'] = po
+    paginator = LimitOffsetPagination()
+    grouping_po_rs = paginator.paginate_queryset(grouping_queryset, request)
+    serializer = POFormulaGroupingSerializer(grouping_po_rs, many=True)
+    return paginator.get_paginated_response(serializer.data)
 
 
 @api_view(['GET'])
