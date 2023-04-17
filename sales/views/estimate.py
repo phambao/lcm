@@ -159,9 +159,9 @@ def filter_group_fo_to_fo(request):
         if data == 'created_date' and temp['created_date'] != str():
             date = datetime.strptime(temp[data], '%Y-%m-%d %H:%M:%S')
             q &= Q(**{f'{data}__gt': date})
-        if data == 'date_filter' and temp['date_filter'] != str():
-            q &= Q(**data_filter[temp['date_filter']])
-        if data != 'cost' and data != 'limit' and data != 'offset' and data != 'modified_date' and data != 'created_date' and data != 'date_filter':
+        if data == 'age_of_formula' and temp['age_of_formula'] != str():
+            q &= Q(**data_filter[temp['age_of_formula']])
+        if data != 'cost' and data != 'limit' and data != 'offset' and data != 'modified_date' and data != 'created_date' and data != 'age_of_formula':
             q &= Q(**{f'{data}__icontains': temp[data]})
         if data == 'cost' and temp[data] != str():
             q &= Q(cost__gt=temp[data])
