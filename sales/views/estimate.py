@@ -103,7 +103,7 @@ class AssembleDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class EstimateTemplateList(generics.ListCreateAPIView):
-    queryset = EstimateTemplate.objects.all().order_by('-modified_date')
+    queryset = EstimateTemplate.objects.all().order_by('-modified_date').prefetch_related('data_views', 'assembles', 'data_entries')
     serializer_class = EstimateTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend,)
