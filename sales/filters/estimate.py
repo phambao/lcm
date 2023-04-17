@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django_filters import rest_framework as filters
 
 from sales.models import POFormula, POFormulaGrouping, Assemble, EstimateTemplate
+from sales.filters.lead_list import CHOICES, FILTERS
 
 
 class FormulaFilter(filters.FilterSet):
@@ -23,6 +24,7 @@ class FormulaFilter(filters.FilterSet):
     user_create = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
     user_update = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
     is_show = filters.BooleanFilter(field_name='is_show')
+    age_of_formula = filters.DateRangeFilter(field_name='created_date', choices=CHOICES, filters=FILTERS)
 
     class Meta:
         model = POFormula
