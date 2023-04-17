@@ -265,10 +265,7 @@ class AssembleSerializer(serializers.ModelSerializer):
         model = Assemble
         fields = ('id', 'name', 'created_date', 'modified_date', 'user_create', 'user_update',
                   'assemble_formulas', 'description')
-        extra_kwargs = {'created_date': {'read_only': True},
-                        'modified_date': {'read_only': True},
-                        'user_create': {'read_only': True},
-                        'user_update': {'read_only': True}}
+        extra_kwargs = extra_kwargs_for_base_model()
 
     def create_po_formula(self, po_formulas, instance):
         for po_formula in po_formulas:
