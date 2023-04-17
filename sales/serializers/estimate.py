@@ -322,8 +322,11 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
         pk_assembles = []
         for assemble in assembles:
             for po in assemble.get('assemble_formulas', []):
+                ### Need to clean this up
                 if po.get('assemble'):
                     po['assemble'] = po['assemble'].pk
+                if po.get('group'):
+                    po['group'] = po['group'].pk
                 if po.get('created_from'):
                     po['created_from'] = po['created_from'].pk
             serializer = AssembleSerializer(data=assemble)
