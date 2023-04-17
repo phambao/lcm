@@ -141,7 +141,7 @@ class CatalogLevelModelSerializer(serializers.ModelSerializer, SerializerMixin):
 
 
 class CatalogEstimateSerializer(serializers.ModelSerializer):
-    level = serializers.PrimaryKeyRelatedField(allow_null=True, allow_empty=True, required=False, queryset=None)
+    level = serializers.PrimaryKeyRelatedField(read_only=True, queryset=None)
     class Meta:
         model = Catalog
         fields = ('id', 'name', 'level', 'level_index')
