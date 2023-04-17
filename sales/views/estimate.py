@@ -152,18 +152,21 @@ def filter_group_fo_to_fo(request):
         },
     }
     for data in temp:
+        if data == 'modified_date' and temp['modified_date'] != str():
+            q &= Q(**data_filter[temp['modified_date']])
         if data != 'cost' and data != 'limit' and data != 'offset' and data != 'modified_date' and data != 'created_date':
             q &= Q(**{f'{data}__icontains': temp[data]})
         if data == 'cost' and temp[data] != str():
             q &= Q(cost__gt=temp[data])
 
     formula_queryset = POFormula.objects.filter(q)
+
     grouping_queryset = POFormulaGrouping.objects.filter(
         group_formulas__in=Subquery(formula_queryset.values('pk'))
     ).order_by('-modified_date').distinct().values()
 
     for data in grouping_queryset:
-        po = POFormula.objects.filter(Q(group_id=data['id']) & q & Q(**data_filter[temp['modified_date']])).values()
+        po = POFormula.objects.filter(Q(group_id=data['id']) & q).values()
         data['group_formulas'] = po
     paginator = LimitOffsetPagination()
     grouping_po_rs = paginator.paginate_queryset(grouping_queryset, request)
