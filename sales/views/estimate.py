@@ -1,3 +1,4 @@
+from datetime import datetime
 from datetime import timedelta
 
 from django.utils.timezone import now
@@ -153,8 +154,14 @@ def filter_group_fo_to_fo(request):
     }
     for data in temp:
         if data == 'modified_date' and temp['modified_date'] != str():
-            q &= Q(**data_filter[temp['modified_date']])
-        if data != 'cost' and data != 'limit' and data != 'offset' and data != 'modified_date' and data != 'created_date':
+            date = datetime.strptime(temp[data], '%Y-%m-%d %H:%M:%S')
+            q &= Q(**{f'{data}__gt': date})
+        if data == 'created_date' and temp['created_date'] != str():
+            date = datetime.strptime(temp[data], '%Y-%m-%d %H:%M:%S')
+            q &= Q(**{f'{data}__gt': date})
+        if data == 'age_of_formula' and temp['age_of_formula'] != str():
+            q &= Q(**data_filter[temp['age_of_formula']])
+        if data != 'cost' and data != 'limit' and data != 'offset' and data != 'modified_date' and data != 'created_date' and data != 'age_of_formula':
             q &= Q(**{f'{data}__icontains': temp[data]})
         if data == 'cost' and temp[data] != str():
             q &= Q(cost__gt=temp[data])
