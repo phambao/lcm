@@ -5,7 +5,7 @@ from rest_framework.exceptions import ValidationError
 from api.serializers.base import SerializerMixin
 from base.serializers.base import IDAndNameSerializer
 from base.constants import true, null, false
-from ..models import catalog, Catalog
+from ..models import catalog, Catalog, CatalogLevel
 
 
 class DataPointUnitSerializer(serializers.ModelSerializer):
@@ -141,7 +141,7 @@ class CatalogLevelModelSerializer(serializers.ModelSerializer, SerializerMixin):
 
 
 class CatalogEstimateSerializer(serializers.ModelSerializer):
-    level = serializers.PrimaryKeyRelatedField(allow_null=True, allow_empty=True, required=False)
+    level = serializers.PrimaryKeyRelatedField(allow_null=True, allow_empty=True, required=False, queryset=CatalogLevel.objects.all())
     class Meta:
         model = Catalog
         fields = ('id', 'name', 'level', 'level_index')
