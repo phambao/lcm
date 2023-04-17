@@ -41,35 +41,6 @@ class POFormulaGroupingList(generics.ListCreateAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = GroupFormulaFilter
 
-    def get_queryset(self):
-        created_date = self.request.query_params.get('created_date')
-        modified_date = self.request.query_params.get('modified_date')
-        filter_params = self.request.query_params
-        q = Q()
-        for key, value in filter_params.items():
-            if key in self.filterset_class.get_fields():
-                if key != 'cost':
-                    q &= Q(**{f'{key}__icontains': value})
-                if key == 'cost' and value != str():
-                    q &= Q(cost__gt=value)
-        if created_date == str() or created_date is None:
-            created_date = datetime.min
-
-        if modified_date == str() or modified_date is None:
-            modified_date = datetime.min
-
-        formula_queryset = POFormula.objects.filter(q)
-        grouping_queryset = POFormulaGrouping.objects.filter(
-            created_date__gt=created_date,
-            modified_date__gt=modified_date,
-            group_formulas__in=Subquery(formula_queryset.values('pk'))
-        ).order_by('-modified_date').distinct()
-
-        for data in grouping_queryset:
-            po = POFormula.objects.filter(Q(group=data), q)
-            data.group_formulas.set(po)
-        return grouping_queryset
-
 
 class POFormulaGroupingDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = POFormulaGrouping.objects.all()
