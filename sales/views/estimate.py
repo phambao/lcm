@@ -144,28 +144,11 @@ class EstimateTemplateDetail(generics.RetrieveUpdateDestroyAPIView):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
-def get_linked_descriptions(request):
-    """
-    Get linked description from estimate and catalog
-    """
-    search_query = {'linked_description__icontains': request.GET.get('search', '')}
-    dl = DescriptionLibrary.objects.filter(**search_query)
-    dp = DataPoint.objects.filter(**search_query)
-    paginator = LimitOffsetPagination()
-    estimate_result = paginator.paginate_queryset(dl, request)
-    catalog_result = paginator.paginate_queryset(dp, request)
-    estimate_serializer = LinkedDescriptionSerializer(estimate_result, many=True)
-    catalog_serializer = LinkedDescriptionSerializer(catalog_result, many=True)
-    return paginator.get_paginated_response(estimate_serializer.data + catalog_serializer.data)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
 def filter_group_fo_to_fo(request):
     q = Q()
     temp = request.query_params.dict()
     for data in temp:
-        if data != 'cost':
+        if data != 'cost' and data != 'limit' and data != 'offset':
             q &= Q(**{f'{data}__icontains': temp[data]})
         if data == 'cost' and temp[data] != str():
             q &= Q(cost__gt=temp[data])
@@ -177,7 +160,9 @@ def filter_group_fo_to_fo(request):
     for data in grouping_queryset:
         po = POFormula.objects.filter(Q(group_id=data['id']) & q).values()
         data['group_formulas'] = po
-    serializer = POFormulaGroupingSerializer(grouping_queryset, many=True)
+    paginator = LimitOffsetPagination()
+    grouping_po_rs = paginator.paginate_queryset(grouping_queryset, request)
+    serializer = POFormulaGroupingSerializer(grouping_po_rs, many=True)
     return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
