@@ -1,4 +1,6 @@
-from django.db.models import Value
+from datetime import datetime
+
+from django.db.models import Value, Q, Prefetch, Subquery
 from rest_framework import generics, permissions, status, filters as rf_filters
 from django_filters import rest_framework as filters
 from rest_framework.decorators import api_view, permission_classes
@@ -17,7 +19,9 @@ from sales.views.catalog import parse_c_table
 
 
 class POFormulaList(generics.ListCreateAPIView):
-    queryset = POFormula.objects.all().prefetch_related('self_data_entries').select_related('assemble', 'group').order_by('-modified_date')
+    queryset = POFormula.objects.all().prefetch_related('self_data_entries').select_related('assemble',
+                                                                                            'group').order_by(
+        '-modified_date')
     serializer_class = POFormulaSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend,)
@@ -36,6 +40,35 @@ class POFormulaGroupingList(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = GroupFormulaFilter
+
+    def get_queryset(self):
+        created_date = self.request.query_params.get('created_date')
+        modified_date = self.request.query_params.get('modified_date')
+        filter_params = self.request.query_params
+        q = Q()
+        for key, value in filter_params.items():
+            if key in self.filterset_class.get_fields():
+                if key != 'cost':
+                    q &= Q(**{f'{key}__icontains': value})
+                if key == 'cost' and value != str():
+                    q &= Q(cost__gt=value)
+        if created_date == str() or created_date is None:
+            created_date = datetime.min
+
+        if modified_date == str() or modified_date is None:
+            modified_date = datetime.min
+
+        formula_queryset = POFormula.objects.filter(q)
+        grouping_queryset = POFormulaGrouping.objects.filter(
+            created_date__gt=created_date,
+            modified_date__gt=modified_date,
+            group_formulas__in=Subquery(formula_queryset.values('pk'))
+        ).order_by('-modified_date').distinct()
+
+        for data in grouping_queryset:
+            po = POFormula.objects.filter(Q(group=data), q)
+            data.group_formulas.set(po)
+        return grouping_queryset
 
 
 class POFormulaGroupingDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -107,6 +140,45 @@ class EstimateTemplateDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = EstimateTemplate.objects.all()
     serializer_class = EstimateTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_linked_descriptions(request):
+    """
+    Get linked description from estimate and catalog
+    """
+    search_query = {'linked_description__icontains': request.GET.get('search', '')}
+    dl = DescriptionLibrary.objects.filter(**search_query)
+    dp = DataPoint.objects.filter(**search_query)
+    paginator = LimitOffsetPagination()
+    estimate_result = paginator.paginate_queryset(dl, request)
+    catalog_result = paginator.paginate_queryset(dp, request)
+    estimate_serializer = LinkedDescriptionSerializer(estimate_result, many=True)
+    catalog_serializer = LinkedDescriptionSerializer(catalog_result, many=True)
+    return paginator.get_paginated_response(estimate_serializer.data + catalog_serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def filter_group_fo_to_fo(request):
+    q = Q()
+    temp = request.query_params.dict()
+    for data in temp:
+        if data != 'cost':
+            q &= Q(**{f'{data}__icontains': temp[data]})
+        if data == 'cost' and temp[data] != str():
+            q &= Q(cost__gt=temp[data])
+    formula_queryset = POFormula.objects.filter(q)
+    grouping_queryset = POFormulaGrouping.objects.filter(
+        group_formulas__in=Subquery(formula_queryset.values('pk'))
+    ).order_by('-modified_date').distinct().values()
+
+    for data in grouping_queryset:
+        po = POFormula.objects.filter(Q(group_id=data['id']) & q).values()
+        data['group_formulas'] = po
+    serializer = POFormulaGroupingSerializer(grouping_queryset, many=True)
+    return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
 @api_view(['GET'])
