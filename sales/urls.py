@@ -4,11 +4,9 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from base.views.base import FileMessageTodoGenericView
-from sales.views import lead_list, catalog, lead_schedule, estimate
+from sales.views import lead_list, catalog, lead_schedule, estimate, proposal
 from api.views.upload_file import FileUploadView
 
-# Define Path for Contacts -----------------------------------------------------
-from sales.views.proposal import ProposalTemplateGenericView, ProposalTemplateDetailGenericView
 
 url_contacts = [
     path('contacts/', lead_list.ContactsViewSet.as_view()),
@@ -213,17 +211,22 @@ url_estimate = [
     path('tag-formula/', estimate.get_tag_formula),
     path('tag-catalog/', estimate.get_tag_data_point),
 ]
+
 # URL Proposal
 url_proposal = [
-    path('template/', ProposalTemplateGenericView.as_view()),
-    path('template/<int:pk>/', ProposalTemplateDetailGenericView.as_view()),
+    path('template/', proposal.ProposalTemplateGenericView.as_view()),
+    path('template/<int:pk>/', proposal.ProposalTemplateDetailGenericView.as_view()),
+    path('price-comparison/', proposal.PriceComparisonList.as_view()),
+    path('price-comparison/<int:pk>/', proposal.PriceComparisonDetail.as_view()),
 ]
+
 # URL Config
 url_config = [
     path('options-lead-list/', lead_schedule.select_lead_list),
     path('file/', FileMessageTodoGenericView.as_view({
         "post": "create_file"})),
 ]
+
 # DEFINE PATH FOR SALES APP -----------------------------------------------------
 url_sales = [
     path('', include(url_config)),

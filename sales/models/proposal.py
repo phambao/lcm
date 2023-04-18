@@ -30,3 +30,7 @@ class ProposalWidget(BaseModel):
     title = models.CharField(max_length=128, blank=True)
     display_order = models.IntegerField(blank=True, null=True)
     data_widget = models.JSONField(default=dict)
+
+
+class PriceComparison(BaseModel):
+    name = models.CharField(max_length=128)
