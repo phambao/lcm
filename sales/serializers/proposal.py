@@ -1,7 +1,9 @@
+from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
-from base.utils import pop
-from sales.models import ProposalTemplate, ProposalElement, ProposalWidget
+from base.utils import pop, activity_log
+from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison
+from sales.serializers import estimate
 
 
 class ProposalWidgetSerializer(serializers.ModelSerializer):
@@ -80,3 +82,37 @@ class ProposalTemplateSerializer(serializers.ModelSerializer):
         ProposalWidget.objects.bulk_create(data_create_widget)
         instance.refresh_from_db()
         return instance
+
+
+class PriceComparisonSerializer(serializers.ModelSerializer):
+    estimate_templates = estimate.EstimateTemplateSerializer('price_comparison', many=True, allow_null=True, required=False)
+
+    class Meta:
+        model = PriceComparison
+        fields = ('id', 'name', 'estimate_templates')
+
+    def create_estimate_template(self, estimate_templates, instance):
+        for estimate_template in estimate_templates:
+            serializer = estimate.EstimateTemplateSerializer(data=estimate_template)
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save(price_comparison_id=instance.pk)
+
+    def create(self, validated_data):
+        estimate_templates = pop(validated_data, 'estimate_templates', [])
+        instance = super().create(validated_data)
+        self.create_estimate_template(estimate_templates, instance)
+        activity_log(PriceComparison, instance, 1, PriceComparisonSerializer, {})
+        return instance
+
+    def update(self, instance, validated_data):
+        estimate_templates = pop(validated_data, 'estimate_templates', [])
+
+        instance.estimate_templates.all().delete()
+        self.create_estimate_template(estimate_templates, instance)
+        activity_log(PriceComparison, instance, 2, PriceComparisonSerializer, {})
+        return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['content_type'] = ContentType.objects.get_for_model(PriceComparison).pk
+        return data

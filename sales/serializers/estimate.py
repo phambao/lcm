@@ -137,6 +137,20 @@ class POFormulaSerializer(serializers.ModelSerializer):
         activity_log(POFormula, instance, 2, POFormulaSerializer, {})
         return super().update(instance, validated_data)
 
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+        if self.context.get('view'):
+            from sales.views import proposal
+            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail]
+            if any([isinstance(self.context['view'], view) for view in views]):
+                created_from = data['created_from']
+                if isinstance(created_from, POFormula):
+                    data['created_from'] = created_from.pk
+                assemble = data['assemble']
+                if isinstance(assemble, Assemble):
+                    data['assemble'] = assemble.pk
+        return data
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         linked_descriptions = []
@@ -372,6 +386,17 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
         activity_log(EstimateTemplate, instance, 2, EstimateTemplateSerializer, {})
         return instance
+
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+        if self.context.get('view'):
+            from sales.views import proposal
+            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail]
+            if any([isinstance(self.context['view'], view) for view in views]):
+                price_comparison = data['price_comparison']
+                if isinstance(price_comparison, proposal.PriceComparison):
+                    data['price_comparison'] = price_comparison.pk
+        return data
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
