@@ -328,7 +328,7 @@ class DataViewSerializer(serializers.ModelSerializer):
             views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail]
             if any([isinstance(self.context['view'], view) for view in views]):
                 estimate_template = data['estimate_template']
-                if isinstance(estimate_template, proposal.PriceComparison):
+                if isinstance(estimate_template, EstimateTemplate):
                     data['estimate_template'] = estimate_template.pk
         return data
 
