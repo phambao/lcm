@@ -92,10 +92,11 @@ class EstimateTemplate(BaseModel):
     catalog_links = ArrayField(models.CharField(max_length=128, blank=True, default=''), default=list, blank=True)
     price_comparison = models.ForeignKey('sales.PriceComparison', on_delete=models.CASCADE,
                                          related_name='estimate_templates', null=True, blank=True)
+    is_show = models.BooleanField(default=True, blank=True)
 
 
 class DataView(BaseModel):
     name = models.CharField(verbose_name='Formula Name', max_length=128)
-    formula = models.TextField(verbose_name='Formula')
+    formula = models.TextField(verbose_name='Formula', blank=True)
     estimate_template = models.ForeignKey('sales.EstimateTemplate', on_delete=models.CASCADE, related_name='data_views',
                                           null=True, blank=True)

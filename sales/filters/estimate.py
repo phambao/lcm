@@ -62,6 +62,7 @@ class EstimateTemplateFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
     created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='gt')
     modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='gt')
+    is_show = filters.BooleanFilter(field_name='is_show')
 
     class Meta:
         model = EstimateTemplate
