@@ -365,7 +365,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
             data_view['estimate_template'] = instance.pk
             serializer = DataViewSerializer(data=data_view)
             serializer.is_valid()
-            serializer.save()
+            serializer.save(estimate_template_id=instance.pk)
 
     def create(self, validated_data):
         assembles = pop(validated_data, 'assembles', [])
