@@ -149,6 +149,9 @@ class POFormulaSerializer(serializers.ModelSerializer):
                 assemble = data['assemble']
                 if isinstance(assemble, Assemble):
                     data['assemble'] = assemble.pk
+                group = data['group']
+                if isinstance(group, POFormulaGrouping):
+                    data['group'] = group.pk
         return data
 
     def to_representation(self, instance):
