@@ -8,6 +8,8 @@ class ProposalTemplate(BaseModel):
         db_table = 'proposal_template'
 
     name = models.CharField(max_length=64)
+    proposal_formatting = models.ForeignKey('ProposalFormatting', on_delete=models.CASCADE,
+                                            related_name='proposal_formatting_template', null=True)
 
 
 class ProposalElement(BaseModel):
@@ -34,3 +36,12 @@ class ProposalWidget(BaseModel):
 
 class PriceComparison(BaseModel):
     name = models.CharField(max_length=128)
+
+
+class ProposalFormatting(BaseModel):
+    class Meta:
+        db_table = 'proposal_formatting'
+
+    name = models.CharField(max_length=64)
+    proposal_template = models.ForeignKey(ProposalTemplate, on_delete=models.CASCADE,
+                                          related_name='proposal_template_formatting', null=True)
