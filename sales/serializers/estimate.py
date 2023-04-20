@@ -321,6 +321,17 @@ class DataViewSerializer(serializers.ModelSerializer):
         model = DataView
         fields = ('id', 'formula', 'name', 'estimate_template')
 
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+        if self.context.get('view'):
+            from sales.views import proposal
+            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail]
+            if any([isinstance(self.context['view'], view) for view in views]):
+                estimate_template = data['estimate_template']
+                if isinstance(estimate_template, EstimateTemplate):
+                    data['estimate_template'] = estimate_template.pk
+        return data
+
 
 class EstimateTemplateSerializer(serializers.ModelSerializer):
     assembles = AssembleSerializer(many=True, required=False, allow_null=True,)
@@ -354,7 +365,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
             data_view['estimate_template'] = instance.pk
             serializer = DataViewSerializer(data=data_view)
             serializer.is_valid()
-            serializer.save()
+            serializer.save(estimate_template_id=instance.pk)
 
     def create(self, validated_data):
         assembles = pop(validated_data, 'assembles', [])

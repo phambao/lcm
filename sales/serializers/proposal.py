@@ -97,7 +97,7 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
         for estimate_template in estimate_templates:
             serializer = estimate.EstimateTemplateSerializer(data=estimate_template)
             serializer.is_valid(raise_exception=True)
-            obj = serializer.save(price_comparison_id=instance.pk)
+            obj = serializer.save(price_comparison_id=instance.pk, is_show=False)
 
     def create(self, validated_data):
         estimate_templates = pop(validated_data, 'estimate_templates', [])
