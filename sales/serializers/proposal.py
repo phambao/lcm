@@ -86,8 +86,7 @@ class ProposalTemplateSerializer(serializers.ModelSerializer):
 
 
 class PriceComparisonSerializer(serializers.ModelSerializer):
-    estimate_templates = estimate.EstimateTemplateSerializer('price_comparison', many=True, allow_null=True,
-                                                             required=False)
+    estimate_templates = estimate.EstimateTemplateSerializer('price_comparison', many=True, allow_null=True, required=False)
 
     class Meta:
         model = PriceComparison
