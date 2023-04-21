@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 from api.models import BaseModel
 
@@ -36,6 +37,16 @@ class ProposalWidget(BaseModel):
 
 class PriceComparison(BaseModel):
     name = models.CharField(max_length=128)
+
+
+class ProposalWriting(BaseModel):
+    name = models.CharField(max_length=128)
+    total_project_price = models.IntegerField(blank=True, default=0, null=True)
+    total_project_cost = models.IntegerField(blank=True, default=0, null=True)
+    gross_profit = models.IntegerField(blank=True, default=0, null=True)
+    gross_profit_percent = models.IntegerField(blank=True, default=0, null=True)
+    avg_markup = models.IntegerField(blank=True, default=0, null=True)
+    costs = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
 
 class ProposalFormatting(BaseModel):
