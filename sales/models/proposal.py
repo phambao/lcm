@@ -41,11 +41,11 @@ class PriceComparison(BaseModel):
 
 class ProposalWriting(BaseModel):
     name = models.CharField(max_length=128)
-    total_project_price = models.IntegerField(blank=True, default=0)
-    total_project_cost = models.IntegerField(blank=True, default=0)
-    gross_profit = models.IntegerField(blank=True, default=0)
-    gross_profit_percent = models.IntegerField(blank=True, default=0)
-    avg_markup = models.IntegerField(blank=True, default=0)
+    total_project_price = models.IntegerField(blank=True, default=0, null=True)
+    total_project_cost = models.IntegerField(blank=True, default=0, null=True)
+    gross_profit = models.IntegerField(blank=True, default=0, null=True)
+    gross_profit_percent = models.IntegerField(blank=True, default=0, null=True)
+    avg_markup = models.IntegerField(blank=True, default=0, null=True)
     costs = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
 
