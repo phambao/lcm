@@ -1,8 +1,8 @@
 from rest_framework import generics, permissions
 
-from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting
+from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
-    ProposalFormattingTemplateSerializer
+    ProposalFormattingTemplateSerializer, ProposalWritingSerializer
 
 
 class ProposalTemplateGenericView(generics.ListCreateAPIView):
@@ -28,6 +28,18 @@ class PriceComparisonList(generics.ListCreateAPIView):
 class PriceComparisonDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = PriceComparison.objects.all()
     serializer_class = PriceComparisonSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ProposalWritingList(generics.ListCreateAPIView):
+    queryset = ProposalWriting.objects.all()
+    serializer_class = ProposalWritingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ProposalWritingDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ProposalWriting.objects.all()
+    serializer_class = ProposalWritingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 

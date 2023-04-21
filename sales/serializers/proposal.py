@@ -1,8 +1,9 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
-from base.utils import pop, activity_log
-from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting
+from base.utils import pop, activity_log, extra_kwargs_for_base_model
+from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting, \
+    ProposalWriting
 from sales.serializers import estimate
 
 
@@ -90,7 +91,8 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PriceComparison
-        fields = ('id', 'name', 'estimate_templates')
+        fields = '__all__'
+        extra_kwargs = extra_kwargs_for_base_model()
 
     def create_estimate_template(self, estimate_templates, instance):
         for estimate_template in estimate_templates:
@@ -116,6 +118,41 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(PriceComparison).pk
+        return data
+
+
+class ProposalWritingSerializer(serializers.ModelSerializer):
+    estimate_templates = estimate.EstimateTemplateSerializer('proposal_writing', many=True, allow_null=True, required=False)
+
+    class Meta:
+        model = ProposalWriting
+        fields = '__all__'
+        extra_kwargs = extra_kwargs_for_base_model()
+
+    def create_estimate_template(self, estimate_templates, instance):
+        for estimate_template in estimate_templates:
+            serializer = estimate.EstimateTemplateSerializer(data=estimate_template)
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save(proposal_writing_id=instance.pk, is_show=False)
+
+    def create(self, validated_data):
+        estimate_templates = pop(validated_data, 'estimate_templates', [])
+        instance = super().create(validated_data)
+        self.create_estimate_template(estimate_templates, instance)
+        activity_log(ProposalWriting, instance, 1, ProposalWritingSerializer, {})
+        return instance
+
+    def update(self, instance, validated_data):
+        estimate_templates = pop(validated_data, 'estimate_templates', [])
+
+        instance.estimate_templates.all().delete()
+        self.create_estimate_template(estimate_templates, instance)
+        activity_log(ProposalWriting, instance, 2, ProposalWritingSerializer, {})
+        return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['content_type'] = ContentType.objects.get_for_model(ProposalWriting).pk
         return data
 
 
