@@ -141,7 +141,8 @@ class POFormulaSerializer(serializers.ModelSerializer):
         data = super().to_internal_value(data)
         if self.context.get('view'):
             from sales.views import proposal
-            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail]
+            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
+                     proposal.ProposalWritingList, proposal.ProposalWritingDetail]
             if any([isinstance(self.context['view'], view) for view in views]):
                 created_from = data['created_from']
                 if isinstance(created_from, POFormula):
@@ -149,6 +150,9 @@ class POFormulaSerializer(serializers.ModelSerializer):
                 assemble = data['assemble']
                 if isinstance(assemble, Assemble):
                     data['assemble'] = assemble.pk
+                group = data['group']
+                if isinstance(group, POFormulaGrouping):
+                    data['group'] = group.pk
         return data
 
     def to_representation(self, instance):
@@ -325,7 +329,8 @@ class DataViewSerializer(serializers.ModelSerializer):
         data = super().to_internal_value(data)
         if self.context.get('view'):
             from sales.views import proposal
-            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail]
+            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
+                     proposal.ProposalWritingList, proposal.ProposalWritingDetail]
             if any([isinstance(self.context['view'], view) for view in views]):
                 estimate_template = data['estimate_template']
                 if isinstance(estimate_template, EstimateTemplate):
@@ -402,11 +407,15 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
         data = super().to_internal_value(data)
         if self.context.get('view'):
             from sales.views import proposal
-            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail]
+            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
+                     proposal.ProposalWritingList, proposal.ProposalWritingDetail]
             if any([isinstance(self.context['view'], view) for view in views]):
                 price_comparison = data['price_comparison']
                 if isinstance(price_comparison, proposal.PriceComparison):
                     data['price_comparison'] = price_comparison.pk
+                proposal_writing = data['proposal_writing']
+                if isinstance(proposal_writing, proposal.ProposalWriting):
+                    data['proposal_writing'] = proposal_writing.pk
         return data
 
     def to_representation(self, instance):
