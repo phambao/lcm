@@ -356,11 +356,14 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
             for po in assemble.get('assemble_formulas', []):
                 ### Need to clean this up
                 if po.get('assemble'):
-                    po['assemble'] = po['assemble'].pk
+                    if isinstance(po['assemble'], Assemble):
+                        po['assemble'] = po['assemble'].pk
                 if po.get('group'):
-                    po['group'] = po['group'].pk
+                    if isinstance(po['group'], POFormulaGrouping):
+                        po['group'] = po['group'].pk
                 if po.get('created_from'):
-                    po['created_from'] = po['created_from'].pk
+                    if isinstance(po['created_from'], POFormula):
+                        po['created_from'] = po['created_from'].pk
             serializer = AssembleSerializer(data=assemble, context=self.context)
             serializer.is_valid(raise_exception=True)
             obj = serializer.save()
