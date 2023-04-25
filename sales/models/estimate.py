@@ -38,7 +38,8 @@ class POFormula(BaseModel):
     material = models.TextField(blank=True)
     unit = models.CharField(max_length=32, blank=True)
     cost = models.IntegerField(blank=True, default=0)
-    formula_mentions = models.CharField(blank=True, max_length=256)
+    formula_mentions = models.CharField(blank=True, max_length=256)  # for FE
+    formula_data_mentions = models.CharField(blank=True, max_length=256)  # for FE
     gross_profit = models.CharField(max_length=32, blank=True)
     description_of_formula = models.TextField(blank=True)
     formula_scenario = models.TextField(blank=True)
