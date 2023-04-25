@@ -96,7 +96,7 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
 
     def create_estimate_template(self, estimate_templates, instance):
         for estimate_template in estimate_templates:
-            serializer = estimate.EstimateTemplateSerializer(data=estimate_template)
+            serializer = estimate.EstimateTemplateSerializer(data=estimate_template, context=self.context)
             serializer.is_valid(raise_exception=True)
             obj = serializer.save(price_comparison_id=instance.pk, is_show=False)
 
@@ -131,7 +131,7 @@ class ProposalWritingSerializer(serializers.ModelSerializer):
 
     def create_estimate_template(self, estimate_templates, instance):
         for estimate_template in estimate_templates:
-            serializer = estimate.EstimateTemplateSerializer(data=estimate_template)
+            serializer = estimate.EstimateTemplateSerializer(data=estimate_template, context=self.context)
             serializer.is_valid(raise_exception=True)
             obj = serializer.save(proposal_writing_id=instance.pk, is_show=False)
 
