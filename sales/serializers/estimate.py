@@ -294,9 +294,11 @@ class AssembleSerializer(serializers.ModelSerializer):
                 po_formula['created_from'] = created_from.pk
             else:
                 po_formula['created_from'] = po_formula['id']
+            if self.context.get('request').method == 'POST':
+                po_formula['formula_for_data_view'] = po_formula.get('id')
             del po_formula['group']
             del po_formula['id']
-            po = POFormulaSerializer(data=po_formula)
+            po = POFormulaSerializer(data=po_formula, context=self.context)
             po.is_valid(raise_exception=True)
             po.save()
 
@@ -359,7 +361,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
                     po['group'] = po['group'].pk
                 if po.get('created_from'):
                     po['created_from'] = po['created_from'].pk
-            serializer = AssembleSerializer(data=assemble)
+            serializer = AssembleSerializer(data=assemble, context=self.context)
             serializer.is_valid(raise_exception=True)
             obj = serializer.save()
             pk_assembles.append(obj.pk)
