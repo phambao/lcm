@@ -144,13 +144,13 @@ class POFormulaSerializer(serializers.ModelSerializer):
             views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
                      proposal.ProposalWritingList, proposal.ProposalWritingDetail]
             if any([isinstance(self.context['view'], view) for view in views]):
-                created_from = data['created_from']
+                created_from = data.get('created_from')
                 if isinstance(created_from, POFormula):
                     data['created_from'] = created_from.pk
-                assemble = data['assemble']
+                assemble = data.get('assemble')
                 if isinstance(assemble, Assemble):
                     data['assemble'] = assemble.pk
-                group = data['group']
+                group = data.get('group')
                 if isinstance(group, POFormulaGrouping):
                     data['group'] = group.pk
         return data
@@ -291,7 +291,8 @@ class AssembleSerializer(serializers.ModelSerializer):
             po_formula['is_show'] = False
             created_from = po_formula.get('created_from')
             if created_from:
-                po_formula['created_from'] = created_from.pk
+                if isinstance(po_formula['created_from'], POFormula):
+                    po_formula['created_from'] = created_from.pk
             else:
                 po_formula['created_from'] = po_formula['id']
             if self.context.get('request').method == 'POST':
