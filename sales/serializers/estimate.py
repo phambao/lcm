@@ -6,7 +6,7 @@ from base.constants import true, null, false
 from base.utils import pop, activity_log, extra_kwargs_for_base_model
 from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE, \
     UNIT_LIBRARY_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE, ESTIMATE_TEMPLATE_CONTENT_TYPE, ASSEMBLE_CONTENT_TYPE
-from sales.models import DataPoint, Catalog
+from sales.models import DataPoint, Catalog, PriceComparison, ProposalWriting
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, \
     UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView
 from sales.serializers.catalog import CatalogSerializer, CatalogEstimateSerializer
@@ -368,6 +368,17 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = extra_kwargs_for_base_model()
 
+    def reparse(self, data):
+        # Serializer is auto convert pk to model, But when reuse serializer in others, it is required to have int field.
+        # So we reparse this case
+        price_comparison = data.get('price_comparison')
+        if isinstance(price_comparison, int):
+            data['price_comparison'] = PriceComparison.objects.get(pk=price_comparison)
+        proposal_writing = data.get('proposal_writing')
+        if isinstance(proposal_writing, int):
+            data['proposal_writing'] = ProposalWriting.objects.get(pk=proposal_writing)
+        return data
+
     def create_assembles(self, assembles):
         pk_assembles = []
         for assemble in assembles:
@@ -401,6 +412,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
         data_entries = pop(validated_data, 'data_entries', [])
 
         pk_assembles = self.create_assembles(assembles)
+        validated_data = self.reparse(validated_data)
         instance = super().create(validated_data)
         create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk)
         self.create_data_view(data_views, instance)
@@ -417,6 +429,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
         create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk)
         pk_assembles = self.create_assembles(assembles)
 
+        validated_data = self.reparse(validated_data)
         instance = super().update(instance, validated_data)
         instance.data_views.all().delete()
         self.create_data_view(data_views, instance)
