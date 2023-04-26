@@ -267,7 +267,7 @@ class ToDoChecklistItemSerializer(serializers.ModelSerializer):
 
 class ToDoCreateSerializer(serializers.ModelSerializer):
     # temp_checklist = list()
-    temp_checklist = ToDoChecklistItemSerializer('check_list', allow_null=True, required=False, many=True)
+    check_list = ToDoChecklistItemSerializer('check_list', allow_null=True, required=False, many=True)
     assigned_to = UserCustomSerializer(allow_null=True, required=False, many=True)
     tags = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
 
@@ -328,7 +328,7 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         rs_checklist = ToDoChecklistItemSerializer(instance.check_list.all(), many=True).data
-        data['temp_checklist'] = rs_checklist
+        data['check_list'] = rs_checklist
 
         rs_messaging = MessagingSerializer(instance.messaging.all(), many=True).data
         data['messaging'] = rs_messaging
