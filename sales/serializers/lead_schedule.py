@@ -266,7 +266,8 @@ class ToDoChecklistItemSerializer(serializers.ModelSerializer):
 
 
 class ToDoCreateSerializer(serializers.ModelSerializer):
-    temp_checklist = list()
+    # temp_checklist = list()
+    temp_checklist = ToDoChecklistItemSerializer('check_list', allow_null=True, required=False, many=True)
     assigned_to = UserCustomSerializer(allow_null=True, required=False, many=True)
     tags = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
 
@@ -326,17 +327,14 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        # rs_checklist = CheckListItems.objects.filter(to_do=data['id']).values()
         rs_checklist = ToDoChecklistItemSerializer(instance.check_list.all(), many=True).data
         data['check_list'] = rs_checklist
 
-        # rs_messaging = Messaging.objects.filter(to_do=data['id']).values()
         rs_messaging = MessagingSerializer(instance.messaging.all(), many=True).data
         data['messaging'] = rs_messaging
-        rs_custom_field = TodoCustomField.objects.filter(todo=data['id']).values()
-        data['custom_field'] = rs_custom_field
-        files = Attachments.objects.filter(to_do=data['id']).values()
-        data['files'] = files
+        data['custom_field'] = ToDoCustomField(instance.custom_filed_to_do.all(), many=True).data
+        data['files'] = ScheduleAttachmentsModelSerializer(instance.attachments.all(), many=True).data
+
         return data
 
 
