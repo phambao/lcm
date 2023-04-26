@@ -328,7 +328,7 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         rs_checklist = ToDoChecklistItemSerializer(instance.check_list.all(), many=True).data
-        data['check_list'] = rs_checklist
+        data['temp_checklist'] = rs_checklist
 
         rs_messaging = MessagingSerializer(instance.messaging.all(), many=True).data
         data['messaging'] = rs_messaging
