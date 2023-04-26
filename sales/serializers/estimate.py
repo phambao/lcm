@@ -123,8 +123,23 @@ class POFormulaSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = {**{'id': {'read_only': False, 'required': False}}, **extra_kwargs_for_base_model()}
 
+    def reparse(self, data):
+        # Serializer is auto convert pk to model, But when reuse serializer in others, it is required to have int field.
+        # So we reparse this case
+        created_from = data.get('created_from')
+        if isinstance(created_from, int):
+            data['created_from'] = POFormula.objects.get(pk=created_from)
+        assemble = data.get('assemble')
+        if isinstance(assemble, int):
+            data['assemble'] = Assemble.objects.get(pk=assemble)
+        group = data.get('group')
+        if isinstance(group, int):
+            data['group'] = POFormulaGrouping.objects.get(pk=group)
+        return data
+
     def create(self, validated_data):
         data_entries = pop(validated_data, 'self_data_entries', [])
+        validated_data = self.reparse(validated_data)
         instance = super().create(validated_data)
         create_po_formula_to_data_entry(instance, data_entries)
         activity_log(POFormula, instance, 1, POFormulaSerializer, {})
@@ -135,6 +150,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
         instance.self_data_entries.all().delete()
         create_po_formula_to_data_entry(instance, data_entries)
         activity_log(POFormula, instance, 2, POFormulaSerializer, {})
+        validated_data = self.reparse(validated_data)
         return super().update(instance, validated_data)
 
     def to_internal_value(self, data):
@@ -144,13 +160,13 @@ class POFormulaSerializer(serializers.ModelSerializer):
             views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
                      proposal.ProposalWritingList, proposal.ProposalWritingDetail]
             if any([isinstance(self.context['view'], view) for view in views]):
-                created_from = data['created_from']
+                created_from = data.get('created_from')
                 if isinstance(created_from, POFormula):
                     data['created_from'] = created_from.pk
-                assemble = data['assemble']
+                assemble = data.get('assemble')
                 if isinstance(assemble, Assemble):
                     data['assemble'] = assemble.pk
-                group = data['group']
+                group = data.get('group')
                 if isinstance(group, POFormulaGrouping):
                     data['group'] = group.pk
         return data
@@ -291,7 +307,8 @@ class AssembleSerializer(serializers.ModelSerializer):
             po_formula['is_show'] = False
             created_from = po_formula.get('created_from')
             if created_from:
-                po_formula['created_from'] = created_from.pk
+                if isinstance(po_formula['created_from'], POFormula):
+                    po_formula['created_from'] = created_from.pk
             else:
                 po_formula['created_from'] = po_formula['id']
             if self.context.get('request').method == 'POST':
