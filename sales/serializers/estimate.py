@@ -311,7 +311,8 @@ class AssembleSerializer(serializers.ModelSerializer):
                     po_formula['created_from'] = created_from.pk
             else:
                 po_formula['created_from'] = po_formula['id']
-            if self.context.get('request').method == 'POST':
+            from sales.views.estimate import EstimateTemplateList
+            if self.context.get('request').method == 'POST' and isinstance(self.context.get('view'), EstimateTemplateList):
                 po_formula['formula_for_data_view'] = po_formula.get('id')
             del po_formula['group']
             del po_formula['id']
@@ -432,10 +433,10 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
             views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
                      proposal.ProposalWritingList, proposal.ProposalWritingDetail]
             if any([isinstance(self.context['view'], view) for view in views]):
-                price_comparison = data['price_comparison']
+                price_comparison = data.get('price_comparison')
                 if isinstance(price_comparison, proposal.PriceComparison):
                     data['price_comparison'] = price_comparison.pk
-                proposal_writing = data['proposal_writing']
+                proposal_writing = data.get('proposal_writing')
                 if isinstance(proposal_writing, proposal.ProposalWriting):
                     data['proposal_writing'] = proposal_writing.pk
         return data
