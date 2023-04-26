@@ -44,12 +44,12 @@ class ProposalWritingDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ProposalFormattingTemplateGenericView(generics.ListCreateAPIView):
-    queryset = ProposalFormatting.objects.all()
+    queryset = ProposalFormatting.objects.all().prefetch_related('estimate_templates')
     serializer_class = ProposalFormattingTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
 class ProposalFormattingTemplateDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ProposalFormatting.objects.all()
+    queryset = ProposalFormatting.objects.all().prefetch_related('estimate_templates')
     serializer_class = ProposalFormattingTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
