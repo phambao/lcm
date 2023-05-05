@@ -90,11 +90,14 @@ class DescriptionLibrary(BaseModel):
 
 class EstimateTemplate(BaseModel):
     name = models.CharField(max_length=128)
+    proposal_name = models.CharField(max_length=128, blank=True, default='')
     assembles = models.ManyToManyField(Assemble, related_name='estimate_templates', blank=True)
     contact_description = models.TextField(blank=True, default='')
     catalog_links = ArrayField(models.CharField(max_length=128, blank=True, default=''), default=list, blank=True)
     group_by_proposal = models.ForeignKey('sales.GroupByEstimate', on_delete=models.CASCADE,
                                           related_name='estimate_templates', null=True, blank=True)
+    price_comparison = models.ForeignKey('sales.PriceComparison', on_delete=models.CASCADE,
+                                         related_name='estimate_templates', null=True, blank=True)
     is_show = models.BooleanField(default=True, blank=True)
 
 

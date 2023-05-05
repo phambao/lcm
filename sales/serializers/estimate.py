@@ -375,6 +375,9 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
         group_by_proposal = data.get('group_by_proposal')
         if isinstance(group_by_proposal, int):
             data['group_by_proposal'] = GroupByEstimate.objects.get(pk=group_by_proposal)
+        price_comparison = data.get('price_comparison')
+        if isinstance(price_comparison, int):
+            data['price_comparison'] = PriceComparison.objects.get(pk=price_comparison)
         return data
 
     def create_assembles(self, assembles):
@@ -444,6 +447,9 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
             views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
                      proposal.ProposalWritingList, proposal.ProposalWritingDetail]
             if any([isinstance(self.context['view'], view) for view in views]):
+                price_comparison = data.get('price_comparison')
+                if isinstance(price_comparison, proposal.PriceComparison):
+                    data['price_comparison'] = price_comparison.pk
                 group_by_proposal = data.get('group_by_proposal')
                 if isinstance(group_by_proposal, proposal.GroupByEstimate):
                     data['group_by_proposal'] = group_by_proposal.pk

@@ -134,31 +134,31 @@ class GroupByEstimateSerializers(serializers.ModelSerializer):
 
 
 class PriceComparisonSerializer(serializers.ModelSerializer):
-    comparison_groups = GroupByEstimateSerializers('comparison', many=True, allow_null=True, required=False)
+    estimate_templates = estimate.EstimateTemplateSerializer('proposal_writing', many=True, allow_null=True, required=False)
 
     class Meta:
         model = PriceComparison
         fields = '__all__'
         extra_kwargs = extra_kwargs_for_base_model()
 
-    def create_group(self, comparison_groups, instance):
-        for comparison_group in comparison_groups:
-            serializer = GroupByEstimateSerializers(data=comparison_group, context=self.context)
+    def create_estimate_template(self, estimate_templates, instance):
+        for estimate_template in estimate_templates:
+            serializer = estimate.EstimateTemplateSerializer(data=estimate_template, context=self.context)
             serializer.is_valid(raise_exception=True)
-            serializer.save(comparison_id=instance.pk)
+            obj = serializer.save(price_comparison_id=instance.pk, is_show=False)
 
     def create(self, validated_data):
-        comparison_groups = pop(validated_data, 'comparison_groups', [])
+        estimate_templates = pop(validated_data, 'estimate_templates', [])
         instance = super().create(validated_data)
-        self.create_group(comparison_groups, instance)
+        self.create_estimate_template(estimate_templates, instance)
         activity_log(PriceComparison, instance, 1, PriceComparisonSerializer, {})
         return instance
 
     def update(self, instance, validated_data):
-        comparison_groups = pop(validated_data, 'comparison_groups', [])
+        estimate_templates = pop(validated_data, 'estimate_templates', [])
 
-        instance.comparison_groups.all().update(comparison=None)
-        self.create_group(comparison_groups, instance)
+        # instance.estimate_templates.delete()
+        self.create_estimate_template(estimate_templates, instance)
         activity_log(PriceComparison, instance, 2, PriceComparisonSerializer, {})
         return super().update(instance, validated_data)
 
