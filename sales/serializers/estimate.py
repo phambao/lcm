@@ -344,18 +344,18 @@ class DataViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataView
         fields = ('id', 'formula', 'name', 'estimate_template')
-    #
-    # def to_internal_value(self, data):
-    #     data = super().to_internal_value(data)
-    #     if self.context.get('view'):
-    #         from sales.views import proposal
-    #         views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
-    #                  proposal.ProposalWritingList, proposal.ProposalWritingDetail]
-    #         if any([isinstance(self.context['view'], view) for view in views]):
-    #             estimate_template = data['estimate_template']
-    #             if isinstance(estimate_template, EstimateTemplate):
-    #                 data['estimate_template'] = estimate_template.pk
-    #     return data
+
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+        if self.context.get('view'):
+            from sales.views import proposal
+            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
+                     proposal.ProposalWritingList, proposal.ProposalWritingDetail]
+            if any([isinstance(self.context['view'], view) for view in views]):
+                estimate_template = data['estimate_template']
+                if isinstance(estimate_template, EstimateTemplate):
+                    data['estimate_template'] = estimate_template.pk
+        return data
 
 
 class EstimateTemplateSerializer(serializers.ModelSerializer):

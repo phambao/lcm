@@ -104,6 +104,9 @@ class GroupByEstimateSerializers(serializers.ModelSerializer):
         writing = data.get('writing')
         if writing:
             data['writing'] = ProposalWriting.objects.get(pk=writing)
+        comparison = data.get('comparison')
+        if comparison:
+            data['comparison'] = PriceComparison.objects.get(pk=comparison)
         return data
 
     def create(self, validated_data):
@@ -124,6 +127,9 @@ class GroupByEstimateSerializers(serializers.ModelSerializer):
         writing = data.get('writing')
         if writing:
             data['writing'] = writing.pk
+        comparison = data.get('comparison')
+        if comparison:
+            data['comparison'] = comparison.pk
         return data
 
 
