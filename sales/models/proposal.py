@@ -63,5 +63,3 @@ class GroupByEstimate(BaseModel):
     order = models.IntegerField(default=0, blank=True, null=True)
     writing = models.ForeignKey('sales.ProposalWriting', null=True, blank=True,
                                 on_delete=models.CASCADE, related_name='writing_groups')
-    comparison = models.ForeignKey('sales.PriceComparison', null=True, blank=True,
-                                   on_delete=models.CASCADE, related_name='comparison_groups')
