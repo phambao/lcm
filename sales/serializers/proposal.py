@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from base.utils import pop, activity_log, extra_kwargs_for_base_model
 from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting, \
-    ProposalWriting
+    ProposalWriting, GroupByEstimate
 from sales.serializers import estimate
 
 
@@ -86,11 +86,11 @@ class ProposalTemplateSerializer(serializers.ModelSerializer):
         return instance
 
 
-class PriceComparisonSerializer(serializers.ModelSerializer):
-    estimate_templates = estimate.EstimateTemplateSerializer('price_comparison', many=True, allow_null=True, required=False)
-
+class GroupByEstimateSerializers(serializers.ModelSerializer):
+    estimate_templates = estimate.EstimateTemplateSerializer('group_by_proposal', many=True, allow_null=True,
+                                                             required=False)
     class Meta:
-        model = PriceComparison
+        model = GroupByEstimate
         fields = '__all__'
         extra_kwargs = extra_kwargs_for_base_model()
 
@@ -98,20 +98,67 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
         for estimate_template in estimate_templates:
             serializer = estimate.EstimateTemplateSerializer(data=estimate_template, context=self.context)
             serializer.is_valid(raise_exception=True)
-            obj = serializer.save(price_comparison_id=instance.pk, is_show=False)
+            obj = serializer.save(group_by_proposal_id=instance.pk, is_show=False)
+
+    def reparse(self, data):
+        writing = data.get('writing')
+        if writing:
+            data['writing'] = ProposalWriting.objects.get(pk=writing)
+        comparison = data.get('comparison')
+        if comparison:
+            data['comparison'] = PriceComparison.objects.get(pk=comparison)
+        return data
 
     def create(self, validated_data):
         estimate_templates = pop(validated_data, 'estimate_templates', [])
+        validated_data = self.reparse(validated_data)
         instance = super().create(validated_data)
         self.create_estimate_template(estimate_templates, instance)
-        activity_log(PriceComparison, instance, 1, PriceComparisonSerializer, {})
         return instance
 
     def update(self, instance, validated_data):
         estimate_templates = pop(validated_data, 'estimate_templates', [])
-
-        instance.estimate_templates.all().delete()
         self.create_estimate_template(estimate_templates, instance)
+        validated_data = self.reparse(validated_data)
+        return super().update(instance, validated_data)
+
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+        writing = data.get('writing')
+        if writing:
+            data['writing'] = writing.pk
+        comparison = data.get('comparison')
+        if comparison:
+            data['comparison'] = comparison.pk
+        return data
+
+
+class PriceComparisonSerializer(serializers.ModelSerializer):
+    comparison_groups = GroupByEstimateSerializers('comparison', many=True, allow_null=True, required=False)
+
+    class Meta:
+        model = PriceComparison
+        fields = '__all__'
+        extra_kwargs = extra_kwargs_for_base_model()
+
+    def create_group(self, comparison_groups, instance):
+        for comparison_group in comparison_groups:
+            serializer = GroupByEstimateSerializers(data=comparison_group, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(comparison_id=instance.pk)
+
+    def create(self, validated_data):
+        comparison_groups = pop(validated_data, 'comparison_groups', [])
+        instance = super().create(validated_data)
+        self.create_group(comparison_groups, instance)
+        activity_log(PriceComparison, instance, 1, PriceComparisonSerializer, {})
+        return instance
+
+    def update(self, instance, validated_data):
+        comparison_groups = pop(validated_data, 'comparison_groups', [])
+
+        instance.comparison_groups.all().update(comparison=None)
+        self.create_group(comparison_groups, instance)
         activity_log(PriceComparison, instance, 2, PriceComparisonSerializer, {})
         return super().update(instance, validated_data)
 
@@ -122,31 +169,31 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
 
 
 class ProposalWritingSerializer(serializers.ModelSerializer):
-    estimate_templates = estimate.EstimateTemplateSerializer('proposal_writing', many=True, allow_null=True, required=False)
+    writing_groups = GroupByEstimateSerializers('writing', many=True, allow_null=True, required=False)
 
     class Meta:
         model = ProposalWriting
         fields = '__all__'
         extra_kwargs = extra_kwargs_for_base_model()
 
-    def create_estimate_template(self, estimate_templates, instance):
-        for estimate_template in estimate_templates:
-            serializer = estimate.EstimateTemplateSerializer(data=estimate_template, context=self.context)
+    def create_group(self, writing_groups, instance):
+        for writing_group in writing_groups:
+            serializer = GroupByEstimateSerializers(data=writing_group, context=self.context)
             serializer.is_valid(raise_exception=True)
-            obj = serializer.save(proposal_writing_id=instance.pk, is_show=False)
+            serializer.save(writing_id=instance.pk)
 
     def create(self, validated_data):
-        estimate_templates = pop(validated_data, 'estimate_templates', [])
+        writing_groups = pop(validated_data, 'writing_groups', [])
         instance = super().create(validated_data)
-        self.create_estimate_template(estimate_templates, instance)
+        self.create_group(writing_groups, instance)
         activity_log(ProposalWriting, instance, 1, ProposalWritingSerializer, {})
         return instance
 
     def update(self, instance, validated_data):
-        estimate_templates = pop(validated_data, 'estimate_templates', [])
+        writing_groups = pop(validated_data, 'writing_groups', [])
 
-        instance.estimate_templates.all().delete()
-        self.create_estimate_template(estimate_templates, instance)
+        instance.writing_groups.all().update(writing=None)
+        self.create_group(writing_groups, instance)
         activity_log(ProposalWriting, instance, 2, ProposalWritingSerializer, {})
         return super().update(instance, validated_data)
 

@@ -371,12 +371,10 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
     def reparse(self, data):
         # Serializer is auto convert pk to model, But when reuse serializer in others, it is required to have int field.
         # So we reparse this case
-        price_comparison = data.get('price_comparison')
-        if isinstance(price_comparison, int):
-            data['price_comparison'] = PriceComparison.objects.get(pk=price_comparison)
-        proposal_writing = data.get('proposal_writing')
-        if isinstance(proposal_writing, int):
-            data['proposal_writing'] = ProposalWriting.objects.get(pk=proposal_writing)
+        from sales.views.proposal import GroupByEstimate
+        group_by_proposal = data.get('group_by_proposal')
+        if isinstance(group_by_proposal, int):
+            data['group_by_proposal'] = GroupByEstimate.objects.get(pk=group_by_proposal)
         return data
 
     def create_assembles(self, assembles):
@@ -446,12 +444,9 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
             views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
                      proposal.ProposalWritingList, proposal.ProposalWritingDetail]
             if any([isinstance(self.context['view'], view) for view in views]):
-                price_comparison = data.get('price_comparison')
-                if isinstance(price_comparison, proposal.PriceComparison):
-                    data['price_comparison'] = price_comparison.pk
-                proposal_writing = data.get('proposal_writing')
-                if isinstance(proposal_writing, proposal.ProposalWriting):
-                    data['proposal_writing'] = proposal_writing.pk
+                group_by_proposal = data.get('group_by_proposal')
+                if isinstance(group_by_proposal, proposal.GroupByEstimate):
+                    data['group_by_proposal'] = group_by_proposal.pk
         return data
 
     def to_representation(self, instance):
