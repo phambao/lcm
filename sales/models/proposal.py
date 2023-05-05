@@ -56,3 +56,12 @@ class ProposalFormatting(BaseModel):
     name = models.CharField(max_length=64)
     proposal_template = models.ForeignKey(ProposalTemplate, on_delete=models.CASCADE,
                                           related_name='proposal_template_formatting', null=True)
+
+
+class GroupByEstimate(BaseModel):
+    name = models.CharField(max_length=128)
+    order = models.IntegerField(default=0, blank=True, null=True)
+    writing = models.ForeignKey('sales.ProposalWriting', null=True, blank=True,
+                                on_delete=models.CASCADE, related_name='writing_groups')
+    comparison = models.ForeignKey('sales.PriceComparison', null=True, blank=True,
+                                   on_delete=models.CASCADE, related_name='comparison_groups')

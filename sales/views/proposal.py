@@ -1,6 +1,6 @@
 from rest_framework import generics, permissions
 
-from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting
+from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, GroupByEstimate
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer
 
