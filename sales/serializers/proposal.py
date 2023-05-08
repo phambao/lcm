@@ -24,20 +24,32 @@ class ProposalElementSerializer(serializers.ModelSerializer):
         fields = ('id', 'proposal_template', 'display_order', 'proposal_widget_element', 'title')
 
 
+# class ProposalTemplateConfigSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = ProposalTemplateConfig
+#         fields = ('id', 'proposal_template', 'config')
+
+
 class ProposalTemplateSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     proposal_template_element = ProposalElementSerializer('proposal_template', allow_null=True, required=False,
                                                           many=True)
+    # config_proposal_template = ProposalTemplateConfigSerializer('proposal_template', allow_null=True, required=False)
 
     class Meta:
         model = ProposalTemplate
-        fields = ('id', 'name', 'proposal_template_element', 'proposal_formatting')
+        fields = ('id', 'name', 'proposal_template_element', 'proposal_formatting', 'config')
 
     def create(self, validated_data):
         elements = pop(validated_data, 'proposal_template_element', [])
+        # config = pop(validated_data, 'config', dict())
         proposal_template = ProposalTemplate.objects.create(
             **validated_data
         )
+        # proposal_template_config = ProposalTemplateConfig.objects.create(
+        #     proposal_template=proposal_template,
+        #     config=config
+        # )
         data_create_widget = []
         for element in elements:
             proposal_element = ProposalElement.objects.create(
@@ -89,6 +101,7 @@ class ProposalTemplateSerializer(serializers.ModelSerializer):
 class GroupByEstimateSerializers(serializers.ModelSerializer):
     estimate_templates = estimate.EstimateTemplateSerializer('group_by_proposal', many=True, allow_null=True,
                                                              required=False)
+
     class Meta:
         model = GroupByEstimate
         fields = '__all__'
@@ -134,7 +147,8 @@ class GroupByEstimateSerializers(serializers.ModelSerializer):
 
 
 class PriceComparisonSerializer(serializers.ModelSerializer):
-    estimate_templates = estimate.EstimateTemplateSerializer('proposal_writing', many=True, allow_null=True, required=False)
+    estimate_templates = estimate.EstimateTemplateSerializer('proposal_writing', many=True, allow_null=True,
+                                                             required=False)
 
     class Meta:
         model = PriceComparison
@@ -255,3 +269,6 @@ class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
         rs = ProposalTemplateSerializer(temp)
         data['proposal_formatting_template'] = rs.data
         return data
+
+
+
