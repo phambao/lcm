@@ -269,6 +269,3 @@ class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
         rs = ProposalTemplateSerializer(temp)
         data['proposal_formatting_template'] = rs.data
         return data
-
-
-
