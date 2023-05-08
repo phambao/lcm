@@ -11,6 +11,7 @@ class ProposalTemplate(BaseModel):
     name = models.CharField(max_length=64)
     proposal_formatting = models.ForeignKey('ProposalFormatting', on_delete=models.CASCADE,
                                             related_name='proposal_formatting_template', null=True)
+    config = models.JSONField(default=dict)
 
 
 class ProposalElement(BaseModel):
@@ -63,3 +64,11 @@ class GroupByEstimate(BaseModel):
     order = models.IntegerField(default=0, blank=True, null=True)
     writing = models.ForeignKey('sales.ProposalWriting', null=True, blank=True,
                                 on_delete=models.CASCADE, related_name='writing_groups')
+
+
+# class ProposalTemplateConfig(BaseModel):
+#     class Meta:
+#         db_table = 'proposal_template_config'
+#     proposal_template = models.ForeignKey(ProposalTemplate, on_delete=models.CASCADE,
+#                                           related_name='config_proposal_template', null=True)
+#     config = models.JSONField(default=dict)
