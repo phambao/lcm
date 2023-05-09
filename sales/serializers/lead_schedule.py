@@ -5,6 +5,7 @@ import uuid
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.db.models import Subquery
+from django.db.models import F
 from rest_framework import serializers
 
 from api.serializers.auth import UserCustomSerializer
@@ -1132,6 +1133,22 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
         data_insert.is_valid(raise_exception=True)
         data_insert = dict(data_insert.validated_data)
 
+        data_custom_field = lead_schedule.CustomFieldScheduleSetting.objects.filter(
+            todo_setting=todo_setting,
+            display_order=data_insert['display_order']
+        )
+        if data_custom_field:
+            data_custom_fields = lead_schedule.CustomFieldScheduleSetting.objects.filter(
+                todo_setting=todo_setting,
+                display_order__gte=data_insert['display_order']
+            )
+            temp = data_insert['display_order']
+            for custom_field in data_custom_fields:
+                if custom_field.display_order == temp:
+                    custom_field.display_order += 1
+                    custom_field.save()
+                    temp += 1
+
         custom_field_create = lead_schedule.CustomFieldScheduleSetting.objects.create(
             todo_setting=todo_setting,
             user_create=user_create, user_update=user_update,
@@ -1169,6 +1186,21 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
         # data_update = data_serializers(data=data)
         # data_update.is_valid(raise_exception=True)
         # data_update = dict(data_update.validated_data)
+        data_custom_field = lead_schedule.CustomFieldScheduleSetting.objects.filter(
+            todo_setting=data['todo_setting'],
+            display_order=data['display_order']
+        )
+        if data_custom_field:
+            data_custom_fields = lead_schedule.CustomFieldScheduleSetting.objects.filter(
+                todo_setting=data['todo_setting'],
+                display_order__gte=data['display_order']
+            )
+            temp = data['display_order']
+            for custom_field in data_custom_fields:
+                if custom_field.display_order == temp:
+                    custom_field.display_order += 1
+                    custom_field.save()
+                    temp += 1
         data_update = data
         data_custom_field = lead_schedule.CustomFieldScheduleSetting.objects.filter(pk=instance.pk)
         data_custom_field.update(**data_update)
@@ -1241,7 +1273,21 @@ class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
         data_insert = data_serializers(data=validated_data)
         data_insert.is_valid(raise_exception=True)
         data_insert = dict(data_insert.validated_data)
-
+        data_custom_field = lead_schedule.CustomFieldScheduleDailyLogSetting.objects.filter(
+            daily_log_setting=daily_log_setting,
+            display_order=data_insert['display_order']
+        )
+        if data_custom_field:
+            data_custom_fields = lead_schedule.CustomFieldScheduleDailyLogSetting.objects.filter(
+                daily_log_setting=daily_log_setting,
+                display_order__gte=data_insert['display_order']
+            )
+            temp = data_insert['display_order']
+            for custom_field in data_custom_fields:
+                if custom_field.display_order == temp:
+                    custom_field.display_order += 1
+                    custom_field.save()
+                    temp += 1
         custom_field_create = lead_schedule.CustomFieldScheduleDailyLogSetting.objects.create(
             daily_log_setting=daily_log_setting,
             user_create=user_create, user_update=user_update,
@@ -1279,6 +1325,21 @@ class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
         # data_update = data_serializers(data=data)
         # data_update.is_valid(raise_exception=True)
         # data_update = dict(data_update.validated_data)
+        data_custom_field = lead_schedule.CustomFieldScheduleDailyLogSetting.objects.filter(
+            daily_log_setting=data['daily_log_setting'],
+            display_order=data['display_order']
+        )
+        if data_custom_field:
+            data_custom_fields = lead_schedule.CustomFieldScheduleDailyLogSetting.objects.filter(
+                daily_log_setting=data['daily_log_setting'],
+                display_order=data['display_order']
+            )
+            temp = data['display_order']
+            for custom_field in data_custom_fields:
+                if custom_field.display_order == temp:
+                    custom_field.display_order += 1
+                    custom_field.save()
+                    temp += 1
         data_update = data
         data_custom_field = lead_schedule.CustomFieldScheduleDailyLogSetting.objects.filter(pk=instance.pk)
         data_custom_field.update(**data_update)
