@@ -458,6 +458,9 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ESTIMATE_TEMPLATE_CONTENT_TYPE
+        original = data.get('original')
+        if not original:
+            data['original'] = instance.pk
         return data
 
 

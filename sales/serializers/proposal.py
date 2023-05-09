@@ -171,7 +171,7 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         estimate_templates = pop(validated_data, 'estimate_templates', [])
 
-        # instance.estimate_templates.delete()
+        instance.estimate_templates.all().update(price_comparison=None)
         self.create_estimate_template(estimate_templates, instance)
         activity_log(PriceComparison, instance, 2, PriceComparisonSerializer, {})
         return super().update(instance, validated_data)
