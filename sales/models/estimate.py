@@ -99,6 +99,7 @@ class EstimateTemplate(BaseModel):
     price_comparison = models.ForeignKey('sales.PriceComparison', on_delete=models.CASCADE,
                                          related_name='estimate_templates', null=True, blank=True)
     is_show = models.BooleanField(default=True, blank=True)
+    original = models.IntegerField(default=0, blank=True, null=True)
 
 
 class DataView(BaseModel):
