@@ -298,7 +298,7 @@ class AssembleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assemble
         fields = ('id', 'name', 'created_date', 'modified_date', 'user_create', 'user_update',
-                  'assemble_formulas', 'description')
+                  'assemble_formulas', 'description', 'is_show')
         extra_kwargs = extra_kwargs_for_base_model()
 
     def create_po_formula(self, po_formulas, instance):
@@ -396,7 +396,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
                         po['created_from'] = po['created_from'].pk
             serializer = AssembleSerializer(data=assemble, context=self.context)
             serializer.is_valid(raise_exception=True)
-            obj = serializer.save()
+            obj = serializer.save(is_show=False)
             pk_assembles.append(obj.pk)
         return pk_assembles
 
