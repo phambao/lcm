@@ -38,6 +38,7 @@ class ProposalWidget(BaseModel):
 
 class PriceComparison(BaseModel):
     name = models.CharField(max_length=128)
+    cost_different = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
 
 class ProposalWriting(BaseModel):
