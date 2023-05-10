@@ -81,6 +81,7 @@ class POFormulaGrouping(BaseModel):
 class Assemble(BaseModel):
     name = models.CharField(max_length=128)
     description = models.TextField(blank=True)
+    is_show = models.BooleanField(default=True, blank=True)
 
 
 class DescriptionLibrary(BaseModel):

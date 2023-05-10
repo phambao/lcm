@@ -88,7 +88,7 @@ class DescriptionLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AssembleList(generics.ListCreateAPIView):
-    queryset = Assemble.objects.filter(estimate_templates=None).order_by('-modified_date')
+    queryset = Assemble.objects.filter(estimate_templates=None, is_show=True).order_by('-modified_date').prefetch_related('assemble_formulas')
     serializer_class = AssembleSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
