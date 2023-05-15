@@ -8,6 +8,7 @@ from api.serializers.auth import UserCustomSerializer
 from api.serializers.base import SerializerMixin
 from base.serializers import base
 from base.utils import pop
+from .lead_schedule import ScheduleEventSerializer
 from ..models import lead_list
 
 
@@ -399,6 +400,14 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
             ld.salesperson.add(*sps)
         instance.refresh_from_db()
         return instance
+
+
+class LeadViewEventSerializer(serializers.ModelSerializer):
+    schedule_event_lead_list = ScheduleEventSerializer('lead_list', many=True, allow_null=True, required=False)
+
+    class Meta:
+        model = lead_list.LeadDetail
+        fields = ('id', 'lead_title', 'schedule_event_lead_list')
 
 
 class ProjectTypeSerializer(serializers.ModelSerializer):
