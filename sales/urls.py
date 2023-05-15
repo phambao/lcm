@@ -84,8 +84,6 @@ url_catalog = [
     path('list/materials/', catalog.get_materials),
     path('list/<int:pk>/copy-tree/', catalog.duplicate_catalogs_on_tree),
     path('list/delete/', catalog.delete_catalogs),
-    path('cost-tables/', catalog.CostTableList.as_view()),
-    path('cost-tables/<int:pk>/', catalog.CostTableDetail.as_view()),
     path('list/<int:pk_catalog>/levels/', catalog.CatalogLevelList.as_view()),
     path('list/<int:pk_catalog>/levels/<int:pk>/', catalog.CatalogLevelDetail.as_view()),
     path('list/<int:pk_catalog>/swap-level/', catalog.swap_level, name='swap-level'),

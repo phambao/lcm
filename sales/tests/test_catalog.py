@@ -21,7 +21,6 @@ class CatalogTests(BaseTest):
                 "name": f"Catalog {i}",
                 "parent": parent,
                 "sequence": 0,
-                "cost_table": None,
                 "icon": None,
                 "is_ancestor": False,
                 "level": None,

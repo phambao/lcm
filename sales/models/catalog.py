@@ -9,7 +9,7 @@ class DataPointUnit(BaseModel):
     name = models.CharField(max_length=128, unique=True)
 
 
-class CatalogLevel(models.Model):
+class CatalogLevel(BaseModel):
     class Meta:
         db_table = 'catalog_level'
 
@@ -51,18 +51,7 @@ class CatalogLevel(models.Model):
         return descendant
 
 
-class CostTable(models.Model):
-    class Meta:
-        db_table = 'cost_table'
-
-    name = models.CharField(max_length=128)
-    data = models.JSONField(default=dict)
-
-    def __str__(self):
-        return self.name
-
-
-class DataPoint(models.Model):
+class DataPoint(BaseModel):
     class Meta:
         db_table = 'data_point'
 
@@ -88,7 +77,6 @@ class Catalog(BaseModel):
     name = models.CharField(max_length=128)
     is_ancestor = models.BooleanField(default=False, blank=True)
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False)
-    cost_table = models.OneToOneField(CostTable, on_delete=models.CASCADE, null=True, blank=True)
     c_table = models.JSONField(default=dict, blank=True)
     icon = models.ImageField(upload_to='catalog/%Y/%m/%d/', blank=True)
     level = models.ForeignKey(CatalogLevel, on_delete=models.CASCADE, null=True,
@@ -117,7 +105,6 @@ class Catalog(BaseModel):
             'name': self.name,
             'is_ancestor': self.is_ancestor,
             'parents': self.parents.all().values_list('pk', flat=True),
-            'cost_table': self.cost_table,
             'icon': self.icon.url if self.icon else None,
             'level': self.level.id if self.level else None,
             'children': tree
