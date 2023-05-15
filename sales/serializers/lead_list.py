@@ -438,5 +438,3 @@ class SourceLeadSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.SourceLead
         fields = '__all__'
-
-
