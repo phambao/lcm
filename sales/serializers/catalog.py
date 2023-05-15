@@ -30,7 +30,7 @@ class CatalogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = catalog.Catalog
-        fields = ('id', 'name', 'parents', 'parent', 'sequence', 'cost_table', 'icon',
+        fields = ('id', 'name', 'parents', 'parent', 'sequence', 'icon',
                   'is_ancestor', 'level', 'data_points', 'level_index', 'c_table',
                   'created_date', 'modified_date', 'user_create', 'user_update'
                   )
@@ -96,12 +96,6 @@ class CatalogSerializer(serializers.ModelSerializer):
         data['data_points'] = DataPointSerializer(instance.data_points.all(), many=True).data
         data['children'] = catalog.Catalog.objects.filter(parents__id=instance.pk).values_list('pk', flat=True)
         return data
-
-
-class CostTableModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = catalog.CostTable
-        fields = ('id', 'name', 'data')
 
 
 class CatalogLevelModelSerializer(serializers.ModelSerializer, SerializerMixin):

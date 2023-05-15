@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from ..filters.catalog import CatalogFilter
 from ..models import DataEntry
-from ..models.catalog import Catalog, CostTable, CatalogLevel, DataPointUnit
+from ..models.catalog import Catalog, CatalogLevel, DataPointUnit
 from ..serializers import catalog
 from ..serializers.catalog import CatalogSerializer, CatalogEstimateSerializer
 
@@ -40,18 +40,6 @@ class CatalogDetail(generics.RetrieveUpdateDestroyAPIView):
                 parent_catalog.save()
 
         return super().delete(request, *args, **kwargs)
-
-
-class CostTableList(generics.ListCreateAPIView):
-    queryset = CostTable.objects.all()
-    serializer_class = catalog.CostTableModelSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class CostTableDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = CostTable.objects.all()
-    serializer_class = catalog.CostTableModelSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
 class CatalogLevelList(generics.ListCreateAPIView):
