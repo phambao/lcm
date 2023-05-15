@@ -4,10 +4,10 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from base.views.base import FileMessageTodoGenericView
-from sales.views import lead_list, catalog, lead_schedule, estimate
+from sales.views import lead_list, catalog, lead_schedule, estimate, proposal
 from api.views.upload_file import FileUploadView
 
-# Define Path for Contacts -----------------------------------------------------
+
 url_contacts = [
     path('contacts/', lead_list.ContactsViewSet.as_view()),
     path('contacts/<int:pk>/', lead_list.ContactsDetailViewSet.as_view()),
@@ -192,10 +192,12 @@ url_estimate = [
     path('po-formula/', estimate.POFormulaList.as_view()),
     path('po-formula/<int:pk>/', estimate.POFormulaDetail.as_view()),
     path('formula-grouping/', estimate.POFormulaGroupingList.as_view()),
+    path('formula-grouping-filter/', estimate.filter_group_fo_to_fo),
     path('formula-grouping/unlink/', estimate.unlink_group),
     path('formula-grouping/<int:pk>/', estimate.POFormulaGroupingDetail.as_view()),
     path('data-entry/', estimate.DataEntryList.as_view()),
     path('data-entry/<int:pk>/', estimate.DataEntryDetail.as_view()),
+    path('data-entry/<int:pk>/material/', estimate.get_material_by_data_entry),
     path('unit-library/', estimate.UnitLibraryList.as_view()),
     path('unit-library/<int:pk>/', estimate.UnitLibraryDetail.as_view()),
     path('description-library/', estimate.DescriptionLibraryList.as_view()),
@@ -209,12 +211,26 @@ url_estimate = [
     path('tag-formula/', estimate.get_tag_formula),
     path('tag-catalog/', estimate.get_tag_data_point),
 ]
+
+# URL Proposal
+url_proposal = [
+    path('template/', proposal.ProposalTemplateGenericView.as_view()),
+    path('template/<int:pk>/', proposal.ProposalTemplateDetailGenericView.as_view()),
+    path('price-comparison/', proposal.PriceComparisonList.as_view()),
+    path('price-comparison/<int:pk>/', proposal.PriceComparisonDetail.as_view()),
+    path('proposal-writing/', proposal.ProposalWritingList.as_view()),
+    path('proposal-writing/<int:pk>/', proposal.ProposalWritingDetail.as_view()),
+    path('formatting-template/', proposal.ProposalFormattingTemplateGenericView.as_view()),
+    path('formatting-template/<int:pk>/', proposal.ProposalFormattingTemplateDetailGenericView.as_view()),
+]
+
 # URL Config
 url_config = [
     path('options-lead-list/', lead_schedule.select_lead_list),
     path('file/', FileMessageTodoGenericView.as_view({
         "post": "create_file"})),
 ]
+
 # DEFINE PATH FOR SALES APP -----------------------------------------------------
 url_sales = [
     path('', include(url_config)),
@@ -224,6 +240,7 @@ url_sales = [
     path('catalog/', include(url_catalog)),
     path('schedule/', include(url_schedule)),
     path('estimate/', include(url_estimate)),
+    path('proposal/', include(url_proposal)),
 ]
 
 schema_view_sales = get_schema_view(
@@ -238,7 +255,8 @@ schema_view_sales = get_schema_view(
         path('api/sales/lead-list/', include(url_leads)),
         path('api/sales/catalog/', include(url_catalog)),
         path('api/sales/schedule/', include(url_schedule)),
-        path('api/sales/estimate/', include(url_estimate))
+        path('api/sales/estimate/', include(url_estimate)),
+        path('api/sales/proposal/', include(url_proposal))
     ],
     public=True,
     permission_classes=[permissions.AllowAny],

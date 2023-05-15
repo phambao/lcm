@@ -8,8 +8,10 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from ..filters.catalog import CatalogFilter
+from ..models import DataEntry
 from ..models.catalog import Catalog, CostTable, CatalogLevel, DataPointUnit
 from ..serializers import catalog
+from ..serializers.catalog import CatalogSerializer, CatalogEstimateSerializer
 
 
 class CatalogList(generics.ListCreateAPIView):
@@ -25,6 +27,19 @@ class CatalogDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Catalog.objects.all().prefetch_related('data_points', 'parents')
     serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        pk_catalog = kwargs.get('pk')
+        data_catalog = catalog.Catalog.objects.filter(id=pk_catalog).first()
+        c_table = data_catalog.c_table
+        parent_catalog = data_catalog.parents.first()
+        if parent_catalog:
+            children_catalog = catalog.Catalog.objects.filter(parents=parent_catalog.id).count()
+            if children_catalog <= 1:
+                parent_catalog.c_table = c_table
+                parent_catalog.save()
+
+        return super().delete(request, *args, **kwargs)
 
 
 class CostTableList(generics.ListCreateAPIView):
@@ -294,6 +309,26 @@ def swap_level(request, pk_catalog):
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+def parse_c_table(children):
+    data = []
+    for child in children:
+        try:
+            try:
+                ancestor = child.get_full_ancestor()
+                levels = [CatalogEstimateSerializer(c).data for c in ancestor[::-1]]
+            except:
+                levels = []
+            c_table = child.c_table
+            header = c_table['header']
+            for i, d in enumerate(c_table['data']):
+                content = {**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child.pk}:{i}'},
+                           'levels': levels}
+                data.append(content)
+        except:
+            """Some old data is not valid"""
+    return data
+
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_materials(request):
@@ -309,20 +344,5 @@ def get_materials(request):
     else:
         children = Catalog.objects.all()
     children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
-    data = []
-    for child in children:
-        try:
-            try:
-                ancestor = child.get_ancestors()[-1]
-                levels = [i.name for i in ancestor.parents.first().get_ordered_levels()]
-            except:
-                levels = []
-            c_table = child.c_table
-            header = c_table['header']
-            for i, d in enumerate(c_table['data']):
-                content = {**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child.pk}:{i}'},
-                           'levels': levels}
-                data.append(content)
-        except:
-            """Some old data is not valid"""
+    data = parse_c_table(children)
     return Response(status=status.HTTP_200_OK, data=data)

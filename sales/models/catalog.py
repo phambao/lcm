@@ -142,6 +142,14 @@ class Catalog(BaseModel):
             return []
         return ancester
 
+    def get_full_ancestor(self):
+        ancestor = self.get_ancestors()
+        first_ancestor = ancestor[-1]
+        ancestor.append(first_ancestor.parents.first())
+        first_ancestor = ancestor[-1]
+        ancestor.append(first_ancestor.parents.first())
+        return ancestor
+
     def get_ordered_levels(self):
         """
         Ancestor level will be the first and descendant will be the last
