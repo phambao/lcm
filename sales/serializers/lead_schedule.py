@@ -923,10 +923,11 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         links = lead_schedule.ScheduleEvent.objects.filter(predecessor=data['id']).values()
         message = MessageEventSerialized(instance.event_message.all(), many=True).data
         # message = lead_schedule.MessageEvent.objects.filter(event=data['id']).values()
-        shift = lead_schedule.ScheduleEventShift.objects.filter(event=data['id']).values()
+
+        # shift = lead_schedule.ScheduleEventShift.objects.filter(event=data['id']).values()
         data['links'] = links
         data['message'] = message
-        data['shift'] = shift
+        data['shift'] = ScheduleEventShiftSerializer(instance.shift_event.all(), many=True).data
         return data
 
     def get_data_update_by_group(self, pk, start_day_parent, end_day_parent):

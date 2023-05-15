@@ -424,7 +424,7 @@ class ToDoMessageCustomFieldGenericView(GenericViewSet):
 
 
 class ScheduleEventGenericView(generics.ListCreateAPIView):
-    queryset = ScheduleEvent.objects.all().prefetch_related('assigned_user', 'viewing', 'tags', 'event_message')
+    queryset = ScheduleEvent.objects.all().prefetch_related('assigned_user', 'viewing', 'tags', 'event_message', 'shift_event')
     serializer_class = lead_schedule.ScheduleEventSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)

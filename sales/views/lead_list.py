@@ -30,6 +30,15 @@ class LeadDetailList(generics.ListCreateAPIView):
     search_fields = ['lead_title', 'street_address', 'notes']
 
 
+class LeadEventList(generics.ListAPIView):
+    queryset = LeadDetail.objects.all().prefetch_related('schedule_event_lead_list')
+    serializer_class = lead_list.LeadViewEventSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = LeadDetailFilter
+    search_fields = ['lead_title', 'street_address', 'notes']
+
+
 class LeadDetailGeneric(generics.RetrieveUpdateDestroyAPIView):
     queryset = LeadDetail.objects.all()
     serializer_class = lead_list.LeadDetailCreateSerializer
