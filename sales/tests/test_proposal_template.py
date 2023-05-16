@@ -53,21 +53,6 @@ class ProposalTemplateTests(BaseTest):
             HTTP_AUTHORIZATION=self.token)
         self.proposal_formatting_template_id = proposal_formatting_template.data['id']
 
-    def test_update_proposal_formatting_template(self):
-        """Test delete proposal_formatting_template"""
-        res_delete = self.client.delete(
-            f'{self.api_url}/formatting-template/{self.proposal_formatting_template_id}/',
-            format='json',
-            HTTP_AUTHORIZATION=self.token)
-        self.assertEqual(res_delete.status_code, status.HTTP_204_NO_CONTENT)
-
-        # Check if proposal template is deleted
-        res_deleted = self.client.get(
-            f'{self.api_url}/formatting-template/',
-            format='json',
-            HTTP_AUTHORIZATION=self.token)
-        self.assertEqual(res_deleted.data['count'], 0)
-
     def test_delete_proposal_formatting_template(self):
         """Test delete proposal_formatting_template"""
         res_delete = self.client.delete(
