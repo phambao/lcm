@@ -103,6 +103,7 @@ class EstimateTemplate(BaseModel):
                                          related_name='estimate_templates', null=True, blank=True)
     is_show = models.BooleanField(default=True, blank=True)
     original = models.IntegerField(default=0, blank=True, null=True)
+    order = models.IntegerField(default=0, blank=True)
 
 
 class DataView(BaseModel):
