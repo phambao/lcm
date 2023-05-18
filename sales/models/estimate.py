@@ -47,6 +47,7 @@ class POFormula(BaseModel):
     formula_scenario = models.TextField(blank=True)
     material_data_entry = models.JSONField(blank=True, default=dict, null=True)
     formula_for_data_view = models.IntegerField(blank=True, default=0, null=True)  # Used for dataview in other model
+    original = models.IntegerField(default=0, blank=True, null=True)
 
     def parse_material(self):
         primary_key = eval(self.material)
@@ -84,6 +85,7 @@ class Assemble(BaseModel):
     name = models.CharField(max_length=128)
     description = models.TextField(blank=True)
     is_show = models.BooleanField(default=True, blank=True)
+    original = models.IntegerField(default=0, blank=True, null=True)
 
 
 class DescriptionLibrary(BaseModel):
