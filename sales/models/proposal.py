@@ -9,8 +9,17 @@ class ProposalTemplate(BaseModel):
         db_table = 'proposal_template'
 
     name = models.CharField(max_length=64)
-    proposal_formatting = models.ForeignKey('ProposalFormatting', on_delete=models.CASCADE,
-                                            related_name='proposal_formatting_template', null=True)
+    # proposal_formatting = models.ForeignKey('ProposalFormatting', on_delete=models.CASCADE,
+    #                                         related_name='proposal_formatting_template', null=True)
+    screen_shot = models.CharField(max_length=64, blank=True)
+
+
+class ProposalTemplateConfig(BaseModel):
+    class Meta:
+        db_table = 'proposal_template_config'
+
+    proposal_template = models.ForeignKey(ProposalTemplate, on_delete=models.CASCADE,
+                                          related_name='proposal_formatting_template_config', null=True)
     config = models.JSONField(default=dict)
 
 
@@ -55,9 +64,20 @@ class ProposalFormatting(BaseModel):
     class Meta:
         db_table = 'proposal_formatting'
 
+    screen_shot = models.CharField(max_length=64, blank=True)
     name = models.CharField(max_length=64)
     proposal_template = models.ForeignKey(ProposalTemplate, on_delete=models.CASCADE,
                                           related_name='proposal_template_formatting', null=True)
+
+
+class ProposalFormattingConfig(BaseModel):
+    class Meta:
+        db_table = 'proposal_formatting_config'
+
+    name = models.CharField(max_length=64)
+    proposal_formatting = models.ForeignKey(ProposalFormatting, on_delete=models.CASCADE,
+                                            related_name='config_proposal_formatting', null=True)
+    config = models.JSONField(default=dict)
 
 
 class GroupByEstimate(BaseModel):
