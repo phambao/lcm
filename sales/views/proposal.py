@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions, filters as rf_filters
 from django_filters import rest_framework as filters
 
-from sales.filters.proposal import PriceComparisonFilter
+from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, GroupByEstimate
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer
@@ -40,6 +40,9 @@ class ProposalWritingList(generics.ListCreateAPIView):
     queryset = ProposalWriting.objects.all()
     serializer_class = ProposalWritingSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = ProposalWritingFilter
+    search_fields = ('name',)
 
 
 class ProposalWritingDetail(generics.RetrieveUpdateDestroyAPIView):

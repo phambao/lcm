@@ -208,6 +208,9 @@ class POFormulaSerializer(serializers.ModelSerializer):
             data['catalog_link'] = []
 
         data['content_type'] = PO_FORMULA_CONTENT_TYPE
+        original = data.get('original')
+        if not original:
+            data['original'] = instance.pk
         return data
 
 
@@ -298,7 +301,7 @@ class AssembleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assemble
         fields = ('id', 'name', 'created_date', 'modified_date', 'user_create', 'user_update',
-                  'assemble_formulas', 'description', 'is_show')
+                  'assemble_formulas', 'description', 'is_show', 'original')
         extra_kwargs = extra_kwargs_for_base_model()
 
     def create_po_formula(self, po_formulas, instance):
@@ -337,6 +340,9 @@ class AssembleSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ASSEMBLE_CONTENT_TYPE
+        original = data.get('original')
+        if not original:
+            data['original'] = instance.pk
         return data
 
 

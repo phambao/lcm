@@ -37,7 +37,9 @@ class POFormula(BaseModel):
     charge = models.CharField(max_length=64, blank=True)
     material = models.TextField(blank=True)
     unit = models.CharField(max_length=32, blank=True)
+    unit_price = models.CharField(max_length=32, blank=True)
     cost = models.IntegerField(blank=True, default=0)
+    total_cost = models.IntegerField(blank=True, default=0)
     formula_mentions = models.CharField(blank=True, max_length=256)  # for FE
     formula_data_mentions = models.CharField(blank=True, max_length=256)  # for FE
     gross_profit = models.CharField(max_length=32, blank=True)
@@ -45,6 +47,7 @@ class POFormula(BaseModel):
     formula_scenario = models.TextField(blank=True)
     material_data_entry = models.JSONField(blank=True, default=dict, null=True)
     formula_for_data_view = models.IntegerField(blank=True, default=0, null=True)  # Used for dataview in other model
+    original = models.IntegerField(default=0, blank=True, null=True)
 
     def parse_material(self):
         primary_key = eval(self.material)
@@ -82,6 +85,7 @@ class Assemble(BaseModel):
     name = models.CharField(max_length=128)
     description = models.TextField(blank=True)
     is_show = models.BooleanField(default=True, blank=True)
+    original = models.IntegerField(default=0, blank=True, null=True)
 
 
 class DescriptionLibrary(BaseModel):
@@ -101,6 +105,7 @@ class EstimateTemplate(BaseModel):
                                          related_name='estimate_templates', null=True, blank=True)
     is_show = models.BooleanField(default=True, blank=True)
     original = models.IntegerField(default=0, blank=True, null=True)
+    order = models.IntegerField(default=0, blank=True)
 
 
 class DataView(BaseModel):
