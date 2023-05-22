@@ -213,13 +213,13 @@ url_estimate = [
 
 # URL Proposal
 url_proposal = [
-    path('template/', proposal.ProposalTemplateGenericView.as_view()),
+    path('template/', proposal.ProposalTemplateGenericView.as_view(), name='proposal'),
     path('template/<int:pk>/', proposal.ProposalTemplateDetailGenericView.as_view()),
     path('price-comparison/', proposal.PriceComparisonList.as_view()),
     path('price-comparison/<int:pk>/', proposal.PriceComparisonDetail.as_view()),
     path('proposal-writing/', proposal.ProposalWritingList.as_view()),
     path('proposal-writing/<int:pk>/', proposal.ProposalWritingDetail.as_view()),
-    path('formatting-template/', proposal.ProposalFormattingTemplateGenericView.as_view()),
+    path('formatting-template/', proposal.ProposalFormattingTemplateGenericView.as_view(), name='proposal-formatting'),
     path('formatting-template/<int:pk>/', proposal.ProposalFormattingTemplateDetailGenericView.as_view()),
 ]
 

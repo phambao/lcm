@@ -28,6 +28,13 @@ class LeadDetailList(generics.ListCreateAPIView):
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = LeadDetailFilter
     search_fields = ['lead_title', 'street_address', 'notes']
+    #
+
+    def get_queryset(self):
+        return LeadDetail.objects.filter(company=self.request.user.company).prefetch_related(
+                                                        'activities', 'contacts', 'contacts__phone_contacts',
+                                                        'project_types', 'salesperson', 'sources', 'tags',
+                                                        'photos',).select_related('city', 'state', 'country')
 
 
 class LeadEventList(generics.ListAPIView):

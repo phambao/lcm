@@ -53,7 +53,7 @@ class CompanySerializer(serializers.ModelSerializer):
         model = Company
         fields = ('id', 'logo', 'company_name', 'address', 'city', 'state', 'zip_code', 'tax', 'size',
                   'business_phone', 'cell_phone', 'fax', 'email', 'cell_mail', 'created_date', 'modified_date',
-                  'user_create', 'user_update')
+                  'user_create', 'user_update', 'currency')
 
     # def create(self, validated_data):
     #     request = self.context['request']

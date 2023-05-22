@@ -9,7 +9,7 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'last_name', 'first_name', 'image')
+        fields = ('id', 'email', 'username', 'last_name', 'first_name', 'image', 'company')
 
     def to_representation(self, instance):
         data = super(UserSerializer, self).to_representation(instance)
@@ -33,7 +33,7 @@ class UserCustomSerializer(serializers.Serializer):
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'password', 'first_name', 'last_name')
+        fields = ('id', 'email', 'username', 'password', 'first_name', 'last_name', 'company')
         extra_kwargs = {'password': {'write_only': True}, 'email': {'required': True}}
 
     def validate(self, data):

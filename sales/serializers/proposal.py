@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
-
+from django.urls import reverse
 from base.utils import pop, activity_log, extra_kwargs_for_base_model
 from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting, \
     ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig
@@ -112,7 +112,7 @@ class ProposalTemplateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if self.context['request'].path != '/api/sales/proposal/template/' or (self.context['request'].method != 'GET' and self.context['request'].path == '/api/sales/proposal/template/'):
+        if self.context['request'].path != reverse('proposal') or (self.context['request'].method != 'GET' and self.context['request'].path == reverse('proposal')):
             temp = instance.proposal_formatting_template_config.first()
             rs = ProposalTemplateConfigSerializer(temp)
             data['config_proposal_template'] = rs.data
@@ -306,8 +306,7 @@ class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if self.context['request'].path != '/api/sales/proposal/formatting-template/' or \
-                (self.context['request'].method != 'GET'and self.context['request'].path == '/api/sales/proposal/formatting-template/'):
+        if self.context['request'].path != reverse('proposal-formatting') or (self.context['request'].method != 'GET' and self.context['request'].path == reverse('proposal-formatting')):
             temp = instance.config_proposal_formatting.first()
             rs = ProposalFormattingTemplateConfigSerializer(temp)
             data['proposal_formatting_template_config'] = rs.data

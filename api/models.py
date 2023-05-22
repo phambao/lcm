@@ -12,6 +12,7 @@ class User(AbstractUser):
     code = models.IntegerField(blank=True, null=True)
     token = models.CharField(max_length=128, blank=True)
     image = models.CharField(max_length=128, blank=True, null=True)
+    company = models.ForeignKey('base.Company', on_delete=models.CASCADE, related_name='%(class)s_company', null=True, blank=True)
 
 
 class BaseModel(models.Model):
@@ -21,6 +22,7 @@ class BaseModel(models.Model):
                                     null=True, blank=True)
     user_update = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='%(class)s_user_update',
                                     null=True, blank=True)
+    company = models.ForeignKey('base.Company', on_delete=models.CASCADE, related_name='%(class)s_company', null=True, blank=True)
 
     class Meta:
         abstract = True
@@ -31,6 +33,7 @@ class BaseModel(models.Model):
         if self.pk:
             self.user_update = request.user
         else:
+            self.company = request.user.company
             self.user_create = request.user
         return super(BaseModel, self).save(force_insert=force_insert, force_update=force_update,
                                            using=using, update_fields=update_fields)
