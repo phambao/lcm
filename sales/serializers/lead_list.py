@@ -401,6 +401,12 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         instance.refresh_from_db()
         return instance
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data.get('currency'):
+            data['currency'] = 'USD'
+        return data
+
 
 class LeadViewEventSerializer(serializers.ModelSerializer):
     schedule_event_lead_list = ScheduleEventSerializer('lead_list', many=True, allow_null=True, required=False)

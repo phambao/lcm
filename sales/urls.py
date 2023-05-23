@@ -36,6 +36,7 @@ url_leads = [
     path('leads/<int:pk_lead>/contacts/<int:pk>/', lead_list.LeadContactDetailsViewSet.as_view()),
     path('leads/<int:pk_lead>/contacts/link/', lead_list.link_contacts_to_lead),
     path('leads/<int:pk_lead>/contacts/unlink/', lead_list.unlink_contact_from_lead),
+    path('leads/<int:pk_lead>/not-added-contact/', lead_list.LeadNoContactsViewSet.as_view()),
     # Activities
     path('leads/<int:pk_lead>/activities/',
          lead_list.LeadActivitiesViewSet.as_view()),
@@ -194,8 +195,8 @@ url_estimate = [
     path('formula-grouping-filter/', estimate.filter_group_fo_to_fo),
     path('formula-grouping/unlink/', estimate.unlink_group),
     path('formula-grouping/<int:pk>/', estimate.POFormulaGroupingDetail.as_view()),
-    path('data-entry/', estimate.DataEntryList.as_view()),
-    path('data-entry/<int:pk>/', estimate.DataEntryDetail.as_view()),
+    path('data-entry/', estimate.DataEntryList.as_view(), name='sales.estimate.data-entry'),
+    path('data-entry/<int:pk>/', estimate.DataEntryDetail.as_view(), name='sales.estimate.data-entry.detail'),
     path('data-entry/<int:pk>/material/', estimate.get_material_by_data_entry),
     path('unit-library/', estimate.UnitLibraryList.as_view()),
     path('unit-library/<int:pk>/', estimate.UnitLibraryDetail.as_view()),
