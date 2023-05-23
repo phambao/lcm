@@ -2,7 +2,8 @@ from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from knox import views as knox_views
 
-from api.views.auth import SignInAPI, SignUpAPI, MainUser, UserList, forgot_password, check_private_code, reset_password
+from api.views.auth import SignInAPI, SignUpAPI, MainUser, UserList, forgot_password, check_private_code, \
+    reset_password, SignUpUserCompanyAPI
 
 urlpatterns = [
     # For authenticate
@@ -11,6 +12,7 @@ urlpatterns = [
     path('logoutall/', knox_views.LogoutAllView.as_view(), name='knox_logoutall'),
     path('user/<int:pk>/', MainUser.as_view()),
     path('users', UserList.as_view()),
+    path('company/user/register', SignUpUserCompanyAPI.as_view()),
 
 
     # For password reset

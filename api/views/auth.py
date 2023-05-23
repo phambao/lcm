@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
 from base.tasks import celery_send_mail
+from ..models import CompanyBuilder
 from ..serializers.auth import UserSerializer, RegisterSerializer, LoginSerializer, User, \
     ForgotPasswordSerializer, CheckCodeSerializer, ChangePasswordSerializer
 
@@ -22,6 +23,30 @@ class SignUpAPI(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        token = AuthToken.objects.create(user)
+        return Response({
+            "users": UserSerializer(user, context=self.get_serializer_context()).data,
+            "token": token[1],
+            "message": "Register successfully"
+        })
+
+
+class SignUpUserCompanyAPI(generics.GenericAPIView):
+    serializer_class = RegisterSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = User.objects.create_user(username=request.data['username'],
+                                        email=request.data['email'],
+                                        password=request.data['password'])
+        data_company = CompanyBuilder.objects.get(pk=request.data['company'])
+        user.last_name = request.data['last_name']
+        user.first_name = request.data['first_name']
+        user.company = data_company
+        user.save()
+        # user = serializer.save()
         token = AuthToken.objects.create(user)
         return Response({
             "users": UserSerializer(user, context=self.get_serializer_context()).data,

@@ -1,7 +1,8 @@
 import re
 from rest_framework import serializers
 
-from ..models.config import Column, Search, Config, GridSetting, Company, Division
+from api.models import DivisionCompany, CompanyBuilder
+from ..models.config import Column, Search, Config, GridSetting
 from ..utils import pop
 
 from base.serializers import base
@@ -50,10 +51,10 @@ class GridSettingSerializer(serializers.ModelSerializer):
 class CompanySerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Company
+        model = CompanyBuilder
         fields = ('id', 'logo', 'company_name', 'address', 'city', 'state', 'zip_code', 'tax', 'size',
-                  'business_phone', 'cell_phone', 'fax', 'email', 'cell_mail', 'created_date', 'modified_date',
-                  'user_create', 'user_update')
+                  'business_phone', 'fax', 'email', 'cell_phone', 'cell_mail', 'created_date', 'modified_date',
+                  'user_create', 'user_update', 'currency')
 
     # def create(self, validated_data):
     #     request = self.context['request']
@@ -74,5 +75,5 @@ class CompanySerializer(serializers.ModelSerializer):
 
 class DivisionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Division
+        model = DivisionCompany
         fields = '__all__'
