@@ -21,8 +21,8 @@ class ProposalTemplateConfig(BaseModel):
     proposal_template = models.ForeignKey(ProposalTemplate, on_delete=models.CASCADE,
                                           related_name='proposal_formatting_template_config', null=True)
     config = models.JSONField(default=dict)
-    html_code = models.CharField(max_length=1000, blank=True)
-    css_code = models.CharField(max_length=1000, blank=True)
+    models.TextField(blank=True, null=True)
+    models.TextField(blank=True, null=True)
 
 
 class ProposalElement(BaseModel):
@@ -80,8 +80,8 @@ class ProposalFormattingConfig(BaseModel):
     proposal_formatting = models.ForeignKey(ProposalFormatting, on_delete=models.CASCADE,
                                             related_name='config_proposal_formatting', null=True)
     config = models.JSONField(default=dict)
-    html_code = models.CharField(max_length=1000, blank=True)
-    css_code = models.CharField(max_length=1000, blank=True)
+    html_code = models.TextField(blank=True, null=True)
+    css_code = models.TextField(blank=True, null=True)
 
 
 class GroupByEstimate(BaseModel):
