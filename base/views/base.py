@@ -12,12 +12,12 @@ from rest_framework.viewsets import GenericViewSet
 
 from api.serializers.base import ActivityLogSerializer
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter
-from ..models.config import Column, Search, Config, GridSetting, FileBuilder365, Company, Division
+from ..models.config import Column, Search, Config, GridSetting, FileBuilder365
 from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerializer, \
     FileBuilder365ResSerializer
 from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer, \
     CompanySerializer, DivisionSerializer
-from api.models import ActivityLog
+from api.models import ActivityLog, CompanyBuilder, DivisionCompany
 
 
 class ContentTypeList(generics.ListAPIView):
@@ -140,25 +140,25 @@ class GridSettingListView(generics.ListCreateAPIView):
 
 
 class CompanyListView(generics.ListCreateAPIView):
-    queryset = Company.objects.all()
+    queryset = CompanyBuilder.objects.all()
     serializer_class = CompanySerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
 class CompanyDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Company.objects.all()
+    queryset = CompanyBuilder.objects.all()
     serializer_class = CompanySerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
 class DivisionListView(generics.ListCreateAPIView):
-    queryset = Division.objects.all()
+    queryset = DivisionCompany.objects.all()
     serializer_class = DivisionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
 class DivisionDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Division.objects.all()
+    queryset = DivisionCompany.objects.all()
     serializer_class = DivisionSerializer
     permission_classes = [permissions.IsAuthenticated]
 

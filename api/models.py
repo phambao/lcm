@@ -12,7 +12,7 @@ class User(AbstractUser):
     code = models.IntegerField(blank=True, null=True)
     token = models.CharField(max_length=128, blank=True)
     image = models.CharField(max_length=128, blank=True, null=True)
-    company = models.ForeignKey('base.Company', on_delete=models.CASCADE, related_name='%(class)s_company', null=True, blank=True)
+    company = models.ForeignKey('api.CompanyBuilder', on_delete=models.CASCADE, related_name='%(class)s_company_builder', null=True, blank=True)
 
 
 class BaseModel(models.Model):
@@ -22,7 +22,7 @@ class BaseModel(models.Model):
                                     null=True, blank=True)
     user_update = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='%(class)s_user_update',
                                     null=True, blank=True)
-    company = models.ForeignKey('base.Company', on_delete=models.CASCADE, related_name='%(class)s_company', null=True, blank=True)
+    company = models.ForeignKey('api.CompanyBuilder', on_delete=models.CASCADE, related_name='%(class)s_company_builder', null=True, blank=True)
 
     class Meta:
         abstract = True
@@ -37,6 +37,42 @@ class BaseModel(models.Model):
             self.user_create = request.user
         return super(BaseModel, self).save(force_insert=force_insert, force_update=force_update,
                                            using=using, update_fields=update_fields)
+
+
+class CompanyBuilder(models.Model):
+    class Meta:
+        db_table = 'company_builder'
+
+    logo = models.CharField(blank=True, max_length=128)
+    company_name = models.CharField(blank=True, max_length=128)
+    address = models.CharField(blank=True, max_length=128)
+    city = models.ForeignKey('base.City', on_delete=models.SET_NULL,
+                             related_name='company_cities', null=True, blank=True)
+    state = models.ForeignKey('base.State', on_delete=models.SET_NULL,
+                              related_name='company_states', null=True, blank=True)
+    zip_code = models.CharField(verbose_name='Zip Code', max_length=6, blank=True)
+    size = models.IntegerField(null=True, blank=True)
+    tax = models.CharField(blank=True, max_length=128)
+    business_phone = models.CharField(blank=True, max_length=11)
+    fax = models.CharField(blank=True, max_length=11)
+    email = models.EmailField(blank=True, max_length=128)
+    cell_mail = models.CharField(blank=True, max_length=128)
+    cell_phone = models.CharField(blank=True, max_length=11)
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+    user_create = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='%(class)s_user_create',
+                                    null=True, blank=True)
+    user_update = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='%(class)s_user_update',
+                                    null=True, blank=True)
+    currency = models.CharField(blank=True, max_length=128)
+
+
+class DivisionCompany(models.Model):
+    class Meta:
+        db_table = 'division_company'
+
+    name = models.CharField(max_length=128)
+    company = models.ForeignKey(CompanyBuilder, on_delete=models.SET_NULL, related_name='division_company_builder', null=True, blank=True)
 
 
 class Action(models.IntegerChoices):

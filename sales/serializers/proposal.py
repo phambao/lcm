@@ -27,7 +27,7 @@ class ProposalElementSerializer(serializers.ModelSerializer):
 class ProposalTemplateConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProposalTemplateConfig
-        fields = ('id', 'config')
+        fields = ('id', 'config', 'html_code', 'css_code')
 
 
 class ProposalTemplateSerializer(serializers.ModelSerializer):
@@ -44,14 +44,20 @@ class ProposalTemplateSerializer(serializers.ModelSerializer):
         elements = pop(validated_data, 'proposal_template_element', [])
         config_proposal_template = pop(validated_data, 'config_proposal_template', dict())
         config = dict()
+        html_code = None
+        css_code = None
         if config_proposal_template != dict():
             config = config_proposal_template['config']
+            html_code = config_proposal_template['html_code']
+            css_code = config_proposal_template['css_code']
         proposal_template = ProposalTemplate.objects.create(
             **validated_data
         )
         ProposalTemplateConfig.objects.create(
             proposal_template=proposal_template,
-            config=config
+            config=config,
+            html_code=html_code,
+            css_code=css_code
         )
         data_create_widget = []
         for element in elements:
@@ -77,15 +83,19 @@ class ProposalTemplateSerializer(serializers.ModelSerializer):
         elements = pop(data, 'proposal_template_element', [])
         config_proposal_template = pop(data, 'config_proposal_template', dict())
         config = dict()
+        html_code = None
+        css_code = None
         if config_proposal_template != dict():
             config = config_proposal_template['config']
+            html_code = config_proposal_template['html_code']
+            css_code = config_proposal_template['css_code']
         proposal_template = ProposalTemplate.objects.filter(pk=instance.pk)
         proposal_template.update(**data)
         temp = proposal_template.first()
         proposal_template_config = ProposalTemplateConfig.objects.filter(
             proposal_template=temp
         )
-        proposal_template_config.update(config=config)
+        proposal_template_config.update(config=config, html_code=html_code, css_code=css_code)
 
         data_create_widget = []
         proposal_element = ProposalElement.objects.filter(proposal_template=proposal_template.first().id)
@@ -241,12 +251,12 @@ class ProposalWritingSerializer(serializers.ModelSerializer):
 class ProposalFormattingTemplateConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProposalFormattingConfig
-        fields = ('id', 'name', 'config')
+        fields = ('id', 'name', 'config', 'html_code', 'css_code')
 
 
 class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
     choose_update_template = serializers.BooleanField(required=False)
-    config_proposal_template = ProposalTemplateConfigSerializer('proposal_template', allow_null=True, required=False)
+    config_proposal_template = ProposalFormattingTemplateConfigSerializer('proposal_template', allow_null=True, required=False)
 
     class Meta:
         model = ProposalFormatting
@@ -265,35 +275,45 @@ class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         config_proposal_template = pop(validated_data, 'config_proposal_template', None)
         config = dict()
+        html_code = None
+        css_code = None
         if config_proposal_template != dict():
             config = config_proposal_template['config']
+            html_code = config_proposal_template['html_code']
+            css_code = config_proposal_template['css_code']
         proposal_template_id = validated_data['proposal_template']
         choose_update_template = pop(validated_data, 'choose_update_template', False)
         if choose_update_template is True:
             proposal_template_config_update = ProposalTemplateConfig.objects.filter(
                 proposal_template=proposal_template_id)
-            proposal_template_config_update.update(config=config)
+            proposal_template_config_update.update(config=config, html_code=html_code, css_code=css_code)
             proposal_template = ProposalTemplate.objects.filter(id=proposal_template_id.id)
             proposal_template.update(screen_shot=validated_data['screen_shot'])
 
         instance = super().create(validated_data)
         ProposalFormattingConfig.objects.create(
             proposal_formatting=instance,
-            config=config
+            config=config,
+            html_code=html_code,
+            css_code=css_code
         )
         return instance
 
     def update(self, instance, validated_data):
         config_proposal_template = pop(validated_data, 'config_proposal_template', None)
         config = dict()
+        html_code = None
+        css_code = None
         if config_proposal_template != dict():
             config = config_proposal_template['config']
+            html_code = config_proposal_template['html_code']
+            css_code = config_proposal_template['css_code']
         proposal_template_id = validated_data['proposal_template']
         choose_update_template = pop(validated_data, 'choose_update_template', False)
         if choose_update_template is True:
             proposal_template_config_update = ProposalTemplateConfig.objects.filter(
                 proposal_template=proposal_template_id)
-            proposal_template_config_update.update(config=config)
+            proposal_template_config_update.update(config=config, html_code=html_code, css_code=css_code)
             proposal_template = ProposalTemplate.objects.filter(id=proposal_template_id.id)
             proposal_template.update(screen_shot=validated_data['screen_shot'])
 
@@ -301,7 +321,7 @@ class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
         temp = ProposalFormattingConfig.objects.filter(
             proposal_formatting=instance,
         )
-        temp.update(config=config)
+        temp.update(config=config, html_code=html_code, css_code=css_code)
         return instance
 
     def to_representation(self, instance):

@@ -10,8 +10,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
-from base.models.config import Company
 from base.tasks import celery_send_mail
+from ..models import CompanyBuilder
 from ..serializers.auth import UserSerializer, RegisterSerializer, LoginSerializer, User, \
     ForgotPasswordSerializer, CheckCodeSerializer, ChangePasswordSerializer
 
@@ -41,7 +41,7 @@ class SignUpUserCompanyAPI(generics.GenericAPIView):
         user = User.objects.create_user(username=request.data['username'],
                                         email=request.data['email'],
                                         password=request.data['password'])
-        data_company = Company.objects.get(pk=request.data['company'])
+        data_company = CompanyBuilder.objects.get(pk=request.data['company'])
         user.last_name = request.data['last_name']
         user.first_name = request.data['first_name']
         user.company = data_company
