@@ -124,6 +124,17 @@ class ContactsViewSet(generics.ListCreateAPIView):
     filterset_class = ContactsFilter
 
 
+class LeadNoContactsViewSet(generics.ListAPIView):
+    queryset = Contact.objects.all()
+    serializer_class = lead_list.ContactsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = ContactsFilter
+
+    def get_queryset(self):
+        return Contact.objects.exclude(leads=self.kwargs['pk_lead']).distinct()
+
+
 class ContactsDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
     queryset = Contact.objects.all()
     serializer_class = lead_list.ContactsSerializer
