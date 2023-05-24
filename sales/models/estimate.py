@@ -103,6 +103,10 @@ class EstimateTemplate(BaseModel):
                                           related_name='estimate_templates', null=True, blank=True)
     price_comparison = models.ForeignKey('sales.PriceComparison', on_delete=models.CASCADE,
                                          related_name='estimate_templates', null=True, blank=True)
+    proposal_writing_add_on = models.ForeignKey('sales.ProposalWriting', on_delete=models.CASCADE,
+                                                related_name='add_ons', null=True, blank=True)
+    proposal_writing_additional_cost = models.ForeignKey('sales.ProposalWriting', on_delete=models.CASCADE,
+                                                         related_name='additional_cost', null=True, blank=True)
     is_show = models.BooleanField(default=True, blank=True)
     original = models.IntegerField(default=0, blank=True, null=True)
     order = models.IntegerField(default=0, blank=True)
