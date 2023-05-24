@@ -215,6 +215,8 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
 
 class ProposalWritingSerializer(serializers.ModelSerializer):
     writing_groups = GroupByEstimateSerializers('writing', many=True, allow_null=True, required=False)
+    add_ons = estimate.EstimateTemplateSerializer('proposal_writing_add_on', many=True, allow_null=True, required=False)
+    additional_cost = estimate.EstimateTemplateSerializer('proposal_writing_additional_cost', many=True, allow_null=True, required=False)
 
     class Meta:
         model = ProposalWriting
@@ -227,18 +229,39 @@ class ProposalWritingSerializer(serializers.ModelSerializer):
             serializer.is_valid(raise_exception=True)
             serializer.save(writing_id=instance.pk)
 
+    def create_add_ons(self, add_ons, instance):
+        for estimate_template in add_ons:
+            serializer = estimate.EstimateTemplateSerializer(data=estimate_template, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save(proposal_writing_add_on_id=instance.pk, is_show=False)
+
+    def create_additional_cost(self, additional_cost, instance):
+        for estimate_template in additional_cost:
+            serializer = estimate.EstimateTemplateSerializer(data=estimate_template, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save(proposal_writing_additional_cost_id=instance.pk, is_show=False)
+
     def create(self, validated_data):
         writing_groups = pop(validated_data, 'writing_groups', [])
+        add_ons = pop(validated_data, 'add_ons', [])
+        additional_cost = pop(validated_data, 'additional_cost', [])
         instance = super().create(validated_data)
         self.create_group(writing_groups, instance)
+        self.create_add_ons(add_ons, instance)
+        self.create_additional_cost(additional_cost, instance)
         activity_log(ProposalWriting, instance, 1, ProposalWritingSerializer, {})
         return instance
 
     def update(self, instance, validated_data):
         writing_groups = pop(validated_data, 'writing_groups', [])
-
+        add_ons = pop(validated_data, 'add_ons', [])
+        additional_cost = pop(validated_data, 'additional_cost', [])
         instance.writing_groups.all().update(writing=None)
+        instance.add_ons.all().update(proposal_writing_add_on=None)
+        instance.additional_cost.all().update(proposal_writing_additional_cost=None)
         self.create_group(writing_groups, instance)
+        self.create_add_ons(add_ons, instance)
+        self.create_additional_cost(additional_cost, instance)
         activity_log(ProposalWriting, instance, 2, ProposalWritingSerializer, {})
         return super().update(instance, validated_data)
 
