@@ -301,19 +301,16 @@ def parse_c_table(children):
     data = []
     for child in children:
         try:
-            try:
-                ancestor = child.get_full_ancestor()
-                levels = [CatalogEstimateSerializer(c).data for c in ancestor[::-1]]
-            except:
-                levels = []
-            c_table = child.c_table
-            header = c_table['header']
-            for i, d in enumerate(c_table['data']):
-                content = {**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child.pk}:{i}'},
-                           'levels': levels}
-                data.append(content)
+            ancestor = child.get_full_ancestor()
+            levels = [CatalogEstimateSerializer(c).data for c in ancestor[::-1]]
         except:
-            """Some old data is not valid"""
+            levels = []
+        c_table = child.c_table
+        header = c_table['header']
+        for i, d in enumerate(c_table['data']):
+            content = {**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child.pk}:{i}'},
+                       'levels': levels}
+            data.append(content)
     return data
 
 
