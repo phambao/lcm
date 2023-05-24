@@ -86,13 +86,15 @@ class Catalog(BaseModel):
     def __str__(self):
         return self.name
 
-    def get_all_descendant(self):
+    def get_all_descendant(self, have_self=False):
         """Get all descendant of this catalog. Return a list of id"""
         descendants = []
+        if have_self:
+            descendants = [self.pk]
         catalogs = Catalog.objects.filter(parents__id=self.pk)
         for c in catalogs:
             descendants.append(c.pk)
-            descendants.extend(c.get_all_descendant())
+            descendants.extend(c.get_all_descendant(have_self=have_self))
         return descendants
 
     def get_tree_view(self):

@@ -243,7 +243,7 @@ def get_material_by_data_entry(request, pk):
     categories = de.material_selections.all()
     children = Catalog.objects.none()
     for category in categories:
-        children |= Catalog.objects.filter(pk__in=category.get_all_descendant())
+        children |= Catalog.objects.filter(pk__in=category.get_all_descendant(have_self=True))
     children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
     data = parse_c_table(children)
     return Response(status=status.HTTP_200_OK, data=data)
