@@ -163,6 +163,12 @@ class DivisionDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
+class CompanyFilterMixin:
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.filter(company=self.request.user.company)
+        return queryset
+
 @api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated])
 def config_view(request, model):

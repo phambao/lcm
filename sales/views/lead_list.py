@@ -9,6 +9,7 @@ from rest_framework import status, filters as rf_filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
+from base.views.base import CompanyFilterMixin
 from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, Photos, ContactTypeName, \
     ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead
@@ -16,13 +17,6 @@ from ..serializers import lead_list
 from ..serializers.lead_list import PhotoSerializer
 
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
-
-
-class CompanyFilterMixin:
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        queryset = queryset.filter(company=self.request.user.company)
-        return queryset
 
 
 class LeadDetailList(CompanyFilterMixin, generics.ListCreateAPIView):
