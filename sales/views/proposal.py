@@ -22,7 +22,7 @@ class ProposalTemplateDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class PriceComparisonList(generics.ListCreateAPIView):
-    queryset = PriceComparison.objects.all()
+    queryset = PriceComparison.objects.all().order_by('-modified_date').prefetch_related('estimate_templates')
     serializer_class = PriceComparisonSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -37,7 +37,7 @@ class PriceComparisonDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ProposalWritingList(generics.ListCreateAPIView):
-    queryset = ProposalWriting.objects.all()
+    queryset = ProposalWriting.objects.all().order_by('-modified_date').prefetch_related('add_ons', 'additional_cost', 'writing_groups')
     serializer_class = ProposalWritingSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
