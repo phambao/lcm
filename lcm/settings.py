@@ -180,10 +180,12 @@ USE_L10N = True
 
 USE_TZ = True
 
+STATIC_ROOT = '/static'
+
 USE_CLOUD_STORAGE = config('USE_CLOUD_STORAGE', default=False)
 if USE_CLOUD_STORAGE:
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
+    DEFAULT_FILE_STORAGE = config('DEFAULT_FILE_STORAGE', default='django.core.files.storage.FileSystemStorage')
+    STATICFILES_STORAGE = config('STATICFILES_STORAGE', default='django.contrib.staticfiles.storage.StaticFilesStorage')
     AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='')
     AWS_S3_ENDPOINT_URL = config('AWS_S3_ENDPOINT_URL', default='')
     AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default='')
