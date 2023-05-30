@@ -37,7 +37,7 @@ class PriceComparisonDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ProposalWritingList(generics.ListCreateAPIView):
-    queryset = ProposalWriting.objects.all().order_by('-modified_date').prefetch_related('add_ons', 'additional_cost', 'writing_groups')
+    queryset = ProposalWriting.objects.all().order_by('-modified_date').prefetch_related('writing_groups')
     serializer_class = ProposalWritingSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
