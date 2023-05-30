@@ -100,11 +100,18 @@ class ProposalFormattingConfig(BaseModel):
 
 
 class GroupByEstimate(BaseModel):
+
+    class Type(models.IntegerChoices):
+        GENERAL = 0, 'General'
+        ADD_ON = 1, 'Add-on'
+        ADDITIONAL_COST = 2, 'Additional-cost'
+
     name = models.CharField(max_length=128)
     order = models.IntegerField(default=0, blank=True, null=True)
     writing = models.ForeignKey('sales.ProposalWriting', null=True, blank=True,
                                 on_delete=models.CASCADE, related_name='writing_groups')
     open_index = models.CharField(max_length=64, blank=True, default='')
+    type = models.IntegerField(default=Type.GENERAL, blank=True, choices=Type.choices)
 
 
 # class ProposalTemplateConfig(BaseModel):

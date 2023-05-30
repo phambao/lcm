@@ -384,12 +384,6 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
         price_comparison = data.get('price_comparison')
         if isinstance(price_comparison, int):
             data['price_comparison'] = PriceComparison.objects.get(pk=price_comparison)
-        proposal_writing_add_on = data.get('proposal_writing_add_on')
-        if isinstance(proposal_writing_add_on, int):
-            data['proposal_writing_add_on'] = ProposalWriting.objects.get(pk=proposal_writing_add_on)
-        proposal_writing_additional_cost = data.get('proposal_writing_additional_cost')
-        if isinstance(proposal_writing_additional_cost, int):
-            data['proposal_writing_additional_cost'] = ProposalWriting.objects.get(pk=proposal_writing_additional_cost)
         return data
 
     def create_assembles(self, assembles):
@@ -467,12 +461,6 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
                 group_by_proposal = data.get('group_by_proposal')
                 if isinstance(group_by_proposal, proposal.GroupByEstimate):
                     data['group_by_proposal'] = group_by_proposal.pk
-                proposal_writing_add_on = data.get('proposal_writing_add_on')
-                if isinstance(proposal_writing_add_on, proposal.ProposalWriting):
-                    data['proposal_writing_add_on'] = proposal_writing_add_on.pk
-                proposal_writing_additional_cost = data.get('proposal_writing_additional_cost')
-                if isinstance(proposal_writing_additional_cost, proposal.ProposalWriting):
-                    data['proposal_writing_additional_cost'] = proposal_writing_additional_cost.pk
         return data
 
     def to_representation(self, instance):
