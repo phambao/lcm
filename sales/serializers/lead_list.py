@@ -7,7 +7,7 @@ from rest_framework import serializers
 from api.serializers.auth import UserCustomSerializer
 from api.serializers.base import SerializerMixin
 from base.serializers import base
-from base.utils import pop
+from base.utils import pop, extra_kwargs_for_base_model
 from .lead_schedule import ScheduleEventSerializer
 from ..models import lead_list
 
@@ -39,6 +39,7 @@ class ContactTypeNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.ContactTypeName
         fields = '__all__'
+        extra_kwargs = extra_kwargs_for_base_model()
 
 
 class ContactTypesSerializer(serializers.ModelSerializer):
@@ -65,7 +66,7 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         fields = ('id', 'first_name', 'last_name', 'gender', 'lead_id',
                   'email', 'phone_contacts', 'contact_types',
                   'street', 'city', 'state', 'zip_code', 'country', 'user_create')
-        extra_kwargs = {'street': {'required': False}}
+        extra_kwargs = {**{'street': {'required': False}}, **extra_kwargs_for_base_model()}
 
     def create(self, validated_data):
         validated_data['user_create'] = self.context['request'].user
@@ -224,12 +225,14 @@ class LeadDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.LeadDetail
         fields = '__all__'
+        extra_kwargs = extra_kwargs_for_base_model()
 
 
 class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.Photos
         fields = ('id', 'photo')
+        extra_kwargs = extra_kwargs_for_base_model()
 
     def validate(self, validated_data):
         pk_lead = self.context['request'].__dict__[
@@ -267,8 +270,9 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
         model = lead_list.LeadDetail
         fields = '__all__'
-        extra_kwargs = {'street_address': {'required': False},
-                        'zip_code': {'required': False}}
+        extra_kwargs = {**{'street_address': {'required': False},
+                        'zip_code': {'required': False}},
+                        **extra_kwargs_for_base_model()}
 
     def create(self, validated_data):
         request = self.context['request']
@@ -420,12 +424,14 @@ class ProjectTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.ProjectType
         fields = '__all__'
+        extra_kwargs = extra_kwargs_for_base_model()
 
 
 class TagLeadSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.TagLead
         fields = '__all__'
+        extra_kwargs = extra_kwargs_for_base_model()
 
 
 class TagActivitySerializer(serializers.ModelSerializer):
@@ -444,3 +450,4 @@ class SourceLeadSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.SourceLead
         fields = '__all__'
+        extra_kwargs = extra_kwargs_for_base_model()
