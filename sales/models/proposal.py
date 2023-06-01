@@ -54,6 +54,7 @@ class PriceComparison(BaseModel):
 
 class ProposalWriting(BaseModel):
     name = models.CharField(max_length=128)
+    budget = models.IntegerField(blank=True, default=0)
     total_project_price = models.IntegerField(blank=True, default=0, null=True)
     total_project_cost = models.IntegerField(blank=True, default=0, null=True)
     gross_profit = models.IntegerField(blank=True, default=0, null=True)
