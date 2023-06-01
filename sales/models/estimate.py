@@ -30,7 +30,7 @@ class POFormula(BaseModel):
     formula = models.TextField()
     group = models.ForeignKey('sales.POFormulaGrouping', blank=True, related_name='group_formulas', null=True, on_delete=models.SET_NULL)
     assemble = models.ForeignKey('sales.Assemble', blank=True, related_name='assemble_formulas', null=True, on_delete=models.SET_NULL)
-    created_from = models.ForeignKey('self', related_name='clones', null=True, blank=True, on_delete=models.SET_NULL)
+    created_from = models.IntegerField(default=None, blank=True, null=True)
     is_show = models.BooleanField(default=True, blank=True)  # Only show formula page
     quantity = models.CharField(max_length=64, blank=True)
     markup = models.CharField(max_length=64, blank=True)
