@@ -136,7 +136,7 @@ class GroupByEstimateSerializers(serializers.ModelSerializer):
     class Meta:
         model = GroupByEstimate
         fields = '__all__'
-        extra_kwargs = extra_kwargs_for_base_model()
+        extra_kwargs = {**extra_kwargs_for_base_model(), **{'writing': {'read_only': True}}}
 
     def create_estimate_template(self, estimate_templates, instance):
         for estimate_template in estimate_templates:
