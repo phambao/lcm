@@ -7,6 +7,7 @@ from django.contrib import admin, messages
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.timesince import timesince
+from django.db import models
 
 from api.models import CompanyBuilder, User
 
