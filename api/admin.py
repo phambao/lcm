@@ -2,11 +2,11 @@
 from django.template.loader import render_to_string
 from django.contrib import admin, messages
 from django.core.mail import send_mail
-from api.models import CompanyBuilder, User
-import random
-import string
 from django.conf import settings
 from django.utils.timesince import timesince
+import random
+import string
+from api.models import CompanyBuilder, User
 
 
 class CompanyAdmin(admin.ModelAdmin):
