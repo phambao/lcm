@@ -372,7 +372,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = EstimateTemplate
         fields = '__all__'
-        extra_kwargs = extra_kwargs_for_base_model()
+        extra_kwargs = {**{'id': {'read_only': False, 'required': False}}, **extra_kwargs_for_base_model()}
 
     def reparse(self, data):
         # Serializer is auto convert pk to model, But when reuse serializer in others, it is required to have int field.
@@ -417,6 +417,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
         assembles = pop(validated_data, 'assembles', [])
         data_views = pop(validated_data, 'data_views', [])
         data_entries = pop(validated_data, 'data_entries', [])
+        pk = pop(validated_data, 'id', None)
 
         pk_assembles = self.create_assembles(assembles)
         validated_data = self.reparse(validated_data)
@@ -431,6 +432,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
         assembles = pop(validated_data, 'assembles', [])
         data_views = pop(validated_data, 'data_views', [])
         data_entries = pop(validated_data, 'data_entries', [])
+        pk = pop(validated_data, 'id', None)
 
         instance.data_entries.all().delete()
         create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk)

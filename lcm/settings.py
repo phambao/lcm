@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'knox',
     'base.apps.BaseConfig',
     'api.apps.ApiConfig',
-    'sales.apps.SalesConfig'
+    'sales.apps.SalesConfig',
 ]
 
 MIDDLEWARE = [
@@ -180,6 +180,17 @@ USE_L10N = True
 
 USE_TZ = True
 
+STATIC_ROOT = '/static'
+
+USE_CLOUD_STORAGE = config('USE_CLOUD_STORAGE', default=False)
+if USE_CLOUD_STORAGE:
+    DEFAULT_FILE_STORAGE = config('DEFAULT_FILE_STORAGE', default='django.core.files.storage.FileSystemStorage')
+    STATICFILES_STORAGE = config('STATICFILES_STORAGE', default='django.contrib.staticfiles.storage.StaticFilesStorage')
+    AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='')
+    AWS_S3_ENDPOINT_URL = config('AWS_S3_ENDPOINT_URL', default='')
+    AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default='')
+    AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default='')
+    AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default='')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/

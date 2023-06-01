@@ -59,6 +59,21 @@ class ProposalWriting(BaseModel):
     gross_profit = models.IntegerField(blank=True, default=0, null=True)
     gross_profit_percent = models.IntegerField(blank=True, default=0, null=True)
     avg_markup = models.IntegerField(blank=True, default=0, null=True)
+    cost_breakdown = models.JSONField(blank=True, null=True, default=dict)
+
+    add_on_total_project_price = models.IntegerField(blank=True, default=0, null=True)
+    add_on_total_project_cost = models.IntegerField(blank=True, default=0, null=True)
+    add_on_gross_profit = models.IntegerField(blank=True, default=0, null=True)
+    add_on_gross_profit_percent = models.IntegerField(blank=True, default=0, null=True)
+    add_on_avg_markup = models.IntegerField(blank=True, default=0, null=True)
+    add_on_cost_breakdown = models.JSONField(blank=True, null=True, default=dict)
+
+    additional_cost_total_project_price = models.IntegerField(blank=True, default=0, null=True)
+    additional_cost_total_project_cost = models.IntegerField(blank=True, default=0, null=True)
+    additional_cost_gross_profit = models.IntegerField(blank=True, default=0, null=True)
+    additional_cost_gross_profit_percent = models.IntegerField(blank=True, default=0, null=True)
+    additional_cost_avg_markup = models.IntegerField(blank=True, default=0, null=True)
+    additional_cost_breakdown = models.JSONField(blank=True, null=True, default=dict)
     costs = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
 
@@ -85,11 +100,18 @@ class ProposalFormattingConfig(BaseModel):
 
 
 class GroupByEstimate(BaseModel):
+
+    class Type(models.IntegerChoices):
+        GENERAL = 0, 'General'
+        ADD_ON = 1, 'Add-on'
+        ADDITIONAL_COST = 2, 'Additional-cost'
+
     name = models.CharField(max_length=128)
     order = models.IntegerField(default=0, blank=True, null=True)
     writing = models.ForeignKey('sales.ProposalWriting', null=True, blank=True,
                                 on_delete=models.CASCADE, related_name='writing_groups')
     open_index = models.CharField(max_length=64, blank=True, default='')
+    type = models.IntegerField(default=Type.GENERAL, blank=True, choices=Type.choices)
 
 
 # class ProposalTemplateConfig(BaseModel):

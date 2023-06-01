@@ -54,9 +54,12 @@ class CatalogSerializer(serializers.ModelSerializer):
                 raise ValidationError({'name': 'Name has been exist.'})
             validated_data['parents'] = [parent]
             data_catalog_parent = catalog.Catalog.objects.filter(id=parent).first()
-            validated_data['c_table'] = data_catalog_parent.c_table
-            data_catalog_parent.c_table = dict()
-            data_catalog_parent.save()
+
+            # in case category no parent
+            if data_catalog_parent:
+                validated_data['c_table'] = data_catalog_parent.c_table
+                data_catalog_parent.c_table = dict()
+                data_catalog_parent.save()
         instance = super().create(validated_data)
         instance.user_create = self.context['request'].user
         instance.created_date = timezone.now()

@@ -136,7 +136,7 @@ class GroupByEstimateSerializers(serializers.ModelSerializer):
     class Meta:
         model = GroupByEstimate
         fields = '__all__'
-        extra_kwargs = extra_kwargs_for_base_model()
+        extra_kwargs = {**extra_kwargs_for_base_model(), **{'writing': {'read_only': True}}}
 
     def create_estimate_template(self, estimate_templates, instance):
         for estimate_template in estimate_templates:
@@ -187,15 +187,31 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
         extra_kwargs = extra_kwargs_for_base_model()
 
     def create_estimate_template(self, estimate_templates, instance):
+        new_id = {}
         for estimate_template in estimate_templates:
             serializer = estimate.EstimateTemplateSerializer(data=estimate_template, context=self.context)
             serializer.is_valid(raise_exception=True)
             obj = serializer.save(price_comparison_id=instance.pk, is_show=False)
+            new_id[estimate_template['id']] = obj.pk
+        return new_id
+
+    def parse_cost_diff(self, cost_different, new_ids):
+        different_cost = []
+        for c in cost_different:
+            try:
+                c.update({'first_id': new_ids[c['first_id']], 'second_id': new_ids[c['second_id']]})
+            except KeyError:
+                """It update more than one time so we catch the second time"""
+            different_cost.append(c)
+        return different_cost
 
     def create(self, validated_data):
         estimate_templates = pop(validated_data, 'estimate_templates', [])
         instance = super().create(validated_data)
-        self.create_estimate_template(estimate_templates, instance)
+        new_ids = self.create_estimate_template(estimate_templates, instance)
+        cost_different = pop(validated_data, 'cost_different', [])
+        instance.cost_different = self.parse_cost_diff(cost_different, new_ids)
+        instance.save(update_fields=['cost_different'])
         activity_log(PriceComparison, instance, 1, PriceComparisonSerializer, {})
         return instance
 
@@ -203,7 +219,10 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
         estimate_templates = pop(validated_data, 'estimate_templates', [])
 
         instance.estimate_templates.all().update(price_comparison=None)
-        self.create_estimate_template(estimate_templates, instance)
+        new_ids = self.create_estimate_template(estimate_templates, instance)
+        cost_different = pop(validated_data, 'cost_different', [])
+        instance.cost_different = self.parse_cost_diff(cost_different, new_ids)
+        instance.save(update_fields=['cost_different'])
         activity_log(PriceComparison, instance, 2, PriceComparisonSerializer, {})
         return super().update(instance, validated_data)
 
@@ -236,7 +255,6 @@ class ProposalWritingSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         writing_groups = pop(validated_data, 'writing_groups', [])
-
         instance.writing_groups.all().update(writing=None)
         self.create_group(writing_groups, instance)
         activity_log(ProposalWriting, instance, 2, ProposalWritingSerializer, {})
