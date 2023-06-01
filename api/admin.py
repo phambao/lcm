@@ -7,15 +7,22 @@ from django.contrib import admin, messages
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.timesince import timesince
-from django.db import models
 
 from api.models import CompanyBuilder, User
+
+
+class UserInline(admin.TabularInline):
+
+    model = User
+    extra = 0
+    fields = ["username", "password", "first_name", "last_name", "email", "is_active"]
 
 
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ["company_name", "logo", "business_phone", "size"]
     fields = ["company_name", "logo", "business_phone", "size"]
     list_filter = ["company_name"]
+    inlines = [UserInline]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -26,13 +33,12 @@ class CompanyAdmin(admin.ModelAdmin):
         return obj.user_set.count()
 
     user_count.short_description = "User Count"
-
-    def get_inline_instances(self, request, obj=None):
-        # Thêm inline của User vào trang chi tiết CompanyBuilder
-        inline_instances = super().get_inline_instances(request, obj)
-        if obj:
-            inline_instances.append(UserInline(self.model, self.admin_site))
-        return inline_instances
+    # def get_inline_instances(self, request, obj=None):
+    #     # Thêm inline của User vào trang chi tiết CompanyBuilder
+    #     inline_instances = super().get_inline_instances(request, obj)
+    #     if obj:
+    #         inline_instances.append(UserInline(self.model, self.admin_site))
+    #     return inline_instances
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -74,13 +80,6 @@ class UserAdmin(admin.ModelAdmin):
         return None
 
     display_last_login.short_description = "Last Login"
-
-
-class UserInline(admin.TabularInline):
-    model = User
-    extra = 0
-    fields = ["username", "password", "first_name", "last_name", "email", "is_active"]
-    readonly_fields = ["username", "password", "first_name", "last_name", "email", "is_active"]
 
 
 admin.site.register(User, UserAdmin)
