@@ -14,6 +14,9 @@ class User(AbstractUser):
     image = models.CharField(max_length=128, blank=True, null=True)
     company = models.ForeignKey('api.CompanyBuilder', on_delete=models.CASCADE, related_name='%(class)s_company_builder', null=True, blank=True)
 
+    def __str__(self):
+        return self.email
+
 
 class BaseModel(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
@@ -65,6 +68,9 @@ class CompanyBuilder(models.Model):
     user_update = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='%(class)s_user_update',
                                     null=True, blank=True)
     currency = models.CharField(blank=True, max_length=128)
+
+    def __str__(self):
+        return self.company_name
 
 
 class DivisionCompany(models.Model):
