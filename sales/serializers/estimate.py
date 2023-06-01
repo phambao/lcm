@@ -126,9 +126,6 @@ class POFormulaSerializer(serializers.ModelSerializer):
     def reparse(self, data):
         # Serializer is auto convert pk to model, But when reuse serializer in others, it is required to have int field.
         # So we reparse this case
-        created_from = data.get('created_from')
-        if isinstance(created_from, int):
-            data['created_from'] = POFormula.objects.get(pk=created_from)
         assemble = data.get('assemble')
         if isinstance(assemble, int):
             data['assemble'] = Assemble.objects.get(pk=assemble)
@@ -160,9 +157,6 @@ class POFormulaSerializer(serializers.ModelSerializer):
             views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
                      proposal.ProposalWritingList, proposal.ProposalWritingDetail]
             if any([isinstance(self.context['view'], view) for view in views]):
-                created_from = data.get('created_from')
-                if isinstance(created_from, POFormula):
-                    data['created_from'] = created_from.pk
                 assemble = data.get('assemble')
                 if isinstance(assemble, Assemble):
                     data['assemble'] = assemble.pk
@@ -309,10 +303,7 @@ class AssembleSerializer(serializers.ModelSerializer):
             po_formula['assemble'] = instance.pk
             po_formula['is_show'] = False
             created_from = po_formula.get('created_from')
-            if created_from:
-                if isinstance(po_formula['created_from'], POFormula):
-                    po_formula['created_from'] = created_from.pk
-            else:
+            if not created_from:
                 po_formula['created_from'] = po_formula['id']
             from sales.views.estimate import EstimateTemplateList
             if self.context.get('request').method == 'POST' and isinstance(self.context.get('view'), EstimateTemplateList):
@@ -397,9 +388,6 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
                 if po.get('group'):
                     if isinstance(po['group'], POFormulaGrouping):
                         po['group'] = po['group'].pk
-                if po.get('created_from'):
-                    if isinstance(po['created_from'], POFormula):
-                        po['created_from'] = po['created_from'].pk
             serializer = AssembleSerializer(data=assemble, context=self.context)
             serializer.is_valid(raise_exception=True)
             obj = serializer.save(is_show=False)
