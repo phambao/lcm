@@ -7,7 +7,6 @@ from django.contrib import admin, messages
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.timesince import timesince
-from django.db import models
 
 from api.models import CompanyBuilder, User
 
@@ -17,7 +16,6 @@ class UserInline(admin.TabularInline):
     model = User
     extra = 0
     fields = ["username", "password", "first_name", "last_name", "email", "is_active"]
-    # readonly_fields = ["username", "password", "first_name", "last_name", "email", "is_active"]
 
 
 class CompanyAdmin(admin.ModelAdmin):
