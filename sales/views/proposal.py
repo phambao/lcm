@@ -4,7 +4,8 @@ from django_filters import rest_framework as filters
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, GroupByEstimate
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
-    ProposalFormattingTemplateSerializer, ProposalWritingSerializer
+    ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
+    ProposalWritingCompactSerializer
 
 
 class ProposalTemplateGenericView(generics.ListCreateAPIView):
@@ -30,6 +31,15 @@ class PriceComparisonList(generics.ListCreateAPIView):
     search_fields = ('name',)
 
 
+class PriceComparisonCompactList(generics.ListAPIView):
+    queryset = PriceComparison.objects.all().order_by('-modified_date').prefetch_related('estimate_templates')
+    serializer_class = PriceComparisonCompactSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = PriceComparisonFilter
+    search_fields = ('name',)
+
+
 class PriceComparisonDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = PriceComparison.objects.all()
     serializer_class = PriceComparisonSerializer
@@ -39,6 +49,15 @@ class PriceComparisonDetail(generics.RetrieveUpdateDestroyAPIView):
 class ProposalWritingList(generics.ListCreateAPIView):
     queryset = ProposalWriting.objects.all().order_by('-modified_date').prefetch_related('writing_groups')
     serializer_class = ProposalWritingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = ProposalWritingFilter
+    search_fields = ('name',)
+
+
+class ProposalWritingCompactList(generics.ListAPIView):
+    queryset = ProposalWriting.objects.all().order_by('-modified_date').prefetch_related('writing_groups')
+    serializer_class = ProposalWritingCompactSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = ProposalWritingFilter
