@@ -21,9 +21,9 @@ class User(AbstractUser):
 class BaseModel(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
-    user_create = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='%(class)s_user_create',
+    user_create = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, related_name='%(class)s_user_create',
                                     null=True, blank=True)
-    user_update = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='%(class)s_user_update',
+    user_update = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, related_name='%(class)s_user_update',
                                     null=True, blank=True)
     company = models.ForeignKey('api.CompanyBuilder', on_delete=models.CASCADE, related_name='%(class)s_company_builder', null=True, blank=True)
 

@@ -70,7 +70,7 @@ class SignInAPI(generics.GenericAPIView):
         })
 
 
-class MainUser(generics.RetrieveUpdateAPIView):
+class MainUser(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [
         permissions.IsAuthenticated
     ]
