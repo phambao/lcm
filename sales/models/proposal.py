@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.utils import timezone
 
 from api.models import BaseModel
 
@@ -75,7 +76,12 @@ class ProposalWriting(BaseModel):
     additional_cost_gross_profit_percent = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
     additional_cost_avg_markup = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
     additional_cost_breakdown = models.JSONField(blank=True, null=True, default=dict)
-    costs = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
+
+    project_start_date = models.DateTimeField(blank=True, null=True, default=timezone.now)
+    project_end_date = models.DateTimeField(blank=True, null=True, default=timezone.now)
+    estimated_start_date = models.DateTimeField(blank=True, null=True, default=timezone.now)
+    estimated_end_date = models.DateTimeField(blank=True, null=True, default=timezone.now)
+    additional_information = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
 
 class ProposalFormatting(BaseModel):
