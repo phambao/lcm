@@ -3,7 +3,7 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
-from base.views import country_state_city, base
+from base.views import country_state_city, base, auth
 
 # Define path for Base App ------------------------------------------------------
 url_base = [
@@ -34,6 +34,10 @@ url_base = [
     path('company/division/', base.DivisionListView.as_view()),
     path('company/division/<int:pk>/', base.DivisionDetailGenericView.as_view()),
     path('delete/<int:content_type>/', base.delete_models),
+    path('group/', auth.GroupList.as_view()),
+    path('group/<int:pk>/', auth.GroupDetail.as_view()),
+    path('permission/', auth.PermissionList.as_view()),
+    path('permission/<int:pk>/', auth.PermissionDetail.as_view()),
 ]
 
 # Create schema view for Swagger ------------------------------------------------
