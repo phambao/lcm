@@ -15,6 +15,7 @@ from django_filters import rest_framework as filters
 
 from base.serializers.base import IDAndNameSerializer
 from base.utils import pop
+from base.views.base import CompanyFilterMixin
 from ..filters.lead_list import ContactsFilter
 from ..filters.schedule import DailyLogFilter, EventFilter, ToDoFilter
 from ..models import LeadDetail
@@ -160,7 +161,7 @@ class AttachmentsEventGenericView(GenericViewSet):
         return Response(status=status.HTTP_200_OK, data=data)
 
 
-class SourceScheduleToDoGenericView(generics.ListCreateAPIView):
+class SourceScheduleToDoGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ToDo.objects.all().prefetch_related('tags', 'assigned_to', 'check_list', 'messaging',
                                                    'check_list__assigned_to', 'messaging__notify',
                                                    'messaging__todo_message_file',
@@ -172,49 +173,49 @@ class SourceScheduleToDoGenericView(generics.ListCreateAPIView):
     # search_fields = ['first_name', 'last_name', 'email', 'phone_contacts__phone_number']
 
 
-class ScheduleDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ToDo.objects.all().prefetch_related('tags', 'assigned_to', 'check_list', 'messaging')
     serializer_class = lead_schedule.ToDoCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class TagScheduleGenericView(generics.ListCreateAPIView):
+class TagScheduleGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = TagSchedule.objects.all()
     serializer_class = lead_schedule.TagScheduleSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class TagScheduleDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class TagScheduleDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = TagSchedule.objects.all()
     serializer_class = lead_schedule.TagScheduleSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleCheckListItemGenericView(generics.ListCreateAPIView):
+class ScheduleCheckListItemGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = CheckListItems.objects.all()
     serializer_class = lead_schedule.ToDoChecklistItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleCheckListItemDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleCheckListItemDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = CheckListItems.objects.all()
     serializer_class = lead_schedule.ToDoChecklistItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleTodoMessageGenericView(generics.ListCreateAPIView):
+class ScheduleTodoMessageGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = Messaging.objects.all().prefetch_related('todo_message_file')
     serializer_class = lead_schedule.MessagingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleTodoMessageDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleTodoMessageDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = Messaging.objects.all().prefetch_related('todo_message_file')
     serializer_class = lead_schedule.MessagingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class DailyLogGenericView(generics.ListCreateAPIView):
+class DailyLogGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = DailyLog.objects.all().prefetch_related('tags', 'to_dos')
     serializer_class = lead_schedule.DailyLogSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -223,43 +224,43 @@ class DailyLogGenericView(generics.ListCreateAPIView):
     # search_fields = ['first_name', 'last_name', 'email', 'phone_contacts__phone_number']
 
 
-class DailyLogDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class DailyLogDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = DailyLog.objects.all()
     serializer_class = lead_schedule.DailyLogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class DailyLogTemplateNoteGenericView(generics.ListCreateAPIView):
+class DailyLogTemplateNoteGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = DailyLogTemplateNotes.objects.all()
     serializer_class = lead_schedule.DailyLogNoteSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class DailyLogTemplateNoteDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class DailyLogTemplateNoteDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = DailyLogTemplateNotes.objects.all()
     serializer_class = lead_schedule.DailyLogNoteSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class DaiLyLogCommentGenericView(generics.ListCreateAPIView):
+class DaiLyLogCommentGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = CommentDailyLog.objects.all().prefetch_related('attachment_daily_log_comment')
     serializer_class = lead_schedule.CommentDailyLogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class DaiLyLogCommentDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class DaiLyLogCommentDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = CommentDailyLog.objects.all().prefetch_related('attachment_daily_log_comment')
     serializer_class = lead_schedule.CommentDailyLogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class CheckListItemGenericView(generics.ListCreateAPIView):
+class CheckListItemGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = CheckListItems.objects.all()
     serializer_class = lead_schedule.ToDoChecklistItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class CheckListItemDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class CheckListItemDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = CheckListItems.objects.all()
     serializer_class = lead_schedule.ToDoChecklistItemSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -287,25 +288,25 @@ class CheckListItemDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ToDoChecklistItemTemplateGenericView(generics.ListCreateAPIView):
+class ToDoChecklistItemTemplateGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = TodoTemplateChecklistItem.objects.all()
     serializer_class = lead_schedule.ToDoCheckListItemsTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ToDoChecklistItemTemplateDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ToDoChecklistItemTemplateDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = TodoTemplateChecklistItem.objects.all()
     serializer_class = lead_schedule.ToDoCheckListItemsTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class TemplateChecklistItemGenericView(generics.ListCreateAPIView):
+class TemplateChecklistItemGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = CheckListItemsTemplate.objects.all()
     serializer_class = lead_schedule.CheckListItemsTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class TemplateChecklistItemDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class TemplateChecklistItemDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = CheckListItemsTemplate.objects.all()
     serializer_class = lead_schedule.CheckListItemsTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -423,7 +424,7 @@ class ToDoMessageCustomFieldGenericView(GenericViewSet):
         return Response(status=status.HTTP_200_OK, data=rs)
 
 
-class ScheduleEventGenericView(generics.ListCreateAPIView):
+class ScheduleEventGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ScheduleEvent.objects.all().prefetch_related('assigned_user', 'viewing', 'tags', 'event_message', 'shift_event')
     serializer_class = lead_schedule.ScheduleEventSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -432,115 +433,115 @@ class ScheduleEventGenericView(generics.ListCreateAPIView):
     # search_fields = ['first_name', 'last_name', 'email', 'phone_contacts__phone_number']
 
 
-class ScheduleEventDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleEventDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ScheduleEvent.objects.all()
     serializer_class = lead_schedule.ScheduleEventSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleEventShiftReasonGenericView(generics.ListCreateAPIView):
+class ScheduleEventShiftReasonGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = EventShiftReason.objects.all()
     serializer_class = lead_schedule.ScheduleEventShiftReasonSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleEventShiftReasonDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleEventShiftReasonDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = EventShiftReason.objects.all()
     serializer_class = lead_schedule.ScheduleEventShiftReasonSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleShiftReasonGenericView(generics.ListCreateAPIView):
+class ScheduleShiftReasonGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ShiftReason.objects.all()
     serializer_class = lead_schedule.ShiftReasonSerialized
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleShiftReasonDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleShiftReasonDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ShiftReason.objects.all()
     serializer_class = lead_schedule.ShiftReasonSerialized
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleToDoCustomFieldGenericView(generics.ListCreateAPIView):
+class ScheduleToDoCustomFieldGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = CustomFieldScheduleSetting.objects.all()
     serializer_class = lead_schedule.CustomFieldScheduleSettingSerialized
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleToDoCustomFieldDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleToDoCustomFieldDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomFieldScheduleSetting.objects.all()
     serializer_class = lead_schedule.CustomFieldScheduleSettingSerialized
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleToDoSettingGenericView(generics.ListCreateAPIView):
+class ScheduleToDoSettingGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ScheduleToDoSetting.objects.all()
     serializer_class = lead_schedule.ScheduleToDoSettingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleToDoSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleToDoSettingDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ScheduleToDoSetting.objects.all()
     serializer_class = lead_schedule.ScheduleToDoSettingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleDailyLogSettingGenericView(generics.ListCreateAPIView):
+class ScheduleDailyLogSettingGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ScheduleDailyLogSetting.objects.all()
     serializer_class = lead_schedule.ScheduleDailyLogSettingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleDailyLogSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleDailyLogSettingDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ScheduleDailyLogSetting.objects.all()
     serializer_class = lead_schedule.ScheduleDailyLogSettingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleDailyLogCustomFieldSettingGenericView(generics.ListCreateAPIView):
+class ScheduleDailyLogCustomFieldSettingGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = CustomFieldScheduleDailyLogSetting.objects.all()
     serializer_class = lead_schedule.CustomFieldScheduleDailyLogSettingSerialized
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleDailyLogCustomFieldSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleDailyLogCustomFieldSettingDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomFieldScheduleDailyLogSetting.objects.all()
     serializer_class = lead_schedule.CustomFieldScheduleDailyLogSettingSerialized
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleEventSettingGenericView(generics.ListCreateAPIView):
+class ScheduleEventSettingGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ScheduleEventSetting.objects.all()
     serializer_class = lead_schedule.ScheduleEventSettingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleEventSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleEventSettingDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ScheduleEventSetting.objects.all()
     serializer_class = lead_schedule.ScheduleEventSettingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleEventPhaseSettingGenericView(generics.ListCreateAPIView):
+class ScheduleEventPhaseSettingGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ScheduleEventPhaseSetting.objects.all()
     serializer_class = lead_schedule.ScheduleEventPhaseSettingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleEventPhaseSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleEventPhaseSettingDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ScheduleEventPhaseSetting.objects.all()
     serializer_class = lead_schedule.ScheduleEventPhaseSettingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleEventMessageGenericView(generics.ListCreateAPIView):
+class ScheduleEventMessageGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = MessageEvent.objects.all().prefetch_related('file_message_event')
     serializer_class = lead_schedule.MessageEventSerialized
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ScheduleEventMessageDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class ScheduleEventMessageDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = MessageEvent.objects.all().prefetch_related('file_message_event')
     serializer_class = lead_schedule.MessageEventSerialized
     permission_classes = [permissions.IsAuthenticated]
