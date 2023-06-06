@@ -263,7 +263,7 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
     state = base.IDAndNameSerializer(allow_null=True, required=False)
     country = base.IDAndNameSerializer(allow_null=True, required=False)
     project_types = base.IDAndNameSerializer(many=True, allow_null=True, required=False)
-    salesperson = UserCustomSerializer(many=True)
+    salesperson = UserCustomSerializer(many=True, allow_null=True, required=False)
     tags = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
     sources = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
 
@@ -271,7 +271,7 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         model = lead_list.LeadDetail
         fields = '__all__'
         extra_kwargs = {**{'street_address': {'required': False},
-                        'zip_code': {'required': False}},
+                        'zip_code': {'required': False}, 'projected_sale_date': {'required': False}},
                         **extra_kwargs_for_base_model()}
 
     def create(self, validated_data):
