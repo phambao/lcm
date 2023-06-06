@@ -134,6 +134,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'api.User'
 
+USE_CLOUD_STORAGE = config('USE_CLOUD_STORAGE', default=False, cast=bool)
+
 DEFAULT_RENDERER_CLASSES = [
     'rest_framework.renderers.JSONRenderer',
 ]
@@ -149,7 +151,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_METADATA_CLASS': 'base.metadata.SimpleMetadata',
     'DEFAULT_RENDERER_CLASSES': DEFAULT_RENDERER_CLASSES,
-    'UPLOADED_FILES_USE_URL': False,
+    'UPLOADED_FILES_USE_URL': USE_CLOUD_STORAGE,
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle'
     ],
@@ -182,7 +184,6 @@ USE_TZ = True
 
 STATIC_ROOT = '/static'
 
-USE_CLOUD_STORAGE = config('USE_CLOUD_STORAGE', default=False)
 if USE_CLOUD_STORAGE:
     DEFAULT_FILE_STORAGE = config('DEFAULT_FILE_STORAGE', default='django.core.files.storage.FileSystemStorage')
     STATICFILES_STORAGE = config('STATICFILES_STORAGE', default='django.contrib.staticfiles.storage.StaticFilesStorage')
