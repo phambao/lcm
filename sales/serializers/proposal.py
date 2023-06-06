@@ -177,6 +177,18 @@ class GroupByEstimateSerializers(serializers.ModelSerializer):
         return data
 
 
+class PriceComparisonCompactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PriceComparison
+        fields = '__all__'
+        extra_kwargs = extra_kwargs_for_base_model()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['content_type'] = ContentType.objects.get_for_model(PriceComparison).pk
+        return data
+
+
 class PriceComparisonSerializer(serializers.ModelSerializer):
     estimate_templates = estimate.EstimateTemplateSerializer('proposal_writing', many=True, allow_null=True,
                                                              required=False)
@@ -229,6 +241,18 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(PriceComparison).pk
+        return data
+
+
+class ProposalWritingCompactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProposalWriting
+        fields = '__all__'
+        extra_kwargs = extra_kwargs_for_base_model()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['content_type'] = ContentType.objects.get_for_model(ProposalWriting).pk
         return data
 
 
