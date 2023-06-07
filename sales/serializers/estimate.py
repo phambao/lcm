@@ -150,56 +150,60 @@ class POFormulaSerializer(serializers.ModelSerializer):
         validated_data = self.reparse(validated_data)
         return super().update(instance, validated_data)
 
-    def to_internal_value(self, data):
-        data = super().to_internal_value(data)
+    def is_in_proposal_view(self):
         if self.context.get('view'):
             from sales.views import proposal
             views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
                      proposal.ProposalWritingList, proposal.ProposalWritingDetail]
-            if any([isinstance(self.context['view'], view) for view in views]):
-                assemble = data.get('assemble')
-                if isinstance(assemble, Assemble):
-                    data['assemble'] = assemble.pk
-                group = data.get('group')
-                if isinstance(group, POFormulaGrouping):
-                    data['group'] = group.pk
+            return any([isinstance(self.context['view'], view) for view in views])
+
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+        if self.is_in_proposal_view():
+            assemble = data.get('assemble')
+            if isinstance(assemble, Assemble):
+                data['assemble'] = assemble.pk
+            group = data.get('group')
+            if isinstance(group, POFormulaGrouping):
+                data['group'] = group.pk
         return data
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        linked_descriptions = []
-        try:
-            linked_descriptions = eval(data['linked_description'])
-        except:
-            pass
-        data['linked_description'] = []
-        for linked_description in linked_descriptions:
-            if isinstance(linked_description, dict):
-                linked_description = linked_description.get('id', '')
-                if 'catalog' in linked_description or 'estimate' in linked_description:
-                    pk = linked_description.split(':')[1]
-                    if 'estimate' in linked_description:
-                        linked_description = DescriptionLibrary.objects.get(pk=pk)
-                    else:
-                        linked_description = DataPoint.objects.get(pk=pk)
-                    data['linked_description'].append(LinkedDescriptionSerializer(linked_description).data)
-        data['linked_description'] = str(data['linked_description'])
-
-        if data['material']:
+        if not self.is_in_proposal_view():
+            linked_descriptions = []
             try:
-                primary_key = eval(data['material'])
-                pk_catalog, row_index = primary_key.get('id').split(':')
-                catalog = Catalog.objects.get(pk=pk_catalog)
-                ancestors = catalog.get_full_ancestor()
-                ancestor = ancestors[-1]
-                data['catalog_ancestor'] = ancestor.pk
-                data['catalog_link'] = [CatalogEstimateSerializer(c).data for c in ancestors[::-1]]
-            except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError, AttributeError):
+                linked_descriptions = eval(data['linked_description'])
+            except:
+                pass
+            data['linked_description'] = []
+            for linked_description in linked_descriptions:
+                if isinstance(linked_description, dict):
+                    linked_description = linked_description.get('id', '')
+                    if 'catalog' in linked_description or 'estimate' in linked_description:
+                        pk = linked_description.split(':')[1]
+                        if 'estimate' in linked_description:
+                            linked_description = DescriptionLibrary.objects.get(pk=pk)
+                        else:
+                            linked_description = DataPoint.objects.get(pk=pk)
+                        data['linked_description'].append(LinkedDescriptionSerializer(linked_description).data)
+            data['linked_description'] = str(data['linked_description'])
+
+            if data['material']:
+                try:
+                    primary_key = eval(data['material'])
+                    pk_catalog, row_index = primary_key.get('id').split(':')
+                    catalog = Catalog.objects.get(pk=pk_catalog)
+                    ancestors = catalog.get_full_ancestor()
+                    ancestor = ancestors[-1]
+                    data['catalog_ancestor'] = ancestor.pk
+                    data['catalog_link'] = [CatalogEstimateSerializer(c).data for c in ancestors[::-1]]
+                except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError, AttributeError):
+                    data['catalog_ancestor'] = None
+                    data['catalog_link'] = []
+            else:
                 data['catalog_ancestor'] = None
                 data['catalog_link'] = []
-        else:
-            data['catalog_ancestor'] = None
-            data['catalog_link'] = []
 
         data['content_type'] = PO_FORMULA_CONTENT_TYPE
         original = data.get('original')
