@@ -1,11 +1,14 @@
-from rest_framework import generics, permissions, filters as rf_filters
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, permissions, filters as rf_filters, status
+from rest_framework.decorators import api_view, permission_classes
 from django_filters import rest_framework as filters
+from rest_framework.response import Response
 
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, GroupByEstimate
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
-    ProposalWritingCompactSerializer
+    ProposalWritingCompactSerializer, ProposalTemplateHtmlSerializer, ProposalTemplateHtmlCssSerializer
 
 
 class ProposalTemplateGenericView(generics.ListCreateAPIView):
@@ -80,3 +83,14 @@ class ProposalFormattingTemplateDetailGenericView(generics.RetrieveUpdateDestroy
     queryset = ProposalFormatting.objects.all()
     serializer_class = ProposalFormattingTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_html_css_by_template(request, *args, **kwargs):
+    pk = kwargs.get('pk')
+    get_object_or_404(ProposalTemplate.objects.all(), pk=pk)
+    template = ProposalTemplate.objects.prefetch_related('proposal_template_element__proposal_widget_element').get(id=pk)
+    data = ProposalTemplateHtmlCssSerializer(
+        template, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=data)

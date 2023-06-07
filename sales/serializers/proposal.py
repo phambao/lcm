@@ -24,6 +24,31 @@ class ProposalElementSerializer(serializers.ModelSerializer):
         fields = ('id', 'proposal_template', 'display_order', 'proposal_widget_element', 'title')
 
 
+class ProposalTemplateHtmlSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProposalTemplateConfig
+        fields = ('id', 'html_code', 'css_code')
+
+
+class ProposalTemplateHtmlCssSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    proposal_template_element = ProposalElementSerializer('proposal_template', allow_null=True, required=False,
+                                                          many=True)
+    config_proposal_template = ProposalTemplateHtmlSerializer(allow_null=True, required=False)
+
+    class Meta:
+        model = ProposalTemplate
+        fields = ('id', 'name', 'proposal_template_element', 'config_proposal_template', 'screen_shot', 'created_date', 'user_create')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if self.context['request'].path != reverse('proposal') or (self.context['request'].method != 'GET' and self.context['request'].path == reverse('proposal')):
+            temp = instance.proposal_formatting_template_config.first()
+            rs = ProposalTemplateHtmlSerializer(temp)
+            data['config_proposal_template'] = rs.data
+        return data
+
+
 class ProposalTemplateConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProposalTemplateConfig

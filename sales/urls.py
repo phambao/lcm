@@ -214,6 +214,7 @@ url_estimate = [
 
 # URL Proposal
 url_proposal = [
+    path('template/<int:pk>/html/', proposal.get_html_css_by_template),
     path('template/', proposal.ProposalTemplateGenericView.as_view(), name='proposal'),
     path('template/<int:pk>/', proposal.ProposalTemplateDetailGenericView.as_view()),
     path('price-comparison/', proposal.PriceComparisonList.as_view()),
