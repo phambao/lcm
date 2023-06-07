@@ -12,7 +12,7 @@ class ProposalTemplate(BaseModel):
     name = models.CharField(max_length=64)
     # proposal_formatting = models.ForeignKey('ProposalFormatting', on_delete=models.CASCADE,
     #                                         related_name='proposal_formatting_template', null=True)
-    screen_shot = models.CharField(max_length=64, blank=True)
+    screen_shot = models.CharField(max_length=1000, blank=True)
 
 
 class ProposalTemplateConfig(BaseModel):
@@ -88,7 +88,7 @@ class ProposalFormatting(BaseModel):
     class Meta:
         db_table = 'proposal_formatting'
 
-    screen_shot = models.CharField(max_length=64, blank=True)
+    screen_shot = models.CharField(max_length=1000, blank=True)
     name = models.CharField(max_length=64)
     proposal_template = models.ForeignKey(ProposalTemplate, on_delete=models.CASCADE,
                                           related_name='proposal_template_formatting', null=True)

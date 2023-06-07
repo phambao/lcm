@@ -38,7 +38,7 @@ class ProposalTemplateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProposalTemplate
-        fields = ('id', 'name', 'proposal_template_element', 'config_proposal_template', 'screen_shot')
+        fields = ('id', 'name', 'proposal_template_element', 'config_proposal_template', 'screen_shot', 'created_date', 'user_create')
 
     def create(self, validated_data):
         elements = pop(validated_data, 'proposal_template_element', [])
