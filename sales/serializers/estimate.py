@@ -12,6 +12,21 @@ from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFor
 from sales.serializers.catalog import CatalogSerializer, CatalogEstimateSerializer
 
 
+class SerializerMixin:
+    def is_in_proposal_view(self):
+        if self.context.get('view'):
+            from sales.views import proposal
+            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
+                     proposal.ProposalWritingList, proposal.ProposalWritingDetail]
+            return any([isinstance(self.context['view'], view) for view in views])
+
+    def is_in_proposal_writing_view(self):
+        if self.context.get('view'):
+            from sales.views import proposal
+            views = [proposal.ProposalWritingList, proposal.ProposalWritingDetail]
+            return any([isinstance(self.context['view'], view) for view in views])
+
+
 class LinkedDescriptionSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     linked_description = serializers.CharField()
@@ -115,7 +130,7 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
     POFormulaToDataEntry.objects.bulk_create(data)
 
 
-class POFormulaSerializer(serializers.ModelSerializer):
+class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
     self_data_entries = POFormulaToDataEntrySerializer('po_formula', many=True, required=False, read_only=False)
 
     class Meta:
@@ -149,13 +164,6 @@ class POFormulaSerializer(serializers.ModelSerializer):
         activity_log(POFormula, instance, 2, POFormulaSerializer, {})
         validated_data = self.reparse(validated_data)
         return super().update(instance, validated_data)
-
-    def is_in_proposal_view(self):
-        if self.context.get('view'):
-            from sales.views import proposal
-            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
-                     proposal.ProposalWritingList, proposal.ProposalWritingDetail]
-            return any([isinstance(self.context['view'], view) for view in views])
 
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
@@ -341,25 +349,21 @@ class AssembleSerializer(serializers.ModelSerializer):
         return data
 
 
-class DataViewSerializer(serializers.ModelSerializer):
+class DataViewSerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
         model = DataView
         fields = ('id', 'formula', 'name', 'estimate_template')
 
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
-        if self.context.get('view'):
-            from sales.views import proposal
-            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
-                     proposal.ProposalWritingList, proposal.ProposalWritingDetail]
-            if any([isinstance(self.context['view'], view) for view in views]):
-                estimate_template = data['estimate_template']
-                if isinstance(estimate_template, EstimateTemplate):
-                    data['estimate_template'] = estimate_template.pk
+        if self.is_in_proposal_view():
+            estimate_template = data['estimate_template']
+            if isinstance(estimate_template, EstimateTemplate):
+                data['estimate_template'] = estimate_template.pk
         return data
 
 
-class EstimateTemplateSerializer(serializers.ModelSerializer):
+class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
     assembles = AssembleSerializer(many=True, required=False, allow_null=True,)
     data_views = DataViewSerializer('estimate_template', many=True, required=False, allow_null=True)
     data_entries = POFormulaToDataEntrySerializer('estimate_template', many=True, required=False, allow_null=True)
@@ -410,6 +414,8 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
         data_views = pop(validated_data, 'data_views', [])
         data_entries = pop(validated_data, 'data_entries', [])
         pk = pop(validated_data, 'id', None)
+        if self.is_in_proposal_writing_view():
+            pop(validated_data, 'price_comparison', None)
 
         pk_assembles = self.create_assembles(assembles)
         validated_data = self.reparse(validated_data)
@@ -442,17 +448,14 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
-        if self.context.get('view'):
-            from sales.views import proposal
-            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
-                     proposal.ProposalWritingList, proposal.ProposalWritingDetail]
-            if any([isinstance(self.context['view'], view) for view in views]):
-                price_comparison = data.get('price_comparison')
-                if isinstance(price_comparison, proposal.PriceComparison):
-                    data['price_comparison'] = price_comparison.pk
-                group_by_proposal = data.get('group_by_proposal')
-                if isinstance(group_by_proposal, proposal.GroupByEstimate):
-                    data['group_by_proposal'] = group_by_proposal.pk
+        if self.is_in_proposal_view():
+            from sales.models import proposal
+            price_comparison = data.get('price_comparison')
+            if isinstance(price_comparison, proposal.PriceComparison):
+                data['price_comparison'] = price_comparison.pk
+            group_by_proposal = data.get('group_by_proposal')
+            if isinstance(group_by_proposal, proposal.GroupByEstimate):
+                data['group_by_proposal'] = group_by_proposal.pk
         return data
 
     def to_representation(self, instance):
