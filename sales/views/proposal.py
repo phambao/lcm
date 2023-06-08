@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from django_filters import rest_framework as filters
 from rest_framework.response import Response
 
-from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter
+from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter, ProposalTemplateFilter
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, GroupByEstimate
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
@@ -15,8 +15,9 @@ class ProposalTemplateGenericView(generics.ListCreateAPIView):
     queryset = ProposalTemplate.objects.all().prefetch_related('proposal_template_element__proposal_widget_element')
     serializer_class = ProposalTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
-    # filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
-    # filterset_class = ToDoFilter
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = ProposalTemplateFilter
+    search_fields = ('name',)
 
 
 class ProposalTemplateDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
