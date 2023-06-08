@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 
-from ..models.proposal import PriceComparison, ProposalWriting
+from ..models.proposal import PriceComparison, ProposalWriting, ProposalTemplate
 
 
 class PriceComparisonFilter(filters.FilterSet):
@@ -23,3 +23,11 @@ class ProposalWritingFilter(filters.FilterSet):
     class Meta:
         model = ProposalWriting
         fields = ('name', 'created_date', 'modified_date', 'total_project_cost', 'avg_markup')
+
+
+class ProposalTemplateFilter(filters.FilterSet):
+    name = filters.CharFilter(field_name='name', lookup_expr='icontains')
+
+    class Meta:
+        model = ProposalTemplate
+        fields = ('name',)
