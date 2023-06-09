@@ -92,6 +92,9 @@ class ProposalFormatting(BaseModel):
     name = models.CharField(max_length=64)
     proposal_template = models.ForeignKey(ProposalTemplate, on_delete=models.CASCADE,
                                           related_name='proposal_template_formatting', null=True)
+    proposal_writing = models.ForeignKey('sales.ProposalWriting', on_delete=models.SET_NULL,
+                                         related_name='proposal_formatting', null=True, blank=True)
+    show_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
 
 
 class ProposalFormattingConfig(BaseModel):

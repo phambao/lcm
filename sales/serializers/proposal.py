@@ -327,7 +327,8 @@ class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProposalFormatting
-        fields = ('id', 'name', 'proposal_template', 'choose_update_template', 'config_proposal_template', 'screen_shot')
+        fields = ('id', 'name', 'proposal_template', 'choose_update_template', 'config_proposal_template',
+                  'screen_shot', 'proposal_writing', 'show_fields')
 
     def create_proposal_template(self, proposal_template, instance):
         serializer = ProposalTemplateSerializer(data=proposal_template)
