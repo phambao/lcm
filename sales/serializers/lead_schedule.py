@@ -22,6 +22,10 @@ from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging,
     CommentDailyLog, AttachmentCommentDailyLog, ScheduleEventShift, Attachments, FileMessageToDo, FileMessageEvent
 
 
+class EventLinkSerializer(IDAndNameSerializer):
+    lead_list = serializers.IntegerField(required=False)
+
+
 class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_schedule.Attachments

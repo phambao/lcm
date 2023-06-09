@@ -26,7 +26,8 @@ from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachment
     FileCheckListItems, FileCheckListItemsTemplate, MessageEvent, CommentDailyLog, EventShiftReason, ShiftReason, \
     FileMessageToDo
 from ..serializers import lead_schedule
-from ..serializers.lead_schedule import ScheduleEventPhaseSettingSerializer, ScheduleDailyLogSettingSerializer
+from ..serializers.lead_schedule import ScheduleEventPhaseSettingSerializer, ScheduleDailyLogSettingSerializer, \
+    EventLinkSerializer
 
 
 class ScheduleAttachmentsGenericView(GenericViewSet):
@@ -655,8 +656,8 @@ def select_checklist_template(request, *args, **kwargs):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def select_event_predecessors(request, *args, **kwargs):
-    rs = ScheduleEvent.objects.all().values('id', name=Lower('event_title'))
-    rs = IDAndNameSerializer(
+    rs = ScheduleEvent.objects.all().values('id', 'lead_list', name=Lower('event_title'))
+    rs = EventLinkSerializer(
         rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
 
