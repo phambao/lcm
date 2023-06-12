@@ -1,6 +1,7 @@
 import re
 from rest_framework import serializers
 
+from api.middleware import get_request
 from api.models import DivisionCompany, CompanyBuilder
 from ..models.config import Column, Search, Config, GridSetting
 from ..utils import pop
@@ -22,6 +23,16 @@ class SearchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Search
         fields = ('id', 'name', 'params', 'content_type', 'user')
+
+    def create(self, validated_data):
+        if Search.objects.filter(company=get_request().user.company, name=validated_data['name']).exists():
+            raise serializers.ValidationError({'name': ['Name has been exists']})
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if Search.objects.filter(company=get_request().user.company, name=validated_data['name']).exclude(pk=instance.pk).exists():
+            raise serializers.ValidationError({'name': ['Name has been exists']})
+        return super().update(instance, validated_data)
 
 
 class CustomColumnSerializer(serializers.Serializer):
