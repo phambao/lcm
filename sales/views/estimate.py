@@ -19,9 +19,11 @@ from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSer
     UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, AssembleSerializer, \
     EstimateTemplateSerializer, TaggingSerializer
 from sales.views.catalog import parse_c_table
+from api.middleware import get_request
+from base.views.base import CompanyFilterMixin
 
 
-class POFormulaList(generics.ListCreateAPIView):
+class POFormulaList(generics.ListCreateAPIView, CompanyFilterMixin):
     queryset = POFormula.objects.filter(is_show=True, group=None).\
         prefetch_related('self_data_entries').select_related('assemble', 'group').order_by('-modified_date')
     serializer_class = POFormulaSerializer
@@ -36,7 +38,7 @@ class POFormulaDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class POFormulaGroupingList(generics.ListCreateAPIView):
+class POFormulaGroupingList(generics.ListCreateAPIView, CompanyFilterMixin):
     queryset = POFormulaGrouping.objects.all().order_by('-modified_date').distinct()
     serializer_class = POFormulaGroupingSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -50,7 +52,7 @@ class POFormulaGroupingDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class DataEntryList(generics.ListCreateAPIView):
+class DataEntryList(generics.ListCreateAPIView, CompanyFilterMixin):
     queryset = DataEntry.objects.all().order_by('-modified_date')
     serializer_class = DataEntrySerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -62,7 +64,7 @@ class DataEntryDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class UnitLibraryList(generics.ListCreateAPIView):
+class UnitLibraryList(generics.ListCreateAPIView, CompanyFilterMixin):
     queryset = UnitLibrary.objects.all().order_by('-modified_date')
     serializer_class = UnitLibrarySerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -74,7 +76,7 @@ class UnitLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class DescriptionLibraryList(generics.ListCreateAPIView):
+class DescriptionLibraryList(generics.ListCreateAPIView, CompanyFilterMixin):
     queryset = DescriptionLibrary.objects.all().order_by('-modified_date')
     serializer_class = DescriptionLibrarySerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -86,7 +88,7 @@ class DescriptionLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class AssembleList(generics.ListCreateAPIView):
+class AssembleList(generics.ListCreateAPIView, CompanyFilterMixin):
     queryset = Assemble.objects.filter(estimate_templates=None, is_show=True).order_by('-modified_date').prefetch_related('assemble_formulas')
     serializer_class = AssembleSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -101,7 +103,7 @@ class AssembleDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class EstimateTemplateList(generics.ListCreateAPIView):
+class EstimateTemplateList(generics.ListCreateAPIView, CompanyFilterMixin):
     queryset = EstimateTemplate.objects.filter(is_show=True).order_by('-modified_date').prefetch_related('data_views', 'assembles', 'data_entries')
     serializer_class = EstimateTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -187,8 +189,8 @@ def get_linked_descriptions(request):
     Get linked description from estimate and catalog
     """
     search_query = {'linked_description__icontains': request.GET.get('search', '')}
-    dl = DescriptionLibrary.objects.filter(**search_query)
-    dp = DataPoint.objects.filter(**search_query)
+    dl = DescriptionLibrary.objects.filter(**search_query, company=get_request().user.company)
+    dp = DataPoint.objects.filter(**search_query, company=get_request().user.company)
     paginator = LimitOffsetPagination()
     estimate_result = paginator.paginate_queryset(dl, request)
     catalog_result = paginator.paginate_queryset(dp, request)
@@ -204,9 +206,9 @@ def get_linked_description(request, pk):
     Get linked description from estimate and catalog
     """
     if 'estimate' in pk:
-        obj = get_object_or_404(DescriptionLibrary.objects.all(), pk=pk.split(':')[1])
+        obj = get_object_or_404(DescriptionLibrary.objects.filter(company=get_request().user.company), pk=pk.split(':')[1])
     else:
-        obj = get_object_or_404(DataPoint.objects.all(), pk=pk.split(':')[1])
+        obj = get_object_or_404(DataPoint.objects.filter(company=get_request().user.company), pk=pk.split(':')[1])
     serializer = LinkedDescriptionSerializer(obj)
     return Response(status=status.HTTP_200_OK, data=serializer.data)
 
@@ -214,7 +216,7 @@ def get_linked_description(request, pk):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_tag_formula(request):
-    formulas = POFormula.objects.all()
+    formulas = POFormula.objects.filter(company=get_request().user.company)
     serializer = TaggingSerializer(formulas, many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
 
@@ -222,7 +224,7 @@ def get_tag_formula(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_tag_data_point(request):
-    data_points = DataPoint.objects.all()
+    data_points = DataPoint.objects.filter(company=get_request().user.company)
     serializer = TaggingSerializer(data_points, many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
 

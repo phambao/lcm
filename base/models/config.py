@@ -16,11 +16,14 @@ class Column(models.Model):
     is_active = models.BooleanField(default=False, blank=True)
 
 
-class Search(models.Model):
+class Search(BaseModel):
     name = models.CharField(max_length=64)
     params = models.CharField(max_length=512, blank=True)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True, blank=True)
+
+    class Meta:
+        unique_together = ('name', 'company')
 
 
 class Config(models.Model):
