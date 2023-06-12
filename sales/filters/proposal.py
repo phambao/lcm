@@ -5,8 +5,8 @@ from ..models.proposal import PriceComparison, ProposalWriting, ProposalTemplate
 
 class PriceComparisonFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
-    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='gt')
-    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='gt')
+    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
+    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
 
     class Meta:
         model = PriceComparison
@@ -15,8 +15,8 @@ class PriceComparisonFilter(filters.FilterSet):
 
 class ProposalWritingFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
-    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='gt')
-    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='gt')
+    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
+    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
     total_project_cost = filters.NumberFilter(field_name='total_project_cost', lookup_expr='gt')
     avg_markup = filters.NumberFilter(field_name='avg_markup', lookup_expr='gt')
 
