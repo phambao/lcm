@@ -1,0 +1,11 @@
+[
+  {
+    "model": "api.CompanyBuilder",
+    "pk": 1,
+    "fields": {
+      "company_name": "Builder 365",
+      "created_date": "2022-01-01T00:00:00Z",
+      "modified_date": "2022-01-01T00:00:00Z"
+    }
+  }
+]

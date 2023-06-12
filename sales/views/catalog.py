@@ -8,13 +8,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from ..filters.catalog import CatalogFilter
-from ..models import DataEntry
 from ..models.catalog import Catalog, CatalogLevel, DataPointUnit
 from ..serializers import catalog
-from ..serializers.catalog import CatalogSerializer, CatalogEstimateSerializer
+from ..serializers.catalog import CatalogEstimateSerializer
+from api.middleware import get_request
+from base.views.base import CompanyFilterMixin
 
 
-class CatalogList(generics.ListCreateAPIView):
+class CatalogList(generics.ListCreateAPIView, CompanyFilterMixin):
     queryset = Catalog.objects.all().prefetch_related('data_points', 'parents')
     serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -74,7 +75,7 @@ class CatalogLevelDetail(generics.RetrieveUpdateDestroyAPIView):
         return catalog.all_levels.all()
 
 
-class DataPointUnitView(generics.ListCreateAPIView):
+class DataPointUnitView(generics.ListCreateAPIView, CompanyFilterMixin):
     serializer_class = catalog.DataPointUnitSerializer
     permission_classes = [permissions.IsAuthenticated]
     queryset = DataPointUnit.objects.all()
@@ -155,7 +156,7 @@ def get_catalog_ancestors(request):
     ids = request.GET.getlist('id', [])
     data = {}
     if ids:
-        catalogs = Catalog.objects.filter(id__in=ids)
+        catalogs = Catalog.objects.filter(id__in=ids, company=get_request().user.company)
         for c in catalogs:
             navigation = c.get_ancestors()
             navigation = navigation[1:]
@@ -330,7 +331,7 @@ def get_materials(request):
             pk__in=c.get_all_descendant()
         )
     else:
-        children = Catalog.objects.all()
+        children = Catalog.objects.filter(company=get_request().user.company)
     children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
     data = parse_c_table(children)
     return Response(status=status.HTTP_200_OK, data=data)
