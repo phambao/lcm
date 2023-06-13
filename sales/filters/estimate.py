@@ -8,8 +8,8 @@ from sales.filters.lead_list import CHOICES, FILTERS
 class FormulaFilter(filters.FilterSet):
     group = filters.BooleanFilter(field_name='group', lookup_expr='isnull', exclude=True)
     assemble = filters.BooleanFilter(field_name='assemble', lookup_expr='isnull', exclude=True)
-    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='gt')
-    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='gt')
+    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
+    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
     formula = filters.CharFilter(field_name='formula', lookup_expr='icontains')
     quantity = filters.CharFilter(field_name='quantity', lookup_expr='icontains')
@@ -35,8 +35,8 @@ class FormulaFilter(filters.FilterSet):
 
 class GroupFormulaFilter(filters.FilterSet):
 
-    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='gt')
-    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='gt')
+    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
+    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
     name = filters.CharFilter(field_name='group_formulas__name', lookup_expr='icontains')
     formula = filters.CharFilter(field_name='group_formulas__formula', lookup_expr='icontains')
     quantity = filters.CharFilter(field_name='group_formulas__quantity', lookup_expr='icontains')
@@ -60,8 +60,8 @@ class GroupFormulaFilter(filters.FilterSet):
 
 class EstimateTemplateFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
-    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='gt')
-    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='gt')
+    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
+    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
     is_show = filters.BooleanFilter(field_name='is_show')
 
     class Meta:
@@ -71,10 +71,10 @@ class EstimateTemplateFilter(filters.FilterSet):
 
 class AssembleFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
-    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='gt')
+    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
     formula_name = filters.CharFilter(field_name='assemble_formulas__name', lookup_expr='icontains')
     user_create = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
-    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='gt')
+    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
 
     class Meta:
         model = Assemble
