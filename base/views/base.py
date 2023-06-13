@@ -265,8 +265,7 @@ def delete_models(request, content_type):
 @permission_classes([permissions.IsAuthenticated])
 def update_language_user(request, *args, **kwargs):
     lang = kwargs.get('lang')
-    user_id = request.user.id
-    user = get_user_model().objects.get(id=user_id)
+    user = request.user
     user.lang = lang
     user.save()
     return Response(status=status.HTTP_200_OK)

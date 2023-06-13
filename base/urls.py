@@ -4,9 +4,8 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
 from base.views import country_state_city, base, auth
-
-# Define path for Base App ------------------------------------------------------
 from base.views.base import update_language_user
+# Define path for Base App ------------------------------------------------------
 
 url_base = [
     path('location/',
