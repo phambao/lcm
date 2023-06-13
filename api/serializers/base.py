@@ -19,9 +19,13 @@ class ActivityLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ActivityLog
-        fields = ('id', 'action', 'last_state', 'next_state', 'content_type', 'object_id', 'user_create', 'created_date')
+        fields = ('id', 'action', 'next_state', 'content_type', 'object_id', 'user_create', 'created_date')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['action'] = {'id': data['action'], 'name': instance.get_action_name()}
+        last_state = instance.last_state
+        if last_state:
+            data['last_state'] = {'created_date': last_state.get('created_date'),
+                                  'name': last_state.get('name')}
         return data

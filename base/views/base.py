@@ -195,8 +195,10 @@ def config_view(request, model):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ActivityLogList(generics.ListCreateAPIView):
-    queryset = ActivityLog.objects.all().order_by('-created_date').prefetch_related('user_create')
+class ActivityLogList(generics.ListCreateAPIView, CompanyFilterMixin):
+    queryset = ActivityLog.objects.all().order_by('-created_date').prefetch_related(
+        'user_create', 'user_create__groups', 'user_create__user_permissions'
+    )
     serializer_class = ActivityLogSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend,)
