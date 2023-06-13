@@ -1,5 +1,5 @@
 from threading import current_thread
-
+from django.utils.translation import activate
 _requests = {}
 
 
@@ -27,3 +27,15 @@ class CacheRequestMiddleware:
         # the view is called.
 
         return response
+
+
+class SettingTranslateMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = request.user
+        if user.lang:
+            activate(user.lang)
+        return self.get_response(request)
+

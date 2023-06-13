@@ -6,6 +6,8 @@ from rest_framework import permissions
 from base.views import country_state_city, base, auth
 
 # Define path for Base App ------------------------------------------------------
+from base.views.base import update_language_user
+
 url_base = [
     path('location/',
          include([
@@ -38,6 +40,7 @@ url_base = [
     path('group/<int:pk>/', auth.GroupDetail.as_view()),
     path('permission/', auth.PermissionList.as_view()),
     path('permission/<int:pk>/', auth.PermissionDetail.as_view()),
+    path('lang/<str:lang>/', update_language_user),
 ]
 
 # Create schema view for Swagger ------------------------------------------------
