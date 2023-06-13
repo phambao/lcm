@@ -35,7 +35,8 @@ class SettingTranslateMiddleware:
 
     def __call__(self, request):
         user = request.user
-        if user.lang:
-            activate(user.lang)
+        if request.user.is_authenticated is True:
+            if user.lang:
+                activate(user.lang)
         return self.get_response(request)
 
