@@ -13,6 +13,7 @@ class User(AbstractUser):
     token = models.CharField(max_length=128, blank=True)
     image = models.CharField(max_length=128, blank=True, null=True)
     company = models.ForeignKey('api.CompanyBuilder', on_delete=models.CASCADE, related_name='%(class)s_company_builder', null=True, blank=True)
+    lang = models.CharField(max_length=128, blank=True, null=True)
 
     def __str__(self):
         return self.email
