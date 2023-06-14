@@ -13,7 +13,7 @@ from api.middleware import get_request
 from base.views.base import CompanyFilterMixin
 
 
-class ProposalTemplateGenericView(generics.ListCreateAPIView, CompanyFilterMixin):
+class ProposalTemplateGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ProposalTemplate.objects.all().prefetch_related('proposal_template_element__proposal_widget_element')
     serializer_class = ProposalTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -28,7 +28,7 @@ class ProposalTemplateDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class PriceComparisonList(generics.ListCreateAPIView, CompanyFilterMixin):
+class PriceComparisonList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = PriceComparison.objects.all().order_by('-modified_date').prefetch_related('estimate_templates')
     serializer_class = PriceComparisonSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -37,7 +37,7 @@ class PriceComparisonList(generics.ListCreateAPIView, CompanyFilterMixin):
     search_fields = ('name',)
 
 
-class PriceComparisonCompactList(generics.ListAPIView, CompanyFilterMixin):
+class PriceComparisonCompactList(CompanyFilterMixin, generics.ListAPIView):
     queryset = PriceComparison.objects.all().order_by('-modified_date').prefetch_related('estimate_templates')
     serializer_class = PriceComparisonCompactSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -52,7 +52,7 @@ class PriceComparisonDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ProposalWritingList(generics.ListCreateAPIView, CompanyFilterMixin):
+class ProposalWritingList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ProposalWriting.objects.all().order_by('-modified_date').prefetch_related('writing_groups')
     serializer_class = ProposalWritingSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -61,7 +61,7 @@ class ProposalWritingList(generics.ListCreateAPIView, CompanyFilterMixin):
     search_fields = ('name',)
 
 
-class ProposalWritingCompactList(generics.ListAPIView, CompanyFilterMixin):
+class ProposalWritingCompactList(CompanyFilterMixin, generics.ListAPIView):
     queryset = ProposalWriting.objects.all().order_by('-modified_date').prefetch_related('writing_groups')
     serializer_class = ProposalWritingCompactSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -76,7 +76,7 @@ class ProposalWritingDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ProposalFormattingTemplateGenericView(generics.ListCreateAPIView, CompanyFilterMixin):
+class ProposalFormattingTemplateGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ProposalFormatting.objects.all()
     serializer_class = ProposalFormattingTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
