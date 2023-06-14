@@ -23,7 +23,7 @@ from api.middleware import get_request
 from base.views.base import CompanyFilterMixin
 
 
-class POFormulaList(generics.ListCreateAPIView, CompanyFilterMixin):
+class POFormulaList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = POFormula.objects.filter(is_show=True, group=None).\
         prefetch_related('self_data_entries').select_related('assemble', 'group').order_by('-modified_date')
     serializer_class = POFormulaSerializer
@@ -38,7 +38,7 @@ class POFormulaDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class POFormulaGroupingList(generics.ListCreateAPIView, CompanyFilterMixin):
+class POFormulaGroupingList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = POFormulaGrouping.objects.all().order_by('-modified_date').distinct()
     serializer_class = POFormulaGroupingSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -52,7 +52,7 @@ class POFormulaGroupingDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class DataEntryList(generics.ListCreateAPIView, CompanyFilterMixin):
+class DataEntryList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = DataEntry.objects.all().order_by('-modified_date')
     serializer_class = DataEntrySerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -64,7 +64,7 @@ class DataEntryDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class UnitLibraryList(generics.ListCreateAPIView, CompanyFilterMixin):
+class UnitLibraryList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = UnitLibrary.objects.all().order_by('-modified_date')
     serializer_class = UnitLibrarySerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -76,7 +76,7 @@ class UnitLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class DescriptionLibraryList(generics.ListCreateAPIView, CompanyFilterMixin):
+class DescriptionLibraryList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = DescriptionLibrary.objects.all().order_by('-modified_date')
     serializer_class = DescriptionLibrarySerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -88,7 +88,7 @@ class DescriptionLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class AssembleList(generics.ListCreateAPIView, CompanyFilterMixin):
+class AssembleList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = Assemble.objects.filter(estimate_templates=None, is_show=True).order_by('-modified_date').prefetch_related('assemble_formulas')
     serializer_class = AssembleSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -103,7 +103,7 @@ class AssembleDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class EstimateTemplateList(generics.ListCreateAPIView, CompanyFilterMixin):
+class EstimateTemplateList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = EstimateTemplate.objects.filter(is_show=True).order_by('-modified_date').prefetch_related('data_views', 'assembles', 'data_entries')
     serializer_class = EstimateTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]

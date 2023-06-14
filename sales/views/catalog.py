@@ -15,7 +15,7 @@ from api.middleware import get_request
 from base.views.base import CompanyFilterMixin
 
 
-class CatalogList(generics.ListCreateAPIView, CompanyFilterMixin):
+class CatalogList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = Catalog.objects.all().prefetch_related('data_points', 'parents')
     serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -75,7 +75,7 @@ class CatalogLevelDetail(generics.RetrieveUpdateDestroyAPIView):
         return catalog.all_levels.all()
 
 
-class DataPointUnitView(generics.ListCreateAPIView, CompanyFilterMixin):
+class DataPointUnitView(CompanyFilterMixin, generics.ListCreateAPIView):
     serializer_class = catalog.DataPointUnitSerializer
     permission_classes = [permissions.IsAuthenticated]
     queryset = DataPointUnit.objects.all()
