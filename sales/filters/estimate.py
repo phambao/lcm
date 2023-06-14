@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django_filters import rest_framework as filters
 
-from sales.models import POFormula, POFormulaGrouping, Assemble, EstimateTemplate
+from sales.models import POFormula, POFormulaGrouping, Assemble, EstimateTemplate, DataEntry, DescriptionLibrary, UnitLibrary
 from sales.filters.lead_list import CHOICES, FILTERS
 
 
@@ -79,3 +79,38 @@ class AssembleFilter(filters.FilterSet):
     class Meta:
         model = Assemble
         fields = ('name', 'created_date', 'formula_name', 'user_create', 'modified_date')
+
+
+class DataEntryFilter(filters.FilterSet):
+    name = filters.CharFilter(field_name='name', lookup_expr='icontains')
+    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
+    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
+    unit = filters.ModelMultipleChoiceFilter(queryset=UnitLibrary.objects.all())
+    is_dropdown = filters.BooleanFilter(field_name='is_dropdown')
+    is_material_selection = filters.BooleanFilter(field_name='is_material_selection')
+
+    class Meta:
+        model = DataEntry
+        fields = ('name', 'created_date', 'modified_date', 'unit', 'is_dropdown', 'is_material_selection')
+
+
+class DescriptionFilter(filters.FilterSet):
+    name = filters.CharFilter(field_name='name', lookup_expr='icontains')
+    linked_description = filters.CharFilter(field_name='linked_description', lookup_expr='icontains')
+    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
+    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
+
+    class Meta:
+        model = DescriptionLibrary
+        fields = ('name', 'linked_description', 'created_date', 'modified_date')
+
+
+class UnitFilter(filters.FilterSet):
+    name = filters.CharFilter(field_name='name', lookup_expr='icontains')
+    description = filters.CharFilter(field_name='description', lookup_expr='icontains')
+    created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
+    modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
+
+    class Meta:
+        model = UnitLibrary
+        fields = ('name', 'description', 'created_date', 'modified_date')
