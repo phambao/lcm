@@ -49,8 +49,10 @@ class DataEntrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataEntry
-        fields = ('id', 'name', 'unit', 'dropdown', 'is_dropdown', 'is_material_selection', 'material_selections')
+        fields = ('id', 'name', 'unit', 'dropdown', 'is_dropdown', 'is_material_selection', 'material_selections',
+                  'created_date', 'modified_date')
         extra_kwargs = {'id': {'read_only': False, 'required': False}}
+        read_only_fields = ('created_date', 'modified_date')
 
     def set_material(self, material_selections):
         catalog_pks = []
@@ -284,7 +286,8 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
 class DescriptionLibrarySerializer(serializers.ModelSerializer):
     class Meta:
         model = DescriptionLibrary
-        fields = ('id', 'name', 'linked_description',)
+        fields = ('id', 'name', 'linked_description', 'created_date', 'modified_date')
+        read_only_fields = ('created_date', 'modified_date')
 
     def create(self, validated_data):
         instance = super().create(validated_data)

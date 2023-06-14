@@ -23,7 +23,7 @@ class Search(BaseModel):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
-        unique_together = ('name', 'company')
+        unique_together = ('name', 'company', 'content_type')
 
 
 class Config(models.Model):
