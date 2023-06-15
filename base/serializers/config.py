@@ -36,7 +36,7 @@ class SearchSerializer(serializers.ModelSerializer):
         try:
             return super().update(instance, validated_data)
         except IntegrityError:
-            raise serializers.ValidationError({'name': ['Name has been exists ']})
+            raise serializers.ValidationError({'name': ['Name has been exists']})
 
 
 class CustomColumnSerializer(serializers.Serializer):
