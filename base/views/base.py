@@ -1,11 +1,13 @@
 import uuid
 
+from django.utils.translation import gettext  as _
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions, status
 from django_filters import rest_framework as filters
 from rest_framework.viewsets import GenericViewSet
@@ -257,3 +259,13 @@ def delete_models(request, content_type):
     model = ContentType.objects.get_for_id(content_type)
     deleted_data = model.model_class().objects.filter(pk__in=ids).delete()
     return Response(status=status.HTTP_204_NO_CONTENT, data=deleted_data)
+
+
+@api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def update_language_user(request, *args, **kwargs):
+    lang = kwargs.get('lang')
+    user = request.user
+    user.lang = lang
+    user.save()
+    return Response(status=status.HTTP_200_OK)
