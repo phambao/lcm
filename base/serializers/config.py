@@ -1,4 +1,6 @@
 import re
+
+from django.db import IntegrityError
 from rest_framework import serializers
 
 from api.middleware import get_request
@@ -25,14 +27,16 @@ class SearchSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'params', 'content_type', 'user')
 
     def create(self, validated_data):
-        if Search.objects.filter(company=get_request().user.company, name=validated_data['name']).exists():
+        try:
+            return super().create(validated_data)
+        except IntegrityError:
             raise serializers.ValidationError({'name': ['Name has been exists']})
-        return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        if Search.objects.filter(company=get_request().user.company, name=validated_data['name']).exclude(pk=instance.pk).exists():
+        try:
+            return super().update(instance, validated_data)
+        except IntegrityError:
             raise serializers.ValidationError({'name': ['Name has been exists']})
-        return super().update(instance, validated_data)
 
 
 class CustomColumnSerializer(serializers.Serializer):

@@ -32,7 +32,7 @@ class LeadDetailList(CompanyFilterMixin, generics.ListCreateAPIView):
     search_fields = ['lead_title', 'street_address', 'notes']
 
 
-class LeadEventList(generics.ListAPIView, CompanyFilterMixin):
+class LeadEventList(CompanyFilterMixin, generics.ListAPIView):
     queryset = LeadDetail.objects.all().prefetch_related('schedule_event_lead_list')
     serializer_class = lead_list.LeadViewEventSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -111,7 +111,7 @@ class LeadPhotosDetailViewSet(generics.RetrieveDestroyAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ContactsViewSet(generics.ListCreateAPIView, CompanyFilterMixin):
+class ContactsViewSet(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = Contact.objects.all()
     serializer_class = lead_list.ContactsSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -178,7 +178,7 @@ class PhoneOfContactsDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ContactTypeNameGenericView(generics.ListCreateAPIView, CompanyFilterMixin):
+class ContactTypeNameGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ContactTypeName.objects.all()
     serializer_class = lead_list.ContactTypeNameSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -190,7 +190,7 @@ class ContactTypeNameDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class ProjectTypeGenericView(generics.ListCreateAPIView, CompanyFilterMixin):
+class ProjectTypeGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ProjectType.objects.all()
     serializer_class = lead_list.ProjectTypeSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -202,7 +202,7 @@ class ProjectTypeDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class TagLeadGenericView(generics.ListCreateAPIView, CompanyFilterMixin):
+class TagLeadGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = TagLead.objects.all()
     serializer_class = lead_list.TagLeadSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -238,7 +238,7 @@ class PhaseActivityDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class SourceLeadGenericView(generics.ListCreateAPIView, CompanyFilterMixin):
+class SourceLeadGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = SourceLead.objects.all()
     serializer_class = lead_list.SourceLeadSerializer
     permission_classes = [permissions.IsAuthenticated]
