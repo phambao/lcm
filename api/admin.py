@@ -74,13 +74,14 @@ class UserAdmin(admin.ModelAdmin):
     search_fields = ['username', 'first_name', 'last_name', 'email', 'company__company_name']
 
     def save_model(self, request, obj, form, change):
-        new_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
-        obj.set_password(new_password)
-        obj.save()
-        subject = f'Reset Password for {obj.get_username()}'
-        content = render_to_string('auth/create-user.html', {'username': obj.get_username(),
-                                                             'password': new_password})
-        send_mail(subject, content, settings.EMAIL_HOST_USER, [obj.email])
+        if obj.id is None:
+            new_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+            obj.set_password(new_password)
+            obj.save()
+            subject = f'Reset Password for {obj.get_username()}'
+            content = render_to_string('auth/create-user.html', {'username': obj.get_username(),
+                                                                 'password': new_password})
+            send_mail(subject, content, settings.EMAIL_HOST_USER, [obj.email])
 
         obj.save()
 
