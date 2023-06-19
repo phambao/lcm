@@ -405,7 +405,7 @@ class CustomFieldScheduleDailyLogSetting(BaseModel):
     tool_tip_text = models.CharField(blank=True, max_length=128, null=True)
     show_owners = models.BooleanField(default=False)
     allow_permitted_sub = models.BooleanField(default=False)
-    default_value = models.CharField(blank=True, max_length=128)
+    default_value = models.CharField(blank=True, max_length=128, default="")
     default_date = models.DateTimeField(null=True, blank=True)
     default_checkbox = models.BooleanField(null=True, blank=True)
     default_number = models.IntegerField(blank=True, null=True)
