@@ -16,8 +16,10 @@ class SerializerMixin:
     def is_in_proposal_view(self):
         if self.context.get('view'):
             from sales.views import proposal
+            from sales.views import change_order
             views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
-                     proposal.ProposalWritingList, proposal.ProposalWritingDetail]
+                     proposal.ProposalWritingList, proposal.ProposalWritingDetail,
+                     change_order.ChangeOderDetail, change_order.ChangeOderList]
             return any([isinstance(self.context['view'], view) for view in views])
 
     def is_in_proposal_writing_view(self):
