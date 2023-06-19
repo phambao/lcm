@@ -1079,7 +1079,7 @@ class FieldSettingSerialized(serializers.Serializer):
 
 
 class TextFieldSerialized(FieldSettingSerialized):
-    default_value = serializers.CharField(required=False)
+    default_value = serializers.CharField(allow_blank=True, required=False)
 
 
 class NumberFieldSerialized(FieldSettingSerialized):
@@ -1255,6 +1255,7 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
 class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
     name_item = ItemDropdownSerialized(allow_null=True, required=False, many=True)
     daily_log_list = IDAndNameSerializer(required=False, many=True)
+    default_value = serializers.CharField(allow_blank=True)
 
     class Meta:
         model = lead_schedule.CustomFieldScheduleDailyLogSetting
