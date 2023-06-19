@@ -106,6 +106,9 @@ class EstimateTemplate(BaseModel):
     is_show = models.BooleanField(default=True, blank=True)
     original = models.IntegerField(default=0, blank=True, null=True)
     order = models.IntegerField(default=0, blank=True)
+    is_checked = models.BooleanField(default=False, blank=True)
+    description = models.TextField(blank=True, default='')
+    note = models.TextField(blank=True, default='')
 
 
 class DataView(BaseModel):
