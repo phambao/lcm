@@ -63,6 +63,9 @@ class LeadDetail(BaseModel):
     number_of_click = models.IntegerField(default=0, null=True, blank=True)  # For filter
     recent_click = models.DateTimeField(null=True, blank=True)  # For filter
 
+    def __str__(self):
+        return self.lead_title
+
 
 class Contact(BaseModel):
     """Contact information"""

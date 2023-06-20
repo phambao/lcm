@@ -83,6 +83,9 @@ class ProposalWriting(BaseModel):
     estimated_end_date = models.DateTimeField(blank=True, null=True, default=timezone.now)
     additional_information = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
+    def __str__(self):
+        return self.name
+
 
 class ProposalFormatting(BaseModel):
     class Meta:
