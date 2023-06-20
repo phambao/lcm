@@ -110,6 +110,9 @@ class EstimateTemplate(BaseModel):
     description = models.TextField(blank=True, default='')
     note = models.TextField(blank=True, default='')
 
+    def __str__(self):
+        return self.name
+
 
 class DataView(BaseModel):
     name = models.CharField(verbose_name='Formula Name', max_length=128)
