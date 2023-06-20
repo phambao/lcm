@@ -9,6 +9,7 @@ from sales.models.proposal import ProposalWriting
 
 class FilterUserCreateAdmin(admin.ModelAdmin):
     list_filter = ('user_create', )
+    list_display = ('id', 'name')
 
 
 class CatalogAdmin(FilterUserCreateAdmin):
@@ -16,7 +17,7 @@ class CatalogAdmin(FilterUserCreateAdmin):
 
 
 class LeadDetailAdmin(FilterUserCreateAdmin):
-    pass
+    list_display = ('id', 'lead_title')
 
 
 class EstimateTemplateAdmin(FilterUserCreateAdmin):
