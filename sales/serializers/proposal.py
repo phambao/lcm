@@ -312,7 +312,6 @@ class ProposalWritingSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(ProposalWriting).pk
-        instance.get_imgs()
         return data
 
 
