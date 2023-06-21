@@ -422,7 +422,7 @@ class DailyLogSerializer(serializers.ModelSerializer):
                 value_date=custom_field['value_date'],
                 value_checkbox=custom_field['value_checkbox'],
                 value_number=custom_field['value_number'],
-                custom_field_id=custom_field['custom_field']
+                custom_field=custom_field['custom_field']
             )
             data_insert.append(temp)
         DailyLogCustomField.objects.bulk_create(data_insert)
