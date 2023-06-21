@@ -3,6 +3,8 @@ from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
 
 from api.models import BaseModel
+from sales.models import EstimateTemplate, Assemble, POFormula, Catalog
+from base.constants import true, null, false
 
 
 class ProposalTemplate(BaseModel):
@@ -85,6 +87,38 @@ class ProposalWriting(BaseModel):
 
     def __str__(self):
         return self.name
+
+    def _get_poformula(self):
+        groups = self.writing_groups.all()
+        estimates = EstimateTemplate.objects.none()
+        for group in groups:
+            estimates |= group.estimate_templates.all()
+        assembles = Assemble.objects.none()
+        for estimate in estimates:
+            assembles |= estimate.assembles.all()
+        poformulas = POFormula.objects.none()
+        for assemble in assembles:
+            poformulas |= assemble.assemble_formulas.all()
+        return poformulas
+
+    def get_data_formula(self):
+        """Get data from po formula"""
+        poformulas = self._get_poformula()
+        return poformulas
+
+    def get_imgs(self):
+        """Get image from catalog"""
+        poformulas = self._get_poformula()
+        catalog_ids = set()
+        for poformula in poformulas:
+            primary_key = eval(poformula.material)
+            pk_catalog, row_index = primary_key.get('id').split(':')
+            catalog_ids.add(pk_catalog)
+        catalogs = Catalog.objects.filter(pk__in=catalog_ids)
+        ancestors = []
+        for catalog in catalogs:
+            ancestors.extend(catalog.get_ancestors())
+        return set(ancestors)
 
 
 class ProposalFormatting(BaseModel):
