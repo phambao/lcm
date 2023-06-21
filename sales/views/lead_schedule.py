@@ -1,4 +1,6 @@
 import uuid
+import pytz
+import datetime
 from datetime import datetime
 
 from django.core.files.base import ContentFile
@@ -770,8 +772,13 @@ def select_checklist_item_template(request, pk_template, pk_todo):
 @permission_classes([permissions.IsAuthenticated])
 def filter_event(request, *args, **kwargs):
     data = request.query_params
-    start_day = datetime.strptime(data['start_day'], '%Y-%m-%d %H:%M:%S')
-    end_day = datetime.strptime(data['end_day'], '%Y-%m-%d %H:%M:%S')
+    # start_day = datetime.strptime(data['start_day'], '%Y-%m-%d %H:%M:%S')
+    # end_day = datetime.strptime(data['end_day'], '%Y-%m-%d %H:%M:%S')
+    start_day = datetime.datetime.fromisoformat(data['start_day'])
+    end_day = datetime.datetime.fromisoformat(data['end_day'])
+
+    start_day = start_day.astimezone(pytz.UTC)
+    end_day = end_day.astimezone(pytz.UTC)
     rs_event = ScheduleEvent.objects.filter(Q(start_day__gte=start_day, end_day__lte=end_day)
                                             | Q(end_day__gte=start_day, end_day__lte=end_day)
                                             | Q(start_day__gte=start_day, start_day__lte=end_day))
