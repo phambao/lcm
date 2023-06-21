@@ -1152,11 +1152,8 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
             DataType.DATE: DateTimeFieldSerialized,
             DataType.MULTI_SELECT_DROPDOWN: DropdownFieldSerialized
         }
-        print(validated_data['data_type'])
         data_serializers = item_types.get(validated_data['data_type'])
-        print(data_serializers)
         data_insert = data_serializers(data=validated_data)
-
         data_insert.is_valid(raise_exception=True)
         data_insert = dict(data_insert.validated_data)
 
