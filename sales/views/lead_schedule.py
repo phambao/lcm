@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-
+import datetime
 from django.core.files.base import ContentFile
 from django.db.models.functions import Lower
 from django.db.models import Q
@@ -770,8 +770,13 @@ def select_checklist_item_template(request, pk_template, pk_todo):
 @permission_classes([permissions.IsAuthenticated])
 def filter_event(request, *args, **kwargs):
     data = request.query_params
-    start_day = datetime.strptime(data['start_day'], '%Y-%m-%d %H:%M:%S')
-    end_day = datetime.strptime(data['end_day'], '%Y-%m-%d %H:%M:%S')
+    # start_day = datetime.strptime(data['start_day'], '%Y-%m-%d %H:%M:%S')
+    # end_day = datetime.strptime(data['end_day'], '%Y-%m-%d %H:%M:%S')
+    start_day = datetime.datetime.fromisoformat(data['start_day'])
+    end_day = datetime.datetime.fromisoformat(data['end_day'])
+
+    start_day = start_day.astimezone(pytz.UTC)
+    end_day = end_day.astimezone(pytz.UTC)
     rs_event = ScheduleEvent.objects.filter(Q(start_day__gte=start_day, end_day__lte=end_day)
                                             | Q(end_day__gte=start_day, end_day__lte=end_day)
                                             | Q(start_day__gte=start_day, start_day__lte=end_day))
@@ -779,7 +784,7 @@ def filter_event(request, *args, **kwargs):
         rs_event, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=event)
 
-
+import pytz
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_event_of_day(request, *args, **kwargs):
