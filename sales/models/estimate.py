@@ -38,8 +38,8 @@ class POFormula(BaseModel):
     material = models.TextField(blank=True)
     unit = models.CharField(max_length=32, blank=True)
     unit_price = models.CharField(max_length=32, blank=True)
-    cost = models.IntegerField(blank=True, default=0)
-    total_cost = models.IntegerField(blank=True, default=0)
+    cost = models.IntegerField(blank=True, default=0, null=True)
+    total_cost = models.IntegerField(blank=True, default=0, null=True)
     formula_mentions = models.CharField(blank=True, max_length=256)  # for FE
     formula_data_mentions = models.CharField(blank=True, max_length=256)  # for FE
     gross_profit = models.CharField(max_length=32, blank=True)
@@ -48,6 +48,7 @@ class POFormula(BaseModel):
     material_data_entry = models.JSONField(blank=True, default=dict, null=True)
     formula_for_data_view = models.IntegerField(blank=True, default=0, null=True)  # Used for dataview in other model
     original = models.IntegerField(default=0, blank=True, null=True)
+    catalog_materials = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True, null=True)
 
     def parse_material(self):
         primary_key = eval(self.material)
@@ -108,6 +109,7 @@ class EstimateTemplate(BaseModel):
     order = models.IntegerField(default=0, blank=True)
     is_checked = models.BooleanField(default=False, blank=True)
     description = models.TextField(blank=True, default='')
+    changed_description = models.TextField(blank=True, default='')  # change order
     note = models.TextField(blank=True, default='')
 
     def __str__(self):

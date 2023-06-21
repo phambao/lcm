@@ -143,3 +143,9 @@ class CatalogEstimateSerializer(serializers.ModelSerializer):
         model = Catalog
         fields = ('id', 'name', 'level', 'level_index')
         extra_kwargs = {'id': {'read_only': False, 'required': False}}
+
+
+class CatalogImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Catalog
+        fields = ('id', 'name', 'icon')
