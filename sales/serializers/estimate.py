@@ -134,6 +134,14 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
     POFormulaToDataEntry.objects.bulk_create(data)
 
 
+class POFormulaCompactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = POFormula
+        fields = ('id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
+                  'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario',
+                  'material_data_entry', 'formula_for_data_view')
+
+
 class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
     self_data_entries = POFormulaToDataEntrySerializer('po_formula', many=True, required=False, read_only=False)
 

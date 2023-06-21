@@ -6,6 +6,8 @@ from rest_framework.response import Response
 
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter, ProposalTemplateFilter
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, GroupByEstimate
+from sales.serializers.catalog import CatalogImageSerializer
+from sales.serializers.estimate import POFormulaSerializer, POFormulaCompactSerializer
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
     ProposalWritingCompactSerializer, ProposalTemplateHtmlSerializer, ProposalTemplateHtmlCssSerializer
@@ -96,4 +98,22 @@ def get_html_css_by_template(request, *args, **kwargs):
     template = ProposalTemplate.objects.prefetch_related('proposal_template_element__proposal_widget_element').get(id=pk)
     data = ProposalTemplateHtmlCssSerializer(
         template, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_data(request, pk):
+    proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
+    po_formulas = proposal_writing.get_data_formula()
+    data = POFormulaCompactSerializer(po_formulas, context={'request': request}, many=True).data
+    return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_image(request, pk):
+    proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
+    imgs = proposal_writing.get_imgs()
+    data = CatalogImageSerializer(imgs, context={'request': request}, many=True).data
     return Response(status=status.HTTP_200_OK, data=data)
