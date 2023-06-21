@@ -1079,7 +1079,7 @@ class FieldSettingSerialized(serializers.Serializer):
 
 
 class TextFieldSerialized(FieldSettingSerialized):
-    default_value = serializers.CharField(required=False)
+    default_value = serializers.CharField(allow_blank=True, required=False)
 
 
 class NumberFieldSerialized(FieldSettingSerialized):
@@ -1095,12 +1095,18 @@ class CheckboxFieldSerialized(serializers.ModelSerializer):
                   'allow_permitted_sub', 'default_checkbox')
 
 
+class ItemDropdownResponseSerialized(serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.ItemFieldDropDownDailyLog
+        fields = '__all__'
+
+
 class ItemDropdownSerialized(serializers.Serializer):
     name = serializers.CharField(required=False)
 
 
 class DropdownFieldSerialized(serializers.Serializer):
-    default_value = serializers.CharField(required=False)
+    default_value = serializers.CharField(allow_null=True, required=False, allow_blank=True)
     label = serializers.CharField(required=True)
     data_type = serializers.CharField(required=True)
     required = serializers.BooleanField(default=False)
@@ -1109,6 +1115,17 @@ class DropdownFieldSerialized(serializers.Serializer):
     show_owners = serializers.BooleanField(default=False)
     allow_permitted_sub = serializers.BooleanField(default=False)
     name_item = ItemDropdownSerialized(allow_null=True, required=False, many=True)
+
+
+class DateTimeFieldSerialized(serializers.Serializer):
+    default_date = serializers.DateTimeField(allow_null=True, required=False)
+    label = serializers.CharField(required=True)
+    data_type = serializers.CharField(required=True)
+    required = serializers.BooleanField(default=False)
+    include_in_filters = serializers.BooleanField(default=False)
+    display_order = serializers.IntegerField()
+    show_owners = serializers.BooleanField(default=False)
+    allow_permitted_sub = serializers.BooleanField(default=False)
 
 
 class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
@@ -1130,9 +1147,11 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
             DataType.MULTI_LINE_TEXT: TextFieldSerialized,
             DataType.CHECKBOX: CheckboxFieldSerialized,
             DataType.DROPDOWN: DropdownFieldSerialized,
-            DataType.WHOLE_NUMBER: NumberFieldSerialized
+            DataType.WHOLE_NUMBER: NumberFieldSerialized,
+            DataType.CURRENCY: TextFieldSerialized,
+            DataType.DATE: DateTimeFieldSerialized,
+            DataType.MULTI_SELECT_DROPDOWN: DropdownFieldSerialized
         }
-
         data_serializers = item_types.get(validated_data['data_type'])
         data_insert = data_serializers(data=validated_data)
         data_insert.is_valid(raise_exception=True)
@@ -1159,7 +1178,8 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
             user_create=user_create, user_update=user_update,
             **data_insert
         )
-        if validated_data['data_type'] == DataType.DROPDOWN:
+        if validated_data['data_type'] == DataType.DROPDOWN or validated_data['data_type'] == DataType.MULTI_SELECT_DROPDOWN:
+
             temp = []
             for item in name_item:
                 data_insert_item = ItemFieldDropDown(
@@ -1255,6 +1275,7 @@ class CustomFieldScheduleSettingSerialized(serializers.ModelSerializer):
 class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
     name_item = ItemDropdownSerialized(allow_null=True, required=False, many=True)
     daily_log_list = IDAndNameSerializer(required=False, many=True)
+    default_value = serializers.CharField(allow_blank=True)
 
     class Meta:
         model = lead_schedule.CustomFieldScheduleDailyLogSetting
@@ -1271,7 +1292,10 @@ class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
             DataType.MULTI_LINE_TEXT: TextFieldSerialized,
             DataType.CHECKBOX: CheckboxFieldSerialized,
             DataType.DROPDOWN: DropdownFieldSerialized,
-            DataType.WHOLE_NUMBER: NumberFieldSerialized
+            DataType.WHOLE_NUMBER: NumberFieldSerialized,
+            DataType.CURRENCY: TextFieldSerialized,
+            DataType.DATE: DateTimeFieldSerialized,
+            DataType.MULTI_SELECT_DROPDOWN: DropdownFieldSerialized
         }
 
         data_serializers = item_types.get(validated_data['data_type'])
@@ -1298,7 +1322,7 @@ class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
             user_create=user_create, user_update=user_update,
             **data_insert
         )
-        if validated_data['data_type'] == DataType.DROPDOWN:
+        if validated_data['data_type'] == DataType.DROPDOWN or validated_data['data_type'] == DataType.MULTI_SELECT_DROPDOWN:
             temp = []
             for item in name_item:
                 data_insert_item = ItemFieldDropDownDailyLog(
@@ -1351,17 +1375,17 @@ class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
         custom_field_setting = data_custom_field.first()
 
         if data['data_type'] == DataType.DROPDOWN:
-            ItemFieldDropDown.objects.filter(dropdown=instance.pk).delete()
+            ItemFieldDropDownDailyLog.objects.filter(dropdown=instance.pk).delete()
             temp = []
             for item in name_item:
-                data_insert_item = ItemFieldDropDown(
+                data_insert_item = ItemFieldDropDownDailyLog(
                     dropdown=custom_field_setting,
                     name=item['name'],
                     user_create=user_create,
                     user_update=user_update
                 )
                 temp.append(data_insert_item)
-            ItemFieldDropDown.objects.bulk_create(temp)
+            ItemFieldDropDownDailyLog.objects.bulk_create(temp)
 
         temp = [data['id'] for data in daily_log_list]
         update_list = []
@@ -1388,8 +1412,8 @@ class CustomFieldScheduleDailyLogSettingSerialized(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        rs_item_dropdown = ItemFieldDropDown.objects.filter(dropdown=data['id']).values()
-        data['name_item'] = rs_item_dropdown
+        temp = ItemDropdownResponseSerialized(instance.custom_field_daily_log_drop_down.all(), many=True).data
+        data['name_item'] = temp
         return data
 
 

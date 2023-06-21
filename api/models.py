@@ -50,6 +50,7 @@ class CompanyBuilder(models.Model):
         db_table = 'company_builder'
 
     logo = models.CharField(blank=True, max_length=128)
+    description = models.CharField(blank=True, max_length=128)
     company_name = models.CharField(blank=True, max_length=128)
     address = models.CharField(blank=True, max_length=128)
     city = models.ForeignKey('base.City', on_delete=models.SET_NULL,
