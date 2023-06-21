@@ -217,9 +217,9 @@ def get_linked_description(request, pk):
     Get linked description from estimate and catalog
     """
     if 'estimate' in pk:
-        obj = get_object_or_404(DescriptionLibrary.objects.filter(company=get_request().user.company), pk=pk.split(':')[1])
+        obj = get_object_or_404(DescriptionLibrary.objects.filter(company=request.user.company), pk=pk.split(':')[1])
     else:
-        obj = get_object_or_404(DataPoint.objects.filter(company=get_request().user.company), pk=pk.split(':')[1])
+        obj = get_object_or_404(DataPoint.objects.filter(company=request.user.company), pk=pk.split(':')[1])
     serializer = LinkedDescriptionSerializer(obj)
     return Response(status=status.HTTP_200_OK, data=serializer.data)
 
@@ -246,6 +246,16 @@ def unlink_group(request):
     ids = request.data
     formulas = POFormula.objects.filter(id__in=ids)
     formulas.update(group=None)
+    serializer = POFormulaSerializer(formulas, many=True)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def add_to_group(request, pk):
+    ids = request.data
+    formulas = POFormula.objects.filter(id__in=ids)
+    formulas.update(group_id=pk)
     serializer = POFormulaSerializer(formulas, many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
 
