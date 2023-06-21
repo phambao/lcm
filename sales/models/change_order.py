@@ -9,3 +9,5 @@ class ChangeOrder(BaseModel):
                                  on_delete=models.CASCADE, related_name='change_orders')
     existing_estimates = models.ManyToManyField('sales.EstimateTemplate', blank=True,
                                                 related_name='change_order', symmetrical=False)
+    add_new_estimates = models.ManyToManyField('sales.EstimateTemplate', blank=True, symmetrical=False,
+                                               related_name='new_change_order')
