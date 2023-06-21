@@ -1,6 +1,8 @@
 import uuid
-from datetime import datetime
+import pytz
 import datetime
+from datetime import datetime
+
 from django.core.files.base import ContentFile
 from django.db.models.functions import Lower
 from django.db.models import Q
@@ -784,7 +786,7 @@ def filter_event(request, *args, **kwargs):
         rs_event, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=event)
 
-import pytz
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_event_of_day(request, *args, **kwargs):
