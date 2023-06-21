@@ -72,6 +72,7 @@ class CompanyBuilder(models.Model):
     user_update = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='%(class)s_user_update',
                                     null=True, blank=True)
     currency = models.CharField(blank=True, max_length=128)
+    company_timezone = models.CharField(blank=True, max_length=128)
 
     def __str__(self):
         return self.company_name
