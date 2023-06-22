@@ -18,7 +18,7 @@ from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, UnitL
     DescriptionLibrary, Assemble, EstimateTemplate
 from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
     UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, AssembleSerializer, \
-    EstimateTemplateSerializer, TaggingSerializer
+    EstimateTemplateSerializer, TaggingSerializer, GroupFormulasSerializer
 from sales.views.catalog import parse_c_table
 from api.middleware import get_request
 from base.views.base import CompanyFilterMixin
@@ -46,6 +46,12 @@ class POFormulaGroupingList(CompanyFilterMixin, generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = GroupFormulaFilter
+
+
+class POFormulaGroupingCreate(CompanyFilterMixin, generics.CreateAPIView):
+    queryset = POFormulaGrouping.objects.all().order_by('-modified_date').distinct()
+    serializer_class = GroupFormulasSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class POFormulaGroupingDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -246,16 +252,6 @@ def unlink_group(request):
     ids = request.data
     formulas = POFormula.objects.filter(id__in=ids)
     formulas.update(group=None)
-    serializer = POFormulaSerializer(formulas, many=True)
-    return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-
-@api_view(['PUT'])
-@permission_classes([permissions.IsAuthenticated])
-def add_to_group(request, pk):
-    ids = request.data
-    formulas = POFormula.objects.filter(id__in=ids)
-    formulas.update(group_id=pk)
     serializer = POFormulaSerializer(formulas, many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
 
