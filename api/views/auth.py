@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
 from base.tasks import celery_send_mail
+from base.views.base import CompanyFilterMixin
 from ..models import CompanyBuilder
 from ..serializers.auth import UserSerializer, RegisterSerializer, LoginSerializer, User, \
     ForgotPasswordSerializer, CheckCodeSerializer, ChangePasswordSerializer
@@ -80,7 +81,7 @@ class MainUser(generics.RetrieveUpdateDestroyAPIView):
         return self.request.user
 
 
-class UserList(generics.ListAPIView):
+class UserList(CompanyFilterMixin, generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
