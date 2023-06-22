@@ -195,6 +195,7 @@ url_estimate = [
     path('formula-grouping-filter/', estimate.filter_group_fo_to_fo),
     path('formula-grouping/unlink/', estimate.unlink_group),
     path('formula-grouping/<int:pk>/', estimate.POFormulaGroupingDetail.as_view()),
+    path('formula-grouping/<int:pk>/add-formula/', estimate.add_to_group),
     path('data-entry/', estimate.DataEntryList.as_view(), name='sales.estimate.data-entry'),
     path('data-entry/<int:pk>/', estimate.DataEntryDetail.as_view(), name='sales.estimate.data-entry.detail'),
     path('data-entry/<int:pk>/material/', estimate.get_material_by_data_entry),
