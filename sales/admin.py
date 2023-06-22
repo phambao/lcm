@@ -13,19 +13,20 @@ class FilterUserCreateAdmin(admin.ModelAdmin):
 
 
 class CatalogAdmin(FilterUserCreateAdmin):
-    pass
+    search_fields = ['name']
 
 
 class LeadDetailAdmin(FilterUserCreateAdmin):
     list_display = ('id', 'lead_title')
+    search_fields = ['lead_title']
 
 
 class EstimateTemplateAdmin(FilterUserCreateAdmin):
-    pass
+    search_fields = ['name']
 
 
 class ProposalWritingAdmin(FilterUserCreateAdmin):
-    pass
+    search_fields = ['name']
 
 
 admin.site.register(Catalog, CatalogAdmin)
