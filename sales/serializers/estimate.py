@@ -232,6 +232,22 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
         return data
 
 
+class GroupFormulasSerializer(serializers.ModelSerializer):
+    group_formulas = serializers.PrimaryKeyRelatedField(queryset=POFormula.objects.all(), many=True, allow_null=True, required=False)
+
+    class Meta:
+        model = POFormulaGrouping
+        fields = ('id', 'name', 'group_formulas')
+
+    def create(self, validated_data):
+        group_formulas = pop(validated_data, 'group_formulas', [])
+        instance = super().create(validated_data)
+        for formula in group_formulas:
+            formula.group = instance
+            formula.save()
+        return instance
+
+
 class POFormulaGroupingSerializer(serializers.ModelSerializer):
     group_formulas = POFormulaSerializer('group', many=True, allow_null=True, required=False)
 
