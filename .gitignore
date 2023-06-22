@@ -8,6 +8,7 @@ node_modules/
 dist/
 uploads/
 data/
+static/
 
 # Compiled Java class files
 *.class
@@ -53,3 +54,4 @@ Thumbs.db
 venv/
 migrations/
 .vscode
+

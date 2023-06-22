@@ -5,6 +5,7 @@ services:
     build: .
     restart: 'always'
     volumes:
+      - ./static:/static
       - .:/code
     ports:
       - "8300:8000"
