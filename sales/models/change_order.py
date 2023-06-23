@@ -6,9 +6,8 @@ from api.models import BaseModel
 class GroupEstimate(BaseModel):
     name = models.CharField(max_length=128, blank=True)
     order = models.IntegerField(blank=True, default=0)
-    type = models.IntegerField(blank=True, default=0)
-    writing_groups = models.ManyToManyField('sales.EstimateTemplate', blank=True, symmetrical=False,
-                                            related_name='change_order_group')
+    estimates = models.ManyToManyField('sales.EstimateTemplate', blank=True, symmetrical=False,
+                                       related_name='change_order_group')
     change_order = models.ForeignKey('sales.ChangeOrder', on_delete=models.CASCADE, blank=True, null=True,
                                      related_name='groups')
 

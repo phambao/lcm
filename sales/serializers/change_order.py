@@ -6,7 +6,7 @@ from sales.serializers.estimate import EstimateTemplateSerializer
 
 
 class GroupEstimateSerializer(serializers.ModelSerializer):
-    writing_groups = EstimateTemplateSerializer('change_order_group', many=True, required=False, allow_null=True)
+    estimates = EstimateTemplateSerializer('change_order_group', many=True, required=False, allow_null=True)
     class Meta:
         model = GroupEstimate
         fields = '__all__'
@@ -22,10 +22,10 @@ class GroupEstimateSerializer(serializers.ModelSerializer):
         return objs
 
     def create(self, validated_data):
-        estimates = pop(validated_data, 'writing_groups', [])
+        estimates = pop(validated_data, 'estimates', [])
         instance = super().create(validated_data)
         estimates = self.create_estimate_template(estimates)
-        instance.writing_groups.add(*estimates)
+        instance.estimates.add(*estimates)
         return instance
 
 
