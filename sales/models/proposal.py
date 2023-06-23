@@ -158,11 +158,3 @@ class GroupByEstimate(BaseModel):
                                 on_delete=models.CASCADE, related_name='writing_groups')
     open_index = models.CharField(max_length=64, blank=True, default='')
     type = models.IntegerField(default=Type.GENERAL, blank=True, choices=Type.choices)
-
-
-# class ProposalTemplateConfig(BaseModel):
-#     class Meta:
-#         db_table = 'proposal_template_config'
-#     proposal_template = models.ForeignKey(ProposalTemplate, on_delete=models.CASCADE,
-#                                           related_name='config_proposal_template', null=True)
-#     config = models.JSONField(default=dict)
