@@ -158,3 +158,12 @@ class GroupByEstimate(BaseModel):
                                 on_delete=models.CASCADE, related_name='writing_groups')
     open_index = models.CharField(max_length=64, blank=True, default='')
     type = models.IntegerField(default=Type.GENERAL, blank=True, choices=Type.choices)
+
+
+class GroupEstimatePrice(BaseModel):
+    name = models.CharField(max_length=128, blank=True)
+    order = models.IntegerField(blank=True, default=0)
+    estimate_templates = models.ManyToManyField('sales.EstimateTemplate', blank=True, symmetrical=False,
+                                                related_name='group_price')
+    price_comparison = models.ForeignKey('sales.PriceComparison', on_delete=models.CASCADE, blank=True, null=True,
+                                         related_name='groups')
