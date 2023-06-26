@@ -777,7 +777,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
                   'time', 'viewing', 'notes', 'internal_notes', 'sub_notes', 'owner_notes', 'links',
                   'start_hour', 'end_hour', 'is_before', 'is_after', 'predecessor_id', 'type', 'lag_day',
                   'link_to_outside_calendar', 'tags', 'phase_label', 'phase_display_order', 'phase_color',
-                  'phase_setting', 'todo', 'daily_log', 'color', 'shift')
+                  'phase_setting', 'todo', 'daily_log', 'color', 'shift', 'user_create', 'created_date', 'modified_date', 'user_update')
 
     def create(self, validated_data):
         request = self.context['request']
