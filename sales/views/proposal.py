@@ -31,7 +31,7 @@ class ProposalTemplateDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class PriceComparisonList(CompanyFilterMixin, generics.ListCreateAPIView):
-    queryset = PriceComparison.objects.all().order_by('-modified_date').prefetch_related('estimate_templates')
+    queryset = PriceComparison.objects.all().order_by('-modified_date').prefetch_related('groups')
     serializer_class = PriceComparisonSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -40,7 +40,7 @@ class PriceComparisonList(CompanyFilterMixin, generics.ListCreateAPIView):
 
 
 class PriceComparisonCompactList(CompanyFilterMixin, generics.ListAPIView):
-    queryset = PriceComparison.objects.all().order_by('-modified_date').prefetch_related('estimate_templates')
+    queryset = PriceComparison.objects.all().order_by('-modified_date').prefetch_related('groups')
     serializer_class = PriceComparisonCompactSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)

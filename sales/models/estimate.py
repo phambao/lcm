@@ -102,8 +102,6 @@ class EstimateTemplate(BaseModel):
     catalog_links = ArrayField(models.CharField(max_length=128, blank=True, default=''), default=list, blank=True)
     group_by_proposal = models.ForeignKey('sales.GroupByEstimate', on_delete=models.CASCADE,
                                           related_name='estimate_templates', null=True, blank=True)
-    price_comparison = models.ForeignKey('sales.PriceComparison', on_delete=models.CASCADE,
-                                         related_name='estimate_templates', null=True, blank=True)
     is_show = models.BooleanField(default=True, blank=True)
     original = models.IntegerField(default=0, blank=True, null=True)
     order = models.IntegerField(default=0, blank=True)

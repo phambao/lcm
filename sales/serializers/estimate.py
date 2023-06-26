@@ -6,10 +6,10 @@ from base.constants import true, null, false
 from base.utils import pop, activity_log, extra_kwargs_for_base_model
 from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE, \
     UNIT_LIBRARY_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE, ESTIMATE_TEMPLATE_CONTENT_TYPE, ASSEMBLE_CONTENT_TYPE
-from sales.models import DataPoint, Catalog, PriceComparison, ProposalWriting
+from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, \
     UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView
-from sales.serializers.catalog import CatalogSerializer, CatalogEstimateSerializer
+from sales.serializers.catalog import CatalogEstimateSerializer
 
 
 class SerializerMixin:
@@ -409,9 +409,6 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         group_by_proposal = data.get('group_by_proposal')
         if isinstance(group_by_proposal, int):
             data['group_by_proposal'] = GroupByEstimate.objects.get(pk=group_by_proposal)
-        price_comparison = data.get('price_comparison')
-        if isinstance(price_comparison, int):
-            data['price_comparison'] = PriceComparison.objects.get(pk=price_comparison)
         return data
 
     def create_assembles(self, assembles):
@@ -443,8 +440,6 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         data_views = pop(validated_data, 'data_views', [])
         data_entries = pop(validated_data, 'data_entries', [])
         pk = pop(validated_data, 'id', None)
-        if self.is_in_proposal_writing_view():
-            pop(validated_data, 'price_comparison', None)
 
         pk_assembles = self.create_assembles(assembles)
         validated_data = self.reparse(validated_data)
@@ -479,9 +474,6 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         data = super().to_internal_value(data)
         if self.is_in_proposal_view():
             from sales.models import proposal
-            price_comparison = data.get('price_comparison')
-            if isinstance(price_comparison, proposal.PriceComparison):
-                data['price_comparison'] = price_comparison.pk
             group_by_proposal = data.get('group_by_proposal')
             if isinstance(group_by_proposal, proposal.GroupByEstimate):
                 data['group_by_proposal'] = group_by_proposal.pk
