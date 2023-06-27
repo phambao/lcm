@@ -162,7 +162,8 @@ class GroupEstimatePriceSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupEstimatePrice
         fields = '__all__'
-        extra_kwargs = {**extra_kwargs_for_base_model(), **{'price_comparison': {'read_only': True}}}
+        extra_kwargs = {**extra_kwargs_for_base_model(), **{'price_comparison': {'read_only': True}},
+                        **{'id': {'read_only': False, 'required': False}}}
 
     def create_estimate_template(self, estimates):
         objs = []
@@ -175,6 +176,7 @@ class GroupEstimatePriceSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         estimate_templates = pop(validated_data, 'estimate_templates', [])
+        pk = pop(validated_data, 'id', None)
         instance = super().create(validated_data)
         estimate_templates = self.create_estimate_template(estimate_templates)
         instance.estimate_templates.add(*estimate_templates)
@@ -250,15 +252,6 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = extra_kwargs_for_base_model()
 
-    def create_estimate_template(self, estimate_templates, instance):
-        new_id = {}
-        for estimate_template in estimate_templates:
-            serializer = estimate.EstimateTemplateSerializer(data=estimate_template, context=self.context)
-            serializer.is_valid(raise_exception=True)
-            obj = serializer.save(is_show=False)
-            new_id[estimate_template['id']] = obj.pk
-        return new_id
-
     def parse_cost_diff(self, cost_different, new_ids):
         different_cost = []
         for c in cost_different:
@@ -270,30 +263,31 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
         return different_cost
 
     def create_groups(self, groups, instance):
+        ids = {}
         for group in groups:
-            obj = GroupEstimatePriceSerializer(data=group, context=self.context)
-            obj.is_valid(raise_exception=True)
-            obj.save(price_comparison=instance)
+            serializer = GroupEstimatePriceSerializer(data=group, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save(price_comparison=instance)
+            ids[group.get('id')] = obj.pk
+        return ids
 
     def create(self, validated_data):
         groups = pop(validated_data, 'groups', [])
         instance = super().create(validated_data)
-        self.create_groups(groups, instance)
-        # new_ids = self.create_estimate_template(estimate_templates, instance)
-        # cost_different = pop(validated_data, 'cost_different', [])
-        # instance.cost_different = self.parse_cost_diff(cost_different, new_ids)
-        # instance.save(update_fields=['cost_different'])
+        new_ids = self.create_groups(groups, instance)
+        cost_different = pop(validated_data, 'cost_different', [])
+        instance.cost_different = self.parse_cost_diff(cost_different, new_ids)
+        instance.save(update_fields=['cost_different'])
         activity_log(PriceComparison, instance, 1, PriceComparisonSerializer, {})
         return instance
 
     def update(self, instance, validated_data):
         groups = pop(validated_data, 'groups', [])
         instance.groups.all().delete()
-        self.create_groups(groups, instance)
-        # new_ids = self.create_estimate_template(estimate_templates, instance)
-        # cost_different = pop(validated_data, 'cost_different', [])
-        # instance.cost_different = self.parse_cost_diff(cost_different, new_ids)
-        # instance.save(update_fields=['cost_different'])
+        new_ids = self.create_groups(groups, instance)
+        cost_different = pop(validated_data, 'cost_different', [])
+        instance.cost_different = self.parse_cost_diff(cost_different, new_ids)
+        instance.save(update_fields=['cost_different'])
         activity_log(PriceComparison, instance, 2, PriceComparisonSerializer, {})
         return super().update(instance, validated_data)
 
