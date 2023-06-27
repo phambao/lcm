@@ -106,7 +106,8 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormulaToDataEntry
-        fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value', 'copies_from')
+        fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value', 'copies_from',
+                  'is_material', 'catalog_materials')
 
     def to_representation(self, instance):
         data = super(POFormulaToDataEntrySerializer, self).to_representation(instance)
