@@ -212,6 +212,7 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
             if data['material']:
                 try:
                     primary_key = eval(data['material'])
+                    data['material_value'] = primary_key
                     pk_catalog, row_index = primary_key.get('id').split(':')
                     catalog = Catalog.objects.get(pk=pk_catalog)
                     ancestors = catalog.get_full_ancestor()
@@ -222,6 +223,7 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
                     data['catalog_ancestor'] = None
                     data['catalog_link'] = []
             else:
+                data['material_value'] = {}
                 data['catalog_ancestor'] = None
                 data['catalog_link'] = []
 
