@@ -200,6 +200,8 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
             for linked_description in linked_descriptions:
                 if isinstance(linked_description, dict):
                     linked_description = linked_description.get('id', '')
+                    if not isinstance(linked_description, str):
+                        continue
                     if 'catalog' in linked_description or 'estimate' in linked_description:
                         pk = linked_description.split(':')[1]
                         if 'estimate' in linked_description:
