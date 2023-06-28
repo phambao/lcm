@@ -8,7 +8,7 @@ from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE
     UNIT_LIBRARY_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE, ESTIMATE_TEMPLATE_CONTENT_TYPE, ASSEMBLE_CONTENT_TYPE
 from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, \
-    UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView
+    UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView, MaterialView
 from sales.serializers.catalog import CatalogEstimateSerializer
 
 
@@ -106,8 +106,7 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormulaToDataEntry
-        fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value', 'copies_from',
-                  'is_material', 'catalog_materials')
+        fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value', 'copies_from')
 
     def to_representation(self, instance):
         data = super(POFormulaToDataEntrySerializer, self).to_representation(instance)
@@ -393,10 +392,17 @@ class DataViewSerializer(serializers.ModelSerializer, SerializerMixin):
         return data
 
 
+class MaterialViewSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = MaterialView
+        fields = ('id', 'material_value', 'copies_from', 'catalog_materials')
+
+
 class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
     assembles = AssembleSerializer(many=True, required=False, allow_null=True,)
     data_views = DataViewSerializer('estimate_template', many=True, required=False, allow_null=True)
     data_entries = POFormulaToDataEntrySerializer('estimate_template', many=True, required=False, allow_null=True)
+    material_views = MaterialViewSerializers('estimate_template', many=True, required=False, allow_null=True)
 
     class Meta:
         model = EstimateTemplate
@@ -436,10 +442,18 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
             serializer.is_valid()
             serializer.save(estimate_template_id=instance.pk)
 
+    def create_material_view(self, material_views, instance):
+        for data_view in material_views:
+            data_view['estimate_template'] = instance.pk
+            serializer = MaterialViewSerializers(data=data_view)
+            serializer.is_valid()
+            serializer.save(estimate_template_id=instance.pk)
+
     def create(self, validated_data):
         assembles = pop(validated_data, 'assembles', [])
         data_views = pop(validated_data, 'data_views', [])
         data_entries = pop(validated_data, 'data_entries', [])
+        material_views = pop(validated_data, 'material_views', [])
         pk = pop(validated_data, 'id', None)
 
         pk_assembles = self.create_assembles(assembles)
@@ -447,6 +461,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         instance = super().create(validated_data)
         create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk)
         self.create_data_view(data_views, instance)
+        self.create_material_view(material_views, instance)
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
         activity_log(EstimateTemplate, instance, 1, EstimateTemplateSerializer, {})
         return instance
@@ -455,6 +470,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         assembles = pop(validated_data, 'assembles', [])
         data_views = pop(validated_data, 'data_views', [])
         data_entries = pop(validated_data, 'data_entries', [])
+        material_views = pop(validated_data, 'material_views', [])
         pk = pop(validated_data, 'id', None)
 
         instance.data_entries.all().delete()
@@ -465,6 +481,8 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         instance = super().update(instance, validated_data)
         instance.data_views.all().delete()
         self.create_data_view(data_views, instance)
+        instance.material_views.all().delete()
+        self.create_material_view(material_views, instance)
 
         instance.assembles.all().delete()
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
