@@ -79,6 +79,7 @@ class POFormulaToDataEntry(BaseModel):
 
 
 class MaterialView(BaseModel):
+    name = models.CharField(max_length=128, default='')
     material_value = models.JSONField(blank=True, default=dict)
     copies_from = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True, null=True)
     estimate_template = models.ForeignKey('sales.EstimateTemplate', on_delete=models.CASCADE,

@@ -15,7 +15,7 @@ from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter, Assemb
     DescriptionFilter, UnitFilter, DataEntryFilter
 from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, UnitLibrary, \
-    DescriptionLibrary, Assemble, EstimateTemplate
+    DescriptionLibrary, Assemble, EstimateTemplate, MaterialView
 from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
     UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, AssembleSerializer, \
     EstimateTemplateSerializer, TaggingSerializer, GroupFormulasSerializer
@@ -266,4 +266,15 @@ def get_material_by_data_entry(request, pk):
         children |= Catalog.objects.filter(pk__in=category.get_all_descendant(have_self=True))
     children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
     data = parse_c_table(children)
+    return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_material_from_formula(request, pk):
+    mv = get_object_or_404(MaterialView.objects.filter(company=request.user.company), pk=pk)
+    catagory_id = mv.catalog_materials[-1].get('id')
+    cat = get_object_or_404(Catalog.objects.all(), pk=catagory_id)
+    sub_categories = Catalog.objects.filter(pk__in=cat.get_all_descendant(have_self=True))
+    data = parse_c_table(sub_categories)
     return Response(status=status.HTTP_200_OK, data=data)
