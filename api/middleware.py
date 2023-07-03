@@ -10,6 +10,10 @@ def get_request():
     return _requests[t]
 
 
+def set_request(request):
+    _requests[current_thread()] = request
+
+
 class CacheRequestMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response

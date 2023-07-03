@@ -1,7 +1,9 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 from django.urls import reverse
-from base.utils import pop, activity_log, extra_kwargs_for_base_model
+
+from base.tasks import activity_log
+from base.utils import pop, extra_kwargs_for_base_model
 from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting, \
     ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig, GroupEstimatePrice, \
     EstimateTemplate
@@ -278,7 +280,8 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
         cost_different = pop(validated_data, 'cost_different', [])
         instance.cost_different = self.parse_cost_diff(cost_different, new_ids)
         instance.save(update_fields=['cost_different'])
-        activity_log(PriceComparison, instance, 1, PriceComparisonSerializer, {})
+        activity_log.delay(ContentType.objects.get_for_model(PriceComparison).pk, instance.pk, 1,
+                           PriceComparisonSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
@@ -288,7 +291,8 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
         cost_different = pop(validated_data, 'cost_different', [])
         instance.cost_different = self.parse_cost_diff(cost_different, new_ids)
         instance.save(update_fields=['cost_different'])
-        activity_log(PriceComparison, instance, 2, PriceComparisonSerializer, {})
+        activity_log.delay(ContentType.objects.get_for_model(PriceComparison).pk, instance.pk, 2,
+                           PriceComparisonSerializer.__name__, __name__, self.context['request'].user.pk)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
@@ -327,14 +331,16 @@ class ProposalWritingSerializer(serializers.ModelSerializer):
         writing_groups = pop(validated_data, 'writing_groups', [])
         instance = super().create(validated_data)
         self.create_group(writing_groups, instance)
-        activity_log(ProposalWriting, instance, 1, ProposalWritingSerializer, {})
+        activity_log.delay(ContentType.objects.get_for_model(ProposalWriting).pk, instance.pk, 1,
+                           ProposalWritingSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
         writing_groups = pop(validated_data, 'writing_groups', [])
         instance.writing_groups.all().update(writing=None)
         self.create_group(writing_groups, instance)
-        activity_log(ProposalWriting, instance, 2, ProposalWritingSerializer, {})
+        activity_log.delay(ContentType.objects.get_for_model(ProposalWriting).pk, instance.pk, 2,
+                           ProposalWritingSerializer.__name__, __name__, self.context['request'].user.pk)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
