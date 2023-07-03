@@ -3,7 +3,8 @@ from rest_framework import serializers
 
 from base.serializers.base import IDAndNameSerializer
 from base.constants import true, null, false
-from base.utils import pop, activity_log, extra_kwargs_for_base_model
+from base.tasks import activity_log
+from base.utils import pop, extra_kwargs_for_base_model
 from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE, \
     UNIT_LIBRARY_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE, ESTIMATE_TEMPLATE_CONTENT_TYPE, ASSEMBLE_CONTENT_TYPE
 from sales.models import DataPoint, Catalog
@@ -72,7 +73,8 @@ class DataEntrySerializer(serializers.ModelSerializer):
         catalogs = self.set_material(material_selections)
         instance.material_selections.add(*catalogs)
 
-        activity_log(DataEntry, instance, 1, DataEntrySerializer, {})
+        activity_log.delay(DATA_ENTRY_CONTENT_TYPE, instance.pk, 1,
+                           DataEntrySerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
@@ -84,7 +86,8 @@ class DataEntrySerializer(serializers.ModelSerializer):
         instance.material_selections.add(*catalogs)
 
         validated_data['unit_id'] = unit.get('id', None)
-        activity_log(DataEntry, instance, 2, DataEntrySerializer, {})
+        activity_log.delay(DATA_ENTRY_CONTENT_TYPE, instance.pk, 2,
+                           DataEntrySerializer.__name__, __name__, self.context['request'].user.pk)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
@@ -166,14 +169,16 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
         validated_data = self.reparse(validated_data)
         instance = super().create(validated_data)
         create_po_formula_to_data_entry(instance, data_entries)
-        activity_log(POFormula, instance, 1, POFormulaSerializer, {})
+        activity_log.delay(PO_FORMULA_CONTENT_TYPE, instance.pk, 1,
+                           POFormulaSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
         data_entries = pop(validated_data, 'self_data_entries', [])
         instance.self_data_entries.all().delete()
         create_po_formula_to_data_entry(instance, data_entries)
-        activity_log(POFormula, instance, 2, POFormulaSerializer, {})
+        activity_log.delay(PO_FORMULA_CONTENT_TYPE, instance.pk, 2,
+                           POFormulaSerializer.__name__, __name__, self.context['request'].user.pk)
         validated_data = self.reparse(validated_data)
         return super().update(instance, validated_data)
 
@@ -300,11 +305,13 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         instance = super().create(validated_data)
-        activity_log(UnitLibrary, instance, 1, UnitLibrarySerializer, {})
+        activity_log.delay(UNIT_LIBRARY_CONTENT_TYPE, instance.pk, 1,
+                           UnitLibrarySerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
-        activity_log(UnitLibrary, instance, 2, UnitLibrarySerializer, {})
+        activity_log.delay(UNIT_LIBRARY_CONTENT_TYPE, instance.pk, 2,
+                           UnitLibrarySerializer.__name__, __name__, self.context['request'].user.pk)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
@@ -321,11 +328,13 @@ class DescriptionLibrarySerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         instance = super().create(validated_data)
-        activity_log(DescriptionLibrary, instance, 1, DescriptionLibrarySerializer, {})
+        activity_log.delay(DESCRIPTION_LIBRARY_CONTENT_TYPE, instance.pk, 1,
+                           DescriptionLibrarySerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
-        activity_log(DescriptionLibrary, instance, 2, DescriptionLibrarySerializer, {})
+        activity_log.delay(DESCRIPTION_LIBRARY_CONTENT_TYPE, instance.pk, 2,
+                           DescriptionLibrarySerializer.__name__, __name__, self.context['request'].user.pk)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
@@ -363,14 +372,16 @@ class AssembleSerializer(serializers.ModelSerializer):
         po_formulas = pop(validated_data, 'assemble_formulas', [])
         instance = super().create(validated_data)
         self.create_po_formula(po_formulas, instance)
-        activity_log(Assemble, instance, 1, AssembleSerializer, {})
+        activity_log.delay(ASSEMBLE_CONTENT_TYPE, instance.pk, 1,
+                           AssembleSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
         po_formulas = pop(validated_data, 'assemble_formulas', [])
         instance.assemble_formulas.all().delete()
         self.create_po_formula(po_formulas, instance)
-        activity_log(Assemble, instance, 2, AssembleSerializer, {})
+        activity_log.delay(ASSEMBLE_CONTENT_TYPE, instance.pk, 2,
+                           AssembleSerializer.__name__, __name__, self.context['request'].user.pk)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
@@ -467,7 +478,8 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         self.create_data_view(data_views, instance)
         self.create_material_view(material_views, instance)
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
-        activity_log(EstimateTemplate, instance, 1, EstimateTemplateSerializer, {})
+        activity_log.delay(ESTIMATE_TEMPLATE_CONTENT_TYPE, instance.pk, 1,
+                           EstimateTemplateSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
@@ -490,7 +502,8 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
 
         instance.assembles.all().delete()
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
-        activity_log(EstimateTemplate, instance, 2, EstimateTemplateSerializer, {})
+        activity_log.delay(ESTIMATE_TEMPLATE_CONTENT_TYPE, instance.pk, 2,
+                           EstimateTemplateSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def to_internal_value(self, data):
