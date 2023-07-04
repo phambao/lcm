@@ -208,7 +208,9 @@ class ActivityLogList(generics.ListCreateAPIView, CompanyFilterMixin):
 
 
 class ActivityLogDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ActivityLog.objects.all()
+    queryset = ActivityLog.objects.all().prefetch_related(
+        'user_create', 'user_create__groups', 'user_create__user_permissions'
+    )
     serializer_class = ActivityLogSerializer
     permission_classes = [permissions.IsAuthenticated]
 

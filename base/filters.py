@@ -72,6 +72,7 @@ class CountryFilter(filters.FilterSet):
 
 class ActivityLogFilter(filters.FilterSet):
     created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='gt')
+    is_full_last_state = filters.BooleanFilter(method=lambda query, name, value: query, lookup_expr='gt')
 
     class Meta:
         model = ActivityLog

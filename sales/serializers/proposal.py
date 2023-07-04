@@ -1,7 +1,9 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 from django.urls import reverse
-from base.utils import pop, activity_log, extra_kwargs_for_base_model
+
+from base.tasks import activity_log
+from base.utils import pop, extra_kwargs_for_base_model
 from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting, \
     ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig, GroupEstimatePrice, \
     EstimateTemplate
@@ -162,7 +164,8 @@ class GroupEstimatePriceSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupEstimatePrice
         fields = '__all__'
-        extra_kwargs = {**extra_kwargs_for_base_model(), **{'price_comparison': {'read_only': True}}}
+        extra_kwargs = {**extra_kwargs_for_base_model(), **{'price_comparison': {'read_only': True}},
+                        **{'id': {'read_only': False, 'required': False}}}
 
     def create_estimate_template(self, estimates):
         objs = []
@@ -175,6 +178,7 @@ class GroupEstimatePriceSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         estimate_templates = pop(validated_data, 'estimate_templates', [])
+        pk = pop(validated_data, 'id', None)
         instance = super().create(validated_data)
         estimate_templates = self.create_estimate_template(estimate_templates)
         instance.estimate_templates.add(*estimate_templates)
@@ -250,15 +254,6 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = extra_kwargs_for_base_model()
 
-    def create_estimate_template(self, estimate_templates, instance):
-        new_id = {}
-        for estimate_template in estimate_templates:
-            serializer = estimate.EstimateTemplateSerializer(data=estimate_template, context=self.context)
-            serializer.is_valid(raise_exception=True)
-            obj = serializer.save(is_show=False)
-            new_id[estimate_template['id']] = obj.pk
-        return new_id
-
     def parse_cost_diff(self, cost_different, new_ids):
         different_cost = []
         for c in cost_different:
@@ -270,31 +265,34 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
         return different_cost
 
     def create_groups(self, groups, instance):
+        ids = {}
         for group in groups:
-            obj = GroupEstimatePriceSerializer(data=group, context=self.context)
-            obj.is_valid(raise_exception=True)
-            obj.save(price_comparison=instance)
+            serializer = GroupEstimatePriceSerializer(data=group, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save(price_comparison=instance)
+            ids[group.get('id')] = obj.pk
+        return ids
 
     def create(self, validated_data):
         groups = pop(validated_data, 'groups', [])
         instance = super().create(validated_data)
-        self.create_groups(groups, instance)
-        # new_ids = self.create_estimate_template(estimate_templates, instance)
-        # cost_different = pop(validated_data, 'cost_different', [])
-        # instance.cost_different = self.parse_cost_diff(cost_different, new_ids)
-        # instance.save(update_fields=['cost_different'])
-        activity_log(PriceComparison, instance, 1, PriceComparisonSerializer, {})
+        new_ids = self.create_groups(groups, instance)
+        cost_different = pop(validated_data, 'cost_different', [])
+        instance.cost_different = self.parse_cost_diff(cost_different, new_ids)
+        instance.save(update_fields=['cost_different'])
+        activity_log.delay(ContentType.objects.get_for_model(PriceComparison).pk, instance.pk, 1,
+                           PriceComparisonSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
         groups = pop(validated_data, 'groups', [])
         instance.groups.all().delete()
-        self.create_groups(groups, instance)
-        # new_ids = self.create_estimate_template(estimate_templates, instance)
-        # cost_different = pop(validated_data, 'cost_different', [])
-        # instance.cost_different = self.parse_cost_diff(cost_different, new_ids)
-        # instance.save(update_fields=['cost_different'])
-        activity_log(PriceComparison, instance, 2, PriceComparisonSerializer, {})
+        new_ids = self.create_groups(groups, instance)
+        cost_different = pop(validated_data, 'cost_different', [])
+        instance.cost_different = self.parse_cost_diff(cost_different, new_ids)
+        instance.save(update_fields=['cost_different'])
+        activity_log.delay(ContentType.objects.get_for_model(PriceComparison).pk, instance.pk, 2,
+                           PriceComparisonSerializer.__name__, __name__, self.context['request'].user.pk)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
@@ -333,14 +331,16 @@ class ProposalWritingSerializer(serializers.ModelSerializer):
         writing_groups = pop(validated_data, 'writing_groups', [])
         instance = super().create(validated_data)
         self.create_group(writing_groups, instance)
-        activity_log(ProposalWriting, instance, 1, ProposalWritingSerializer, {})
+        activity_log.delay(ContentType.objects.get_for_model(ProposalWriting).pk, instance.pk, 1,
+                           ProposalWritingSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
         writing_groups = pop(validated_data, 'writing_groups', [])
         instance.writing_groups.all().update(writing=None)
         self.create_group(writing_groups, instance)
-        activity_log(ProposalWriting, instance, 2, ProposalWritingSerializer, {})
+        activity_log.delay(ContentType.objects.get_for_model(ProposalWriting).pk, instance.pk, 2,
+                           ProposalWritingSerializer.__name__, __name__, self.context['request'].user.pk)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from base.utils import pop, extra_kwargs_for_base_model
-from sales.models import ChangeOrder, GroupEstimate
+from sales.models import ChangeOrder, GroupEstimate, FlatRate, GroupFlatRate
 from sales.serializers.estimate import EstimateTemplateSerializer
 
 
@@ -29,13 +29,43 @@ class GroupEstimateSerializer(serializers.ModelSerializer):
         return instance
 
 
+class FlatRateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FlatRate
+        fields = '__all__'
+        extra_kwargs = {**extra_kwargs_for_base_model(), **{'group': {'read_only': True}}}
+
+
+class GroupFlatRateSerializer(serializers.ModelSerializer):
+    flat_rates = FlatRateSerializer('group', many=True, required=False, allow_null=True)
+
+    class Meta:
+        model = GroupFlatRate
+        fields = '__all__'
+        extra_kwargs = {**extra_kwargs_for_base_model(), **{'change_order': {'read_only': True}}}
+
+    def create_flat_rates(self, flat_rates, instance):
+        for fl in flat_rates:
+            serializer = FlatRateSerializer(data=fl, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(group=instance)
+
+    def create(self, validated_data):
+        flat_rates = pop(validated_data, 'flat_rates', [])
+        instance = super().create(validated_data)
+        self.create_flat_rates(flat_rates, instance)
+        return instance
+
+
 class ChangeOrderSerializer(serializers.ModelSerializer):
     existing_estimates = EstimateTemplateSerializer('change_order', many=True, required=False, allow_null=True)
     groups = GroupEstimateSerializer('change_order', many=True, required=False, allow_null=True)
+    flat_rate_groups = GroupFlatRateSerializer('change_order', many=True, required=False, allow_null=True)
 
     class Meta:
         model = ChangeOrder
-        fields = ('id', 'name', 'proposal', 'existing_estimates', 'groups')
+        fields = ('id', 'name', 'proposal', 'existing_estimates', 'groups', 'flat_rate_groups')
 
     def create_existing_estimate(self, existing_estimates):
         objs = []
@@ -52,11 +82,19 @@ class ChangeOrderSerializer(serializers.ModelSerializer):
             obj.is_valid(raise_exception=True)
             obj.save(change_order=instance)
 
+    def create_flat_rate_groups(self, flat_rate_groups, instance):
+        for group in flat_rate_groups:
+            serializer = GroupFlatRateSerializer(data=group, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(change_order=instance)
+
     def create(self, validated_data):
         existing_estimates = pop(validated_data, 'existing_estimates', [])
         groups = pop(validated_data, 'groups', [])
+        flat_rate_groups = pop(validated_data, 'flat_rate_groups', [])
         objs = self.create_existing_estimate(existing_estimates)
         instance = super().create(validated_data)
+        self.create_flat_rate_groups(flat_rate_groups, instance)
         self.create_groups(groups, instance)
         instance.existing_estimates.add(*objs)
         return instance
@@ -64,8 +102,11 @@ class ChangeOrderSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         existing_estimates = pop(validated_data, 'existing_estimates', [])
         groups = pop(validated_data, 'groups', [])
+        flat_rate_groups = pop(validated_data, 'flat_rate_groups', [])
         instance = super().update(instance, validated_data)
         instance.groups.all().delete()
+        instance.flat_rate_groups.all().delete()
+        self.create_flat_rate_groups(flat_rate_groups, instance)
         self.create_groups(groups, instance)
         instance.existing_estimates.all().delete()
         instance.existing_estimates.add(*self.create_existing_estimate(existing_estimates))
