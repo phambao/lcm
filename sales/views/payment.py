@@ -1,20 +1,19 @@
-from rest_framework import response, status
+from django.conf import settings
 from django.http import HttpResponse
 import stripe
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render, redirect
-from rest_framework.generics import RetrieveAPIView
+from django.shortcuts import redirect
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.decorators import api_view
+from decouple import config
 
-from lcm import settings
-from sales.models.payment import Product
-from sales.serializers.payment import ProductSerializer, CheckoutSessionSerializer
+from base.models.payment import Product
+from base.serializers.payment import ProductSerializer, CheckoutSessionSerializer
 
-stripe.api_key = settings.STRIPE_SECRET_KEY
+stripe.api_key = config('STRIPE_SECRET_KEY')
 
 
 class ProductPreview(generics.ListCreateAPIView):

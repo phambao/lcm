@@ -1,4 +1,5 @@
 from django.urls import path, include
+from django.views.decorators.csrf import csrf_exempt
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
@@ -6,6 +7,8 @@ from rest_framework import permissions
 from base.views import country_state_city, base, auth
 from base.views.base import update_language_user
 # Define path for Base App ------------------------------------------------------
+from sales.views.payment import stripe_webhook_view, ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
+    stripe_cancel_subscription
 
 url_base = [
     path('location/',
@@ -40,8 +43,12 @@ url_base = [
     path('permission/', auth.PermissionList.as_view()),
     path('permission/<int:pk>/', auth.PermissionDetail.as_view()),
     path('lang/<str:lang>/', update_language_user),
+    path('stripe-webhook/', stripe_webhook_view, name='stripe-webhook'),
+    path('product/<int:pk>/', ProductPreviewDetail.as_view()),
+    path('product/', ProductPreview.as_view()),
+    path('create-checkout-session/', csrf_exempt(CreateCheckOutSession.as_view()), name='checkout_session'),
+    path('stripe-cancel-subscription/', stripe_cancel_subscription)
 ]
-
 # Create schema view for Swagger ------------------------------------------------
 schema_view_base = get_schema_view(
     openapi.Info(

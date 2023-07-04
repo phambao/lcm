@@ -264,7 +264,6 @@ url_sales = [
     path('estimate/', include(url_estimate)),
     path('proposal/', include(url_proposal)),
     path('change-order/', include(url_change_order)),
-    path('payment/', include(url_payment)),
 ]
 
 schema_view_sales = get_schema_view(
@@ -281,7 +280,6 @@ schema_view_sales = get_schema_view(
         path('api/sales/schedule/', include(url_schedule)),
         path('api/sales/estimate/', include(url_estimate)),
         path('api/sales/proposal/', include(url_proposal)),
-        path('api/sales/payment/', include(url_payment))
     ],
     public=True,
     permission_classes=[permissions.AllowAny],
