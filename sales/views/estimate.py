@@ -191,7 +191,7 @@ def filter_group_fo_to_fo(request):
     ).order_by('-modified_date').distinct().values()
 
     for data in grouping_queryset:
-        po = POFormula.objects.filter(Q(group_id=data['id']) & q).values()
+        po = POFormula.objects.filter(Q(group_id=data['id']) & q)
         data['group_formulas'] = po
     paginator = LimitOffsetPagination()
     grouping_po_rs = paginator.paginate_queryset(grouping_queryset, request)
