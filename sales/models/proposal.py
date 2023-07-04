@@ -112,8 +112,10 @@ class ProposalWriting(BaseModel):
         catalog_ids = set()
         for poformula in poformulas:
             primary_key = eval(poformula.material)
-            pk_catalog, row_index = primary_key.get('id').split(':')
-            catalog_ids.add(pk_catalog)
+            if isinstance(primary_key, dict):
+                """Somehow material on poformula is still string so we ignore this"""
+                pk_catalog, row_index = primary_key.get('id').split(':')
+                catalog_ids.add(pk_catalog)
         catalogs = Catalog.objects.filter(pk__in=catalog_ids)
         ancestors = []
         for catalog in catalogs:
