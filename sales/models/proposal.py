@@ -111,7 +111,10 @@ class ProposalWriting(BaseModel):
         poformulas = self._get_poformula()
         catalog_ids = set()
         for poformula in poformulas:
-            primary_key = eval(poformula.material)
+            try:
+                primary_key = eval(poformula.material)
+            except SyntaxError:
+                continue
             if isinstance(primary_key, dict) and primary_key:
                 """Somehow material on poformula is still string so we ignore this"""
                 pk_catalog, row_index = primary_key.get('id').split(':')
