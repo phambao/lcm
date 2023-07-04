@@ -89,6 +89,14 @@ class ProposalFormattingTemplateDetailGenericView(generics.RetrieveUpdateDestroy
     serializer_class = ProposalFormattingTemplateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        proposal_writing = get_object_or_404(ProposalWriting.objects.filter(company=get_request().user.company),
+                                             pk=self.kwargs['pk'])
+        proposal_formatting = proposal_writing.proposal_formatting
+        if not proposal_formatting:
+            proposal_formatting = ProposalFormatting.objects.create(proposal_writing=proposal_writing)
+        return ProposalFormatting.objects.all()
+
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -117,3 +125,25 @@ def get_image(request, pk):
     imgs = proposal_writing.get_imgs()
     data = CatalogImageSerializer(imgs, context={'request': request}, many=True).data
     return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def proposal_formatting_view(request, pk):
+    proposal_writing = get_object_or_404(ProposalWriting.objects.filter(company=get_request().user.company),
+                                         pk=pk)
+    if request.method == 'GET':
+        try:
+            proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
+        except ProposalFormatting.DoesNotExist:
+            proposal_formatting = ProposalFormatting.objects.create(proposal_writing=proposal_writing)
+        serializer = ProposalFormattingTemplateSerializer(proposal_formatting)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    if request.method == 'PUT':
+        proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
+        serializer = ProposalFormattingTemplateSerializer(proposal_formatting, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+    return Response(status=status.HTTP_204_NO_CONTENT)
