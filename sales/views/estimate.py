@@ -233,7 +233,7 @@ def get_linked_description(request, pk):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_tag_formula(request):
-    formulas = POFormula.objects.filter(company=get_request().user.company)
+    formulas = POFormula.objects.filter(company=get_request().user.company, is_show=True)
     serializer = TaggingSerializer(formulas, many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
 
