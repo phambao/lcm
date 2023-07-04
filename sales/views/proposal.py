@@ -132,18 +132,21 @@ def get_image(request, pk):
 def proposal_formatting_view(request, pk):
     proposal_writing = get_object_or_404(ProposalWriting.objects.filter(company=get_request().user.company),
                                          pk=pk)
+    all_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
+                  'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario',
+                  'material_data_entry']
     if request.method == 'GET':
         try:
             proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
         except ProposalFormatting.DoesNotExist:
             proposal_formatting = ProposalFormatting.objects.create(proposal_writing=proposal_writing)
         serializer = ProposalFormattingTemplateSerializer(proposal_formatting)
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
+        return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_fields': all_fields}})
 
     if request.method == 'PUT':
         proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
         serializer = ProposalFormattingTemplateSerializer(proposal_formatting, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
+        return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_fields': all_fields}})
     return Response(status=status.HTTP_204_NO_CONTENT)
