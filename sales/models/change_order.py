@@ -29,9 +29,9 @@ class FlatRate(BaseModel):
     catalog_materials = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True,
                                    null=True)
     quantity = models.IntegerField(default=0, blank=True)
-    cost = models.IntegerField(default=0, blank=True)
-    charge = models.IntegerField(default=0, blank=True)
-    markup = models.IntegerField(default=0, blank=True)
+    cost = models.DecimalField(default=0, blank=True, decimal_places=2, max_digits=16)
+    charge = models.DecimalField(default=0, blank=True, decimal_places=2, max_digits=16)
+    markup = models.DecimalField(default=0, blank=True, decimal_places=2, max_digits=16)
     unit = models.CharField(default='', blank=True, max_length=64)
     order = models.IntegerField(default=0, blank=True)
 
