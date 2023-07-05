@@ -7,6 +7,7 @@ from base.views.base import FileMessageTodoGenericView
 from sales.views import lead_list, catalog, lead_schedule, estimate, proposal, change_order
 from api.views.upload_file import FileUploadView
 
+
 url_contacts = [
     path('contacts/', lead_list.ContactsViewSet.as_view()),
     path('contacts/<int:pk>/', lead_list.ContactsDetailViewSet.as_view()),
@@ -268,7 +269,7 @@ schema_view_sales = get_schema_view(
         path('api/sales/catalog/', include(url_catalog)),
         path('api/sales/schedule/', include(url_schedule)),
         path('api/sales/estimate/', include(url_estimate)),
-        path('api/sales/proposal/', include(url_proposal)),
+        path('api/sales/proposal/', include(url_proposal))
     ],
     public=True,
     permission_classes=[permissions.AllowAny],
