@@ -1,3 +1,4 @@
+import io
 import os
 import tempfile
 import uuid
@@ -388,7 +389,7 @@ def export_data(request):
     ]
     sheet.append(headers)
     # fields = [field.name for field in LeadDetail._meta.get_fields()]
-    lead_details = LeadDetail.objects.all()
+    lead_details = LeadDetail.objects.filter(company=request.user.company)
     for index, lead_detail in enumerate(lead_details, 1):
         # projected_sale_date = lead_detail.projected_sale_date
         # if projected_sale_date is not None:
@@ -411,10 +412,8 @@ def export_data(request):
         sheet.append(row_data)
     current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"Lead_detail_{current_datetime}.xlsx"
-    temp_dir = tempfile.gettempdir()
-    temp_file = os.path.join(temp_dir, 'exported_data.xlsx')
-    workbook.save(temp_file)
-
-    response = FileResponse(open(temp_file, 'rb'), as_attachment=True, filename=filename)
-
+    output = io.BytesIO()
+    workbook.save(output)
+    output.seek(0)
+    response = FileResponse(output, as_attachment=True, filename=filename)
     return response
