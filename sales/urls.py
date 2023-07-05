@@ -1,5 +1,4 @@
 from django.urls import path, include
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -7,8 +6,6 @@ from drf_yasg import openapi
 from base.views.base import FileMessageTodoGenericView
 from sales.views import lead_list, catalog, lead_schedule, estimate, proposal, change_order
 from api.views.upload_file import FileUploadView
-from sales.views.payment import stripe_webhook_view, CreateCheckOutSession, ProductPreview, ProductPreviewDetail, \
-    stripe_cancel_subscription
 
 url_contacts = [
     path('contacts/', lead_list.ContactsViewSet.as_view()),
@@ -236,14 +233,6 @@ url_proposal = [
 url_change_order = [
     path('', change_order.ChangeOderList.as_view()),
     path('<int:pk>/', change_order.ChangeOderDetail.as_view())
-]
-url_payment = [
-    path('stripe-webhook/', stripe_webhook_view, name='stripe-webhook'),
-    path('product/<int:pk>/', ProductPreviewDetail.as_view()),
-    path('product/', ProductPreview.as_view()),
-    path('create-checkout-session/', csrf_exempt(CreateCheckOutSession.as_view()), name='checkout_session'),
-    path('stripe-cancel-subscription/', stripe_cancel_subscription)
-
 ]
 
 # URL Config

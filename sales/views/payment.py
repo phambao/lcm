@@ -50,7 +50,7 @@ class CreateCheckOutSession(APIView):
                 client_reference_id='1'
             )
             return redirect(checkout_session.url)
-        except Exception as e:
+        except stripe.error.StripeError as e:
             return Response({'msg': 'something went wrong while creating stripe session', 'error': str(e)}, status=500)
 
 
