@@ -335,5 +335,3 @@ def get_materials(request):
     children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
     data = parse_c_table(children)
     return Response(status=status.HTTP_200_OK, data=data)
-
-
