@@ -140,12 +140,13 @@ def proposal_formatting_view(request, pk):
             proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
         except ProposalFormatting.DoesNotExist:
             proposal_formatting = ProposalFormatting.objects.create(proposal_writing=proposal_writing)
-        serializer = ProposalFormattingTemplateSerializer(proposal_formatting)
+        serializer = ProposalFormattingTemplateSerializer(proposal_formatting, context={'request': request})
         return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_fields': all_fields}})
 
     if request.method == 'PUT':
         proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
-        serializer = ProposalFormattingTemplateSerializer(proposal_formatting, data=request.data, partial=True)
+        serializer = ProposalFormattingTemplateSerializer(proposal_formatting, data=request.data,
+                                                          partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_fields': all_fields}})
