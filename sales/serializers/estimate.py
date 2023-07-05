@@ -73,8 +73,10 @@ class DataEntrySerializer(serializers.ModelSerializer):
         catalogs = self.set_material(material_selections)
         instance.material_selections.add(*catalogs)
 
-        activity_log.delay(DATA_ENTRY_CONTENT_TYPE, instance.pk, 1,
-                           DataEntrySerializer.__name__, __name__, self.context['request'].user.pk)
+        from sales.views.estimate import DataEntryList
+        if isinstance(self.context.get('view'), DataEntryList):
+            activity_log.delay(DATA_ENTRY_CONTENT_TYPE, instance.pk, 1,
+                               DataEntrySerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
@@ -169,8 +171,11 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
         validated_data = self.reparse(validated_data)
         instance = super().create(validated_data)
         create_po_formula_to_data_entry(instance, data_entries)
-        activity_log.delay(PO_FORMULA_CONTENT_TYPE, instance.pk, 1,
-                           POFormulaSerializer.__name__, __name__, self.context['request'].user.pk)
+
+        from sales.views.estimate import POFormulaList
+        if isinstance(self.context.get('view'), POFormulaList):
+            activity_log.delay(PO_FORMULA_CONTENT_TYPE, instance.pk, 1,
+                               POFormulaSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
@@ -305,8 +310,11 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         instance = super().create(validated_data)
-        activity_log.delay(UNIT_LIBRARY_CONTENT_TYPE, instance.pk, 1,
-                           UnitLibrarySerializer.__name__, __name__, self.context['request'].user.pk)
+
+        from sales.views.estimate import UnitLibraryList
+        if isinstance(self.context.get('view'), UnitLibraryList):
+            activity_log.delay(UNIT_LIBRARY_CONTENT_TYPE, instance.pk, 1,
+                               UnitLibrarySerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
@@ -328,8 +336,11 @@ class DescriptionLibrarySerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         instance = super().create(validated_data)
-        activity_log.delay(DESCRIPTION_LIBRARY_CONTENT_TYPE, instance.pk, 1,
-                           DescriptionLibrarySerializer.__name__, __name__, self.context['request'].user.pk)
+
+        from sales.views.estimate import DescriptionLibraryList
+        if isinstance(self.context.get('view'), DescriptionLibraryList):
+            activity_log.delay(DESCRIPTION_LIBRARY_CONTENT_TYPE, instance.pk, 1,
+                               DescriptionLibrarySerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
@@ -372,8 +383,11 @@ class AssembleSerializer(serializers.ModelSerializer):
         po_formulas = pop(validated_data, 'assemble_formulas', [])
         instance = super().create(validated_data)
         self.create_po_formula(po_formulas, instance)
-        activity_log.delay(ASSEMBLE_CONTENT_TYPE, instance.pk, 1,
-                           AssembleSerializer.__name__, __name__, self.context['request'].user.pk)
+
+        from sales.views.estimate import AssembleList
+        if isinstance(self.context.get('view'), AssembleList):
+            activity_log.delay(ASSEMBLE_CONTENT_TYPE, instance.pk, 1,
+                               AssembleSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
@@ -478,8 +492,11 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         self.create_data_view(data_views, instance)
         self.create_material_view(material_views, instance)
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
-        activity_log.delay(ESTIMATE_TEMPLATE_CONTENT_TYPE, instance.pk, 1,
-                           EstimateTemplateSerializer.__name__, __name__, self.context['request'].user.pk)
+
+        from sales.views.estimate import EstimateTemplateList
+        if isinstance(self.context.get('view'), EstimateTemplateList):
+            activity_log.delay(ESTIMATE_TEMPLATE_CONTENT_TYPE, instance.pk, 1,
+                               EstimateTemplateSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
