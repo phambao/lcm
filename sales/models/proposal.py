@@ -111,9 +111,14 @@ class ProposalWriting(BaseModel):
         poformulas = self._get_poformula()
         catalog_ids = set()
         for poformula in poformulas:
-            primary_key = eval(poformula.material)
-            pk_catalog, row_index = primary_key.get('id').split(':')
-            catalog_ids.add(pk_catalog)
+            try:
+                primary_key = eval(poformula.material)
+            except SyntaxError:
+                continue
+            if isinstance(primary_key, dict) and primary_key:
+                """Somehow material on poformula is still string so we ignore this"""
+                pk_catalog, row_index = primary_key.get('id').split(':')
+                catalog_ids.add(pk_catalog)
         catalogs = Catalog.objects.filter(pk__in=catalog_ids)
         ancestors = []
         for catalog in catalogs:
@@ -125,13 +130,15 @@ class ProposalFormatting(BaseModel):
     class Meta:
         db_table = 'proposal_formatting'
 
-    screen_shot = models.CharField(max_length=1000, blank=True)
-    name = models.CharField(max_length=64)
-    proposal_template = models.ForeignKey(ProposalTemplate, on_delete=models.CASCADE,
-                                          related_name='proposal_template_formatting', null=True)
-    proposal_writing = models.ForeignKey('sales.ProposalWriting', on_delete=models.SET_NULL,
-                                         related_name='proposal_formatting', null=True, blank=True)
+    screen_shot = models.TextField(blank=True, default='')
+    config = models.JSONField(default=dict, blank=True)
+    html_code = models.TextField(blank=True, null=True, default='')
+    css_code = models.TextField(blank=True, null=True, default='')
+    proposal_writing = models.OneToOneField('sales.ProposalWriting', on_delete=models.SET_NULL,
+                                            related_name='proposal_formatting', null=True, blank=True)
     show_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
+    has_send_mail = models.BooleanField(default=False, blank=True)
+    has_signed = models.BooleanField(default=False, blank=True)
 
 
 class ProposalFormattingConfig(BaseModel):

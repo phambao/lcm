@@ -99,7 +99,7 @@ def get_catalog_children(request, pk):
     if level:
         catalogs = Catalog.objects.filter(parents__id=pk, level=level)
 
-    serializer = catalog.CatalogSerializer(catalogs, many=True)
+    serializer = catalog.CatalogSerializer(catalogs, many=True, context={'request': request})
     return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
@@ -136,7 +136,7 @@ def get_catalog_list(request, pk):
     catalog_obj = get_object_or_404(Catalog, pk=pk)
     catalog_ids = catalog_obj.get_all_descendant()
     catalogs = Catalog.objects.filter(pk__in=catalog_ids).prefetch_related('data_points', 'parents')
-    serializer = catalog.CatalogSerializer(catalogs, many=True)
+    serializer = catalog.CatalogSerializer(catalogs, many=True, context={'request': request})
     return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 

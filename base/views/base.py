@@ -197,7 +197,7 @@ def config_view(request, model):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ActivityLogList(generics.ListCreateAPIView, CompanyFilterMixin):
+class ActivityLogList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ActivityLog.objects.all().order_by('-created_date').prefetch_related(
         'user_create', 'user_create__groups', 'user_create__user_permissions'
     )
