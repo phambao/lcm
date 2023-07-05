@@ -1,6 +1,11 @@
+import os
+import tempfile
 import uuid
+from datetime import datetime
 
+import openpyxl
 from django.core.files.base import ContentFile
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_filters import rest_framework as filters
@@ -368,3 +373,48 @@ def upload_multiple_photo(request, pk_lead):
     serializer = PhotoSerializer(photos, many=True)
 
     return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def export_data(request):
+    workbook = openpyxl.Workbook()
+
+    sheet = workbook.active
+    headers = [
+        'Lead Title', 'Street Address', 'Country', 'City', 'State', 'Zip Code',
+        'Status', 'Proposal Status', 'Notes', 'Confidence', 'Estimate Revenue From',
+        'Estimate Revenue To', 'Number of Click',
+    ]
+    sheet.append(headers)
+    # fields = [field.name for field in LeadDetail._meta.get_fields()]
+    lead_details = LeadDetail.objects.all()
+    for index, lead_detail in enumerate(lead_details, 1):
+        # projected_sale_date = lead_detail.projected_sale_date
+        # if projected_sale_date is not None:
+        #     projected_sale_date = projected_sale_date.replace(tzinfo=None)
+        row_data = [
+            lead_detail.lead_title, lead_detail.street_address,
+            lead_detail.country.name if lead_detail.country else '',
+            lead_detail.city.name if lead_detail.city else '',
+            lead_detail.state.name if lead_detail.state else '',
+            lead_detail.zip_code, lead_detail.get_status_display(),
+            lead_detail.get_proposal_status_display(), lead_detail.notes,
+            lead_detail.confidence, lead_detail.estimate_revenue_from,
+            lead_detail.estimate_revenue_to,
+            # ', '.join(pt.name for pt in lead_detail.project_types.all()),
+            # ', '.join(salesperson.username for salesperson in lead_detail.salesperson.all()),
+            # ', '.join(source.name for source in lead_detail.sources.all()),
+            # ', '.join(tag.name for tag in lead_detail.tags.all()),
+            lead_detail.number_of_click,
+        ]
+        sheet.append(row_data)
+    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"Lead_detail_{current_datetime}.xlsx"
+    temp_dir = tempfile.gettempdir()
+    temp_file = os.path.join(temp_dir, 'exported_data.xlsx')
+    workbook.save(temp_file)
+
+    response = FileResponse(open(temp_file, 'rb'), as_attachment=True, filename=filename)
+
+    return response
