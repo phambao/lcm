@@ -335,3 +335,40 @@ def get_materials(request):
     children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
     data = parse_c_table(children)
     return Response(status=status.HTTP_200_OK, data=data)
+
+
+import openpyxl
+from django.http import HttpResponse
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def export_data(request):
+    # Tạo một workbook mới
+    workbook = openpyxl.Workbook()
+
+    # Chọn sheet đầu tiên
+    sheet = workbook.active
+
+    # Tạo tiêu đề cột
+    sheet['A1'] = 'Field 1'
+    sheet['B1'] = 'Field 2'
+    # Thêm tiêu đề cho các cột khác
+
+    # Lấy dữ liệu từ model và điền vào sheet
+    data = [1,2]
+    row = 2  # Bắt đầu từ dòng thứ 2
+    for item in data:
+        sheet.cell(row=row, column=1).value = 'test1'
+        sheet.cell(row=row, column=2).value = 'test2'
+        # Điền dữ liệu cho các cột khác
+        row += 1
+
+    # Tạo HTTP response chứa file Excel
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=exported_data.xlsx'
+
+    # Ghi workbook vào response
+    workbook.save(response)
+
+    return response
+
+
