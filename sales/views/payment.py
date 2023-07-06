@@ -13,7 +13,7 @@ from decouple import config
 from base.models.payment import Product
 from base.serializers.payment import ProductSerializer, CheckoutSessionSerializer
 
-stripe.api_key = config('STRIPE_SECRET_KEY')
+stripe.api_key = config('STRIPE_SECRET_KEY', '')
 
 
 class ProductPreview(generics.ListCreateAPIView):

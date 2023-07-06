@@ -5,7 +5,8 @@ from django_filters import rest_framework as filters
 from rest_framework.response import Response
 
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter, ProposalTemplateFilter
-from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, GroupByEstimate
+from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, GroupByEstimate, \
+    POFormula
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import POFormulaSerializer, POFormulaCompactSerializer
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
@@ -109,12 +110,26 @@ def get_html_css_by_template(request, *args, **kwargs):
     return Response(status=status.HTTP_200_OK, data=data)
 
 
-@api_view(['GET'])
+@api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated])
 def get_data(request, pk):
-    proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
-    po_formulas = proposal_writing.get_data_formula()
-    data = POFormulaCompactSerializer(po_formulas, context={'request': request}, many=True).data
+    if request.method == 'GET':
+        proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
+        po_formulas = proposal_writing.get_data_formula().order_by('order')
+        data = POFormulaCompactSerializer(po_formulas, context={'request': request}, many=True).data
+
+    if request.method == 'PUT':
+        """Update order po formula"""
+        ids = request.data
+        po_formulas = POFormula.objects.filter(id__in=ids)
+        for po_formula in po_formulas:
+            try:
+                po_formula.order = ids.index(po_formula.pk)
+            except ValueError:
+                pass
+        POFormula.objects.bulk_update(po_formulas, ['order'])
+        data = POFormulaCompactSerializer(po_formulas.order_by('order'), context={'request': request}, many=True).data
+
     return Response(status=status.HTTP_200_OK, data=data)
 
 
