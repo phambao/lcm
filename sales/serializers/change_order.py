@@ -1,6 +1,8 @@
+from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
 from base.utils import pop, extra_kwargs_for_base_model
+from base.tasks import activity_log
 from sales.models import ChangeOrder, GroupEstimate, FlatRate, GroupFlatRate
 from sales.serializers.estimate import EstimateTemplateSerializer
 
@@ -65,7 +67,9 @@ class ChangeOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChangeOrder
-        fields = ('id', 'name', 'proposal', 'existing_estimates', 'groups', 'flat_rate_groups')
+        fields = ('id', 'name', 'existing_estimates', 'groups', 'flat_rate_groups',
+                  'proposal_writing', 'approval_deadline', 'owner_last_view')
+        extra_kwargs = {'approval_deadline': {'required': True}}
 
     def create_existing_estimate(self, existing_estimates):
         objs = []
@@ -97,6 +101,8 @@ class ChangeOrderSerializer(serializers.ModelSerializer):
         self.create_flat_rate_groups(flat_rate_groups, instance)
         self.create_groups(groups, instance)
         instance.existing_estimates.add(*objs)
+        activity_log.delay(ContentType.objects.get_for_model(ChangeOrder).pk, instance.pk, 1,
+                           ChangeOrderSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
@@ -110,4 +116,6 @@ class ChangeOrderSerializer(serializers.ModelSerializer):
         self.create_groups(groups, instance)
         instance.existing_estimates.all().delete()
         instance.existing_estimates.add(*self.create_existing_estimate(existing_estimates))
+        activity_log.delay(ContentType.objects.get_for_model(ChangeOrder).pk, instance.pk, 2,
+                           ChangeOrderSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
