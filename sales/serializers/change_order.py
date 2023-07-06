@@ -67,9 +67,8 @@ class ChangeOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChangeOrder
-        fields = ('id', 'name', 'existing_estimates', 'groups', 'flat_rate_groups',
-                  'proposal_writing', 'approval_deadline', 'owner_last_view')
-        extra_kwargs = {'approval_deadline': {'required': True}}
+        fields = '__all__'
+        extra_kwargs = {**{'approval_deadline': {'required': True}}, **extra_kwargs_for_base_model()}
 
     def create_existing_estimate(self, existing_estimates):
         objs = []
@@ -119,3 +118,9 @@ class ChangeOrderSerializer(serializers.ModelSerializer):
         activity_log.delay(ContentType.objects.get_for_model(ChangeOrder).pk, instance.pk, 2,
                            ChangeOrderSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        proposal_writing = instance.proposal_writing
+        data['proposal_name'] = proposal_writing.name if proposal_writing else None
+        return data
