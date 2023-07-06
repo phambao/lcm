@@ -256,6 +256,16 @@ def unlink_group(request):
     return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
+@api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def add_existing_formula(request, pk):
+    ids = request.data
+    formulas = POFormula.objects.filter(id__in=ids)
+    formulas.update(group=pk)
+    serializer = POFormulaSerializer(formulas, many=True)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_material_by_data_entry(request, pk):
