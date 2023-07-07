@@ -75,7 +75,7 @@ class ChangeOrderSerializer(serializers.ModelSerializer):
         for estimate in existing_estimates:
             serializer = EstimateTemplateSerializer(data=estimate, context=self.context)
             serializer.is_valid(raise_exception=True)
-            obj = serializer.save(is_show=False)
+            obj = serializer.save(is_show=False, group_by_proposal=None)
             objs.append(obj)
         return objs
 
