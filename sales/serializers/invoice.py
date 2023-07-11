@@ -4,6 +4,7 @@ from rest_framework.exceptions import ValidationError
 from base.utils import pop
 from .change_order import ChangeOrderSerializer
 from api.serializers.base import SerializerMixin
+from .proposal import ProposalWritingSerializer
 from ..models import ChangeOrder
 from ..models.invoice import Invoice, TableInvoice
 
@@ -20,12 +21,13 @@ class TableInvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
         return data
 
 
-class InvoiceSerializer(serializers.ModelSerializer):
+class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
     tables = TableInvoiceSerializer('invoice', many=True, required=False, allow_null=True)
 
     class Meta:
         model = Invoice
-        fields = ('id', 'name', 'tables', 'date_paid', 'status', 'deadline', 'deadline_date', 'deadline_time', 'comment', 'note')
+        fields = ('id', 'name', 'tables', 'date_paid', 'status', 'deadline', 'deadline_date',
+                  'deadline_time', 'comment', 'note', 'proposal')
 
     def create_talbes(self, instance, tables):
         for table in tables:
@@ -45,3 +47,10 @@ class InvoiceSerializer(serializers.ModelSerializer):
         instance.tables.all().delete()
         self.create_talbes(instance, tables)
         return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if self.is_param_exist('pk'):
+            if instance.proposal:
+                data['proposal'] = ProposalWritingSerializer(instance.proposal).data
+        return data

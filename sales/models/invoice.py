@@ -31,3 +31,4 @@ class Invoice(BaseModel):
     deadline_time = models.TimeField(blank=True, null=True)
     comment = models.TextField(blank=True)
     note = models.TextField(blank=True)
+    proposal = models.ForeignKey('sales.ProposalWriting', on_delete=models.CASCADE, related_name='invoices', blank=True, null=True)
