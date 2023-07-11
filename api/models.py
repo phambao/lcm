@@ -112,3 +112,16 @@ class ActivityLog(BaseModel):
         if self.action == Action.UPDATE:
             return 'Update'
         return 'Delete'
+
+
+class RequireSignature(models.TextChoices):
+    ALL = 'all', 'ALL'
+
+
+class ChangeOrderSetting(BaseModel):
+    class Meta:
+        db_table = 'change_order_setting'
+
+    require_signature = models.CharField(max_length=128, choices=RequireSignature.choices, default=RequireSignature.ALL)
+    change_order_approval = models.TextField(blank=True)
+    default_change_order = models.TextField(blank=True)
