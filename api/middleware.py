@@ -1,5 +1,7 @@
 from threading import current_thread
+
 from django.utils.translation import activate
+
 _requests = {}
 
 
@@ -26,6 +28,10 @@ class CacheRequestMiddleware:
         # the view (and later middleware) are called.
         self.process_request(request)
         response = self.get_response(request)
+
+        # All lru objects cleared
+        from sales.models.catalog import Catalog
+        Catalog().get_full_ancestor.cache_clear()
 
         # Code to be executed for each request/response after
         # the view is called.
