@@ -379,9 +379,9 @@ def upload_multiple_photo(request, pk_lead):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def export_data(request):
-    workbook = openpyxl.Workbook()
+    workbook = openpyxl.Workbook(write_only=True)
 
-    sheet = workbook.active
+    sheet = workbook.create_sheet()
     headers = [
         'Lead Title', 'Street Address', 'Country', 'City', 'State', 'Zip Code',
         'Status', 'Proposal Status', 'Notes', 'Confidence', 'Estimate Revenue From',

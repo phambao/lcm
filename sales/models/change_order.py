@@ -1,5 +1,6 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.utils import timezone
 
 from api.models import BaseModel
 
@@ -38,7 +39,9 @@ class FlatRate(BaseModel):
 
 class ChangeOrder(BaseModel):
     name = models.CharField(max_length=128)
-    proposal = models.ForeignKey('sales.ProposalFormatting', null=True, blank=True,
-                                 on_delete=models.CASCADE, related_name='change_orders')
+    approval_deadline = models.DateTimeField(default=timezone.now)
+    owner_last_view = models.DateTimeField(auto_now=True, blank=True)
+    proposal_writing = models.ForeignKey('sales.ProposalWriting', null=True, blank=True,
+                                         on_delete=models.CASCADE, related_name='change_orders')
     existing_estimates = models.ManyToManyField('sales.EstimateTemplate', blank=True,
                                                 related_name='change_order', symmetrical=False)

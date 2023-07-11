@@ -4,7 +4,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from base.views.base import FileMessageTodoGenericView
-from sales.views import lead_list, catalog, lead_schedule, estimate, proposal, change_order
+from sales.views import lead_list, catalog, lead_schedule, estimate, proposal, change_order, invoice
 from api.views.upload_file import FileUploadView
 from sales.views.lead_list import export_data
 
@@ -198,6 +198,7 @@ url_estimate = [
     path('formula-grouping/unlink/', estimate.unlink_group),
     path('formula-grouping/<int:pk>/', estimate.POFormulaGroupingDetail.as_view()),
     path('formula-grouping/add-formula/', estimate.POFormulaGroupingCreate.as_view()),
+    path('formula-grouping/<int:pk>/add-existing-formula/', estimate.add_existing_formula),
     path('data-entry/', estimate.DataEntryList.as_view(), name='sales.estimate.data-entry'),
     path('data-entry/<int:pk>/', estimate.DataEntryDetail.as_view(), name='sales.estimate.data-entry.detail'),
     path('data-entry/<int:pk>/material/', estimate.get_material_by_data_entry),
@@ -226,6 +227,7 @@ url_proposal = [
     path('proposal-writing/', proposal.ProposalWritingList.as_view()),
     path('proposal-writing-compact/', proposal.ProposalWritingCompactList.as_view()),
     path('proposal-writing/<int:pk>/', proposal.ProposalWritingDetail.as_view()),
+    path('proposal-writing/<int:pk>/change-order', change_order.ChangeOrderFromProposalWritingList.as_view()),
     path('proposal-writing/<int:pk>/formatting/', proposal.proposal_formatting_view),
     path('proposal-writing/<int:pk>/data/', proposal.get_data),
     path('proposal-writing/<int:pk>/image/', proposal.get_image),
@@ -235,6 +237,11 @@ url_proposal = [
 url_change_order = [
     path('', change_order.ChangeOderList.as_view()),
     path('<int:pk>/', change_order.ChangeOderDetail.as_view())
+]
+
+url_invoice = [
+    path('', invoice.InvoiceListView.as_view()),
+    path('<int:pk>/', invoice.InvoiceDetailGenericView.as_view())
 ]
 
 # URL Config
@@ -255,6 +262,7 @@ url_sales = [
     path('estimate/', include(url_estimate)),
     path('proposal/', include(url_proposal)),
     path('change-order/', include(url_change_order)),
+    path('invoice/', include(url_invoice)),
 ]
 
 schema_view_sales = get_schema_view(

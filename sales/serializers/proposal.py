@@ -367,7 +367,7 @@ class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
         data['row_data'] = []
         data['images'] = []
         if instance.proposal_writing:
-            po_formulas = instance.proposal_writing.get_data_formula()
+            po_formulas = instance.proposal_writing.get_data_formula().order_by('order')
             row_data = POFormulaCompactSerializer(po_formulas, context=self.context, many=True).data
             data['row_data'] = row_data
             imgs = instance.proposal_writing.get_imgs()

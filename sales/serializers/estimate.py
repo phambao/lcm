@@ -200,44 +200,43 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if not self.is_in_proposal_view():
-            linked_descriptions = []
-            try:
-                linked_descriptions = eval(data['linked_description'])
-            except:
-                pass
-            data['linked_description'] = []
-            for linked_description in linked_descriptions:
-                if isinstance(linked_description, dict):
-                    linked_description = linked_description.get('id', '')
-                    if not isinstance(linked_description, str):
-                        continue
-                    if 'catalog' in linked_description or 'estimate' in linked_description:
-                        pk = linked_description.split(':')[1]
-                        if 'estimate' in linked_description:
-                            linked_description = DescriptionLibrary.objects.get(pk=pk)
-                        else:
-                            linked_description = DataPoint.objects.get(pk=pk)
-                        data['linked_description'].append(LinkedDescriptionSerializer(linked_description).data)
-            data['linked_description'] = str(data['linked_description'])
+        linked_descriptions = []
+        try:
+            linked_descriptions = eval(data['linked_description'])
+        except:
+            pass
+        data['linked_description'] = []
+        for linked_description in linked_descriptions:
+            if isinstance(linked_description, dict):
+                linked_description = linked_description.get('id', '')
+                if not isinstance(linked_description, str):
+                    continue
+                if 'catalog' in linked_description or 'estimate' in linked_description:
+                    pk = linked_description.split(':')[1]
+                    if 'estimate' in linked_description:
+                        linked_description = DescriptionLibrary.objects.get(pk=pk)
+                    else:
+                        linked_description = DataPoint.objects.get(pk=pk)
+                    data['linked_description'].append(LinkedDescriptionSerializer(linked_description).data)
+        data['linked_description'] = str(data['linked_description'])
 
-            if data['material']:
-                try:
-                    primary_key = eval(data['material'])
-                    data['material_value'] = primary_key
-                    pk_catalog, row_index = primary_key.get('id').split(':')
-                    catalog = Catalog.objects.get(pk=pk_catalog)
-                    ancestors = catalog.get_full_ancestor()
-                    ancestor = ancestors[-1]
-                    data['catalog_ancestor'] = ancestor.pk
-                    data['catalog_link'] = [CatalogEstimateSerializer(c).data for c in ancestors[::-1]]
-                except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError, AttributeError):
-                    data['catalog_ancestor'] = None
-                    data['catalog_link'] = []
-            else:
-                data['material_value'] = {}
+        if data['material']:
+            try:
+                primary_key = eval(data['material'])
+                data['material_value'] = primary_key
+                pk_catalog, row_index = primary_key.get('id').split(':')
+                catalog = Catalog.objects.get(pk=pk_catalog)
+                ancestors = catalog.get_full_ancestor()
+                ancestor = ancestors[-1]
+                data['catalog_ancestor'] = ancestor.pk
+                data['catalog_link'] = [CatalogEstimateSerializer(c).data for c in ancestors[::-1]]
+            except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError, AttributeError):
                 data['catalog_ancestor'] = None
                 data['catalog_link'] = []
+        else:
+            data['material_value'] = {}
+            data['catalog_ancestor'] = None
+            data['catalog_link'] = []
 
         data['content_type'] = PO_FORMULA_CONTENT_TYPE
         original = data.get('original')
