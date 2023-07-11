@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django_filters import rest_framework as filters
-
+from django.db.models import Q
 from sales.filters.lead_list import CHOICES, FILTERS
 from sales.models import LeadDetail
 from sales.models.lead_schedule import DailyLog, ToDo, TagSchedule, ScheduleEvent, Priority
@@ -28,7 +28,8 @@ class DailyLogFilter(filters.FilterSet):
 
 
 class EventFilter(filters.FilterSet):
-    lead_list = filters.ModelChoiceFilter(queryset=LeadDetail.objects.all())
+    lead_list = filters.CharFilter(method='filter_lead_list')
+    # lead_list = filters.ModelMultipleChoiceFilter(queryset=LeadDetail.objects.all(), conjoined=True)
     event_title = filters.CharFilter(field_name="event_title", lookup_expr='icontains')
     assigned_user = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
     reminder = filters.NumberFilter()
@@ -47,6 +48,11 @@ class EventFilter(filters.FilterSet):
         model = ScheduleEvent
         fields = ('lead_list', 'event_title', 'assigned_user', 'reminder', 'start_day',
                   'end_day', 'start_hour', 'is_before', 'is_after', 'predecessor', 'tags', 'todo', 'daily_log')
+
+    def filter_lead_list(self, queryset, name, value):
+        lead_list_ids = self.request.GET.getlist('lead_list')
+        queryset = queryset.filter(Q(lead_list__in=lead_list_ids) | Q(lead_list__isnull=True))
+        return queryset
 
 
 class ToDoFilter(filters.FilterSet):

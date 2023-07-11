@@ -997,7 +997,8 @@ class MessageEventSerialized(serializers.ModelSerializer):
 
     class Meta:
         model = lead_schedule.MessageEvent
-        fields = ('event', 'message', 'show_owner', 'show_sub_vendors', 'notify', 'files')
+        fields = ('event', 'message', 'show_owner', 'show_sub_vendors', 'notify', 'files', 'user_update', 'user_create')
+        read_only_fields = ('user_create', 'user_update')
 
     def create(self, validated_data):
         request = self.context['request']
