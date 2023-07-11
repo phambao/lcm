@@ -1,5 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from base.serializers.base import IDAndNameSerializer
 from base.constants import true, null, false
@@ -139,12 +140,20 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
     POFormulaToDataEntry.objects.bulk_create(data)
 
 
-class POFormulaCompactSerializer(serializers.ModelSerializer):
+class POFormulaDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = POFormula
         fields = ('id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
                   'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario',
                   'material_data_entry', 'formula_for_data_view', 'order')
+
+
+class POFormulaCompactSerializer(serializers.ModelSerializer, SerializerMixin):
+
+    class Meta:
+        model = POFormula
+        exclude = ('material', 'formula_mentions', 'formula_data_mentions', 'description_of_formula', 'assemble', 'order',
+                   'formula_scenario', 'formula_for_data_view', 'original', 'catalog_materials', 'company', 'created_from')
 
 
 class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
@@ -353,6 +362,16 @@ class DescriptionLibrarySerializer(serializers.ModelSerializer):
         return data
 
 
+class AssembleCompactSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Assemble
+        fields = ('id', 'name', 'created_date', 'modified_date', 'user_create', 'user_update', 'description')
+
+    def create(self, validated_data):
+        raise ValidationError('Can not Create')
+
+
 class AssembleSerializer(serializers.ModelSerializer):
     assemble_formulas = POFormulaSerializer('assemble', many=True, required=False, allow_null=True)
 
@@ -424,6 +443,13 @@ class MaterialViewSerializers(serializers.ModelSerializer):
     class Meta:
         model = MaterialView
         fields = ('id', 'name', 'material_value', 'copies_from', 'catalog_materials')
+
+
+class EstimateTemplateCompactSerializer(serializers.ModelSerializer, SerializerMixin):
+
+    class Meta:
+        model = EstimateTemplate
+        exclude = ('is_show', 'original', 'order', 'assembles', 'group_by_proposal', 'company', 'is_checked')
 
 
 class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):

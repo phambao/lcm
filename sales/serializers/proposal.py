@@ -9,7 +9,7 @@ from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, Pric
     EstimateTemplate
 from sales.serializers import estimate
 from sales.serializers.catalog import CatalogImageSerializer
-from sales.serializers.estimate import EstimateTemplateSerializer, POFormulaCompactSerializer
+from sales.serializers.estimate import EstimateTemplateSerializer, POFormulaDataSerializer
 
 
 class ProposalWidgetSerializer(serializers.ModelSerializer):
@@ -368,7 +368,7 @@ class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
         data['images'] = []
         if instance.proposal_writing:
             po_formulas = instance.proposal_writing.get_data_formula().order_by('order')
-            row_data = POFormulaCompactSerializer(po_formulas, context=self.context, many=True).data
+            row_data = POFormulaDataSerializer(po_formulas, context=self.context, many=True).data
             data['row_data'] = row_data
             imgs = instance.proposal_writing.get_imgs()
             images = CatalogImageSerializer(imgs, context=self.context, many=True).data

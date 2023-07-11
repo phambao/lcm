@@ -191,6 +191,7 @@ url_schedule = [
 # URL Estimate
 url_estimate = [
     path('po-formula/', estimate.POFormulaList.as_view()),
+    path('po-formula-compact/', estimate.POFormulaCompactList.as_view()),
     path('po-formula/<int:pk>/', estimate.POFormulaDetail.as_view()),
     path('material/<int:pk>/', estimate.get_material_from_formula),
     path('formula-grouping/', estimate.POFormulaGroupingList.as_view()),
@@ -207,8 +208,10 @@ url_estimate = [
     path('description-library/', estimate.DescriptionLibraryList.as_view()),
     path('description-library/<int:pk>/', estimate.DescriptionLibraryDetail.as_view()),
     path('assemble/', estimate.AssembleList.as_view()),
+    path('assemble-compact/', estimate.AssembleCompactList.as_view()),
     path('assemble/<int:pk>/', estimate.AssembleDetail.as_view()),
     path('estimate-template/', estimate.EstimateTemplateList.as_view()),
+    path('estimate-template-compact/', estimate.EstimateTemplateCompactList.as_view()),
     path('estimate-template/<int:pk>/', estimate.EstimateTemplateDetail.as_view()),
     path('linked-descriptions/', estimate.get_linked_descriptions),
     path('linked-descriptions/<str:pk>/', estimate.get_linked_description),
