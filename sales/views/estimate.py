@@ -18,7 +18,8 @@ from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, UnitL
     DescriptionLibrary, Assemble, EstimateTemplate, MaterialView
 from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
     UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, AssembleSerializer, \
-    EstimateTemplateSerializer, TaggingSerializer, GroupFormulasSerializer
+    EstimateTemplateSerializer, TaggingSerializer, GroupFormulasSerializer, POFormulaCompactSerializer, \
+    AssembleCompactSerializer, EstimateTemplateCompactSerializer
 from sales.views.catalog import parse_c_table
 from api.middleware import get_request
 from base.views.base import CompanyFilterMixin
@@ -32,6 +33,10 @@ class POFormulaList(CompanyFilterMixin, generics.ListCreateAPIView):
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = FormulaFilter
     search_fields = ('name', )
+
+
+class POFormulaCompactList(POFormulaList):
+    serializer_class = POFormulaCompactSerializer
 
 
 class POFormulaDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -114,6 +119,10 @@ class AssembleList(CompanyFilterMixin, generics.ListCreateAPIView):
     search_fields = ('name', 'description')
 
 
+class AssembleCompactList(AssembleList):
+    serializer_class = AssembleCompactSerializer
+
+
 class AssembleDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Assemble.objects.all()
     serializer_class = AssembleSerializer
@@ -126,6 +135,10 @@ class EstimateTemplateList(CompanyFilterMixin, generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = EstimateTemplateFilter
+
+
+class EstimateTemplateCompactList(EstimateTemplateList):
+    serializer_class = EstimateTemplateCompactSerializer
 
 
 class EstimateTemplateDetail(generics.RetrieveUpdateDestroyAPIView):

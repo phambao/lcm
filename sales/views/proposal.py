@@ -8,7 +8,7 @@ from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter,
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, GroupByEstimate, \
     POFormula
 from sales.serializers.catalog import CatalogImageSerializer
-from sales.serializers.estimate import POFormulaSerializer, POFormulaCompactSerializer
+from sales.serializers.estimate import POFormulaSerializer, POFormulaDataSerializer
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
     ProposalWritingCompactSerializer, ProposalTemplateHtmlSerializer, ProposalTemplateHtmlCssSerializer
@@ -116,7 +116,7 @@ def get_data(request, pk):
     if request.method == 'GET':
         proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
         po_formulas = proposal_writing.get_data_formula().order_by('order')
-        data = POFormulaCompactSerializer(po_formulas, context={'request': request}, many=True).data
+        data = POFormulaDataSerializer(po_formulas, context={'request': request}, many=True).data
 
     if request.method == 'PUT':
         """Update order po formula"""
@@ -128,7 +128,7 @@ def get_data(request, pk):
             except ValueError:
                 pass
         POFormula.objects.bulk_update(po_formulas, ['order'])
-        data = POFormulaCompactSerializer(po_formulas.order_by('order'), context={'request': request}, many=True).data
+        data = POFormulaDataSerializer(po_formulas.order_by('order'), context={'request': request}, many=True).data
 
     return Response(status=status.HTTP_200_OK, data=data)
 
