@@ -3,3 +3,4 @@ from .catalog import *
 from .estimate import *
 from .proposal import *
 from .change_order import *
+from .invoice import *
