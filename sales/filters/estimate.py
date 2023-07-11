@@ -5,7 +5,16 @@ from sales.models import POFormula, POFormulaGrouping, Assemble, EstimateTemplat
 from sales.filters.lead_list import CHOICES, FILTERS
 
 
-class FormulaFilter(filters.FilterSet):
+class FilterIDMixin:
+
+    def get_by_id(self, query, name, value):
+        if value:
+            return query.filter(pk__in=[v.id for v in value])
+        else:
+            return query
+
+
+class FormulaFilter(filters.FilterSet, FilterIDMixin):
     group = filters.BooleanFilter(field_name='group', lookup_expr='isnull', exclude=True)
     assemble = filters.BooleanFilter(field_name='assemble', lookup_expr='isnull', exclude=True)
     created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
@@ -25,12 +34,13 @@ class FormulaFilter(filters.FilterSet):
     user_update = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
     is_show = filters.BooleanFilter(field_name='is_show')
     age_of_formula = filters.DateRangeFilter(field_name='created_date', choices=CHOICES, filters=FILTERS)
+    id = filters.ModelMultipleChoiceFilter(queryset=POFormula.objects.filter(is_show=True), field_name='id', method='get_by_id')
 
     class Meta:
         model = POFormula
         fields = ('group', 'assemble', 'quantity', 'formula', 'name', 'created_date', 'modified_date', 'markup',
                   'charge', 'material', 'unit', 'cost', 'gross_profit', 'description_of_formula', 'formula_scenario',
-                  'user_create', 'user_update')
+                  'user_create', 'user_update', 'id')
 
 
 class GroupFormulaFilter(filters.FilterSet):
@@ -58,27 +68,31 @@ class GroupFormulaFilter(filters.FilterSet):
                   'user_create', 'user_update')
 
 
-class EstimateTemplateFilter(filters.FilterSet):
+class EstimateTemplateFilter(filters.FilterSet, FilterIDMixin):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
     created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
     modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
     is_show = filters.BooleanFilter(field_name='is_show')
+    id = filters.ModelMultipleChoiceFilter(queryset=EstimateTemplate.objects.filter(is_show=True), field_name='id',
+                                           method='get_by_id')
 
     class Meta:
         model = EstimateTemplate
         fields = ('name', 'created_date', 'modified_date')
 
 
-class AssembleFilter(filters.FilterSet):
+class AssembleFilter(filters.FilterSet, FilterIDMixin):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
     created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
     formula_name = filters.CharFilter(field_name='assemble_formulas__name', lookup_expr='icontains')
     user_create = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
     modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
+    id = filters.ModelMultipleChoiceFilter(queryset=Assemble.objects.filter(is_show=True), field_name='id',
+                                           method='get_by_id')
 
     class Meta:
         model = Assemble
-        fields = ('name', 'created_date', 'formula_name', 'user_create', 'modified_date')
+        fields = ('name', 'created_date', 'formula_name', 'user_create', 'modified_date', 'id')
 
 
 class DataEntryFilter(filters.FilterSet):
