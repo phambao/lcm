@@ -1,5 +1,3 @@
-import functools
-import gc
 from threading import current_thread
 
 from django.utils.translation import activate
@@ -31,16 +29,9 @@ class CacheRequestMiddleware:
         self.process_request(request)
         response = self.get_response(request)
 
-        # Clear cache lru
-        gc.collect()
-
-        # All objects collected
-        objects = [i for i in gc.get_objects()
-                   if isinstance(i, functools._lru_cache_wrapper)]
-
-        # All objects cleared
-        for object in objects:
-            object.cache_clear()
+        # All lru objects cleared
+        from sales.models.catalog import Catalog
+        Catalog().get_full_ancestor.cache_clear()
 
         # Code to be executed for each request/response after
         # the view is called.
