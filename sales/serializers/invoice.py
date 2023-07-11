@@ -12,7 +12,7 @@ from ..models.invoice import Invoice, TableInvoice
 class TableInvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
         model = TableInvoice
-        fields = ('id', 'types', 'change_orders')
+        fields = ('id', 'type', 'change_orders')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

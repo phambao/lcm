@@ -10,8 +10,7 @@ class TableInvoice(BaseModel):
         PROGRESS_PAYMENT_FROM_PROPOSAL = 'progress_payment_from_proposal', 'Progress Payment From Proposal'
         PROPOSAL_ITEMS = 'proposal_items', 'Proposal Item'
         CUSTOM = 'custom', 'Custom'
-    types = ArrayField(models.CharField(max_length=32, choices=TableTypeInvoice.choices, default=TableTypeInvoice.CHANGE_ORDER),
-                       default=list, blank=True, size=2)
+    type = models.CharField(max_length=32, choices=TableTypeInvoice.choices, default=TableTypeInvoice.CHANGE_ORDER)
     change_orders = ArrayField(models.IntegerField(blank=True), default=list, blank=True)
     invoice = models.ForeignKey('sales.Invoice', blank=True, null=True, on_delete=models.CASCADE, related_name='tables')
     # proposal_items = ArrayField(models.IntegerField(blank=True), default=list, blank=True)
