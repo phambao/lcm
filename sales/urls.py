@@ -4,7 +4,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from base.views.base import FileMessageTodoGenericView
-from sales.views import lead_list, catalog, lead_schedule, estimate, proposal, change_order
+from sales.views import lead_list, catalog, lead_schedule, estimate, proposal, change_order, invoice
 from api.views.upload_file import FileUploadView
 from sales.views.lead_list import export_data
 
@@ -238,6 +238,11 @@ url_change_order = [
     path('<int:pk>/', change_order.ChangeOderDetail.as_view())
 ]
 
+url_invoice = [
+    path('', invoice.InvoiceListView.as_view()),
+    path('<int:pk>/', invoice.InvoiceDetailGenericView.as_view())
+]
+
 # URL Config
 url_config = [
     path('options-lead-list/', lead_schedule.select_lead_list),
@@ -256,6 +261,7 @@ url_sales = [
     path('estimate/', include(url_estimate)),
     path('proposal/', include(url_proposal)),
     path('change-order/', include(url_change_order)),
+    path('invoice/', include(url_invoice)),
 ]
 
 schema_view_sales = get_schema_view(
