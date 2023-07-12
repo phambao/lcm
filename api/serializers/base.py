@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from api.models import ActivityLog
+from api.models import ActivityLog, ChangeOrderSetting
 from api.serializers.auth import UserSerializer
 
 
@@ -30,3 +30,11 @@ class ActivityLogSerializer(serializers.ModelSerializer):
             data['last_state'] = {'created_date': last_state.get('created_date'),
                                   'name': last_state.get('name')}
         return data
+
+
+class ChangeOrderSettingSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ChangeOrderSetting
+        fields = ('id', 'require_signature', 'change_order_approval', 'default_change_order', 'company')
+        read_only_fields = ['company']

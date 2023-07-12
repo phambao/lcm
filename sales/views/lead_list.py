@@ -385,15 +385,17 @@ def export_data(request):
     headers = [
         'Lead Title', 'Street Address', 'Country', 'City', 'State', 'Zip Code',
         'Status', 'Proposal Status', 'Notes', 'Confidence', 'Estimate Revenue From',
-        'Estimate Revenue To', 'Number of Click',
+        'Estimate Revenue To', 'Project Types', 'Sales Person', 'Sources', 'Tags', 'Number of Click', 'Projected Sale Date'
     ]
     sheet.append(headers)
     # fields = [field.name for field in LeadDetail._meta.get_fields()]
     lead_details = LeadDetail.objects.filter(company=request.user.company)
     for index, lead_detail in enumerate(lead_details, 1):
-        # projected_sale_date = lead_detail.projected_sale_date
-        # if projected_sale_date is not None:
-        #     projected_sale_date = projected_sale_date.replace(tzinfo=None)
+        projected_sale_date = lead_detail.projected_sale_date
+        if projected_sale_date is not None:
+            projected_sale_date = projected_sale_date.replace(tzinfo=None)
+        else:
+            projected_sale_date = ''
         row_data = [
             lead_detail.lead_title, lead_detail.street_address,
             lead_detail.country.name if lead_detail.country else '',
@@ -403,11 +405,11 @@ def export_data(request):
             lead_detail.get_proposal_status_display(), lead_detail.notes,
             lead_detail.confidence, lead_detail.estimate_revenue_from,
             lead_detail.estimate_revenue_to,
-            # ', '.join(pt.name for pt in lead_detail.project_types.all()),
-            # ', '.join(salesperson.username for salesperson in lead_detail.salesperson.all()),
-            # ', '.join(source.name for source in lead_detail.sources.all()),
-            # ', '.join(tag.name for tag in lead_detail.tags.all()),
-            lead_detail.number_of_click,
+            ', '.join(pt.name for pt in lead_detail.project_types.all()),
+            ', '.join(salesperson.username for salesperson in lead_detail.salesperson.all()),
+            ', '.join(source.name for source in lead_detail.sources.all()),
+            ', '.join(tag.name for tag in lead_detail.tags.all()),
+            lead_detail.number_of_click, projected_sale_date
         ]
         sheet.append(row_data)
     current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
