@@ -36,5 +36,5 @@ class ChangeOrderSettingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChangeOrderSetting
-        fields = ('id', 'require_signature', 'change_order_approval', 'default_change_order', 'user_create', 'user_update')
-        read_only_fields = ['user_create', 'user_update']
+        fields = ('id', 'require_signature', 'change_order_approval', 'default_change_order', 'company')
+        read_only_fields = ['company']

@@ -118,10 +118,11 @@ class RequireSignature(models.TextChoices):
     ALL = 'all', 'ALL'
 
 
-class ChangeOrderSetting(BaseModel):
+class ChangeOrderSetting(models.Model):
     class Meta:
         db_table = 'change_order_setting'
 
+    company = models.OneToOneField(CompanyBuilder, on_delete=models.CASCADE, null=True)
     require_signature = models.CharField(max_length=128, choices=RequireSignature.choices, default=RequireSignature.ALL)
     change_order_approval = models.TextField(blank=True)
     default_change_order = models.TextField(blank=True)

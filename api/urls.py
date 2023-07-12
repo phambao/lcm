@@ -4,7 +4,7 @@ from knox import views as knox_views
 
 from api.views.auth import SignInAPI, SignUpAPI, MainUser, UserList, forgot_password, check_private_code, \
     reset_password, SignUpUserCompanyAPI
-from api.views.company_setting import ChangeOrderSettingGenericView, ChangeOrderSettingGenericViewDetailGenericView
+from api.views.company_setting import setting_change_order
 
 urlpatterns = [
     # For authenticate
@@ -14,8 +14,7 @@ urlpatterns = [
     path('user/<int:pk>/', MainUser.as_view()),
     path('users', UserList.as_view()),
     path('company/user/register', SignUpUserCompanyAPI.as_view()),
-    path('company/setting/change-order', ChangeOrderSettingGenericView.as_view()),
-    path('company/setting/change-order/<int:pk>/', ChangeOrderSettingGenericViewDetailGenericView.as_view()),
+    path('company/setting/change-order/', setting_change_order),
 
     # For password reset
     path('auth/', include([
