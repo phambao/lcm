@@ -239,7 +239,8 @@ url_proposal = [
 
 url_change_order = [
     path('', change_order.ChangeOderList.as_view()),
-    path('<int:pk>/', change_order.ChangeOderDetail.as_view())
+    path('<int:pk>/', change_order.ChangeOderDetail.as_view()),
+    path('<int:pk>/items/', change_order.get_items)
 ]
 
 url_invoice = [
