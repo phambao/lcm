@@ -230,7 +230,7 @@ url_proposal = [
     path('proposal-writing/', proposal.ProposalWritingList.as_view()),
     path('proposal-writing-compact/', proposal.ProposalWritingCompactList.as_view()),
     path('proposal-writing/<int:pk>/', proposal.ProposalWritingDetail.as_view()),
-    path('proposal-writing/<int:pk>/change-order', change_order.ChangeOrderFromProposalWritingList.as_view()),
+    path('proposal-writing/<int:pk>/change-order/', change_order.ChangeOrderFromProposalWritingList.as_view()),
     path('proposal-writing/<int:pk>/formatting/', proposal.proposal_formatting_view),
     path('proposal-writing/<int:pk>/data/', proposal.get_data),
     path('proposal-writing/<int:pk>/image/', proposal.get_image),
@@ -239,11 +239,13 @@ url_proposal = [
 
 url_change_order = [
     path('', change_order.ChangeOderList.as_view()),
-    path('<int:pk>/', change_order.ChangeOderDetail.as_view())
+    path('<int:pk>/', change_order.ChangeOderDetail.as_view()),
+    path('<int:pk>/items/', change_order.get_items)
 ]
 
 url_invoice = [
     path('', invoice.InvoiceListView.as_view()),
+    path('proposal/', invoice.InvoiceProposal.as_view()),
     path('<int:pk>/', invoice.InvoiceDetailGenericView.as_view())
 ]
 

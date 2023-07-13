@@ -5,24 +5,51 @@ from base.utils import pop
 from .change_order import ChangeOrderSerializer
 from .proposal import ProposalWritingSerializer
 from ..models import ChangeOrder
-from ..models.invoice import Invoice, TableInvoice, PaymentHistory
+from ..models.invoice import Invoice, TableInvoice, PaymentHistory, ChangeOrderType
+
+
+class ChangeOrderTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChangeOrderType
+        fields = ('id', 'change_order', 'estimate_templates', 'flat_rates')
 
 
 class PaymentHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentHistory
-        fields = ('id', 'date', 'amount', 'unit_cost', 'received_by')
+        fields = ('id', 'date', 'amount', 'payment_method', 'received_by')
 
 
 class TableInvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
+    change_order_types = ChangeOrderTypeSerializer('table_invoice', many=True, allow_null=True, required=False)
+
     class Meta:
         model = TableInvoice
-        fields = ('id', 'type', 'change_orders')
+        fields = ('id', 'type', 'progress_payment', 'custom', 'change_order_types')
+
+    def create_change_order_types(self, instance, data):
+        for d in data:
+            serializer = ChangeOrderTypeSerializer(data=d, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save(table_invoice=instance)
+
+    def create(self, validated_data):
+        change_other_types = pop(validated_data, 'change_order_types', [])
+        instance = super().create(validated_data)
+        self.create_change_order_types(instance, change_other_types)
+        return instance
+
+    def update(self, instance, validated_data):
+        change_other_types = pop(validated_data, 'change_order_types', [])
+        instance = super().update(instance, validated_data)
+        instance.change_other_types.all().delete()
+        self.create_change_order_types(instance, change_other_types)
+        return instance
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if self.is_param_exist('pk'):
-            data['change_orders'] = ChangeOrderSerializer(ChangeOrder.objects.filter(pk__in=instance.change_orders), many=True).data
+            pass
         return data
 
 
@@ -68,7 +95,7 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if self.is_param_exist('pk'):
-            if instance.proposal:
-                data['proposal'] = ProposalWritingSerializer(instance.proposal).data
+        # if self.is_param_exist('pk'):
+        #     if instance.proposal:
+        #         data['proposal'] = ProposalWritingSerializer(instance.proposal).data
         return data
