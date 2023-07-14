@@ -2,8 +2,8 @@ from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
-from api.models import ChangeOrderSetting
-from api.serializers.base import ChangeOrderSettingSerializer
+from api.models import ChangeOrderSetting, InvoiceSetting
+from api.serializers.base import ChangeOrderSettingSerializer, InvoiceSettingSerializer
 
 
 @api_view(['GET', 'PUT'])
@@ -34,5 +34,45 @@ def setting_change_order(request):
         change_order_setting.save()
         change_order_setting.refresh_from_db()
         serializer = ChangeOrderSettingSerializer(change_order_setting)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def setting_invoice(request):
+    if request.method == 'GET':
+        try:
+            invoice_setting = InvoiceSetting.objects.get(company=request.user.company)
+        except InvoiceSetting.DoesNotExist:
+            invoice_setting = InvoiceSetting.objects.create(
+                company=request.user.company,
+                prefix='LCM',
+                is_notify_internal_deadline=False,
+                is_notify_owners_deadline=False,
+                is_notify_owners_after_deadline=False,
+                is_default_show=False,
+                day_before=1,
+                default_owners_invoice="default_owners_invoice"
+            )
+
+        serializer = InvoiceSettingSerializer(invoice_setting)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    if request.method == 'PUT':
+        serializer = InvoiceSettingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data_insert = dict(serializer.validated_data)
+        invoice_setting = InvoiceSetting.objects.get(company=request.user.company)
+        invoice_setting.prefix = data_insert['prefix']
+        invoice_setting.is_notify_internal_deadline = data_insert['is_notify_internal_deadline']
+        invoice_setting.is_notify_owners_deadline = data_insert['is_notify_owners_deadline']
+        invoice_setting.is_notify_owners_after_deadline = data_insert['is_notify_owners_after_deadline']
+        invoice_setting.is_default_show = data_insert['is_default_show']
+        invoice_setting.day_before = data_insert['day_before']
+        invoice_setting.default_owners_invoice = data_insert['default_owners_invoice']
+        invoice_setting.save()
+        invoice_setting.refresh_from_db()
+        serializer = InvoiceSettingSerializer(invoice_setting)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
     return Response(status=status.HTTP_204_NO_CONTENT)
