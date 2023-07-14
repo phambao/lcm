@@ -126,3 +126,14 @@ class ChangeOrderSetting(models.Model):
     require_signature = models.CharField(max_length=128, choices=RequireSignature.choices, default=RequireSignature.ALL)
     change_order_approval = models.TextField(blank=True)
     default_change_order = models.TextField(blank=True)
+
+
+class InvoiceSetting(models.Model):
+    company = models.OneToOneField(CompanyBuilder, on_delete=models.CASCADE, null=True)
+    prefix = models.CharField(max_length=128, blank=True)
+    is_notify_internal_deadline = models.BooleanField(default=False)
+    is_notify_owners_deadline = models.BooleanField(default=False)
+    is_notify_owners_after_deadline = models.BooleanField(default=False)
+    is_default_show = models.BooleanField(default=False)
+    day_before = models.IntegerField(null=True, blank=True)
+    default_owners_invoice = models.TextField(blank=True)

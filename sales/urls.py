@@ -6,7 +6,7 @@ from drf_yasg import openapi
 from base.views.base import FileMessageTodoGenericView
 from sales.views import lead_list, catalog, lead_schedule, estimate, proposal, change_order, invoice
 from api.views.upload_file import FileUploadView
-from sales.views.lead_list import export_data
+from sales.views.lead_list import export_data, import_data
 
 url_contacts = [
     path('contacts/', lead_list.ContactsViewSet.as_view()),
@@ -70,6 +70,7 @@ url_leads = [
     path('leads/summary/', lead_list.get_summaries),
     path('leads/events/', lead_list.LeadEventList.as_view()),
     path('export-data/', export_data),
+    path('import-data/', import_data),
 ]
 
 # Define Path for Catalog -------------------------------------------------------

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from api.models import ActivityLog, ChangeOrderSetting
+from api.models import ActivityLog, ChangeOrderSetting, InvoiceSetting
 from api.serializers.auth import UserSerializer
 
 
@@ -37,4 +37,13 @@ class ChangeOrderSettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChangeOrderSetting
         fields = ('id', 'require_signature', 'change_order_approval', 'default_change_order', 'company')
+        read_only_fields = ['company']
+
+
+class InvoiceSettingSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = InvoiceSetting
+        fields = ('id', 'prefix', 'is_notify_internal_deadline', 'is_notify_owners_deadline',
+                  'is_notify_owners_after_deadline', 'is_default_show', 'day_before', 'default_owners_invoice', 'company')
         read_only_fields = ['company']

@@ -5,11 +5,13 @@ import uuid
 from datetime import datetime
 
 import openpyxl
+from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_filters import rest_framework as filters
+from openpyxl import Workbook, load_workbook
 from rest_framework import generics, permissions
 from rest_framework import status, filters as rf_filters
 from rest_framework.decorators import api_view, permission_classes
@@ -21,7 +23,7 @@ from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilt
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, Photos, ContactTypeName, \
     ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead
 from ..serializers import lead_list
-from ..serializers.lead_list import PhotoSerializer
+from ..serializers.lead_list import PhotoSerializer, LeadDetailSerializer, LeadDetailCreateSerializer
 
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
 
@@ -134,7 +136,8 @@ class LeadNoContactsViewSet(generics.ListAPIView):
     search_fields = ['first_name', 'last_name']
 
     def get_queryset(self):
-        return Contact.objects.filter(company=get_request().user.company).exclude(leads=self.kwargs['pk_lead']).distinct()
+        return Contact.objects.filter(company=get_request().user.company).exclude(
+            leads=self.kwargs['pk_lead']).distinct()
 
 
 class ContactsDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
@@ -376,20 +379,20 @@ def upload_multiple_photo(request, pk_lead):
     return Response(serializer.data)
 
 
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def export_data(request):
-    workbook = openpyxl.Workbook(write_only=True)
+    workbook = Workbook()
 
-    sheet = workbook.create_sheet()
-    headers = [
-        'Lead Title', 'Street Address', 'Country', 'City', 'State', 'Zip Code',
-        'Status', 'Proposal Status', 'Notes', 'Confidence', 'Estimate Revenue From',
-        'Estimate Revenue To', 'Project Types', 'Sales Person', 'Sources', 'Tags', 'Number of Click', 'Projected Sale Date'
-    ]
-    sheet.append(headers)
-    # fields = [field.name for field in LeadDetail._meta.get_fields()]
-    lead_details = LeadDetail.objects.filter(company=request.user.company)
+    # Mô hình LeadDetail
+    lead_detail_sheet = workbook.create_sheet(title='LeadDetail')
+    lead_details = LeadDetail.objects.all()
+    lead_detail_fields = ['Lead Title', 'Street Address', 'Country', 'City', 'State', 'Zip Code',
+                          'Status', 'Proposal Status', 'Notes', 'Confidence', 'Estimate Revenue From',
+                          'Estimate Revenue To', 'Project Types', 'Sales Person', 'Sources', 'Tags', 'Number of Click',
+                          'Projected Sale Date']
+    lead_detail_sheet.append(lead_detail_fields)
     for index, lead_detail in enumerate(lead_details, 1):
         projected_sale_date = lead_detail.projected_sale_date
         if projected_sale_date is not None:
@@ -398,20 +401,123 @@ def export_data(request):
             projected_sale_date = ''
         row_data = [
             lead_detail.lead_title, lead_detail.street_address,
-            lead_detail.country.name if lead_detail.country else '',
-            lead_detail.city.name if lead_detail.city else '',
-            lead_detail.state.name if lead_detail.state else '',
+            lead_detail.country.id if lead_detail.country else '',
+            lead_detail.city.id if lead_detail.city else '',
+            lead_detail.state.id if lead_detail.state else '',
             lead_detail.zip_code, lead_detail.get_status_display(),
             lead_detail.get_proposal_status_display(), lead_detail.notes,
             lead_detail.confidence, lead_detail.estimate_revenue_from,
             lead_detail.estimate_revenue_to,
-            ', '.join(pt.name for pt in lead_detail.project_types.all()),
-            ', '.join(salesperson.username for salesperson in lead_detail.salesperson.all()),
-            ', '.join(source.name for source in lead_detail.sources.all()),
-            ', '.join(tag.name for tag in lead_detail.tags.all()),
+            ', '.join(str(pt.id) for pt in lead_detail.project_types.all()),
+            ', '.join(str(salesperson.username) for salesperson in lead_detail.salesperson.all()),
+            ', '.join(str(source.id) for source in lead_detail.sources.all()),
+            ', '.join(str(tag.id) for tag in lead_detail.tags.all()),
             lead_detail.number_of_click, projected_sale_date
         ]
-        sheet.append(row_data)
+
+        lead_detail_sheet.append(row_data)
+
+    # Mô hình ProjectType
+    project_type_sheet = workbook.create_sheet(title='ProjectType')
+    project_types = ProjectType.objects.all()
+    project_type_fields = ['Project Type Id', 'Project Type Name', 'User Create', 'User Update', 'Created Date']
+    project_type_sheet.append(project_type_fields)
+    for project_type in project_types:
+        create_date = project_type.created_date
+        if create_date is not None:
+            create_date = create_date.replace(tzinfo=None)
+        else:
+            create_date = ''
+
+        row = [
+            project_type.id, project_type.name,
+            project_type.user_create.id if project_type.user_create else '',
+            project_type.user_update.id if project_type.user_update else '',
+            create_date
+        ]
+        project_type_sheet.append(row)
+
+    # Mô hình Source
+    source_lead_sheet = workbook.create_sheet(title='SourceLead')
+    source_leads = SourceLead.objects.all()
+    source_lead_fields = ['Source Lead Id', 'Source Lead Name', 'User Create', 'User Update', 'Created Date']
+    source_lead_sheet.append(source_lead_fields)
+    for source_lead in source_leads:
+        create_date = source_lead.created_date
+        if create_date is not None:
+            create_date = create_date.replace(tzinfo=None)
+        else:
+            create_date = ''
+
+        row = [
+            source_lead.id, source_lead.name,
+            source_lead.user_create.id if source_lead.user_create else '',
+            source_lead.user_update.id if source_lead.user_update else '',
+            create_date
+        ]
+        source_lead_sheet.append(row)
+
+    # Mô hình contacts
+    contacts_sheet = workbook.create_sheet(title='Contact')
+    contacts = Contact.objects.all()
+    contact_fields = ['Contact Id', 'First Name', 'Last Name', 'Gender', 'Email', 'Street',
+                      'City', 'State', 'Country', 'Zip Code', 'Lead', 'User Create', 'User Update',
+                      'Created Date']
+    contacts_sheet.append(contact_fields)
+    for contact in contacts:
+        create_date = contact.created_date
+        if create_date is not None:
+            create_date = create_date.replace(tzinfo=None)
+        else:
+            create_date = ''
+
+        row = [
+            contact.id, contact.first_name, contact.last_name, contact.gender, contact.email,contact.street,
+            contact.city.id if contact.city else '',
+            contact.state.id if contact.state else '',
+            contact.country.id if contact.country else '',
+            contact.zip_code,
+            ', '.join(str(ct.id)for ct in contact.leads.all()),
+            contact.user_create.id if contact.user_create else '',
+            contact.user_update.id if contact.user_update else '',
+            create_date
+        ]
+        contacts_sheet.append(row)
+
+    # Mô hình Tag
+    tag_lead_sheet = workbook.create_sheet(title='TagLead')
+    tag_leads = TagLead.objects.all()
+    tag_lead_fields = ['Tag Lead Id', 'Tag Lead Name', 'User Create', 'User Update', 'Created Date']
+    tag_lead_sheet.append(tag_lead_fields)
+    for tag_lead in tag_leads:
+        create_date = tag_lead.created_date
+        if create_date is not None:
+            create_date = create_date.replace(tzinfo=None)
+        else:
+            create_date = ''
+
+        row = [
+            tag_lead.id, tag_lead.name,
+            tag_lead.user_create.id if tag_lead.user_create else '',
+            tag_lead.user_update.id if tag_lead.user_update else '',
+            create_date
+        ]
+        tag_lead_sheet.append(row)
+
+    # Mô hình Photo
+    photo_sheet = workbook.create_sheet(title='Photos')
+    photos = Photos.objects.all()
+    photo_fields = ['Photo Id', 'Photo']
+    photo_sheet.append(photo_fields)
+    photo_serializer = PhotoSerializer(photos, many=True)
+    photos_data = photo_serializer.data
+    for photo in photos_data:
+        row = [
+            photo['id'], photo['photo'],
+        ]
+        photo_sheet.append(row)
+
+    workbook.remove(workbook['Sheet'])
     current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"Lead_detail_{current_datetime}.xlsx"
     output = io.BytesIO()
@@ -419,3 +525,94 @@ def export_data(request):
     output.seek(0)
     response = FileResponse(output, as_attachment=True, filename=filename)
     return response
+
+
+
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def import_data(request):
+    file = request.FILES['file']
+
+    workbook = load_workbook(file)
+    lead_detail_sheet = workbook['LeadDetail']
+    project_type_sheet = workbook['ProjectType']
+    source_lead_sheet = workbook['SourceLead']
+    tag_lead_sheet = workbook['TagLead']
+    contacts_sheet = workbook['Contact']
+    photo_sheet = workbook['Photos']
+    # Import dữ liệu cho mô hình LeadDetail
+    lead_detail_data = []
+    temp = []
+    for row in lead_detail_sheet.iter_rows(min_row=2, values_only=True):
+        notes = row[8]
+        street_address = row[1]
+        zip_code = row[5]
+        if notes is None:
+            notes = ''
+        if street_address is None:
+            street_address = ''
+        if zip_code is None:
+            zip_code = ''
+        data_create = {
+            'lead_title': row[0],
+            'street_address': street_address,
+            'country_id': row[2],
+            'city_id': row[3],
+            'state_id': row[4],
+            'zip_code': zip_code,
+            'status': row[6],
+            'proposal_status': row[7],
+            'notes': notes,
+            'confidence': row[9],
+            'estimate_revenue_from': row[10],
+            'estimate_revenue_to': row[11],
+            'number_of_click': row[16],
+            'projected_sale_date': row[17]
+        }
+        ld = LeadDetail.objects.create(**data_create)
+        # lead_detail_data.append(LeadDetail(
+        #     lead_title=row[0],
+        #     street_address=street_address,
+        #     country_id=row[2],
+        #     city_id=row[3],
+        #     state_id=row[4],
+        #     zip_code=zip_code,
+        #     status=row[6],
+        #     proposal_status=row[7],
+        #     notes=notes,
+        #     confidence=row[9],
+        #     estimate_revenue_from=row[10],
+        #     estimate_revenue_to=row[11],
+        #     number_of_click=row[16],
+        #     projected_sale_date=row[17]
+        # ))
+        tags = []
+        for row in tag_lead_sheet.iter_rows(min_row=2, values_only=True):
+            tags.append(TagLead.objects.get(id=row[0]))
+        ld.tags.add(*tags)
+
+        pts = []
+        for row in project_type_sheet.iter_rows(min_row=2, values_only=True):
+            pts.append(ProjectType.objects.get(id=row[0]))
+        ld.project_types.add(*pts)
+        # sps = []
+        # for row in lead_detail_sheet.iter_rows(min_row=2, values_only=True):
+        #     sps.append(get_user_model().objects.get(id=row[0]))
+        # ld.salesperson.add(*sps)
+
+        sources = []
+        for row in source_lead_sheet.iter_rows(min_row=2, values_only=True):
+            sources.append(SourceLead.objects.get(id=row[0]))
+        ld.sources.add(*sources)
+        temp.append(ld)
+
+        for row in contacts_sheet.iter_rows(min_row=2, values_only=True):
+            contact_id = row[0]
+            ct = Contact.objects.get(id=contact_id)
+            ld.contacts.add(ct)
+
+    rs = LeadDetailCreateSerializer(
+        temp, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=rs)
