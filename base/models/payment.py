@@ -13,7 +13,7 @@ class Product(BaseModel):
         return self.name
 
 
-class PaymentHistory(BaseModel):
+class PaymentHistoryStripe(BaseModel):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, blank=True, null=True)
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
