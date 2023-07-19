@@ -57,7 +57,7 @@ class ProposalTemplateHtmlCssSerializer(serializers.ModelSerializer):
 class ProposalTemplateConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProposalTemplateConfig
-        fields = ('id', 'config', 'html_code', 'css_code')
+        fields = ('id', 'config', 'html_code', 'css_code', 'script')
 
 
 class ProposalTemplateSerializer(serializers.ModelSerializer):
@@ -353,7 +353,7 @@ class ProposalWritingSerializer(serializers.ModelSerializer):
 class ProposalFormattingTemplateConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProposalFormattingConfig
-        fields = ('id', 'config', 'html_code', 'css_code')
+        fields = ('id', 'config', 'html_code', 'css_code', 'script')
 
 
 class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
