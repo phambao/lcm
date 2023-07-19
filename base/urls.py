@@ -8,7 +8,8 @@ from base.views import country_state_city, base, auth
 from base.views.base import update_language_user
 # Define path for Base App ------------------------------------------------------
 from sales.views.payment import stripe_webhook_view, ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
-    stripe_cancel_subscription
+    stripe_cancel_subscription, get_config, create_customer, create_subscription, cancel_subscription, \
+    list_subscriptions, preview_invoice, update_subscription, webhook_received
 
 url_base = [
     path('location/',
@@ -47,7 +48,15 @@ url_base = [
     path('product/<int:pk>/', ProductPreviewDetail.as_view()),
     path('product/', ProductPreview.as_view()),
     path('create-checkout-session/', csrf_exempt(CreateCheckOutSession.as_view()), name='checkout_session'),
-    path('stripe-cancel-subscription/', stripe_cancel_subscription)
+    path('stripe-cancel-subscription/', stripe_cancel_subscription),
+    path('config', get_config),
+    path('create-customer', create_customer),
+    path('create-subscription', create_subscription),
+    path('cancel-subscription', cancel_subscription),
+    path('subscriptions', list_subscriptions),
+    path('invoice-preview', preview_invoice),
+    path('update-subscription', update_subscription),
+    path('webhook', webhook_received),
 ]
 # Create schema view for Swagger ------------------------------------------------
 schema_view_base = get_schema_view(
