@@ -26,6 +26,7 @@ class ProposalTemplateConfig(BaseModel):
     config = models.JSONField(default=dict)
     html_code = models.TextField(blank=True, null=True)
     css_code = models.TextField(blank=True, null=True)
+    script = models.TextField(blank=True, null=True)
 
 
 class ProposalElement(BaseModel):
@@ -151,6 +152,7 @@ class ProposalFormattingConfig(BaseModel):
     config = models.JSONField(default=dict)
     html_code = models.TextField(blank=True, null=True)
     css_code = models.TextField(blank=True, null=True)
+    script = models.TextField(blank=True, null=True)
 
 
 class GroupByEstimate(BaseModel):
