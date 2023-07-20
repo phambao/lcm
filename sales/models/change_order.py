@@ -46,6 +46,7 @@ class ChangeOrder(BaseModel):
                                          on_delete=models.CASCADE, related_name='change_orders')
     existing_estimates = models.ManyToManyField('sales.EstimateTemplate', blank=True,
                                                 related_name='change_order', symmetrical=False)
+    changed_items = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True, null=True)
 
     def _get_formulas(self):
         estimate_templates = self.existing_estimates.all()
