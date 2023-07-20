@@ -123,5 +123,4 @@ class ChangeOrderSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         proposal_writing = instance.proposal_writing
         data['proposal_name'] = proposal_writing.name if proposal_writing else None
-        data['changed_items'] = instance._get_changed_item()
         return data
