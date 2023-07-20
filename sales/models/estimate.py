@@ -120,6 +120,8 @@ class EstimateTemplate(BaseModel):
     description = models.TextField(blank=True, default='')
     changed_description = models.TextField(blank=True, default='')  # change order
     note = models.TextField(blank=True, default='')
+    changed_items = ArrayField(models.JSONField(blank=True, default=dict, null=True),
+                               default=list, blank=True, null=True)  # change order
 
     def __str__(self):
         return self.name
