@@ -14,11 +14,12 @@ from rest_framework.viewsets import GenericViewSet
 
 from api.serializers.base import ActivityLogSerializer
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter
-from ..models.config import Column, Search, Config, GridSetting, FileBuilder365
+from ..models.config import Column, Search, Config, GridSetting, FileBuilder365, Question, Answer, CompanyAnswerQuestion
 from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerializer, \
     FileBuilder365ResSerializer
 from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer, \
-    CompanySerializer, DivisionSerializer
+    CompanySerializer, DivisionSerializer, QuestionSerializer, AnswerSerializer, CompanyAnswerQuestionSerializer, \
+    CompanyAnswerQuestionResSerializer
 from api.models import ActivityLog, CompanyBuilder, DivisionCompany
 
 
@@ -170,6 +171,91 @@ class CompanyFilterMixin:
         queryset = super().get_queryset()
         queryset = queryset.filter(company=self.request.user.company)
         return queryset
+
+
+class QuestionGenericView(generics.ListCreateAPIView):
+    queryset = Question.objects.all()
+    serializer_class = QuestionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class QuestionDetailGenericView(generics.RetrieveAPIView):
+    queryset = Question.objects.all()
+    serializer_class = QuestionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class AnswerGenericView(generics.ListCreateAPIView):
+    queryset = Answer.objects.all()
+    serializer_class = AnswerSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class AnswerDetailGenericView(generics.RetrieveAPIView):
+    queryset = Answer.objects.all()
+    serializer_class = AnswerSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class CompanyAnswerQuestionSerializerGenericView(generics.ListAPIView):
+    queryset = CompanyAnswerQuestion.objects.all()
+    serializer_class = CompanyAnswerQuestionResSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class CompanyAnswerQuestionSerializerDetailGenericView(generics.RetrieveAPIView):
+    queryset = CompanyAnswerQuestion.objects.all()
+    serializer_class = CompanyAnswerQuestionResSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def create_question_answer_company(request):
+    serializer = CompanyAnswerQuestionSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data_create = serializer.validated_data
+    questions_info = data_create['info']
+    company = data_create['company']
+    for question_answer in questions_info:
+        question_id = question_answer['question']
+        company_question = CompanyAnswerQuestion.objects.create(
+                    question_id=question_id,
+                    company=company
+        )
+        data_answer = Answer.objects.filter(pk__in=[at['id'] for at in question_answer['answer']])
+        company_question.answer.add(*data_answer)
+    data_rs = CompanyAnswerQuestion.objects.filter(company=company)
+    rs = CompanyAnswerQuestionResSerializer(
+        data_rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_201_CREATED, data=rs)
+
+
+@api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def update_question_answer_company(request, *args, **kwargs):
+    company_id = kwargs.get('company_id')
+    get_object_or_404(CompanyBuilder.objects.all(), pk=company_id)
+    serializer = CompanyAnswerQuestionSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data_create = serializer.validated_data
+    questions_info = data_create['info']
+    company = data_create['company']
+    temp = CompanyAnswerQuestion.objects.filter(company=company_id)
+    temp.delete()
+    for question_answer in questions_info:
+        question_id = question_answer['question']
+        company_question = CompanyAnswerQuestion.objects.create(
+                    question_id=question_id,
+                    company=company
+        )
+        data_answer = Answer.objects.filter(pk__in=[at['id'] for at in question_answer['answer']])
+        company_question.answer.add(*data_answer)
+    data_rs = CompanyAnswerQuestion.objects.filter(company=company)
+    rs = CompanyAnswerQuestionResSerializer(
+        data_rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_201_CREATED, data=rs)
+
 
 @api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated])

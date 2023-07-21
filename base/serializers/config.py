@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from api.middleware import get_request
 from api.models import DivisionCompany, CompanyBuilder
-from ..models.config import Column, Search, Config, GridSetting
+from ..models.config import Column, Search, Config, GridSetting, Question, Answer, CompanyAnswerQuestion
 from ..utils import pop
 
 from base.serializers import base
@@ -64,31 +64,61 @@ class GridSettingSerializer(serializers.ModelSerializer):
 
 
 class CompanySerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CompanyBuilder
         fields = ('id', 'logo', 'company_name', 'address', 'city', 'state', 'zip_code', 'tax', 'size',
                   'business_phone', 'fax', 'email', 'cell_phone', 'cell_mail', 'created_date', 'modified_date',
                   'user_create', 'user_update', 'currency', 'description', 'company_timezone')
 
-    # def create(self, validated_data):
-    #     request = self.context['request']
-    #     user_create = user_update = request.user
-    #
-    #     company_create = Company.objects.create(
-    #         user_create=user_create, user_update=user_update,
-    #         **validated_data
-    #     )
-    #     return company_create
-    #
-    # def update(self, instance, data):
-    #     company_update = Company.objects.filter(pk=instance.pk)
-    #     company_update.update(**data)
-    #     instance.refresh_from_db()
-    #     return instance
-
 
 class DivisionSerializer(serializers.ModelSerializer):
     class Meta:
         model = DivisionCompany
         fields = '__all__'
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = Question
+        fields = ('id', 'name', 'type')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['answer'] = AnswerSerializer(instance.question_answer.all(), many=True).data
+        return data
+
+
+class AnswerSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = Answer
+        fields = ('id', 'question', 'name')
+
+
+class QuestionAnswerInfoSerializer(serializers.Serializer):
+    question = serializers.IntegerField(required=False)
+    answer = AnswerSerializer(allow_null=True, required=False, many=True)
+
+
+class CompanyAnswerQuestionSerializer(serializers.ModelSerializer):
+    info = QuestionAnswerInfoSerializer(allow_null=True, required=False, many=True)
+
+    class Meta:
+        model = CompanyAnswerQuestion
+        fields = ('company', 'info')
+
+
+class CompanyAnswerQuestionResSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CompanyAnswerQuestion
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['question'] = Question.objects.filter(id=data['question']).values()
+        data['answer'] = Answer.objects.filter(id__in=data['answer']).values()
+        return data

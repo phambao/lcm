@@ -5,10 +5,13 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
 from base.views import country_state_city, base, auth
-from base.views.base import update_language_user
+from base.views.base import update_language_user, QuestionGenericView, QuestionDetailGenericView, AnswerGenericView, \
+    AnswerDetailGenericView, CompanyAnswerQuestionSerializerGenericView, \
+    CompanyAnswerQuestionSerializerDetailGenericView, create_question_answer_company, update_question_answer_company
 # Define path for Base App ------------------------------------------------------
 from sales.views.payment import stripe_webhook_view, ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
-    stripe_cancel_subscription
+    stripe_cancel_subscription, get_config, create_customer, create_subscription, cancel_subscription, \
+    list_subscriptions, preview_invoice, update_subscription, webhook_received
 
 url_base = [
     path('location/',
@@ -47,7 +50,24 @@ url_base = [
     path('product/<int:pk>/', ProductPreviewDetail.as_view()),
     path('product/', ProductPreview.as_view()),
     path('create-checkout-session/', csrf_exempt(CreateCheckOutSession.as_view()), name='checkout_session'),
-    path('stripe-cancel-subscription/', stripe_cancel_subscription)
+    path('stripe-cancel-subscription/', stripe_cancel_subscription),
+    path('config', get_config),
+    path('create-customer', create_customer),
+    path('create-subscription', create_subscription),
+    path('cancel-subscription', cancel_subscription),
+    path('subscriptions', list_subscriptions),
+    path('invoice-preview', preview_invoice),
+    path('update-subscription', update_subscription),
+    path('webhook', webhook_received),
+    path('question', QuestionGenericView.as_view()),
+    path('question/<int:pk>/', QuestionDetailGenericView.as_view()),
+    path('answer', AnswerGenericView.as_view()),
+    path('answer/<int:pk>/', AnswerDetailGenericView.as_view()),
+    path('company/question/', CompanyAnswerQuestionSerializerGenericView.as_view()),
+    path('company/question/<int:pk>/', CompanyAnswerQuestionSerializerDetailGenericView.as_view()),
+    path('company/create-question/', create_question_answer_company),
+    path('company/update-question/<int:company_id>/', update_question_answer_company),
+
 ]
 # Create schema view for Swagger ------------------------------------------------
 schema_view_base = get_schema_view(
