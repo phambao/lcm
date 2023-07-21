@@ -113,7 +113,7 @@ class ChangeOrderSerializer(serializers.ModelSerializer):
         instance.flat_rate_groups.all().delete()
         self.create_flat_rate_groups(flat_rate_groups, instance)
         self.create_groups(groups, instance)
-        instance.existing_estimates.all().delete()
+        instance.existing_estimates.clear()
         instance.existing_estimates.add(*self.create_existing_estimate(existing_estimates))
         activity_log.delay(ContentType.objects.get_for_model(ChangeOrder).pk, instance.pk, 2,
                            ChangeOrderSerializer.__name__, __name__, self.context['request'].user.pk)

@@ -26,6 +26,7 @@ class ProposalTemplateConfig(BaseModel):
     config = models.JSONField(default=dict)
     html_code = models.TextField(blank=True, null=True)
     css_code = models.TextField(blank=True, null=True)
+    script = models.TextField(blank=True, null=True)
 
 
 class ProposalElement(BaseModel):
@@ -134,6 +135,7 @@ class ProposalFormatting(BaseModel):
     config = models.JSONField(default=dict, blank=True)
     html_code = models.TextField(blank=True, null=True, default='')
     css_code = models.TextField(blank=True, null=True, default='')
+    script = models.TextField(blank=True, null=True, default='')
     proposal_writing = models.OneToOneField('sales.ProposalWriting', on_delete=models.SET_NULL,
                                             related_name='proposal_formatting', null=True, blank=True)
     show_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
@@ -151,6 +153,7 @@ class ProposalFormattingConfig(BaseModel):
     config = models.JSONField(default=dict)
     html_code = models.TextField(blank=True, null=True)
     css_code = models.TextField(blank=True, null=True)
+    script = models.TextField(blank=True, null=True)
 
 
 class GroupByEstimate(BaseModel):

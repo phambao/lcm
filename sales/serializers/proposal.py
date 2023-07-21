@@ -57,7 +57,7 @@ class ProposalTemplateHtmlCssSerializer(serializers.ModelSerializer):
 class ProposalTemplateConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProposalTemplateConfig
-        fields = ('id', 'config', 'html_code', 'css_code')
+        fields = ('id', 'config', 'html_code', 'css_code', 'script')
 
 
 class ProposalTemplateSerializer(serializers.ModelSerializer):
@@ -76,10 +76,12 @@ class ProposalTemplateSerializer(serializers.ModelSerializer):
         config = dict()
         html_code = None
         css_code = None
+        script = None
         if config_proposal_template != dict():
             config = config_proposal_template['config']
             html_code = config_proposal_template['html_code']
             css_code = config_proposal_template['css_code']
+            script = config_proposal_template['script']
         proposal_template = ProposalTemplate.objects.create(
             **validated_data
         )
@@ -87,7 +89,8 @@ class ProposalTemplateSerializer(serializers.ModelSerializer):
             proposal_template=proposal_template,
             config=config,
             html_code=html_code,
-            css_code=css_code
+            css_code=css_code,
+            script=script
         )
         data_create_widget = []
         for element in elements:
@@ -115,17 +118,19 @@ class ProposalTemplateSerializer(serializers.ModelSerializer):
         config = dict()
         html_code = None
         css_code = None
+        script = None
         if config_proposal_template != dict():
             config = config_proposal_template['config']
             html_code = config_proposal_template['html_code']
             css_code = config_proposal_template['css_code']
+            script = config_proposal_template['script']
         proposal_template = ProposalTemplate.objects.filter(pk=instance.pk)
         proposal_template.update(**data)
         temp = proposal_template.first()
         proposal_template_config = ProposalTemplateConfig.objects.filter(
             proposal_template=temp
         )
-        proposal_template_config.update(config=config, html_code=html_code, css_code=css_code)
+        proposal_template_config.update(config=config, html_code=html_code, css_code=css_code, script=script)
 
         data_create_widget = []
         proposal_element = ProposalElement.objects.filter(proposal_template=proposal_template.first().id)
@@ -353,14 +358,14 @@ class ProposalWritingSerializer(serializers.ModelSerializer):
 class ProposalFormattingTemplateConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProposalFormattingConfig
-        fields = ('id', 'config', 'html_code', 'css_code')
+        fields = ('id', 'config', 'html_code', 'css_code', 'script')
 
 
 class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProposalFormatting
-        fields = ('id', 'html_code', 'css_code', 'config', 'screen_shot', 'show_fields')
+        fields = ('id', 'html_code', 'css_code', 'config', 'screen_shot', 'show_fields', 'script')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
