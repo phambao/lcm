@@ -71,7 +71,6 @@ def stripe_webhook_view(request):
     except stripe.error.SignatureVerificationError as e:
         # Invalid signature
         return Response(status=400)
-    print(event['type'])
     if event['type'] == 'charge.succeeded':
         customer = stripe.Customer.create(
             email='daylatruong1@gmail.com',
@@ -140,7 +139,6 @@ def create_customer(request):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
 @csrf_exempt
 def create_subscription(request):
     data = request.data
@@ -162,7 +160,6 @@ def create_subscription(request):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
 @csrf_exempt
 def cancel_subscription(request):
     data = request.body
@@ -174,7 +171,6 @@ def cancel_subscription(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
 @csrf_exempt
 def list_subscriptions(request):
     customer_id = request.COOKIES.get('customer')
@@ -190,7 +186,6 @@ def list_subscriptions(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
 @csrf_exempt
 def preview_invoice(request):
     customer_id = request.COOKIES.get('customer')
@@ -212,7 +207,6 @@ def preview_invoice(request):
 
 
 @api_view(['PUT'])
-@permission_classes([permissions.IsAuthenticated])
 @csrf_exempt
 def update_subscription(request):
     data = request.body
