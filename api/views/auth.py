@@ -14,7 +14,7 @@ from base.tasks import celery_send_mail
 from base.views.base import CompanyFilterMixin
 from ..models import CompanyBuilder
 from ..serializers.auth import UserSerializer, RegisterSerializer, LoginSerializer, User, \
-    ForgotPasswordSerializer, CheckCodeSerializer, ChangePasswordSerializer
+    ForgotPasswordSerializer, CheckCodeSerializer, ChangePasswordSerializer, InternalUserSerializer
 
 
 class SignUpAPI(generics.GenericAPIView):
@@ -88,6 +88,7 @@ class UserList(CompanyFilterMixin, generics.ListAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['username', 'email']
 
+
 @api_view(['POST'])
 def forgot_password(request):
     """
@@ -154,3 +155,15 @@ def reset_password(request):
     except get_user_model().DoesNotExist:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"email": "Email or code is not valid"})
     return Response(status=status.HTTP_200_OK)
+
+
+class InternalUserListView(CompanyFilterMixin, generics.ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = InternalUserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class InternalUserDetailView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = InternalUserSerializer
+    permission_classes = [permissions.IsAuthenticated]

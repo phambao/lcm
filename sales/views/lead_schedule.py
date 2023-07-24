@@ -1,40 +1,37 @@
-import uuid
-import pytz
-from datetime import datetime
 import datetime
+import uuid
+from datetime import datetime
 
+import pytz
 from django.core.files.base import ContentFile
-from django.db.models.functions import Lower
 from django.db.models import Q
+from django.db.models.functions import Lower
 from django.shortcuts import get_object_or_404
+from django_filters import rest_framework as filters
+from rest_framework import filters as rf_filters
 from rest_framework import generics
 from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-from rest_framework import filters as rf_filters
-from django_filters import rest_framework as filters
 
+from base.permissions import SchedulePermissions
 from base.serializers.base import IDAndNameSerializer
-from base.utils import pop
 from base.views.base import CompanyFilterMixin
-from ..filters.lead_list import ContactsFilter
 from ..filters.schedule import DailyLogFilter, EventFilter, ToDoFilter
 from ..models import LeadDetail
 from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachments, DailyLog, \
     AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate, \
     FileScheduleEvent, CustomFieldScheduleSetting, TodoCustomField, ScheduleToDoSetting, ScheduleDailyLogSetting, \
     CustomFieldScheduleDailyLogSetting, Messaging, ScheduleEventSetting, ScheduleEventPhaseSetting, DailyLogCustomField, \
-    FileCheckListItems, FileCheckListItemsTemplate, MessageEvent, CommentDailyLog, EventShiftReason, ShiftReason, \
-    FileMessageToDo
+    FileCheckListItems, FileCheckListItemsTemplate, MessageEvent, CommentDailyLog, EventShiftReason, ShiftReason
 from ..serializers import lead_schedule
-from ..serializers.lead_schedule import ScheduleEventPhaseSettingSerializer, ScheduleDailyLogSettingSerializer, \
-    EventLinkSerializer
+from ..serializers.lead_schedule import EventLinkSerializer
 
 
 class ScheduleAttachmentsGenericView(GenericViewSet):
     serializer_class = lead_schedule.ScheduleAttachmentsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
     def get_queryset(self):
         get_object_or_404(ToDo.objects.all(), pk=self.kwargs['pk_todo'])
@@ -78,7 +75,7 @@ class ScheduleAttachmentsGenericView(GenericViewSet):
 
 class AttachmentsDailyLogGenericView(GenericViewSet):
     serializer_class = lead_schedule.AttachmentsDailyLogSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
     def get_queryset(self):
         get_object_or_404(DailyLog.objects.all(), pk=self.kwargs['pk_daily_log'])
@@ -122,7 +119,7 @@ class AttachmentsDailyLogGenericView(GenericViewSet):
 
 class AttachmentsEventGenericView(GenericViewSet):
     serializer_class = lead_schedule.AttachmentsEventSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
     def get_queryset(self):
         get_object_or_404(ScheduleEvent.objects.all(), pk=self.kwargs['pk_event'])
@@ -170,7 +167,7 @@ class SourceScheduleToDoGenericView(CompanyFilterMixin, generics.ListCreateAPIVi
                                                    'messaging__todo_message_file',
                                                    'custom_filed_to_do', 'attachments', 'check_list__file_check_list')
     serializer_class = lead_schedule.ToDoCreateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = ToDoFilter
     # search_fields = ['first_name', 'last_name', 'email', 'phone_contacts__phone_number']
@@ -179,49 +176,49 @@ class SourceScheduleToDoGenericView(CompanyFilterMixin, generics.ListCreateAPIVi
 class ScheduleDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ToDo.objects.all().prefetch_related('tags', 'assigned_to', 'check_list', 'messaging')
     serializer_class = lead_schedule.ToDoCreateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class TagScheduleGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = TagSchedule.objects.all()
     serializer_class = lead_schedule.TagScheduleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class TagScheduleDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = TagSchedule.objects.all()
     serializer_class = lead_schedule.TagScheduleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleCheckListItemGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = CheckListItems.objects.all()
     serializer_class = lead_schedule.ToDoChecklistItemSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleCheckListItemDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = CheckListItems.objects.all()
     serializer_class = lead_schedule.ToDoChecklistItemSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleTodoMessageGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = Messaging.objects.all().prefetch_related('todo_message_file')
     serializer_class = lead_schedule.MessagingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleTodoMessageDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = Messaging.objects.all().prefetch_related('todo_message_file')
     serializer_class = lead_schedule.MessagingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class DailyLogGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = DailyLog.objects.all().prefetch_related('tags', 'to_dos')
     serializer_class = lead_schedule.DailyLogSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = DailyLogFilter
     # search_fields = ['first_name', 'last_name', 'email', 'phone_contacts__phone_number']
@@ -230,43 +227,43 @@ class DailyLogGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
 class DailyLogDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = DailyLog.objects.all()
     serializer_class = lead_schedule.DailyLogSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class DailyLogTemplateNoteGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = DailyLogTemplateNotes.objects.all()
     serializer_class = lead_schedule.DailyLogNoteSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class DailyLogTemplateNoteDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = DailyLogTemplateNotes.objects.all()
     serializer_class = lead_schedule.DailyLogNoteSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class DaiLyLogCommentGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = CommentDailyLog.objects.all().prefetch_related('attachment_daily_log_comment')
     serializer_class = lead_schedule.CommentDailyLogSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class DaiLyLogCommentDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = CommentDailyLog.objects.all().prefetch_related('attachment_daily_log_comment')
     serializer_class = lead_schedule.CommentDailyLogSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class CheckListItemGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = CheckListItems.objects.all()
     serializer_class = lead_schedule.ToDoChecklistItemSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class CheckListItemDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = CheckListItems.objects.all()
     serializer_class = lead_schedule.ToDoChecklistItemSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
     def delete(self, request, *args, **kwargs):
         pk_checklist = kwargs.get('pk')
@@ -294,30 +291,30 @@ class CheckListItemDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdate
 class ToDoChecklistItemTemplateGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = TodoTemplateChecklistItem.objects.all()
     serializer_class = lead_schedule.ToDoCheckListItemsTemplateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ToDoChecklistItemTemplateDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = TodoTemplateChecklistItem.objects.all()
     serializer_class = lead_schedule.ToDoCheckListItemsTemplateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class TemplateChecklistItemGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = CheckListItemsTemplate.objects.all()
     serializer_class = lead_schedule.CheckListItemsTemplateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class TemplateChecklistItemDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = CheckListItemsTemplate.objects.all()
     serializer_class = lead_schedule.CheckListItemsTemplateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ToDoMessageCustomFieldGenericView(GenericViewSet):
     serializer_class = lead_schedule.MessageAndCustomFieldToDoCreateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
     def create_message_custom_field(self, request, **kwargs):
         serializer = lead_schedule.MessageAndCustomFieldToDoCreateSerializer(data=request.data)
@@ -430,7 +427,7 @@ class ToDoMessageCustomFieldGenericView(GenericViewSet):
 class ScheduleEventGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ScheduleEvent.objects.all().prefetch_related('assigned_user', 'viewing', 'tags', 'event_message', 'shift_event')
     serializer_class = lead_schedule.ScheduleEventSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = EventFilter
     # search_fields = ['first_name', 'last_name', 'email', 'phone_contacts__phone_number']
@@ -439,119 +436,119 @@ class ScheduleEventGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
 class ScheduleEventDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ScheduleEvent.objects.all()
     serializer_class = lead_schedule.ScheduleEventSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleEventShiftReasonGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = EventShiftReason.objects.all()
     serializer_class = lead_schedule.ScheduleEventShiftReasonSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleEventShiftReasonDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = EventShiftReason.objects.all()
     serializer_class = lead_schedule.ScheduleEventShiftReasonSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleShiftReasonGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ShiftReason.objects.all()
     serializer_class = lead_schedule.ShiftReasonSerialized
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleShiftReasonDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ShiftReason.objects.all()
     serializer_class = lead_schedule.ShiftReasonSerialized
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleToDoCustomFieldGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = CustomFieldScheduleSetting.objects.all()
     serializer_class = lead_schedule.CustomFieldScheduleSettingSerialized
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleToDoCustomFieldDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomFieldScheduleSetting.objects.all()
     serializer_class = lead_schedule.CustomFieldScheduleSettingSerialized
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleToDoSettingGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ScheduleToDoSetting.objects.all()
     serializer_class = lead_schedule.ScheduleToDoSettingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleToDoSettingDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ScheduleToDoSetting.objects.all()
     serializer_class = lead_schedule.ScheduleToDoSettingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleDailyLogSettingGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ScheduleDailyLogSetting.objects.all()
     serializer_class = lead_schedule.ScheduleDailyLogSettingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleDailyLogSettingDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ScheduleDailyLogSetting.objects.all()
     serializer_class = lead_schedule.ScheduleDailyLogSettingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleDailyLogCustomFieldSettingGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = CustomFieldScheduleDailyLogSetting.objects.all()
     serializer_class = lead_schedule.CustomFieldScheduleDailyLogSettingSerialized
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleDailyLogCustomFieldSettingDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomFieldScheduleDailyLogSetting.objects.all()
     serializer_class = lead_schedule.CustomFieldScheduleDailyLogSettingSerialized
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleEventSettingGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ScheduleEventSetting.objects.all()
     serializer_class = lead_schedule.ScheduleEventSettingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleEventSettingDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ScheduleEventSetting.objects.all()
     serializer_class = lead_schedule.ScheduleEventSettingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleEventPhaseSettingGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ScheduleEventPhaseSetting.objects.all()
     serializer_class = lead_schedule.ScheduleEventPhaseSettingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleEventPhaseSettingDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ScheduleEventPhaseSetting.objects.all()
     serializer_class = lead_schedule.ScheduleEventPhaseSettingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleEventMessageGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = MessageEvent.objects.all().prefetch_related('file_message_event')
     serializer_class = lead_schedule.MessageEventSerialized
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 class ScheduleEventMessageDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = MessageEvent.objects.all().prefetch_related('file_message_event')
     serializer_class = lead_schedule.MessageEventSerialized
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def get_checklist_by_todo(request, *args, **kwargs):
     pk_todo = kwargs.get('pk_todo')
     get_object_or_404(ToDo.objects.all(), pk=pk_todo)
@@ -562,7 +559,7 @@ def get_checklist_by_todo(request, *args, **kwargs):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def get_checklist_template_by_todo(request, *args, **kwargs):
     user_create = user_update = request.user
     pk_todo = kwargs.get('pk_todo')
@@ -603,7 +600,7 @@ def get_checklist_template_by_todo(request, *args, **kwargs):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def select_checklist_template(request, *args, **kwargs):
     user_create = user_update = request.user
     pk_template = kwargs.get('pk_template')
@@ -656,7 +653,7 @@ def select_checklist_template(request, *args, **kwargs):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def select_event_predecessors(request, *args, **kwargs):
     rs = ScheduleEvent.objects.filter(company=request.user.company.id).values('id', name=Lower('event_title'))
     rs = EventLinkSerializer(
@@ -665,7 +662,7 @@ def select_event_predecessors(request, *args, **kwargs):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def select_event_link(request, *args, **kwargs):
     event_id = kwargs.get('pk')
     list_id = get_id_by_group(event_id)
@@ -680,7 +677,7 @@ def select_event_link(request, *args, **kwargs):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def select_lead_list(request, *args, **kwargs):
     rs = LeadDetail.objects.filter(company=request.user.company.id).values('id', name=Lower('lead_title'))
     rs = IDAndNameSerializer(
@@ -689,7 +686,7 @@ def select_lead_list(request, *args, **kwargs):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def delete_custom_field(request, *args, **kwargs):
     custom_field_id = kwargs.get('pk')
     todo_list = request.data
@@ -702,7 +699,7 @@ def delete_custom_field(request, *args, **kwargs):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def delete_custom_field_daily_log(request, *args, **kwargs):
     custom_field_id = kwargs.get('pk')
     daily_log_list = request.data
@@ -715,7 +712,7 @@ def delete_custom_field_daily_log(request, *args, **kwargs):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def delete_phase(request, *args, **kwargs):
     phase_id = kwargs.get('pk')
     event_list = request.data
@@ -736,7 +733,7 @@ def delete_phase(request, *args, **kwargs):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def select_checklist_item_template(request, pk_template, pk_todo):
     data_checklist = CheckListItemsTemplate.objects.filter(to_do_checklist_template=pk_template)
     for checklist in data_checklist:
@@ -769,7 +766,7 @@ def select_checklist_item_template(request, pk_template, pk_todo):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def filter_event(request, *args, **kwargs):
     data = request.query_params
     start_day = datetime.datetime.fromisoformat(data['start_day'])
@@ -786,7 +783,7 @@ def filter_event(request, *args, **kwargs):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def get_event_of_day(request, *args, **kwargs):
     data = request.query_params
     start_day = datetime.strptime(data['day'], '%Y-%m-%d %H:%M:%S')
@@ -832,7 +829,7 @@ def get_id_by_parent_checklist_template(pk):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def delete_file_todo_checklist_item(request, *args, **kwargs):
     file_id = kwargs.get('pk')
     pk_checklist = kwargs.get('pk_checklist')
@@ -860,7 +857,7 @@ def delete_file_todo_checklist_item(request, *args, **kwargs):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def delete_file_todo(request, *args, **kwargs):
     file_id = kwargs.get('pk')
     data_attachments = Attachments.objects.filter(pk=file_id)
@@ -869,7 +866,7 @@ def delete_file_todo(request, *args, **kwargs):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def delete_file_daily_log(request, *args, **kwargs):
     file_id = kwargs.get('pk')
     data_attachments = AttachmentDailyLog.objects.filter(pk=file_id)
@@ -878,7 +875,7 @@ def delete_file_daily_log(request, *args, **kwargs):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def delete_file_event(request, *args, **kwargs):
     file_id = kwargs.get('pk')
     data_attachments = FileScheduleEvent.objects.filter(pk=file_id)
@@ -887,7 +884,7 @@ def delete_file_event(request, *args, **kwargs):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def delete_file_checklist_template(request, *args, **kwargs):
     file_id = kwargs.get('pk')
     data_attachments = FileCheckListItemsTemplate.objects.filter(pk=file_id)
@@ -896,7 +893,7 @@ def delete_file_checklist_template(request, *args, **kwargs):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def delete_event(request):
     """
         DELETE: delete multiple event
@@ -910,7 +907,7 @@ def delete_event(request):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def delete_todo(request):
     """
         DELETE: delete multiple to_do
@@ -924,7 +921,7 @@ def delete_todo(request):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def delete_daily_log(request):
     """
         DELETE: delete multiple daily log
@@ -938,7 +935,7 @@ def delete_daily_log(request):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def delete_template_daily_log(request):
     """
         DELETE: delete multiple daily log template
