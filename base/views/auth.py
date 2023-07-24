@@ -56,6 +56,8 @@ def get_permission(request):
     from sales.models.invoice import Invoice
     from sales.models.lead_list import LeadDetail
     from sales.models.lead_schedule import ScheduleEvent
+    from sales.models.lead_schedule import ToDo
+    from sales.models.lead_schedule import DailyLog
     from sales.models.proposal import ProposalWriting
 
     perms = Permission.objects.none()
@@ -72,5 +74,9 @@ def get_permission(request):
     content_type = ContentType.objects.get_for_model(ScheduleEvent)
     perms = perms | Permission.objects.filter(content_type=content_type)
     content_type = ContentType.objects.get_for_model(ProposalWriting)
+    perms = perms | Permission.objects.filter(content_type=content_type)
+    content_type = ContentType.objects.get_for_model(ToDo)
+    perms = perms | Permission.objects.filter(content_type=content_type)
+    content_type = ContentType.objects.get_for_model(DailyLog)
     perms = perms | Permission.objects.filter(content_type=content_type)
     return Response(status=status.HTTP_200_OK, data=perms.values())
