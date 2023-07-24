@@ -5,6 +5,7 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
 from base.views import country_state_city, base, auth
+from base.views.auth import PersonalInformationView, PersonalInformationDetailView
 from base.views.base import update_language_user, QuestionGenericView, QuestionDetailGenericView, AnswerGenericView, \
     AnswerDetailGenericView, CompanyAnswerQuestionSerializerGenericView, \
     CompanyAnswerQuestionSerializerDetailGenericView, create_question_answer_company, update_question_answer_company
@@ -67,6 +68,8 @@ url_base = [
     path('company/question/<int:pk>/', CompanyAnswerQuestionSerializerDetailGenericView.as_view()),
     path('company/create-question/', create_question_answer_company),
     path('company/update-question/<int:company_id>/', update_question_answer_company),
+    path('personal-information/<int:pk>/', PersonalInformationDetailView.as_view()),
+    path('personal-information/', PersonalInformationView.as_view()),
 
 ]
 # Create schema view for Swagger ------------------------------------------------

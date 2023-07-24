@@ -10,6 +10,7 @@ from django.utils.timesince import timesince
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from api.models import CompanyBuilder, User
+from base.models.config import Question, Answer
 
 
 class UserInline(admin.TabularInline):
@@ -120,5 +121,17 @@ class UserAdmin(admin.ModelAdmin):
     display_last_login.short_description = "Last Login"
 
 
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'type', 'name')
+    search_fields = ['name']
+
+
+class AnswerAdmin(admin.ModelAdmin):
+    list_display = ('id', 'question', 'name')
+    search_fields = ['name', 'question']
+
+
 admin.site.register(User, UserAdmin)
 admin.site.register(CompanyBuilder, CompanyAdmin)
+admin.site.register(Question, QuestionAdmin)
+admin.site.register(Answer, AnswerAdmin)
