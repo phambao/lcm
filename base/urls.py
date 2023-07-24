@@ -46,6 +46,7 @@ url_base = [
     path('group/<int:pk>/', auth.GroupDetail.as_view()),
     path('permission/', auth.PermissionList.as_view()),
     path('permission/<int:pk>/', auth.PermissionDetail.as_view()),
+    path('roles/', auth.get_permission),
     path('lang/<str:lang>/', update_language_user),
     path('stripe-webhook/', stripe_webhook_view, name='stripe-webhook'),
     path('product/<int:pk>/', ProductPreviewDetail.as_view()),

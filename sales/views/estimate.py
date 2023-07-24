@@ -11,6 +11,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
+from base.permissions import EstimatePermissions
 from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter, AssembleFilter, GroupFormulaFilter,\
     DescriptionFilter, UnitFilter, DataEntryFilter
 from sales.models import DataPoint, Catalog
@@ -29,7 +30,7 @@ class POFormulaList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = POFormula.objects.filter(is_show=True, group=None).\
         prefetch_related('self_data_entries').select_related('assemble', 'group').order_by('-modified_date')
     serializer_class = POFormulaSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = FormulaFilter
     search_fields = ('name', )
@@ -42,13 +43,13 @@ class POFormulaCompactList(POFormulaList):
 class POFormulaDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = POFormula.objects.all().prefetch_related('self_data_entries')
     serializer_class = POFormulaSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
 
 
 class POFormulaGroupingList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = POFormulaGrouping.objects.all().order_by('-modified_date').distinct()
     serializer_class = POFormulaGroupingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = GroupFormulaFilter
 
@@ -56,19 +57,19 @@ class POFormulaGroupingList(CompanyFilterMixin, generics.ListCreateAPIView):
 class POFormulaGroupingCreate(CompanyFilterMixin, generics.CreateAPIView):
     queryset = POFormulaGrouping.objects.all().order_by('-modified_date').distinct()
     serializer_class = GroupFormulasSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
 
 
 class POFormulaGroupingDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = POFormulaGrouping.objects.all()
     serializer_class = POFormulaGroupingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
 
 
 class DataEntryList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = DataEntry.objects.all().order_by('-modified_date')
     serializer_class = DataEntrySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = DataEntryFilter
     search_fields = ('name', )
@@ -77,13 +78,13 @@ class DataEntryList(CompanyFilterMixin, generics.ListCreateAPIView):
 class DataEntryDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = DataEntry.objects.all()
     serializer_class = DataEntrySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
 
 
 class UnitLibraryList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = UnitLibrary.objects.all().order_by('-modified_date')
     serializer_class = UnitLibrarySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = UnitFilter
     search_fields = ('name', )
@@ -92,13 +93,13 @@ class UnitLibraryList(CompanyFilterMixin, generics.ListCreateAPIView):
 class UnitLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = UnitLibrary.objects.all()
     serializer_class = UnitLibrarySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
 
 
 class DescriptionLibraryList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = DescriptionLibrary.objects.all().order_by('-modified_date')
     serializer_class = DescriptionLibrarySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = DescriptionFilter
     search_fields = ('name', )
@@ -107,13 +108,13 @@ class DescriptionLibraryList(CompanyFilterMixin, generics.ListCreateAPIView):
 class DescriptionLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = DescriptionLibrary.objects.all()
     serializer_class = DescriptionLibrarySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
 
 
 class AssembleList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = Assemble.objects.filter(estimate_templates=None, is_show=True).order_by('-modified_date').prefetch_related('assemble_formulas')
     serializer_class = AssembleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = AssembleFilter
     search_fields = ('name', 'description')
@@ -126,13 +127,13 @@ class AssembleCompactList(AssembleList):
 class AssembleDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Assemble.objects.all()
     serializer_class = AssembleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
 
 
 class EstimateTemplateList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = EstimateTemplate.objects.filter(is_show=True).order_by('-modified_date').prefetch_related('data_views', 'assembles', 'data_entries')
     serializer_class = EstimateTemplateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = EstimateTemplateFilter
 
@@ -144,11 +145,11 @@ class EstimateTemplateCompactList(EstimateTemplateList):
 class EstimateTemplateDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = EstimateTemplate.objects.all()
     serializer_class = EstimateTemplateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def filter_group_fo_to_fo(request):
     q = Q()
     temp = request.query_params.dict()
@@ -213,7 +214,7 @@ def filter_group_fo_to_fo(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def get_linked_descriptions(request):
     """
     Get linked description from estimate and catalog
@@ -230,7 +231,7 @@ def get_linked_descriptions(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def get_linked_description(request, pk):
     """
     Get linked description from estimate and catalog
@@ -244,7 +245,7 @@ def get_linked_description(request, pk):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def get_tag_formula(request):
     formulas = POFormula.objects.filter(company=get_request().user.company, is_show=True)
     serializer = TaggingSerializer(formulas, many=True)
@@ -252,7 +253,7 @@ def get_tag_formula(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def get_tag_data_point(request):
     data_points = DataPoint.objects.filter(company=get_request().user.company)
     serializer = TaggingSerializer(data_points, many=True)
@@ -260,7 +261,7 @@ def get_tag_data_point(request):
 
 
 @api_view(['PUT'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def unlink_group(request):
     ids = request.data
     formulas = POFormula.objects.filter(id__in=ids)
@@ -270,7 +271,7 @@ def unlink_group(request):
 
 
 @api_view(['PUT'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def add_existing_formula(request, pk):
     ids = request.data
     formulas = POFormula.objects.filter(id__in=ids)
@@ -280,7 +281,7 @@ def add_existing_formula(request, pk):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def get_material_by_data_entry(request, pk):
     de = DataEntry.objects.get(pk=pk)
     categories = de.material_selections.all()
@@ -293,7 +294,7 @@ def get_material_by_data_entry(request, pk):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def get_material_from_formula(request, pk):
     mv = get_object_or_404(MaterialView.objects.filter(company=request.user.company), pk=pk)
     catagory_id = mv.catalog_materials[-1].get('id')

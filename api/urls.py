@@ -3,7 +3,7 @@ from django.urls import path, include
 from knox import views as knox_views
 
 from api.views.auth import SignInAPI, SignUpAPI, MainUser, UserList, forgot_password, check_private_code, \
-    reset_password, SignUpUserCompanyAPI
+    reset_password, SignUpUserCompanyAPI, InternalUserListView, InternalUserDetailView
 from api.views.company_setting import setting_change_order, setting_invoice
 
 urlpatterns = [
@@ -12,6 +12,8 @@ urlpatterns = [
     path('login', SignInAPI.as_view()),
     path('logoutall/', knox_views.LogoutAllView.as_view(), name='knox_logoutall'),
     path('user/<int:pk>/', MainUser.as_view()),
+    path('internal-user/', InternalUserListView.as_view()),
+    path('internal-user/<int:pk>/', InternalUserDetailView.as_view()),
     path('users', UserList.as_view()),
     path('company/user/register', SignUpUserCompanyAPI.as_view()),
     path('company/setting/change-order/', setting_change_order),
