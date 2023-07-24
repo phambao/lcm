@@ -65,11 +65,39 @@ class GridSettingSerializer(serializers.ModelSerializer):
 
 
 class CompanySerializer(serializers.ModelSerializer):
+    # city = serializers.CharField(allow_null=True, allow_blank=True)
+    # state = serializers.CharField(allow_null=True, allow_blank=True)
+    # country = serializers.CharField(allow_null=True, allow_blank=True)
+
     class Meta:
         model = CompanyBuilder
         fields = ('id', 'logo', 'company_name', 'address', 'country', 'city', 'state', 'zip_code', 'tax', 'size',
                   'business_phone', 'fax', 'email', 'cell_phone', 'cell_mail', 'created_date', 'modified_date',
                   'user_create', 'user_update', 'currency', 'description', 'company_timezone', 'field')
+
+    # def create(self, validated_data):
+    #     request = self.context['request']
+    #     data = request.data
+    #     lead_state = pop(data, 'state', '')
+    #     lead_city = pop(data, 'city', '')
+    #     lead_country = pop(data, 'country', '')
+    #
+    #     company = CompanyBuilder.objects.create(city_id=lead_city.get('id'), state_id=lead_state.get('id'), country_id=lead_country.get('id'), **data)
+    #
+    #     return company
+    #
+    # def create(self, validated_data):
+    #     request = self.context['request']
+    #     data = request.data
+    #     lead_state = pop(data, 'state', {})
+    #     lead_city = pop(data, 'city', {})
+    #     lead_country = pop(data, 'country', {})
+    #
+    #     company = CompanyBuilder.objects.create(city_id=lead_city.get('id'), state_id=lead_state.get('id'), country_id=lead_country.get('id'), **data)
+    #
+    #     return company
+
+
 
 
 class DivisionSerializer(serializers.ModelSerializer):
