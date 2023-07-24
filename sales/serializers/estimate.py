@@ -466,7 +466,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
     def reparse(self, data):
         # Serializer is auto convert pk to model, But when reuse serializer in others, it is required to have int field.
         # So we reparse this case
-        from sales.views.proposal import GroupByEstimate
+        from sales.models import GroupByEstimate
         group_by_proposal = data.get('group_by_proposal')
         if isinstance(group_by_proposal, int):
             data['group_by_proposal'] = GroupByEstimate.objects.get(pk=group_by_proposal)
