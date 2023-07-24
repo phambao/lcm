@@ -5,7 +5,8 @@ from rest_framework import serializers
 
 from api.middleware import get_request
 from api.models import DivisionCompany, CompanyBuilder
-from ..models.config import Column, Search, Config, GridSetting, Question, Answer, CompanyAnswerQuestion
+from ..models.config import Column, Search, Config, GridSetting, Question, Answer, CompanyAnswerQuestion, \
+    PersonalInformation
 from ..utils import pop
 
 from base.serializers import base
@@ -122,3 +123,9 @@ class CompanyAnswerQuestionResSerializer(serializers.ModelSerializer):
         data['question'] = Question.objects.filter(id=data['question']).values()
         data['answer'] = Answer.objects.filter(id__in=data['answer']).values()
         return data
+
+
+class PersonalInformationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PersonalInformation
+        fields = ('id', 'fullname', 'phone_number', 'email', 'position', 'address', 'company')

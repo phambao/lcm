@@ -58,6 +58,13 @@ class Type(models.TextChoices):
     MULTIPLE_CHOICE = 'multiple', 'MULTIPLE_CHOICE'
 
 
+class Position(models.TextChoices):
+    LEAD = 'lead', 'LEAD'
+    SALES = 'sales', 'SALES'
+    MARKETING = 'marketing', 'MARKETING'
+    SUPPORT = 'support', 'SUPPORT'
+
+
 class Question(models.Model):
     class Meta:
         db_table = 'question'
@@ -82,3 +89,15 @@ class CompanyAnswerQuestion(models.Model):
                                 related_name='%(class)s_company_builder', null=True, blank=True)
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='question_company')
     answer = models.ManyToManyField(Answer, related_name='answer_company', blank=True)
+
+
+class PersonalInformation(models.Model):
+    class Meta:
+        db_table = 'personal_information'
+    fullname = models.CharField(max_length=128, blank=True)
+    phone_number = models.CharField(blank=True, max_length=11)
+    email = models.EmailField(blank=True, max_length=128)
+    position = models.CharField(max_length=128, choices=Position.choices, default=Position.LEAD, blank=True)
+    address = models.CharField(max_length=128, blank=True)
+    company = models.ForeignKey(CompanyBuilder, on_delete=models.CASCADE,
+                                related_name='%(class)s_company_builder', null=True, blank=True)
