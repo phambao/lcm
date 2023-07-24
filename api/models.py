@@ -46,6 +46,12 @@ class BaseModel(models.Model):
                                            using=using, update_fields=update_fields)
 
 
+class FieldChoices(models.TextChoices):
+    IT = 'IT', 'Information Technology'
+    HEALTHCARE = 'HEALTHCARE', 'Healthcare'
+    EDUCATION = 'EDUCATION', 'Education'
+
+
 class CompanyBuilder(models.Model):
     class Meta:
         db_table = 'company_builder'
@@ -54,6 +60,9 @@ class CompanyBuilder(models.Model):
     description = models.CharField(blank=True, max_length=128)
     company_name = models.CharField(blank=True, max_length=128)
     address = models.CharField(blank=True, max_length=128)
+    field = models.CharField(max_length=128, choices=FieldChoices.choices, default=FieldChoices.EDUCATION, blank=True)
+    country = models.ForeignKey('base.Country', on_delete=models.SET_NULL,
+                                related_name='company_builder_country', null=True, blank=True)
     city = models.ForeignKey('base.City', on_delete=models.SET_NULL,
                              related_name='company_cities', null=True, blank=True)
     state = models.ForeignKey('base.State', on_delete=models.SET_NULL,

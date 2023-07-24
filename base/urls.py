@@ -10,7 +10,7 @@ from base.views.base import update_language_user, QuestionGenericView, QuestionD
     AnswerDetailGenericView, CompanyAnswerQuestionSerializerGenericView, \
     CompanyAnswerQuestionSerializerDetailGenericView, create_question_answer_company, update_question_answer_company
 # Define path for Base App ------------------------------------------------------
-from sales.views.payment import stripe_webhook_view, ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
+from base.views.payment import stripe_webhook_view, ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
     stripe_cancel_subscription, get_config, create_customer, create_subscription, cancel_subscription, \
     list_subscriptions, preview_invoice, update_subscription, webhook_received
 
@@ -50,16 +50,16 @@ url_base = [
     path('stripe-webhook/', stripe_webhook_view, name='stripe-webhook'),
     path('product/<int:pk>/', ProductPreviewDetail.as_view()),
     path('product/', ProductPreview.as_view()),
-    path('create-checkout-session/', csrf_exempt(CreateCheckOutSession.as_view()), name='checkout_session'),
-    path('stripe-cancel-subscription/', stripe_cancel_subscription),
-    path('config', get_config),
-    path('create-customer', create_customer),
-    path('create-subscription', create_subscription),
-    path('cancel-subscription', cancel_subscription),
-    path('subscriptions', list_subscriptions),
-    path('invoice-preview', preview_invoice),
-    path('update-subscription', update_subscription),
-    path('webhook', webhook_received),
+    path('payment/stripe/create-checkout-session/', csrf_exempt(CreateCheckOutSession.as_view()), name='checkout_session'),
+    path('payment/stripe/stripe-cancel-subscription/', stripe_cancel_subscription),
+    path('payment/stripe/config', get_config),
+    path('payment/stripe/create-customer', create_customer),
+    path('payment/stripe/create-subscription', create_subscription),
+    path('payment/stripe/cancel-subscription', cancel_subscription),
+    path('payment/stripe/subscriptions', list_subscriptions),
+    path('payment/stripe/invoice-preview', preview_invoice),
+    path('payment/stripe/update-subscription', update_subscription),
+    path('payment/stripe/webhook', webhook_received),
     path('question', QuestionGenericView.as_view()),
     path('question/<int:pk>/', QuestionDetailGenericView.as_view()),
     path('answer', AnswerGenericView.as_view()),

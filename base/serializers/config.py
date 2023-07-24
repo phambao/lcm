@@ -67,9 +67,9 @@ class GridSettingSerializer(serializers.ModelSerializer):
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = CompanyBuilder
-        fields = ('id', 'logo', 'company_name', 'address', 'city', 'state', 'zip_code', 'tax', 'size',
+        fields = ('id', 'logo', 'company_name', 'address', 'country', 'city', 'state', 'zip_code', 'tax', 'size',
                   'business_phone', 'fax', 'email', 'cell_phone', 'cell_mail', 'created_date', 'modified_date',
-                  'user_create', 'user_update', 'currency', 'description', 'company_timezone')
+                  'user_create', 'user_update', 'currency', 'description', 'company_timezone', 'field')
 
 
 class DivisionSerializer(serializers.ModelSerializer):
