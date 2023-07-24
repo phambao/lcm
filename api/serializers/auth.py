@@ -17,6 +17,30 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
 
+class InternalUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'last_name', 'first_name', 'image', 'groups', 'is_superuser', 'is_active',
+                  'phone')
+
+    def create(self, validated_data):
+        validated_data['username'] = validated_data['email']
+        validated_data['company'] = self.context['request'].user.company
+        instance = super().create(validated_data)
+        return instance
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        instance.username = instance.email
+        instance.save()
+        return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['groups'] = instance.groups.all().values()
+        return data
+
+
 class UserCustomSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=True)
     email = serializers.EmailField(required=False)

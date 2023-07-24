@@ -1,11 +1,7 @@
 import io
-import os
-import tempfile
 import uuid
 from datetime import datetime
 
-import openpyxl
-from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
@@ -18,12 +14,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from api.middleware import get_request
+from base.permissions import LeadPermissions
 from base.views.base import CompanyFilterMixin
 from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, Photos, ContactTypeName, \
     ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead
 from ..serializers import lead_list
-from ..serializers.lead_list import PhotoSerializer, LeadDetailSerializer, LeadDetailCreateSerializer
+from ..serializers.lead_list import PhotoSerializer, LeadDetailCreateSerializer
 
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
 
@@ -34,7 +31,7 @@ class LeadDetailList(CompanyFilterMixin, generics.ListCreateAPIView):
                                                          'photos',
                                                          ).select_related('city', 'state', 'country')
     serializer_class = lead_list.LeadDetailCreateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = LeadDetailFilter
     search_fields = ['lead_title', 'street_address', 'notes']
@@ -52,7 +49,7 @@ class LeadEventList(CompanyFilterMixin, generics.ListAPIView):
 class LeadDetailGeneric(generics.RetrieveUpdateDestroyAPIView):
     queryset = LeadDetail.objects.all()
     serializer_class = lead_list.LeadDetailCreateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
     def get_serializer_context(self):
         data = super().get_serializer_context()
@@ -72,7 +69,7 @@ class LeadDetailGeneric(generics.RetrieveUpdateDestroyAPIView):
 
 class LeadActivitiesViewSet(generics.ListCreateAPIView):
     serializer_class = lead_list.ActivitiesSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = ActivitiesFilter
     search_fields = ['title', 'phase', 'tag', 'status', 'assigned_to']
@@ -85,7 +82,7 @@ class LeadActivitiesViewSet(generics.ListCreateAPIView):
 class LeadActivitiesDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
     queryset = Activities.objects.all()
     serializer_class = lead_list.ActivitiesSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
     def put(self, request, *args, **kwargs):
         data = request.data
@@ -98,7 +95,7 @@ class LeadActivitiesDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
 
 class LeadPhotosViewSet(generics.ListCreateAPIView):
     serializer_class = lead_list.PhotoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
     def get_queryset(self):
         get_object_or_404(LeadDetail.objects.filter(company=get_request().user.company), pk=self.kwargs['pk_lead'])
@@ -111,7 +108,7 @@ class LeadPhotosDetailViewSet(generics.RetrieveDestroyAPIView):
     """
     queryset = Photos.objects.all()
     serializer_class = lead_list.PhotoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -122,7 +119,7 @@ class LeadPhotosDetailViewSet(generics.RetrieveDestroyAPIView):
 class ContactsViewSet(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = Contact.objects.all()
     serializer_class = lead_list.ContactsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = ContactsFilter
 
@@ -130,7 +127,7 @@ class ContactsViewSet(CompanyFilterMixin, generics.ListCreateAPIView):
 class LeadNoContactsViewSet(generics.ListAPIView):
     queryset = Contact.objects.all()
     serializer_class = lead_list.ContactsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = ContactsFilter
     search_fields = ['first_name', 'last_name']
@@ -143,12 +140,12 @@ class LeadNoContactsViewSet(generics.ListAPIView):
 class ContactsDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
     queryset = Contact.objects.all()
     serializer_class = lead_list.ContactsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 class PhoneOfContactsViewSet(generics.ListCreateAPIView):
     serializer_class = lead_list.PhoneContactsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
     def get_queryset(self):
         get_object_or_404(Contact.objects.filter(company=get_request().user.company), pk=self.kwargs['pk_contact'])
@@ -158,7 +155,7 @@ class PhoneOfContactsViewSet(generics.ListCreateAPIView):
 class LeadContactsViewSet(generics.ListCreateAPIView):
     queryset = Contact.objects.all()
     serializer_class = lead_list.ContactsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = ContactsFilter
     search_fields = ['first_name', 'last_name', 'email', 'phone_contacts__phone_number']
@@ -170,7 +167,7 @@ class LeadContactsViewSet(generics.ListCreateAPIView):
 
 class LeadContactDetailsViewSet(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = lead_list.ContactsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
     def get_queryset(self):
         try:
@@ -184,83 +181,83 @@ class LeadContactDetailsViewSet(generics.RetrieveUpdateDestroyAPIView):
 class PhoneOfContactsDetailViewSet(generics.RetrieveUpdateDestroyAPIView):
     queryset = PhoneOfContact.objects.all()
     serializer_class = lead_list.PhoneContactsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 class ContactTypeNameGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ContactTypeName.objects.all()
     serializer_class = lead_list.ContactTypeNameSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 class ContactTypeNameDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ContactTypeName.objects.all()
     serializer_class = lead_list.ContactTypeNameSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 class ProjectTypeGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = ProjectType.objects.all()
     serializer_class = lead_list.ProjectTypeSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 class ProjectTypeDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ProjectType.objects.all()
     serializer_class = lead_list.ProjectTypeSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 class TagLeadGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = TagLead.objects.all()
     serializer_class = lead_list.TagLeadSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 class TagLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = TagLead.objects.all()
     serializer_class = lead_list.TagLeadSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 class TagActivitiesGenericView(generics.ListCreateAPIView):
     queryset = TagActivity.objects.all()
     serializer_class = lead_list.TagActivitySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 class TagActivityDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = TagActivity.objects.all()
     serializer_class = lead_list.TagActivitySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 class PhaseActivitiesGenericView(generics.ListCreateAPIView):
     queryset = PhaseActivity.objects.all()
     serializer_class = lead_list.PhaseActivitySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 class PhaseActivityDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = PhaseActivity.objects.all()
     serializer_class = lead_list.PhaseActivitySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 class SourceLeadGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = SourceLead.objects.all()
     serializer_class = lead_list.SourceLeadSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 class SourceLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SourceLead.objects.all()
     serializer_class = lead_list.SourceLeadSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & LeadPermissions])
 def delete_activities(request, pk_lead):
     """
         DELETE: delete multiple activities
@@ -274,7 +271,7 @@ def delete_activities(request, pk_lead):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & LeadPermissions])
 def delete_leads(request):
     """
         DELETE: delete multiple leads
@@ -288,7 +285,7 @@ def delete_leads(request):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & LeadPermissions])
 def delete_contacts(request):
     """
         DELETE: delete multiple contacts
@@ -302,7 +299,7 @@ def delete_contacts(request):
 
 
 @api_view(['PUT'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & LeadPermissions])
 def unlink_contact_from_lead(request, pk_lead):
     """
         PUT: unlink contact from lead
@@ -341,7 +338,7 @@ def get_summaries(request):
 
 
 @api_view(['PUT'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & LeadPermissions])
 def link_contacts_to_lead(request, pk_lead):
     """
         PUT: link contacts to lead
@@ -358,7 +355,7 @@ def link_contacts_to_lead(request, pk_lead):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & LeadPermissions])
 def upload_multiple_photo(request, pk_lead):
     try:
         files = request.FILES.getlist('files')
@@ -379,9 +376,8 @@ def upload_multiple_photo(request, pk_lead):
     return Response(serializer.data)
 
 
-
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & LeadPermissions])
 def export_data(request):
     workbook = Workbook()
 
@@ -527,11 +523,8 @@ def export_data(request):
     return response
 
 
-
-
-
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & LeadPermissions])
 def import_data(request):
     file = request.FILES['file']
 

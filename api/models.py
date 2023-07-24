@@ -1,9 +1,8 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractUser
-from django.db import models
+from django.contrib.auth.models import AbstractUser, Group
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.utils import timezone
+from django.db import models
 
 from .middleware import get_request
 
@@ -15,6 +14,7 @@ class User(AbstractUser):
     company = models.ForeignKey('api.CompanyBuilder', on_delete=models.CASCADE, related_name='%(class)s_company_builder', null=True, blank=True)
     lang = models.CharField(max_length=128, blank=True, null=True)
     email = models.EmailField(unique=True, blank=True)
+    phone = models.CharField(max_length=16, blank=True, default='')
 
     def __str__(self):
         return self.email
@@ -146,3 +146,7 @@ class InvoiceSetting(models.Model):
     is_default_show = models.BooleanField(default=False)
     day_before = models.IntegerField(null=True, blank=True)
     default_owners_invoice = models.TextField(blank=True)
+
+
+Group.add_to_class('company', models.ForeignKey(CompanyBuilder, null=True, on_delete=models.CASCADE,
+                                                related_name='groups', blank=True))

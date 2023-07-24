@@ -7,6 +7,7 @@ from rest_framework import generics, permissions, status, filters as rf_filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
+from base.permissions import CatalogPermissions
 from ..filters.catalog import CatalogFilter
 from ..models.catalog import Catalog, CatalogLevel, DataPointUnit
 from ..serializers import catalog
@@ -18,7 +19,7 @@ from base.views.base import CompanyFilterMixin
 class CatalogList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = Catalog.objects.all().prefetch_related('data_points', 'parents')
     serializer_class = catalog.CatalogSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & CatalogPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = CatalogFilter
     search_fields = ('name',)
@@ -27,7 +28,7 @@ class CatalogList(CompanyFilterMixin, generics.ListCreateAPIView):
 class CatalogDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Catalog.objects.all().prefetch_related('data_points', 'parents')
     serializer_class = catalog.CatalogSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & CatalogPermissions]
 
     def delete(self, request, *args, **kwargs):
         pk_catalog = kwargs.get('pk')
@@ -46,7 +47,7 @@ class CatalogDetail(generics.RetrieveUpdateDestroyAPIView):
 class CatalogLevelList(generics.ListCreateAPIView):
     queryset = CatalogLevel.objects.all()
     serializer_class = catalog.CatalogLevelModelSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & CatalogPermissions]
 
     def get_queryset(self):
         catalog = get_object_or_404(Catalog.objects.all(), pk=self.kwargs['pk_catalog'])
@@ -64,7 +65,7 @@ class CatalogLevelList(generics.ListCreateAPIView):
 
 class CatalogLevelDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = catalog.CatalogLevelModelSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & CatalogPermissions]
 
     def get_queryset(self):
         try:
@@ -77,18 +78,18 @@ class CatalogLevelDetail(generics.RetrieveUpdateDestroyAPIView):
 
 class DataPointUnitView(CompanyFilterMixin, generics.ListCreateAPIView):
     serializer_class = catalog.DataPointUnitSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & CatalogPermissions]
     queryset = DataPointUnit.objects.all()
 
 
 class DataPointUnitDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = catalog.DataPointUnitSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated & CatalogPermissions]
     queryset = DataPointUnit.objects.all()
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def get_catalog_children(request, pk):
     level = None
     catalogs = Catalog.objects.filter(parents__id=pk)
@@ -104,7 +105,7 @@ def get_catalog_children(request, pk):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def get_catalog_levels(request, pk):
     level = None
     catalogs = Catalog.objects.filter(parents__id=pk)
@@ -123,7 +124,7 @@ def get_catalog_levels(request, pk):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def get_catalog_tree(request, pk):
     catalog = get_object_or_404(Catalog, pk=pk)
     catalog_tree = catalog.get_tree_view()
@@ -131,7 +132,7 @@ def get_catalog_tree(request, pk):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def get_catalog_list(request, pk):
     catalog_obj = get_object_or_404(Catalog, pk=pk)
     catalog_ids = catalog_obj.get_all_descendant()
@@ -141,7 +142,7 @@ def get_catalog_list(request, pk):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def delete_catalogs(request):
     ids = request.data
     catalogs = Catalog.objects.filter(pk__in=ids)
@@ -151,7 +152,7 @@ def delete_catalogs(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def get_catalog_ancestors(request):
     ids = request.GET.getlist('id', [])
     data = {}
@@ -165,7 +166,7 @@ def get_catalog_ancestors(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def get_datapoint_by_catalog(request, pk):
     c = Catalog.objects.get(id=pk)
     serializer = catalog.DataPointSerializer(c.get_ancestor_linked_description(),
@@ -174,7 +175,7 @@ def get_datapoint_by_catalog(request, pk):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def add_multiple_level(request):
     if isinstance(request.data, dict):
         catalog_serializer = catalog.CatalogSerializer(data=request.data.get('catalog'), context={'request': request})
@@ -193,7 +194,7 @@ def add_multiple_level(request):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def duplicate_catalogs(request, pk):
     """
     Payload: [{"id": int, "depth": int, data_points: [id,...], descendant: [id,...]},...]
@@ -215,7 +216,7 @@ def duplicate_catalogs(request, pk):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def duplicate_catalogs_on_tree(request, pk):
     """
     Payload: {data_points: [id,...], descendant: [id,...], level: int}
@@ -239,7 +240,7 @@ def duplicate_catalogs_on_tree(request, pk):
 
 
 @api_view(['PUT'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 @transaction.atomic
 def swap_level(request, pk_catalog):
     """
@@ -319,7 +320,7 @@ def parse_c_table(children):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def get_materials(request):
     """
     Get cost table from ancestor catalog
