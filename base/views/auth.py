@@ -10,13 +10,18 @@ from base.serializers.config import PersonalInformationSerializer
 from base.views.base import CompanyFilterMixin
 
 
-class GroupList(CompanyFilterMixin, generics.ListCreateAPIView):
+class GroupFilterCompanyMixin:
+    def get_queryset(self):
+        return Group.objects.filter(group__company=self.request.user.company)
+
+
+class GroupList(GroupFilterCompanyMixin, generics.ListCreateAPIView):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-class GroupDetail(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
+class GroupDetail(GroupFilterCompanyMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAuthenticated]
