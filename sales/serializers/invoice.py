@@ -1,11 +1,8 @@
 from rest_framework import serializers
 
 from api.serializers.base import SerializerMixin
-from base.utils import pop, extra_kwargs_for_base_model
-from .change_order import ChangeOrderSerializer
-from .lead_schedule import ScheduleEventSerializer, EventForInvoiceSerializer
-from .proposal import ProposalWritingSerializer
-from ..models import ChangeOrder
+from base.utils import pop
+from .lead_schedule import EventForInvoiceSerializer
 from ..models.invoice import Invoice, TableInvoice, PaymentHistory
 
 
