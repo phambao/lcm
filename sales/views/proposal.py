@@ -175,7 +175,5 @@ def view_proposal_formatting(request, formatting_id):
     except ProposalFormatting.DoesNotExist:
         raise Http404("ProposalFormatting does not exist")
     data_html = data_proposal.element
-    javascript_code = data_html
-    return render(request, 'proposal_formatting.html', context={'javascript_code': javascript_code})
-
+    return render(request, 'proposal_formatting.html', context={'javascript_code': data_html})
 
