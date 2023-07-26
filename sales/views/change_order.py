@@ -24,7 +24,7 @@ class ChangeOderDetail(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView
 
 class ChangeOrderFromProposalWritingList(generics.ListAPIView):
     queryset = ProposalWriting.objects.all()
-    serializer_class = change_order.ChangeOrderSerializer
+    serializer_class = change_order.ChangeOrderForInvoice
     permission_classes = [permissions.IsAuthenticated & ChangeOrderPermissions]
 
     def get_queryset(self):

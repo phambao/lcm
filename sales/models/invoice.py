@@ -5,14 +5,6 @@ from django.contrib.postgres.fields import ArrayField
 from api.models import BaseModel
 
 
-class ChangeOrderType(BaseModel):
-    table_invoice = models.ForeignKey('sales.TableInvoice', blank=True, null=True,
-                                      on_delete=models.CASCADE, related_name='change_order_types')
-    change_order = models.IntegerField(default=None, null=True, blank=True)
-    estimate_templates = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
-    flat_rates = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
-
-
 class TableInvoice(BaseModel):
     class TableTypeInvoice(models.TextChoices):
         CHANGE_ORDER = 'change_order', 'Change Order'
@@ -20,10 +12,11 @@ class TableInvoice(BaseModel):
         PROPOSAL_ITEMS = 'proposal_items', 'Proposal Item'
         CUSTOM = 'custom', 'Custom'
     type = models.CharField(max_length=32, choices=TableTypeInvoice.choices, default=TableTypeInvoice.CHANGE_ORDER)
-    change_orders = ArrayField(models.IntegerField(blank=True), default=list, blank=True)
+    change_order = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
     invoice = models.ForeignKey('sales.Invoice', blank=True, null=True, on_delete=models.CASCADE, related_name='tables')
     progress_payment = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
     custom = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
+    proposal_items = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
 
 class PaymentHistory(BaseModel):
@@ -52,6 +45,7 @@ class Invoice(BaseModel):
     deadline = models.BooleanField(default=False)
     deadline_date = models.DateField(blank=True, null=True)
     deadline_time = models.TimeField(blank=True, null=True)
+    link_to_event = models.ForeignKey('sales.ScheduleEvent', on_delete=models.CASCADE, related_name='invoice', blank=True, null=True)
     comment = models.TextField(blank=True)
     note = models.TextField(blank=True)
     proposal = models.ForeignKey('sales.ProposalWriting', on_delete=models.CASCADE, related_name='invoices', blank=True, null=True)
