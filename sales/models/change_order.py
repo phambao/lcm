@@ -49,6 +49,8 @@ class ChangeOrder(BaseModel):
 
     def _get_formulas(self):
         estimate_templates = self.existing_estimates.all()
+        for group in self.groups.all():
+            estimate_templates |= group.estimate_templates.all()
         assembles = Assemble.objects.none()
         for estimate in estimate_templates:
             assembles |= estimate.assembles.all()
@@ -57,24 +59,11 @@ class ChangeOrder(BaseModel):
             poformulas |= assemble.assemble_formulas.all()
         return poformulas
 
-    def get_column_formula(self):
-        return ['name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
-                'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario',
-                'material_data_entry', 'formula_for_data_view', 'order']
-
-    def _get_changed_item(self):
-        if self.proposal_writing:
-            changed_formulas = self._get_formulas().values(*self.get_column_formula())
-            orginal_formula = self.proposal_writing.get_data_formula().values(*self.get_column_formula())
-            diff_formula = []
-            for changed_formula in changed_formulas:
-                if changed_formula not in orginal_formula:
-                    diff_formula.append(changed_formula)
-            return diff_formula
-        return None
-
-    def _get_new_items(self):
-        pass
+    def _get_flat_rate(self):
+        flat_rates = FlatRate.objects.none()
+        for group in self.flat_rate_groups.all():
+            flat_rates |= group.flat_rates.all()
+        return flat_rates
 
     def get_items(self):
         items = self._get_changed_item() | self._get_new_items()

@@ -763,6 +763,12 @@ class ScheduleEventShiftSerializer(serializers.ModelSerializer):
                   'notes', 'reason', 'is_direct')
 
 
+class EventForInvoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.ScheduleEvent
+        fields = ('id', 'due_days', 'is_before', 'is_after', 'end_day', 'end_hour')
+
+
 class ScheduleEventSerializer(serializers.ModelSerializer):
     links = PredecessorsLinkSerializer(required=False, many=True)
     predecessor_id = serializers.IntegerField(required=False, allow_null=True)

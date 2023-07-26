@@ -143,6 +143,15 @@ def get_image(request, pk):
     return Response(status=status.HTTP_200_OK, data=data)
 
 
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & ProposalPermissions])
+def get_items(request, pk):
+    proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
+    items = proposal_writing._get_poformula()
+    data = POFormulaDataSerializer(items, context={'request': request}, many=True).data
+    return Response(status=status.HTTP_200_OK, data=data)
+
+
 @api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated & ProposalPermissions])
 def proposal_formatting_view(request, pk):
