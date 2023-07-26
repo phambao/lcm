@@ -145,5 +145,8 @@ class InvoiceSetting(models.Model):
     default_owners_invoice = models.TextField(blank=True)
 
 
-Group.add_to_class('company', models.ForeignKey(CompanyBuilder, null=True, on_delete=models.CASCADE,
-                                                related_name='groups', blank=True))
+class GroupCompany(models.Model):
+    company = models.ForeignKey(CompanyBuilder, null=True, on_delete=models.CASCADE,
+                                related_name='groups', blank=True)
+    group = models.OneToOneField(Group, null=True, on_delete=models.CASCADE,
+                                 related_name='group', blank=True)
