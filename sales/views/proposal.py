@@ -1,4 +1,5 @@
-from django.shortcuts import get_object_or_404
+from django.http import Http404
+from django.shortcuts import get_object_or_404, render
 from django_filters import rest_framework as filters
 from rest_framework import generics, permissions, filters as rf_filters, status
 from rest_framework.decorators import api_view, permission_classes
@@ -166,3 +167,13 @@ def proposal_formatting_view(request, pk):
         serializer.save()
         return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_fields': all_fields}})
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def view_proposal_formatting(request, formatting_id):
+    try:
+        data_proposal = ProposalFormatting.objects.get(id=formatting_id)
+    except ProposalFormatting.DoesNotExist:
+        raise Http404("ProposalFormatting does not exist")
+    data_html = data_proposal.element
+    return render(request, 'proposal_formatting.html', context={'javascript_code': data_html})
+

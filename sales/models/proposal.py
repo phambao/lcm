@@ -141,6 +141,7 @@ class ProposalFormatting(BaseModel):
     show_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
     has_send_mail = models.BooleanField(default=False, blank=True)
     has_signed = models.BooleanField(default=False, blank=True)
+    element = models.TextField(blank=True, null=True, default='')
 
 
 class ProposalFormattingConfig(BaseModel):
