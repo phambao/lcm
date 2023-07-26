@@ -365,10 +365,11 @@ class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProposalFormatting
-        fields = ('id', 'html_code', 'css_code', 'config', 'screen_shot', 'show_fields', 'script')
+        fields = ('id', 'html_code', 'css_code', 'config', 'screen_shot', 'show_fields', 'script', 'element')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        data['content_type'] = ContentType.objects.get_for_model(ProposalFormatting).pk
         data['row_data'] = []
         data['images'] = []
         if instance.proposal_writing:

@@ -111,7 +111,7 @@ def stripe_cancel_subscription(request):
 @csrf_exempt
 def get_config(request):
     prices = stripe.Price.list(
-        lookup_keys=['sample_basic', 'sample_premium']
+        # lookup_keys=['sample_basic', 'sample_premium']
     )
     return Response(
         {'publishable_key': config('STRIPE_PUBLIC_KEY'),
