@@ -218,6 +218,7 @@ url_estimate = [
     path('linked-descriptions/<str:pk>/', estimate.get_linked_description),
     path('tag-formula/', estimate.get_tag_formula),
     path('tag-catalog/', estimate.get_tag_data_point),
+    path('tag-level/', estimate.get_tag_levels),
 ]
 
 # URL Proposal

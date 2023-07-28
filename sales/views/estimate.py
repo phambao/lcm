@@ -17,6 +17,7 @@ from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter, Assemb
 from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, UnitLibrary, \
     DescriptionLibrary, Assemble, EstimateTemplate, MaterialView
+from sales.serializers.catalog import CatalogLevelValueSerializer
 from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
     UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, AssembleSerializer, \
     EstimateTemplateSerializer, TaggingSerializer, GroupFormulasSerializer, POFormulaCompactSerializer, \
@@ -257,6 +258,20 @@ def get_tag_formula(request):
 def get_tag_data_point(request):
     data_points = DataPoint.objects.filter(company=get_request().user.company)
     serializer = TaggingSerializer(data_points, many=True)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def get_tag_levels(request):
+    material_id = request.GET.get('material_id')
+    if not material_id:
+        return Response(data='Missing material_id parameter!', status=status.HTTP_400_BAD_REQUEST)
+    catalog_pk = material_id.split(':')[0]
+    catalog = get_object_or_404(Catalog.objects.filter(company=request.user.company), pk=catalog_pk)
+    ancestor = catalog.get_ancestors()
+
+    serializer = CatalogLevelValueSerializer(ancestor[::-1], many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
