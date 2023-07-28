@@ -11,7 +11,7 @@ from sales.serializers.estimate import POFormulaDataSerializer
 
 
 class ChangeOderList(CompanyFilterMixin, generics.ListCreateAPIView):
-    queryset = ChangeOrder.objects.all().prefetch_related('existing_estimates', 'flat_rate_groups', 'groups')
+    queryset = ChangeOrder.objects.all().prefetch_related('existing_estimates', 'flat_rate_groups', 'groups').order_by('-modified_date')
     serializer_class = change_order.ChangeOrderSerializer
     permission_classes = [permissions.IsAuthenticated & ChangeOrderPermissions]
 
