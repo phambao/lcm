@@ -12,10 +12,8 @@ class TableInvoice(BaseModel):
         PROPOSAL_ITEMS = 'proposal_items', 'Proposal Item'
         CUSTOM = 'custom', 'Custom'
     type = models.CharField(max_length=32, choices=TableTypeInvoice.choices, default=TableTypeInvoice.CHANGE_ORDER)
-    change_order = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
     invoice = models.ForeignKey('sales.Invoice', blank=True, null=True, on_delete=models.CASCADE, related_name='tables')
     progress_payment = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
-    custom = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
     proposal_items = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
 
@@ -31,6 +29,61 @@ class PaymentHistory(BaseModel):
     payment_method = models.CharField(max_length=32, choices=PaymentStatus.choices, default=PaymentStatus.CREDIT_CARD)
     received_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, related_name='payments',
                                     null=True, blank=True)
+
+
+class CustomTable(BaseModel):
+    name = models.CharField(max_length=64)
+    cost_type = models.CharField(max_length=64)
+    unit_cost = models.DecimalField(max_digits=32, decimal_places=2)
+    quantity = models.IntegerField()
+    unit = models.CharField(max_length=64)
+    table_invoice = models.ForeignKey('sales.TableInvoice', on_delete=models.CASCADE, blank=True, null=True, related_name='customs')
+
+
+class GroupChangeOrder(BaseModel):
+    table_invoice = models.ForeignKey('sales.TableInvoice', on_delete=models.CASCADE, blank=True, null=True,
+                                      related_name='group_change_orders')
+    change_order = models.IntegerField(blank=True, default=None, null=True)
+    name = models.CharField(max_length=64)
+    cost_type = models.CharField(max_length=128, blank=True, default='')
+    percentage_payment = models.IntegerField(blank=True, default=100)
+    total_amount = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    quantity = models.IntegerField(default=0, blank=True)
+    unit = models.CharField(blank=True, default='', max_length=32)
+    invoice_amount = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+
+
+class ChangeOrderItem(BaseModel):
+    formula = models.IntegerField(blank=True, default=None, null=True)
+    group_change_order = models.ForeignKey('sales.GroupChangeOrder', on_delete=models.CASCADE, blank=True, null=True,
+                                           related_name='items')
+    type = models.CharField(max_length=128, blank=True, default='')
+    owner_price = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    amount_paid = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    unit = models.CharField(blank=True, default='', max_length=32)
+
+
+class GroupProposal(BaseModel):
+    table_invoice = models.ForeignKey('sales.TableInvoice', on_delete=models.CASCADE, blank=True, null=True,
+                                      related_name='group_proposal')
+    proposal = models.IntegerField(blank=True, default=None, null=True)
+    name = models.CharField(max_length=64)
+    cost_type = models.CharField(max_length=128, blank=True, default='')
+    percentage_payment = models.IntegerField(blank=True, default=100)
+    total_amount = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    quantity = models.IntegerField(default=0, blank=True)
+    unit = models.CharField(blank=True, default='', max_length=32)
+    invoice_amount = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+
+
+class ProposalItem(BaseModel):
+    formula = models.IntegerField(blank=True, default=None, null=True)
+    group_proposal = models.ForeignKey('sales.GroupProposal', on_delete=models.CASCADE, blank=True, null=True,
+                                       related_name='items')
+    type = models.CharField(max_length=128, blank=True, default='')
+    owner_price = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    amount_paid = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    unit = models.CharField(blank=True, default='', max_length=32)
 
 
 class Invoice(BaseModel):

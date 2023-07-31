@@ -3,7 +3,8 @@ from rest_framework import serializers
 from api.serializers.base import SerializerMixin
 from base.utils import pop
 from .lead_schedule import EventForInvoiceSerializer
-from ..models.invoice import Invoice, TableInvoice, PaymentHistory
+from ..models.invoice import (Invoice, TableInvoice, PaymentHistory, CustomTable, GroupChangeOrder, ChangeOrderItem,
+                              ProposalItem, GroupProposal)
 
 
 class PaymentHistorySerializer(serializers.ModelSerializer):
@@ -12,18 +13,131 @@ class PaymentHistorySerializer(serializers.ModelSerializer):
         fields = ('id', 'date', 'amount', 'payment_method', 'received_by')
 
 
-class TableInvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
+class ProposalItemSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = TableInvoice
-        fields = ('id', 'type', 'change_order', 'progress_payment', 'custom', 'proposal_items')
+        model = ProposalItem
+        fields = ('id', 'type', 'owner_price', 'amount_paid', 'unit', 'formula')
+
+
+class GroupProposalSerializer(serializers.ModelSerializer):
+    items = ProposalItemSerializer('group_proposal', many=True, allow_null=True, required=False)
+
+    class Meta:
+        model = GroupProposal
+        fields = ('id', 'name', 'cost_type', 'percentage_payment', 'total_amount', 'quantity', 'proposal',
+                  'unit', 'invoice_amount', 'items')
+
+    def create_proposal_items(self, items, instance):
+        for item in items:
+            serializer = ProposalItemSerializer(data=item, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(group_proposal=instance)
 
     def create(self, validated_data):
+        items = pop(validated_data, 'items', [])
         instance = super().create(validated_data)
+        self.create_proposal_items(items, instance)
         return instance
 
     def update(self, instance, validated_data):
+        items = pop(validated_data, 'items', [])
         instance = super().update(instance, validated_data)
+        instance.items.all().delete()
+        self.create_proposal_items(items, instance)
+        return instance
+
+
+class ChangeOrderItemSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ChangeOrderItem
+        fields = ('id', 'type', 'owner_price', 'amount_paid', 'unit', 'formula')
+
+
+class GroupChangeOrderSerializer(serializers.ModelSerializer):
+    items = ChangeOrderItemSerializer('group_change_order', many=True, allow_null=True, required=False)
+
+    class Meta:
+        model = GroupChangeOrder
+        fields = ('id', 'name', 'cost_type', 'percentage_payment', 'total_amount', 'quantity', 'change_order',
+                  'unit', 'invoice_amount', 'items')
+
+    def create_change_order_items(self, items, instance):
+        for item in items:
+            serializer = ChangeOrderItemSerializer(data=item, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(group_change_order=instance)
+
+    def create(self, validated_data):
+        items = pop(validated_data, 'items', [])
+        instance = super().create(validated_data)
+        self.create_change_order_items(items, instance)
+        return instance
+
+    def update(self, instance, validated_data):
+        items = pop(validated_data, 'items', [])
+        instance = super().update(instance, validated_data)
+        instance.items.all().delete()
+        self.create_change_order_items(items, instance)
+        return instance
+
+
+class CustomTableSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CustomTable
+        fields = ('id', 'name', 'cost_type', 'unit_cost', 'quantity', 'unit')
+
+
+class TableInvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
+    customs = CustomTableSerializer('table_invoice', many=True, allow_null=True, required=False)
+    group_change_orders = GroupChangeOrderSerializer('table_invoice', many=True, allow_null=True, required=False)
+    group_proposal = GroupProposalSerializer('table_invoice', many=True, allow_null=True, required=False)
+
+    class Meta:
+        model = TableInvoice
+        fields = ('id', 'type', 'progress_payment', 'customs', 'group_change_orders', 'group_proposal')
+
+    def create_custom_table(self, customs, instance):
+        for custom in customs:
+            serializer = CustomTableSerializer(data=custom, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(table_invoice=instance)
+
+    def create_group_change_orders(self, group_change_orders, instance):
+        for group in group_change_orders:
+            serializer = GroupChangeOrderSerializer(data=group, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(table_invoice=instance)
+
+    def create_group_proposal(self, group_proposals, instance):
+        for group_proposal in group_proposals:
+            serializer = GroupProposalSerializer(data=group_proposal, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(table_invoice=instance)
+
+    def create(self, validated_data):
+        customs = pop(validated_data, 'customs', [])
+        group_change_orders = pop(validated_data, 'group_change_orders', [])
+        group_proposal = pop(validated_data, 'group_proposal', [])
+        instance = super().create(validated_data)
+        self.create_custom_table(customs, instance)
+        self.create_group_change_orders(group_change_orders, instance)
+        self.create_group_proposal(group_proposal, instance)
+        return instance
+
+    def update(self, instance, validated_data):
+        customs = pop(validated_data, 'customs', [])
+        group_change_orders = pop(validated_data, 'group_change_orders', [])
+        group_proposal = pop(validated_data, 'group_proposal', [])
+        instance = super().update(instance, validated_data)
+        instance.customs.all().delete()
+        instance.group_change_orders.all().delete()
+        instance.group_proposal.all().delete()
+        self.create_group_change_orders(group_change_orders, instance)
+        self.create_custom_table(customs, instance)
+        self.create_group_proposal(group_proposal, instance)
         return instance
 
     def to_representation(self, instance):
