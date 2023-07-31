@@ -14,7 +14,6 @@ class TableInvoice(BaseModel):
     type = models.CharField(max_length=32, choices=TableTypeInvoice.choices, default=TableTypeInvoice.CHANGE_ORDER)
     invoice = models.ForeignKey('sales.Invoice', blank=True, null=True, on_delete=models.CASCADE, related_name='tables')
     progress_payment = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
-    proposal_items = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
 
 class PaymentHistory(BaseModel):
