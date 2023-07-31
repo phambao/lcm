@@ -191,6 +191,14 @@ class GroupEstimatePriceSerializer(serializers.ModelSerializer):
         return instance
 
 
+class GroupByEstimateMiniSerializer(serializers.ModelSerializer):
+    estimate_templates = estimate.EstimateTemplateMiniSerializer('group_by_proposal', many=True, allow_null=True,
+                                                                 required=False)
+    class Meta:
+        model = GroupByEstimate
+        fields = ('id', 'estimate_templates')
+
+
 class GroupByEstimateSerializers(serializers.ModelSerializer):
     estimate_templates = estimate.EstimateTemplateSerializer('group_by_proposal', many=True, allow_null=True,
                                                              required=False)
@@ -305,6 +313,14 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(PriceComparison).pk
         return data
+
+
+class ProposalWritingDataSerializer(serializers.ModelSerializer):
+    writing_groups = GroupByEstimateMiniSerializer('writing', many=True, allow_null=True, required=False)
+
+    class Meta:
+        model = ProposalWriting
+        fields = ('id', 'name', 'writing_groups')
 
 
 class ProposalWritingCompactSerializer(serializers.ModelSerializer):

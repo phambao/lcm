@@ -14,7 +14,7 @@ from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import POFormulaDataSerializer
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
-    ProposalWritingCompactSerializer, ProposalTemplateHtmlCssSerializer
+    ProposalWritingCompactSerializer, ProposalTemplateHtmlCssSerializer, ProposalWritingDataSerializer
 
 
 class ProposalTemplateGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
@@ -116,8 +116,7 @@ def get_html_css_by_template(request, *args, **kwargs):
 def get_data(request, pk):
     if request.method == 'GET':
         proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
-        po_formulas = proposal_writing.get_data_formula().order_by('order')
-        data = POFormulaDataSerializer(po_formulas, context={'request': request}, many=True).data
+        data = ProposalWritingDataSerializer(proposal_writing).data
 
     if request.method == 'PUT':
         """Update order po formula"""

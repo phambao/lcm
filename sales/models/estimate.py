@@ -80,7 +80,7 @@ class POFormulaToDataEntry(BaseModel):
 
 
 class MaterialView(BaseModel):
-    name = models.CharField(max_length=128, default='')
+    name = models.CharField(max_length=128, default='', blank=True)
     material_value = models.JSONField(blank=True, default=dict)
     copies_from = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True, null=True)
     estimate_template = models.ForeignKey('sales.EstimateTemplate', on_delete=models.CASCADE,
@@ -125,6 +125,13 @@ class EstimateTemplate(BaseModel):
 
     def __str__(self):
         return self.name
+
+    def get_formula(self):
+        assembles = self.assembles.all()
+        poformulas = POFormula.objects.none()
+        for assemble in assembles:
+            poformulas |= assemble.assemble_formulas.all()
+        return poformulas
 
 
 class DataView(BaseModel):
