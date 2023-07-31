@@ -39,7 +39,7 @@ class CatalogLevelValueSerializer(serializers.ModelSerializer):
         data['linked_description'] = ''
         if data_point:
             data['value'] = data_point.value
-            data['unit'] = data_point.unit
+            data['unit'] = DataPointUnitSerializer(data_point.unit).data
             data['linked_description'] = data_point.linked_description
         return data
 
