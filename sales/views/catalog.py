@@ -332,7 +332,7 @@ def get_materials(request):
     if filter_query:
         c = get_object_or_404(Catalog.objects.all(), pk=filter_query)
         children = Catalog.objects.filter(
-            pk__in=c.get_all_descendant()
+            pk__in=c.get_all_descendant(have_self=True)
         )
     else:
         children = Catalog.objects.filter(company=get_request().user.company)
