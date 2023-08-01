@@ -80,9 +80,15 @@ class CompanyBuilder(models.Model):
                                     null=True, blank=True)
     currency = models.CharField(blank=True, max_length=128)
     company_timezone = models.CharField(blank=True, max_length=128)
+    short_name = models.CharField(blank=True, max_length=6, null=True)
 
     def __str__(self):
         return self.company_name
+
+    def save(self, *args, **kwargs):
+        if self.short_name:
+            self.short_name = self.short_name.upper()
+        super(CompanyBuilder, self).save(*args, **kwargs)
 
 
 class DivisionCompany(models.Model):
