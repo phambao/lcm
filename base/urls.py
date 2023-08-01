@@ -12,7 +12,7 @@ from base.views.base import update_language_user, QuestionGenericView, QuestionD
 # Define path for Base App ------------------------------------------------------
 from base.views.payment import stripe_webhook_view, ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
     stripe_cancel_subscription, get_config, create_customer, create_subscription, cancel_subscription, \
-    list_subscriptions, preview_invoice, update_subscription, webhook_received
+    list_subscriptions, preview_invoice, update_subscription, webhook_received, PaymentHistoryStripePreview
 
 url_base = [
     path('location/',
@@ -61,6 +61,7 @@ url_base = [
     path('payment/stripe/invoice-preview/', preview_invoice),
     path('payment/stripe/update-subscription/', update_subscription),
     path('payment/stripe/webhook/', webhook_received),
+    path('payment/history/', PaymentHistoryStripePreview.as_view()),
     path('question/', QuestionGenericView.as_view()),
     path('question/<int:pk>/', QuestionDetailGenericView.as_view()),
     path('answer/', AnswerGenericView.as_view()),
