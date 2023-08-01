@@ -13,11 +13,9 @@ class Product(BaseModel):
         return self.name
 
 
-class PaymentHistoryStripe(BaseModel):
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, blank=True, null=True)
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, blank=True, null=True)
+class PaymentHistoryStripe(models.Model):
+    class Meta:
+        db_table = 'payment_history_stripe'
     date = models.DateTimeField(auto_now_add=True)
-    payment_status = models.BooleanField()
+    subscription_id = models.CharField(max_length=100, blank=True)
 
-    def __str__(self):
-        return self.product.name

@@ -10,8 +10,8 @@ from rest_framework import generics
 from rest_framework.decorators import api_view, permission_classes
 from decouple import config
 
-from base.models.payment import Product
-from base.serializers.payment import ProductSerializer, CheckoutSessionSerializer
+from base.models.payment import Product, PaymentHistoryStripe
+from base.serializers.payment import ProductSerializer, CheckoutSessionSerializer, PaymentHistoryStripeSerializer
 
 stripe.api_key = config('STRIPE_SECRET_KEY', '')
 
@@ -26,6 +26,11 @@ class ProductPreviewDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticated]
     queryset = Product.objects.all()
+
+
+class PaymentHistoryStripePreview(generics.ListCreateAPIView):
+    serializer_class = PaymentHistoryStripeSerializer
+    queryset = PaymentHistoryStripe.objects.all()
 
 
 class CreateCheckOutSession(APIView):
@@ -222,6 +227,7 @@ def update_subscription(request):
         return Response({'error': str(e)}, status=403)
 
 
+@api_view(['POST'])
 @csrf_exempt
 def webhook_received(request):
     webhook_secret = config('STRIPE_SECRET_WEBHOOK')
@@ -248,7 +254,16 @@ def webhook_received(request):
                 subscription_id,
                 default_payment_method=payment_intent.payment_method
             )
+            payment_history = PaymentHistoryStripe.objects.create(
+                subscription_id=subscription_id
+            )
             print("Default payment method set for subscription:" + payment_intent.payment_method)
+
+    if event_type == 'customer.subscription.created':
+        subscription_id = data_object.stripe_id
+        payment_history = PaymentHistoryStripe.objects.create(
+            subscription_id=subscription_id
+        )
     elif event_type == 'invoice.payment_failed':
         print('Invoice payment failed: %s', event.id)
     elif event_type == 'invoice.finalized':
