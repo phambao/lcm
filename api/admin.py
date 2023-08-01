@@ -21,7 +21,9 @@ class UserInline(admin.TabularInline):
 
 
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ["company_name", "logo", "business_phone", "size"]
+    list_display = ["company_name", "logo", "description", "address", "field", "country", "city", "state",
+                    "business_phone", "zip_code", "size", "tax", "email", "cell_mail", "cell_phone", "created_date",
+                    "modified_date", "user_create", "user_update", "currency", "company_timezone", "short_name"]
     fields = ["company_name", "logo", "business_phone", "size"]
     list_filter = ["company_name"]
     search_fields = ['company_name', 'business_phone']
