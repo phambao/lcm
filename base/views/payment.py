@@ -107,7 +107,6 @@ def stripe_cancel_subscription(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
 @csrf_exempt
 def get_config(request):
     prices = stripe.Price.list(
@@ -120,7 +119,6 @@ def get_config(request):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
 @csrf_exempt
 def create_customer(request):
     data = request.data
