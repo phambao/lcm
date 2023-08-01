@@ -310,6 +310,9 @@ def parse_c_table(children):
                 levels = []
             c_table = child.c_table
             header = c_table['header']
+
+            if len(header) >= 3:
+                header[:3] = 'name', 'cost', 'unit'
             for i, d in enumerate(c_table['data']):
                 content = {**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child.pk}:{i}'},
                            'levels': levels}
@@ -329,7 +332,7 @@ def get_materials(request):
     if filter_query:
         c = get_object_or_404(Catalog.objects.all(), pk=filter_query)
         children = Catalog.objects.filter(
-            pk__in=c.get_all_descendant()
+            pk__in=c.get_all_descendant(have_self=True)
         )
     else:
         children = Catalog.objects.filter(company=get_request().user.company)
