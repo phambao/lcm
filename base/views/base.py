@@ -142,16 +142,16 @@ class GridSettingListView(generics.ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class CompanyListView(generics.ListCreateAPIView):
+class CompanyListView(generics.CreateAPIView):
     queryset = CompanyBuilder.objects.all()
     serializer_class = CompanySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
 
 
 class CompanyDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CompanyBuilder.objects.all()
     serializer_class = CompanySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
 
 
 class DivisionListView(generics.ListCreateAPIView):
