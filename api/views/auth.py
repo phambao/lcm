@@ -8,7 +8,7 @@ from knox.models import AuthToken
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import UserRateThrottle
 
 from base.tasks import celery_send_mail
 from base.views.base import CompanyFilterMixin
@@ -58,7 +58,7 @@ class SignUpUserCompanyAPI(generics.GenericAPIView):
 
 class SignInAPI(generics.GenericAPIView):
     serializer_class = LoginSerializer
-    throttle_classes = [AnonRateThrottle]
+    throttle_classes = [UserRateThrottle]
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
