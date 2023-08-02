@@ -386,10 +386,10 @@ class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(ProposalFormatting).pk
-        data['row_data'] = []
+        data['writing_groups'] = []
         data['images'] = []
         if instance.proposal_writing:
-            data['row_data'] = ProposalWritingDataSerializer(instance.proposal_writing).data
+            data['writing_groups'] = ProposalWritingDataSerializer(instance.proposal_writing).data.get('writing_groups')
             imgs = instance.proposal_writing.get_imgs()
             images = CatalogImageSerializer(imgs, context=self.context, many=True).data
             data['images'] = images
