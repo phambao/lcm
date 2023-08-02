@@ -226,32 +226,23 @@ def update_subscription(request):
     except Exception as e:
         return Response({'error': str(e)}, status=403)
 
-import json
+
 @csrf_exempt
 def webhook_received(request):
-    webhook_secret = config('STRIPE_SECRET_WEBHOOK')
-    request_data = request.body
-    if webhook_secret:
-        signature = request.META['HTTP_STRIPE_SIGNATURE']
-        try:
-            # payload = json.dumps(request_data, separators=(',', ':'), sort_keys=True).encode('utf-8')
-            event = stripe.Webhook.construct_event(
-                request_data, signature,'whsec_9e199d91e07b5b7a61cfc34c3ebf882d1553e681d5ee03448133c84486e16419')
-            data = event['data']
-        except ValueError as e:
-            return Response({'error': str(e)})
-
-        except stripe.error.SignatureVerificationError as e:
-            print('false')
-            return Response({'error': str(e)})
-        except Exception as e:
-            return Response({'error': str(e)})
-        event_type = event['type']
-    else:
-        data = request_data['data']
-        event_type = request_data['type']
+    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+    event = None
+    try:
+        event = stripe.Webhook.construct_event(
+            request.body, sig_header, config('ENDPOINT_SECRET')
+        )
+    except ValueError as e:
+        return Response(status=400)
+    except stripe.error.SignatureVerificationError as e:
+        return Response(status=400)
+    data = event['data']
+    event_type = event['type']
+    # Handle the event
     data_object = data['object']
-    print('***************')
     if event_type == 'invoice.payment_succeeded':
         if data_object['billing_reason'] == 'subscription_create':
             subscription_id = data_object['subscription']
@@ -261,49 +252,21 @@ def webhook_received(request):
                 subscription_id,
                 default_payment_method=payment_intent.payment_method
             )
-            print('passssss')
-            payment_history = PaymentHistoryStripe.objects.create(
-                subscription_id=subscription_id
-            )
-            print(payment_history)
             print("Default payment method set for subscription:" + payment_intent.payment_method)
 
     if event_type == 'customer.subscription.created':
-        subscription_id = data_object.stripe_id
-        payment_history = PaymentHistoryStripe.objects.create(
-            subscription_id=subscription_id
-        )
-    elif event_type == 'invoice.payment_failed':
-        print('Invoice payment failed: %s', event.id)
-    elif event_type == 'invoice.finalized':
-        print('Invoice finalized: %s', event.id)
-    elif event_type == 'customer.subscription.deleted':
-        print('Subscription canceled: %s', event.id)
-    return Response({'status': 'success'})
-    # payload = request.body
-    # sig_header = request.META['HTTP_STRIPE_SIGNATURE']
-    # event = None
-    #
-    # try:
-    #     event = stripe.Webhook.construct_event(
-    #         payload, sig_header, 'whsec_9e199d91e07b5b7a61cfc34c3ebf882d1553e681d5ee03448133c84486e16419'
-    #     )
-    # except ValueError as e:
-    #     # Invalid payload
-    #     return HttpResponse(status=400)
-    # except stripe.error.SignatureVerificationError as e:
-    #     # Invalid signature
-    #     return HttpResponse(status=400)
-    #
-    # # Handle the event
-    # if event.type == 'payment_intent.succeeded':
-    #     payment_intent = event.data.object  # contains a stripe.PaymentIntent
-    #     print('PaymentIntent was successful!')
-    # elif event.type == 'payment_method.attached':
-    #     payment_method = event.data.object  # contains a stripe.PaymentMethod
-    #     print('PaymentMethod was attached to a Customer!')
-    # # ... handle other event types
-    # else:
-    #     print('Unhandled event type {}'.format(event.type))
-    #
-    # return HttpResponse(status=200)
+            subscription_id = data_object.stripe_id
+            PaymentHistoryStripe.objects.create(
+                subscription_id=subscription_id
+            )
+    if event.type == 'payment_intent.succeeded':
+        payment_intent = event.data.object  # contains a stripe.PaymentIntent
+        print('PaymentIntent was successful!')
+    elif event.type == 'payment_method.attached':
+        payment_method = event.data.object  # contains a stripe.PaymentMethod
+        print('PaymentMethod was attached to a Customer!')
+    # ... handle other event types
+    else:
+        print('Unhandled event type {}'.format(event.type))
+
+    return Response(status=200)
