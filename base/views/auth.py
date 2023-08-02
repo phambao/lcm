@@ -43,13 +43,11 @@ class PermissionDetail(generics.RetrieveUpdateDestroyAPIView):
 class PersonalInformationView(generics.ListCreateAPIView):
     queryset = PersonalInformation.objects.all()
     serializer_class = PersonalInformationSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
 class PersonalInformationDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = PersonalInformation.objects.all()
     serializer_class = PersonalInformationSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
 @api_view(['GET'])

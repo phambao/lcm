@@ -176,41 +176,34 @@ class CompanyFilterMixin:
 class QuestionGenericView(generics.ListCreateAPIView):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
 class QuestionDetailGenericView(generics.RetrieveAPIView):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
 class AnswerGenericView(generics.ListCreateAPIView):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
 class AnswerDetailGenericView(generics.RetrieveAPIView):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
 class CompanyAnswerQuestionSerializerGenericView(generics.ListAPIView):
     queryset = CompanyAnswerQuestion.objects.all()
     serializer_class = CompanyAnswerQuestionResSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
 class CompanyAnswerQuestionSerializerDetailGenericView(generics.RetrieveAPIView):
     queryset = CompanyAnswerQuestion.objects.all()
     serializer_class = CompanyAnswerQuestionResSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
 def create_question_answer_company(request):
     serializer = CompanyAnswerQuestionSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
