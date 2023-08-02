@@ -258,7 +258,8 @@ def webhook_received(request):
             subscription_id = data_object.stripe_id
             customer_stripe_id = data_object.customer
             PaymentHistoryStripe.objects.create(
-                subscription_id=subscription_id
+                subscription_id=subscription_id,
+                customer_stripe_id=customer_stripe_id
             )
     if event.type == 'payment_intent.succeeded':
         payment_intent = event.data.object  # contains a stripe.PaymentIntent
