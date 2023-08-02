@@ -455,14 +455,14 @@ class EstimateTemplateCompactSerializer(serializers.ModelSerializer, SerializerM
 class EstimateTemplateMiniSerializer(serializers.ModelSerializer):
     class Meta:
         model = EstimateTemplate
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'order')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['items'] = instance.get_formula().values(
             'id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
             'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario',
-            'material_data_entry', 'formula_for_data_view', 'order'
+            'material_data_entry', 'order'
         )
         return data
 
