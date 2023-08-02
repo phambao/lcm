@@ -22,12 +22,10 @@ class User(AbstractUser):
     lang = models.CharField(max_length=128, blank=True, null=True)
     email = models.EmailField(unique=True, blank=True)
     phone = models.CharField(max_length=16, blank=True, default='')
-    subscription_id = models.CharField(max_length=100, blank=True)
     stripe_customer = models.CharField(max_length=100, default=uuid.uuid4)
 
     def __str__(self):
         return self.email
-
 
 
 class BaseModel(models.Model):
