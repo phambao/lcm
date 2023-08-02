@@ -138,7 +138,7 @@ def create_customer(request):
 
         return resp
     except Exception as e:
-        return Response({'error': str(e)}, status=403)
+        return Response({'error': str(e)}, status=400)
 
 
 @api_view(['POST'])
