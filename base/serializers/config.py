@@ -71,6 +71,12 @@ class CompanySerializer(serializers.ModelSerializer):
                   'business_phone', 'fax', 'email', 'cell_phone', 'cell_mail', 'created_date', 'modified_date',
                   'user_create', 'user_update', 'currency', 'description', 'company_timezone', 'field', 'short_name')
 
+    def validate(self, validated_data):
+        short_name = validated_data['short_name']
+        if CompanyBuilder.objects.filter(short_name=short_name).exists():
+            raise serializers.ValidationError('short_name exists')
+        return validated_data
+
 
 class DivisionSerializer(serializers.ModelSerializer):
     class Meta:
