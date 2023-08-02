@@ -1,10 +1,17 @@
+import uuid
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, Group
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils.crypto import get_random_string
 
 from .middleware import get_request
+
+
+def generate_unique_uuid():
+    new_uuid = uuid.uuid4()
+    return str(new_uuid)
 
 
 class User(AbstractUser):
@@ -15,10 +22,12 @@ class User(AbstractUser):
     lang = models.CharField(max_length=128, blank=True, null=True)
     email = models.EmailField(unique=True, blank=True)
     phone = models.CharField(max_length=16, blank=True, default='')
-    customer_stripe_id = models.CharField(max_length=16, blank=True)
+    subscription_id = models.CharField(max_length=100, blank=True)
+    stripe_customer = models.CharField(max_length=100, default=uuid.uuid4)
 
     def __str__(self):
         return self.email
+
 
 
 class BaseModel(models.Model):
