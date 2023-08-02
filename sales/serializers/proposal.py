@@ -196,7 +196,7 @@ class GroupByEstimateMiniSerializer(serializers.ModelSerializer):
                                                                  required=False)
     class Meta:
         model = GroupByEstimate
-        fields = ('id', 'estimate_templates')
+        fields = ('id', 'estimate_templates', 'type', 'open_index')
 
 
 class GroupByEstimateSerializers(serializers.ModelSerializer):
@@ -389,9 +389,7 @@ class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
         data['row_data'] = []
         data['images'] = []
         if instance.proposal_writing:
-            po_formulas = instance.proposal_writing.get_data_formula().order_by('order')
-            row_data = POFormulaDataSerializer(po_formulas, context=self.context, many=True).data
-            data['row_data'] = row_data
+            data['row_data'] = ProposalWritingDataSerializer(instance.proposal_writing).data
             imgs = instance.proposal_writing.get_imgs()
             images = CatalogImageSerializer(imgs, context=self.context, many=True).data
             data['images'] = images
