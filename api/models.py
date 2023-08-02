@@ -1,17 +1,12 @@
 import uuid
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, Group
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.utils.crypto import get_random_string
 
 from .middleware import get_request
-
-
-def generate_unique_uuid():
-    new_uuid = uuid.uuid4()
-    return str(new_uuid)
 
 
 class User(AbstractUser):
