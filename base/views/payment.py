@@ -236,9 +236,9 @@ def webhook_received(request):
             request.body, sig_header, config('ENDPOINT_SECRET')
         )
     except ValueError as e:
-        return Response(status=400)
+        return HttpResponse(status=400)
     except stripe.error.SignatureVerificationError as e:
-        return Response(status=400)
+        return HttpResponse(status=400)
     data = event['data']
     event_type = event['type']
     # Handle the event
@@ -256,6 +256,7 @@ def webhook_received(request):
 
     if event_type == 'customer.subscription.created':
             subscription_id = data_object.stripe_id
+            customer_stripe_id = data_object.customer
             PaymentHistoryStripe.objects.create(
                 subscription_id=subscription_id
             )
@@ -269,4 +270,4 @@ def webhook_received(request):
     else:
         print('Unhandled event type {}'.format(event.type))
 
-    return Response(status=200)
+    return HttpResponse(status=200)

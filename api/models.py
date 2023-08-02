@@ -15,6 +15,7 @@ class User(AbstractUser):
     lang = models.CharField(max_length=128, blank=True, null=True)
     email = models.EmailField(unique=True, blank=True)
     phone = models.CharField(max_length=16, blank=True, default='')
+    customer_stripe_id = models.CharField(max_length=16, blank=True)
 
     def __str__(self):
         return self.email
