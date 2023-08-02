@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, Group
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -15,6 +17,7 @@ class User(AbstractUser):
     lang = models.CharField(max_length=128, blank=True, null=True)
     email = models.EmailField(unique=True, blank=True)
     phone = models.CharField(max_length=16, blank=True, default='')
+    stripe_customer = models.CharField(max_length=100, default=uuid.uuid4)
 
     def __str__(self):
         return self.email
