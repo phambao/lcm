@@ -23,41 +23,55 @@ class FullDjangoModelPermissions(permissions.DjangoModelPermissions):
 
 class CatalogPermissions(FullDjangoModelPermissions):
     def has_permission(self, request, view):
+        if request.user.is_admin_company == True:
+            return True
         perms = self.get_required_permissions(request.method, Catalog)
         return request.user.has_perms(perms)
 
 
 class ChangeOrderPermissions(FullDjangoModelPermissions):
     def has_permission(self, request, view):
+        if request.user.is_admin_company == True:
+            return True
         perms = self.get_required_permissions(request.method, ChangeOrder)
         return request.user.has_perms(perms)
 
 
 class EstimatePermissions(FullDjangoModelPermissions):
     def has_permission(self, request, view):
+        if request.user.is_admin_company == True:
+            return True
         perms = self.get_required_permissions(request.method, EstimateTemplate)
         return request.user.has_perms(perms)
 
 
 class InvoicePermissions(FullDjangoModelPermissions):
     def has_permission(self, request, view):
+        if request.user.is_admin_company == True:
+            return True
         perms = self.get_required_permissions(request.method, Invoice)
         return request.user.has_perms(perms)
 
 
 class LeadPermissions(FullDjangoModelPermissions):
     def has_permission(self, request, view):
+        if request.user.is_admin_company == True:
+            return True
         perms = self.get_required_permissions(request.method, LeadDetail)
         return request.user.has_perms(perms)
 
 
 class SchedulePermissions(FullDjangoModelPermissions):
     def has_permission(self, request, view):
+        if request.user.is_admin_company == True:
+            return True
         perms = self.get_required_permissions(request.method, ScheduleEvent)
         return request.user.has_perms(perms)
 
 
 class ProposalPermissions(FullDjangoModelPermissions):
     def has_permission(self, request, view):
+        if request.user.is_admin_company == True:
+            return True
         perms = self.get_required_permissions(request.method, ProposalWriting)
         return request.user.has_perms(perms)

@@ -95,7 +95,7 @@ class PersonalInformation(models.Model):
     class Meta:
         db_table = 'personal_information'
     fullname = models.CharField(max_length=128, blank=True)
-    phone_number = models.CharField(blank=True, max_length=11)
+    phone_number = models.CharField(blank=True, max_length=20)
     email = models.EmailField(blank=True, max_length=128)
     position = models.CharField(max_length=128, choices=Position.choices, default=Position.LEAD, blank=True)
     address = models.CharField(max_length=128, blank=True)
