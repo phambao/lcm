@@ -134,7 +134,7 @@ def create_customer(request):
             invoice_prefix=data['invoice_prefix']
         )
         resp = Response({'customer': customer})
-        resp.set_cookie('customer', customer.id)
+        # resp.set_cookie('customer', customer.id)
 
         return resp
     except Exception as e:
@@ -145,8 +145,9 @@ def create_customer(request):
 @csrf_exempt
 def create_subscription(request):
     data = request.data
-    customer_id = request.COOKIES.get('customer')
+    # customer_id = request.COOKIES.get('customer')
     price_id = data['price_id']
+    customer_id = data['customer_id']
     try:
         subscription = stripe.Subscription.create(
             customer=customer_id,
