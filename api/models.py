@@ -18,6 +18,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, blank=True)
     phone = models.CharField(max_length=16, blank=True, default='')
     stripe_customer = models.CharField(max_length=100, default=uuid.uuid4)
+    is_admin_company = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.email
