@@ -33,8 +33,8 @@ class POFormula(BaseModel):
     created_from = models.IntegerField(default=None, blank=True, null=True)
     is_show = models.BooleanField(default=True, blank=True)  # Only show formula page
     quantity = models.CharField(max_length=64, blank=True)
-    markup = models.CharField(max_length=64, blank=True)
-    charge = models.CharField(max_length=64, blank=True)
+    markup = models.CharField(max_length=64, blank=True) #
+    charge = models.CharField(max_length=64, blank=True) #
     material = models.TextField(blank=True)
     unit = models.CharField(max_length=32, blank=True)
     unit_price = models.CharField(max_length=32, blank=True)
@@ -63,6 +63,24 @@ class POFormula(BaseModel):
             return catalog.get_full_ancestor()
         except:
             return []
+
+    def _parse_value(self, name, value):
+        return {
+            'display_tag': f'@({name})[{name}]',
+            'display': name,
+            'value': value,
+            'display_tag_with_parent': f'[{self.assemble.name}].[{self.name}].{name}',
+        }
+
+    def parse_value_with_tag(self):
+        """
+            Parse formula value for calculating
+        """
+        quantity = self._parse_value('Quantity', self.quantity)
+        cost = self._parse_value('Cost', self.cost)
+        charge = self._parse_value('Charge', self.charge)
+        markup = self._parse_value('Markup', self.markup)
+        return [quantity, cost, charge, markup]
 
 
 class POFormulaToDataEntry(BaseModel):

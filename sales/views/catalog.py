@@ -312,7 +312,7 @@ def parse_c_table(children):
             header = c_table['header']
 
             if len(header) >= 3:
-                header[:3] = 'name', 'cost', 'unit'
+                header[:3] = 'name', 'unit', 'cost'
             for i, d in enumerate(c_table['data']):
                 content = {**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child.pk}:{i}'},
                            'levels': levels}
