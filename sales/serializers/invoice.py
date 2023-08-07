@@ -1,7 +1,9 @@
+from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
 from api.serializers.base import SerializerMixin
 from base.utils import pop
+from base.tasks import activity_log
 from .lead_schedule import EventForInvoiceSerializer
 from ..models.invoice import (Invoice, TableInvoice, PaymentHistory, CustomTable, GroupChangeOrder, ChangeOrderItem,
                               ProposalItem, GroupProposal)
@@ -175,6 +177,8 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
         instance = super().create(validated_data)
         self.create_talbes(instance, tables)
         self.create_payment_history(instance, payment_histories)
+        activity_log.delay(ContentType.objects.get_for_model(Invoice).pk, instance.pk, 1,
+                           InvoiceSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
@@ -185,10 +189,13 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
         instance.payment_histories.all().delete()
         self.create_talbes(instance, tables)
         self.create_payment_history(instance, payment_histories)
+        activity_log.delay(ContentType.objects.get_for_model(Invoice).pk, instance.pk, 2,
+                           InvoiceSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        data['content_type'] = ContentType.objects.get_for_model(Invoice).pk
         if self.is_param_exist('pk'):
             # if instance.proposal:
             #     data['proposal'] = ProposalWritingSerializer(instance.proposal).data
