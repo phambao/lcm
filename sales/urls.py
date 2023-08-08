@@ -251,7 +251,10 @@ url_change_order = [
 url_invoice = [
     path('', invoice.InvoiceListView.as_view()),
     path('proposal/', invoice.InvoiceProposal.as_view()),
-    path('<int:pk>/', invoice.InvoiceDetailGenericView.as_view())
+    path('<int:pk>/', invoice.InvoiceDetailGenericView.as_view()),
+    path('<int:pk>/payment/', invoice.PaymentListView.as_view()),
+    path('payment/<int:pk>/', invoice.PaymentDetailView.as_view()),
+    path('payment/', invoice.InvoicePaymentListView.as_view()),
 ]
 
 # URL Config
