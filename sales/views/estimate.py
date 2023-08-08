@@ -185,6 +185,7 @@ def filter_group_fo_to_fo(request):
                 "%s__lt" % 'modified_date': _truncate(now() + timedelta(days=1)),
         },
     }
+    q &= Q(**{f'company': request.user.company})
     for data in temp:
         if data == 'modified_date' and temp['modified_date'] != str():
             date = datetime.strptime(temp[data], '%Y-%m-%d %H:%M:%S')
@@ -200,7 +201,6 @@ def filter_group_fo_to_fo(request):
             q &= Q(cost__gt=temp[data])
 
     formula_queryset = POFormula.objects.filter(q)
-
     grouping_queryset = POFormulaGrouping.objects.filter(
         group_formulas__in=Subquery(formula_queryset.values('pk'))
     ).order_by('-modified_date').distinct().values()
