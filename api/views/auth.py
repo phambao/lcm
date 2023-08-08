@@ -9,7 +9,6 @@ from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
-
 import jwt
 
 from base.models.payment import PaymentHistoryStripe
