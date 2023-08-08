@@ -430,7 +430,7 @@ class AssembleSerializer(serializers.ModelSerializer):
 class DataViewSerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
         model = DataView
-        fields = ('id', 'formula', 'name', 'estimate_template')
+        fields = ('id', 'formula', 'name', 'estimate_template', 'type')
 
     def to_internal_value(self, data):
         data = super().to_internal_value(data)

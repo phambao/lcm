@@ -3,7 +3,7 @@ version: "3.3"
 services:
   api:
     build: .
-    restart: 'always'
+    restart: always
     volumes:
       - ./static:/static
       - .:/code
@@ -28,7 +28,7 @@ services:
 
   db:
     image: postgres:14
-    restart: 'always'
+    restart: always
     volumes:
       - ./data/db:/var/lib/postgresql/data
     environment:
@@ -37,14 +37,17 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
 
   pgadmin:
-      image: dpage/pgadmin4
-      restart: always
-      environment:
-        PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
-        PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
-        PGADMIN_CONFIG_SERVER_MODE: ${PGADMIN_CONFIG_SERVER_MODE}
-      volumes:
-       - ./../pgAdmin:/pgAdmin
-
-      ports:
-        - "${PGADMIN_PORT:-5050}:80"
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: ${PGADMIN_CONFIG_SERVER_MODE}
+    volumes:
+      - ./../pgAdmin:/pgAdmin
+    depends_on:
+      - db
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    profiles:
+      - debug
