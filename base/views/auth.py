@@ -53,33 +53,16 @@ class PersonalInformationDetailView(generics.RetrieveUpdateDestroyAPIView):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_permission(request):
-    from sales.models.catalog import Catalog
-    from sales.models.change_order import ChangeOrder
-    from sales.models.estimate import EstimateTemplate
-    from sales.models.invoice import Invoice
-    from sales.models.lead_list import LeadDetail
-    from sales.models.lead_schedule import ScheduleEvent
-    from sales.models.lead_schedule import ToDo
-    from sales.models.lead_schedule import DailyLog
-    from sales.models.proposal import ProposalWriting
+    from sales.models import (Catalog, ChangeOrder, EstimateTemplate, Invoice, LeadDetail,
+                              ScheduleEvent, ToDo, DailyLog, ProposalWriting)
 
-    perms = Permission.objects.none()
-    content_type = ContentType.objects.get_for_model(Catalog)
-    perms = perms | Permission.objects.filter(content_type=content_type)
-    content_type = ContentType.objects.get_for_model(ChangeOrder)
-    perms = perms | Permission.objects.filter(content_type=content_type)
-    content_type = ContentType.objects.get_for_model(EstimateTemplate)
-    perms = perms | Permission.objects.filter(content_type=content_type)
-    content_type = ContentType.objects.get_for_model(Invoice)
-    perms = perms | Permission.objects.filter(content_type=content_type)
-    content_type = ContentType.objects.get_for_model(LeadDetail)
-    perms = perms | Permission.objects.filter(content_type=content_type)
-    content_type = ContentType.objects.get_for_model(ScheduleEvent)
-    perms = perms | Permission.objects.filter(content_type=content_type)
-    content_type = ContentType.objects.get_for_model(ProposalWriting)
-    perms = perms | Permission.objects.filter(content_type=content_type)
-    content_type = ContentType.objects.get_for_model(ToDo)
-    perms = perms | Permission.objects.filter(content_type=content_type)
-    content_type = ContentType.objects.get_for_model(DailyLog)
-    perms = perms | Permission.objects.filter(content_type=content_type)
+    def get_perm_by_models(models):
+        perms = Permission.objects.none()
+        for model in models:
+            content_type = ContentType.objects.get_for_model(model)
+            perms |= Permission.objects.filter(content_type=content_type)
+        return perms
+
+    perms = get_perm_by_models((Catalog, ChangeOrder, EstimateTemplate, Invoice, LeadDetail, ScheduleEvent,
+                                ToDo, DailyLog, ProposalWriting))
     return Response(status=status.HTTP_200_OK, data=perms.values())
