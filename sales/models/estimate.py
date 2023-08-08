@@ -153,8 +153,15 @@ class EstimateTemplate(BaseModel):
 
 
 class DataView(BaseModel):
+    class Type(models.TextChoices):
+        COST = 'cost', 'Cost'
+        CHARGE = 'charge', 'Charge'
+        PROFIT = 'profit', 'Profit'
+        CUSTOM = 'custom', 'Custom'
+
     name = models.CharField(verbose_name='Formula Name', max_length=128)
     formula = models.TextField(verbose_name='Formula', blank=True)
     estimate_template = models.ForeignKey('sales.EstimateTemplate', on_delete=models.CASCADE, related_name='data_views',
                                           null=True, blank=True)
     index = models.IntegerField(blank=True, default=0, null=True)
+    type = models.CharField(max_length=8, choices=Type.choices, default=Type.CUSTOM, blank=True)
