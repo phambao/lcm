@@ -300,9 +300,11 @@ class POFormulaGroupingSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         po_formulas = pop(validated_data, 'group_formulas', [])
-        instance.group_formulas.all().update(group=None)
-        po_pk = self.add_relation_po_formula(po_formulas, instance)
-        POFormula.objects.filter(id__in=po_pk, group=None).update(group=instance)
+        method = self.context.get('request').method
+        if (method == 'PATCH' and po_formulas) or method == 'PUT':
+            instance.group_formulas.all().update(group=None)
+            po_pk = self.add_relation_po_formula(po_formulas, instance)
+            POFormula.objects.filter(id__in=po_pk, group=None).update(group=instance)
         return super(POFormulaGroupingSerializer, self).update(instance, validated_data)
 
     def to_representation(self, instance):

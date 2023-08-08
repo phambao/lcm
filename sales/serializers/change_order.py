@@ -123,6 +123,7 @@ class ChangeOrderSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         proposal_writing = instance.proposal_writing
         data['proposal_name'] = proposal_writing.name if proposal_writing else None
+        data['content_type'] = ContentType.objects.get_for_model(ChangeOrder).pk
         return data
 
 

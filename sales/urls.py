@@ -214,6 +214,7 @@ url_estimate = [
     path('estimate-template/', estimate.EstimateTemplateList.as_view()),
     path('estimate-template-compact/', estimate.EstimateTemplateCompactList.as_view()),
     path('estimate-template/<int:pk>/', estimate.EstimateTemplateDetail.as_view()),
+    path('estimate-template/<int:pk>/tag-values/', estimate.get_formula_tag_value),
     path('linked-descriptions/', estimate.get_linked_descriptions),
     path('linked-descriptions/<str:pk>/', estimate.get_linked_description),
     path('tag-formula/', estimate.get_tag_formula),
@@ -250,7 +251,10 @@ url_change_order = [
 url_invoice = [
     path('', invoice.InvoiceListView.as_view()),
     path('proposal/', invoice.InvoiceProposal.as_view()),
-    path('<int:pk>/', invoice.InvoiceDetailGenericView.as_view())
+    path('<int:pk>/', invoice.InvoiceDetailGenericView.as_view()),
+    path('<int:pk>/payment/', invoice.PaymentListView.as_view()),
+    path('payment/<int:pk>/', invoice.PaymentDetailView.as_view()),
+    path('payment/', invoice.InvoicePaymentListView.as_view()),
 ]
 
 # URL Config

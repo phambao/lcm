@@ -247,6 +247,20 @@ def get_linked_description(request, pk):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def get_formula_tag_value(request, pk):
+    """
+    Get linked description from estimate and catalog
+    """
+    estimate = get_object_or_404(EstimateTemplate.objects.filter(company=request.user.company), pk=pk)
+    formulas = estimate.get_formula()
+    data = []
+    for formula in formulas:
+        data.extend(formula.parse_value_with_tag())
+    return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def get_tag_formula(request):
     formulas = POFormula.objects.filter(company=get_request().user.company, is_show=True)
     serializer = TaggingSerializer(formulas, many=True)

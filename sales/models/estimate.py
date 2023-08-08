@@ -64,6 +64,24 @@ class POFormula(BaseModel):
         except:
             return []
 
+    def _parse_value(self, name, value):
+        return {
+            'display_tag': f'@({name})[{name}]',
+            'display': name,
+            'value': value,
+            'display_tag_with_parent': f'[{self.assemble.name}].[{self.name}].{name}',
+        }
+
+    def parse_value_with_tag(self):
+        """
+            Parse formula value for calculating
+        """
+        quantity = self._parse_value('Quantity', self.quantity)
+        cost = self._parse_value('Cost', self.cost)
+        charge = self._parse_value('Charge', self.charge)
+        markup = self._parse_value('Markup', self.markup)
+        return [quantity, cost, charge, markup]
+
 
 class POFormulaToDataEntry(BaseModel):
     data_entry = models.ForeignKey(DataEntry, on_delete=models.CASCADE, blank=True, null=True)
