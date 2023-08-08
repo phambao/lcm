@@ -9,7 +9,9 @@ from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
+import jwt
 
+from base.models.payment import PaymentHistoryStripe
 from base.tasks import celery_send_mail
 from base.views.base import CompanyFilterMixin
 from ..models import CompanyBuilder
@@ -167,3 +169,25 @@ class InternalUserDetailView(CompanyFilterMixin, generics.RetrieveUpdateDestroyA
     queryset = User.objects.all()
     serializer_class = InternalUserSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+@api_view(['POST'])
+def check_link(request):
+    link = request.data.get('link')
+    try:
+        decoded_payload = jwt.decode(link, settings.SECRET_KEY, algorithms=['HS256'])
+
+        data_check = PaymentHistoryStripe.objects.filter(
+                subscription_id=decoded_payload['sub'],
+                customer_stripe_id=decoded_payload['customer']
+            )
+        if not data_check:
+            Response(status=status.HTTP_404_NOT_FOUND, data='link error')
+    except jwt.ExpiredSignatureError:
+        return Response(status=status.HTTP_404_NOT_FOUND, data='link error')
+    except jwt.DecodeError:
+        return Response(status=status.HTTP_404_NOT_FOUND, data='link error')
+    except jwt.InvalidTokenError:
+        return Response(status=status.HTTP_404_NOT_FOUND, data='link error')
+
+    return Response(status=status.HTTP_200_OK, data='link success')

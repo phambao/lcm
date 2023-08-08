@@ -19,4 +19,5 @@ class PaymentHistoryStripe(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     subscription_id = models.CharField(max_length=100, blank=True)
     customer_stripe_id = models.CharField(max_length=100, blank=True)
+    # is_activate = models.BooleanField(default=False, blank=True)
 

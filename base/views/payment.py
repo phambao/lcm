@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.http import HttpResponse
+from django.template.loader import render_to_string
 import stripe
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import redirect
@@ -10,6 +11,8 @@ from rest_framework import generics
 from rest_framework.decorators import api_view, permission_classes
 from decouple import config
 
+import jwt
+from base.tasks import celery_send_mail
 from base.models.payment import Product, PaymentHistoryStripe
 from base.serializers.payment import ProductSerializer, CheckoutSessionSerializer, PaymentHistoryStripeSerializer
 
@@ -253,23 +256,28 @@ def webhook_received(request):
                 subscription_id,
                 default_payment_method=payment_intent.payment_method
             )
-            print("Default payment method set for subscription:" + payment_intent.payment_method)
 
     if event_type == 'customer.subscription.created':
-            subscription_id = data_object.stripe_id
-            customer_stripe_id = data_object.customer
-            PaymentHistoryStripe.objects.create(
-                subscription_id=subscription_id,
-                customer_stripe_id=customer_stripe_id
-            )
+        pass
+
     if event.type == 'payment_intent.succeeded':
-        payment_intent = event.data.object  # contains a stripe.PaymentIntent
-        print('PaymentIntent was successful!')
+        subscription_id = data_object.stripe_id
+        customer_stripe_id = data_object.customer
+        PaymentHistoryStripe.objects.create(
+            subscription_id=subscription_id,
+            customer_stripe_id=customer_stripe_id
+        )
+        payload = {
+            'sub': subscription_id,
+            'customer': customer_stripe_id,
+        }
+        customer = stripe.Customer.retrieve(customer_stripe_id)
+        jwt_token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+        registration_link = f'https://builder365-dev.fdssoft.com/register/{jwt_token.decode()}'
+        content = render_to_string('auth/link-create-account.html', {'registration_link': registration_link})
+        celery_send_mail.delay(f'Create account',
+                               content, settings.EMAIL_HOST_USER, [customer.email], False)
     elif event.type == 'payment_method.attached':
-        payment_method = event.data.object  # contains a stripe.PaymentMethod
-        print('PaymentMethod was attached to a Customer!')
-    # ... handle other event types
-    else:
-        print('Unhandled event type {}'.format(event.type))
+        pass
 
     return HttpResponse(status=200)
