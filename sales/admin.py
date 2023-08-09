@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from sales.models.catalog import Catalog
 from sales.models.lead_list import LeadDetail
-from sales.models.estimate import EstimateTemplate
+from sales.models.estimate import EstimateTemplate, POFormulaGrouping
 from sales.models.lead_schedule import ToDo, ScheduleEvent, DailyLog
 from sales.models.proposal import ProposalWriting
 # Register your models here.
@@ -45,6 +45,11 @@ class ScheduleDailyLogAdmin(FilterUserCreateAdmin):
     search_fields = ['title']
 
 
+class POFormulaGroupingAdmin(FilterUserCreateAdmin):
+    list_display = ('id', 'name')
+    search_fields = ['name']
+
+
 admin.site.register(DailyLog, ScheduleDailyLogAdmin)
 admin.site.register(ScheduleEvent, ScheduleEventAdmin)
 admin.site.register(ToDo, ScheduleTodoAdmin)
@@ -52,3 +57,4 @@ admin.site.register(Catalog, CatalogAdmin)
 admin.site.register(LeadDetail, LeadDetailAdmin)
 admin.site.register(EstimateTemplate, EstimateTemplateAdmin)
 admin.site.register(ProposalWriting, ProposalWritingAdmin)
+admin.site.register(POFormulaGrouping, POFormulaGroupingAdmin)

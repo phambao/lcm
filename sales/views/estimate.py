@@ -202,6 +202,7 @@ def filter_group_fo_to_fo(request):
 
     formula_queryset = POFormula.objects.filter(q)
     grouping_queryset = POFormulaGrouping.objects.filter(
+        company=request.user.company,
         group_formulas__in=Subquery(formula_queryset.values('pk'))
     ).order_by('-modified_date').distinct().values()
 
