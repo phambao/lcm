@@ -24,8 +24,11 @@ class LeadDetail(BaseModel):
     class Meta:
         db_table = 'lead_detail'
         ordering = ['-modified_date']
+        permissions = [('assign_salesperson', 'Can Assign Salesperson'),
+                       ('view_salesperson_and_activity', 'View other Salesperson Lead & Activitíes'),
+                       ('convert_to_job', 'Can Convert to Job'),
+                       ('export_to_excel', 'Can Export to Excel')]
 
-    # General
     class Status(models.TextChoices):
         OPEN = 'open', 'Open'
         CLOSE = 'close', 'Close'
