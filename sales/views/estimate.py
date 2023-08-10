@@ -345,7 +345,7 @@ def delete_estimates(request):
     for obj in objs:
         ActivityLog.objects.create(
             content_type=ContentType.objects.get_for_model(EstimateTemplate), content_object=obj,
-            object_id=obj.pk, action=Action.DELETE, last_state=EstimateTemplateSerializer(obj).data, next_state={}
+            object_id=obj.pk, action=Action.DELETE, last_state=EstimateTemplateCompactSerializer(obj).data, next_state={}
         )
     objs.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
@@ -359,7 +359,7 @@ def delete_assembles(request):
     for obj in objs:
         ActivityLog.objects.create(
             content_type=ContentType.objects.get_for_model(Assemble), content_object=obj,
-            object_id=obj.pk, action=Action.DELETE, last_state=AssembleSerializer(obj).data, next_state={}
+            object_id=obj.pk, action=Action.DELETE, last_state=AssembleCompactSerializer(obj).data, next_state={}
         )
     objs.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)

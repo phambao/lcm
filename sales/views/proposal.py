@@ -196,7 +196,7 @@ def delete_proposal_writings(request):
     for obj in objs:
         ActivityLog.objects.create(
             content_type=ContentType.objects.get_for_model(POFormula), content_object=obj,
-            object_id=obj.pk, action=Action.DELETE, last_state=ProposalWritingCompactList(obj).data, next_state={}
+            object_id=obj.pk, action=Action.DELETE, last_state=ProposalWritingCompactSerializer(obj).data, next_state={}
         )
     objs.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
@@ -210,7 +210,7 @@ def delete_price_comparisons(request):
     for obj in objs:
         ActivityLog.objects.create(
             content_type=ContentType.objects.get_for_model(PriceComparison), content_object=obj,
-            object_id=obj.pk, action=Action.DELETE, last_state=PriceComparisonCompactList(obj).data, next_state={}
+            object_id=obj.pk, action=Action.DELETE, last_state=PriceComparisonCompactSerializer(obj).data, next_state={}
         )
     objs.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
