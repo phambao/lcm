@@ -195,7 +195,7 @@ def delete_proposal_writings(request):
     objs = ProposalWriting.objects.filter(pk__in=ids)
     for obj in objs:
         ActivityLog.objects.create(
-            content_type=ContentType.objects.get_for_model(POFormula), content_object=obj,
+            content_type=ContentType.objects.get_for_model(ProposalWriting), content_object=obj,
             object_id=obj.pk, action=Action.DELETE, last_state=ProposalWritingCompactSerializer(obj).data, next_state={}
         )
     objs.delete()
