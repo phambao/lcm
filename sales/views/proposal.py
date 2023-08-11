@@ -177,6 +177,18 @@ def proposal_formatting_view(request, pk):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated & ProposalPermissions])
+def reset_formatting(request, pk):
+    proposal_writing = get_object_or_404(ProposalWriting.objects.filter(company=request.user.company), pk=pk)
+    try:
+        proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
+        proposal_formatting.delete()
+    except ProposalFormatting.DoesNotExist:
+        pass
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 def view_proposal_formatting(request, formatting_id):
     try:
         data_proposal = ProposalFormatting.objects.get(id=formatting_id)
@@ -184,4 +196,3 @@ def view_proposal_formatting(request, formatting_id):
         raise Http404("ProposalFormatting does not exist")
     data_html = data_proposal.element
     return render(request, 'proposal_formatting.html', context={'javascript_code': data_html})
-
