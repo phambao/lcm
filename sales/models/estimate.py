@@ -124,6 +124,8 @@ class DescriptionLibrary(BaseModel):
 
 
 class EstimateTemplate(BaseModel):
+    class Meta:
+        permissions = [('takeoff', 'Takeoff')]
     name = models.CharField(max_length=128)
     proposal_name = models.CharField(max_length=128, blank=True, default='')
     assembles = models.ManyToManyField(Assemble, related_name='estimate_templates', blank=True, )

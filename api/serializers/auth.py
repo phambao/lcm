@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
 class InternalUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'last_name', 'first_name', 'image', 'groups', 'is_superuser', 'is_active',
+        fields = ('id', 'email', 'last_name', 'first_name', 'image', 'groups', 'is_active', 'is_admin_company',
                   'phone')
 
     def create(self, validated_data):

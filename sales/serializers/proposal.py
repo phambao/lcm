@@ -272,7 +272,7 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
         different_cost = []
         for c in cost_different:
             try:
-                c.update({'first_id': new_ids[c['first_id']], 'second_id': new_ids[c['second_id']]})
+                c.update({'first_id': new_ids[int(c['first_id'])], 'second_id': new_ids[int(c['second_id'])]})
             except KeyError:
                 """It update more than one time so we catch the second time"""
             different_cost.append(c)

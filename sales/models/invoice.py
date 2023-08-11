@@ -86,6 +86,9 @@ class ProposalItem(BaseModel):
 
 
 class Invoice(BaseModel):
+    class Meta:
+        permissions = [('create_edit_credit_memo', 'Can Create/Edit Credit Memo')]
+
     class InvoiceStatus(models.TextChoices):
         DRAFT = 'draft', 'Draft'
         UNPAID = 'unpaid', 'Unpaid'
