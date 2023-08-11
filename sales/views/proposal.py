@@ -1,4 +1,3 @@
-from django.contrib.contenttypes.models import ContentType
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django_filters import rest_framework as filters
@@ -7,7 +6,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from api.middleware import get_request
-from api.models import ActivityLog, Action
 from base.permissions import ProposalPermissions
 from base.views.base import CompanyFilterMixin
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter, ProposalTemplateFilter
@@ -187,44 +185,3 @@ def view_proposal_formatting(request, formatting_id):
     data_html = data_proposal.element
     return render(request, 'proposal_formatting.html', context={'javascript_code': data_html})
 
-
-@api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated & ProposalPermissions])
-def delete_proposal_writings(request):
-    ids = request.data
-    objs = ProposalWriting.objects.filter(pk__in=ids)
-    for obj in objs:
-        ActivityLog.objects.create(
-            content_type=ContentType.objects.get_for_model(ProposalWriting), content_object=obj,
-            object_id=obj.pk, action=Action.DELETE, last_state=ProposalWritingCompactSerializer(obj).data, next_state={}
-        )
-    objs.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-@api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated & ProposalPermissions])
-def delete_price_comparisons(request):
-    ids = request.data
-    objs = PriceComparison.objects.filter(pk__in=ids)
-    for obj in objs:
-        ActivityLog.objects.create(
-            content_type=ContentType.objects.get_for_model(PriceComparison), content_object=obj,
-            object_id=obj.pk, action=Action.DELETE, last_state=PriceComparisonCompactSerializer(obj).data, next_state={}
-        )
-    objs.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-@api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated & ProposalPermissions])
-def delete_proposal_templates(request):
-    ids = request.data
-    objs = ProposalTemplate.objects.filter(pk__in=ids)
-    for obj in objs:
-        ActivityLog.objects.create(
-            content_type=ContentType.objects.get_for_model(ProposalTemplate), content_object=obj,
-            object_id=obj.pk, action=Action.DELETE, last_state=ProposalTemplateSerializer(obj).data, next_state={}
-        )
-    objs.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
