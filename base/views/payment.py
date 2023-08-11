@@ -4,7 +4,7 @@ from django.template.loader import render_to_string
 import stripe
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import redirect
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics
@@ -237,9 +237,9 @@ def preview_subscription(request, **kwargs):
     subscription_id = kwargs.get('subscription_id')
     try:
         subscription = stripe.Subscription.retrieve(subscription_id)
-        return Response({'subscription': subscription})
+        return Response({'subscription': subscription}, status=status.HTTP_200_OK)
     except Exception as e:
-        return Response({'error': str(e)}, status=404)
+        return Response({'error': str(e)}, status=status.HTTP_404_NOT_FOUND)
 
 
 @csrf_exempt
