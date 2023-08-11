@@ -231,6 +231,17 @@ def update_subscription(request):
         return Response({'error': str(e)}, status=403)
 
 
+@api_view(['GET'])
+@csrf_exempt
+def preview_subscription(request, **kwargs):
+    subscription_id = kwargs.get('subscription_id')
+    try:
+        subscription = stripe.Subscription.retrieve(subscription_id)
+        return Response({'subscription': subscription})
+    except Exception as e:
+        return Response({'error': str(e)}, status=404)
+
+
 @csrf_exempt
 def webhook_received(request):
     sig_header = request.META['HTTP_STRIPE_SIGNATURE']
