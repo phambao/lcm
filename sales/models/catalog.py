@@ -78,7 +78,7 @@ class Catalog(BaseModel):
     is_ancestor = models.BooleanField(default=False, blank=True)
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False)
     c_table = models.JSONField(default=dict, blank=True)
-    icon = models.CharField(max_length=256, blank=True)
+    icon = models.TextField(blank=True)
     level = models.ForeignKey(CatalogLevel, on_delete=models.CASCADE, null=True,
                               blank=True, default=None, related_name='catalogs')
     level_index = models.IntegerField(default=0, blank=True, null=True)
