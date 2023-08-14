@@ -19,6 +19,7 @@ class User(AbstractUser):
     phone = models.CharField(max_length=16, blank=True, default='')
     stripe_customer = models.CharField(max_length=100, default=uuid.uuid4)
     is_admin_company = models.BooleanField(default=False, blank=True)
+    create_code = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return self.email
@@ -85,6 +86,7 @@ class CompanyBuilder(models.Model):
     currency = models.CharField(blank=True, max_length=128)
     company_timezone = models.CharField(blank=True, max_length=128)
     short_name = models.CharField(blank=True, max_length=6, null=True)
+    customer_stripe = models.CharField(blank=True, max_length=128, null=True)
 
     def __str__(self):
         return self.company_name

@@ -3,7 +3,8 @@ from django.urls import path, include
 from knox import views as knox_views
 
 from api.views.auth import SignInAPI, SignUpAPI, MainUser, UserList, forgot_password, check_private_code, \
-    reset_password, SignUpUserCompanyAPI, InternalUserListView, InternalUserDetailView, check_link
+    reset_password, SignUpUserCompanyAPI, InternalUserListView, InternalUserDetailView, check_link, \
+    check_private_code_create
 from api.views.company_setting import setting_change_order, setting_invoice
 
 urlpatterns = [
@@ -24,7 +25,8 @@ urlpatterns = [
     path('auth/', include([
         path('reset-password/', forgot_password, name='reset-password'),
         path('check-code/', check_private_code, name='check-private-code'),
-        path('reset/', reset_password, name='reset-password')
+        path('reset/', reset_password, name='reset-password'),
+        path('check-code-create/', check_private_code_create, name='check-private-code-create'),
     ])),
 
     path('reset_password/', auth_views.PasswordResetView.as_view(), name='reset_password'),

@@ -23,7 +23,7 @@ class UserInline(admin.TabularInline):
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ["company_name", "logo", "description", "address", "field", "country", "city", "state",
                     "business_phone", "zip_code", "size", "tax", "email", "cell_mail", "cell_phone", "created_date",
-                    "modified_date", "user_create", "user_update", "currency", "company_timezone", "short_name"]
+                    "modified_date", "user_create", "user_update", "currency", "company_timezone", "short_name", "customer_stripe"]
     fields = ["company_name", "logo", "description", "address", "field", "country", "city", "state",
                     "business_phone", "zip_code", "size", "tax", "email", "cell_mail", "cell_phone",
                     "user_create", "user_update", "currency", "company_timezone", "short_name"]

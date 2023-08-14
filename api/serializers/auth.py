@@ -1,8 +1,12 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
+from django.utils.crypto import get_random_string
+from django.template.loader import render_to_string
+from django.conf import settings
 
 from rest_framework import serializers
 
+from base.tasks import celery_send_mail
 User = get_user_model()
 
 
@@ -68,6 +72,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        code = get_random_string(length=6, allowed_chars='1234567890')
         user = User.objects.create_user(username=validated_data['username'],
                                         email=validated_data['email'],
                                         password=validated_data['password'],
@@ -75,7 +80,13 @@ class RegisterSerializer(serializers.ModelSerializer):
                                         )
         user.last_name = validated_data['last_name']
         user.first_name = validated_data['first_name']
+        user.is_active = False
+        user.create_code = code
         user.save()
+        content = render_to_string('auth/create-user-otp.html', {'username': user.get_username(),
+                                                                 'otp': user.create_code})
+        celery_send_mail.delay(f'Create account for {user.get_username()}',
+                               content, settings.EMAIL_HOST_USER, [validated_data['email']], False)
         return user
 
 
