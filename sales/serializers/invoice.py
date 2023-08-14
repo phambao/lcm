@@ -25,7 +25,7 @@ class ProposalItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProposalItem
-        fields = ('id', 'type', 'owner_price', 'amount_paid', 'unit', 'formula')
+        fields = ('id', 'type', 'owner_price', 'amount_paid', 'unit', 'formula', 'percentage_payment')
 
 
 class GroupProposalSerializer(serializers.ModelSerializer):
@@ -60,7 +60,7 @@ class ChangeOrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChangeOrderItem
-        fields = ('id', 'type', 'owner_price', 'amount_paid', 'unit', 'formula')
+        fields = ('id', 'type', 'owner_price', 'amount_paid', 'unit', 'formula', 'percentage_payment')
 
 
 class GroupChangeOrderSerializer(serializers.ModelSerializer):

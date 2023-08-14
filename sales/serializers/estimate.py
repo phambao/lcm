@@ -454,6 +454,30 @@ class EstimateTemplateCompactSerializer(serializers.ModelSerializer, SerializerM
         exclude = ('is_show', 'original', 'order', 'assembles', 'group_by_proposal', 'company', 'is_checked')
 
 
+class POFormulaItemSerializer(serializers.ModelSerializer):
+    """
+    Used for proposal formatting
+    """
+
+    class Meta:
+        model = POFormula
+        fields = (
+            'id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
+            'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario',
+            'material_data_entry', 'order'
+        )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        try:
+            data['material'] = eval(data['material'])
+        except SyntaxError:
+            data['material'] = ''
+        if data['material'] and isinstance(data['material'], dict):
+            data['material'] = data['material'].get('name')
+        return data
+
+
 class EstimateTemplateMiniSerializer(serializers.ModelSerializer):
     class Meta:
         model = EstimateTemplate
@@ -461,11 +485,7 @@ class EstimateTemplateMiniSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['items'] = instance.get_formula().values(
-            'id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
-            'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario',
-            'material_data_entry', 'order'
-        )
+        data['items'] = POFormulaItemSerializer(instance.get_formula(), context=self.context, many=True).data
         return data
 
 
