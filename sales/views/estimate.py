@@ -1,7 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
 
-from django.contrib.contenttypes.models import ContentType
 from django.utils.timezone import now
 from django.db.models import Value, Q, Subquery
 from django_filters.filters import _truncate
@@ -12,9 +11,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
-from api.models import ActivityLog, Action
 from base.permissions import EstimatePermissions
-from base.tasks import activity_log
 from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter, AssembleFilter, GroupFormulaFilter,\
     DescriptionFilter, UnitFilter, DataEntryFilter
 from sales.models import DataPoint, Catalog
@@ -335,72 +332,3 @@ def get_material_from_formula(request, pk):
     sub_categories = Catalog.objects.filter(pk__in=cat.get_all_descendant(have_self=True))
     data = parse_c_table(sub_categories)
     return Response(status=status.HTTP_200_OK, data=data)
-
-
-@api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
-def delete_estimates(request):
-    ids = request.data
-    objs = EstimateTemplate.objects.filter(pk__in=ids)
-    for obj in objs:
-        ActivityLog.objects.create(
-            content_type=ContentType.objects.get_for_model(EstimateTemplate), content_object=obj,
-            object_id=obj.pk, action=Action.DELETE, last_state=EstimateTemplateCompactSerializer(obj).data, next_state={}
-        )
-    objs.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-@api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
-def delete_assembles(request):
-    ids = request.data
-    objs = Assemble.objects.filter(pk__in=ids)
-    for obj in objs:
-        ActivityLog.objects.create(
-            content_type=ContentType.objects.get_for_model(Assemble), content_object=obj,
-            object_id=obj.pk, action=Action.DELETE, last_state=AssembleCompactSerializer(obj).data, next_state={}
-        )
-    objs.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-@api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
-def delete_formulas(request):
-    ids = request.data
-    objs = POFormula.objects.filter(pk__in=ids)
-    for obj in objs:
-        ActivityLog.objects.create(
-            content_type=ContentType.objects.get_for_model(POFormula), content_object=obj,
-            object_id=obj.pk, action=Action.DELETE, last_state=POFormulaSerializer(obj).data, next_state={}
-        )
-    objs.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-@api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
-def delete_link_descriptions(request):
-    ids = request.data
-    objs = DescriptionLibrary.objects.filter(pk__in=ids)
-    objs.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-@api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
-def delete_data_entries(request):
-    ids = request.data
-    objs = DataEntry.objects.filter(pk__in=ids)
-    objs.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-@api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
-def delete_unit_libraries(request):
-    ids = request.data
-    objs = UnitLibrary.objects.filter(pk__in=ids)
-    objs.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)

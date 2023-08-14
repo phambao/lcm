@@ -192,7 +192,6 @@ url_schedule = [
 # URL Estimate
 url_estimate = [
     path('po-formula/', estimate.POFormulaList.as_view()),
-    path('po-formula/delete/', estimate.delete_formulas),
     path('po-formula-compact/', estimate.POFormulaCompactList.as_view()),
     path('po-formula/<int:pk>/', estimate.POFormulaDetail.as_view()),
     path('material/<int:pk>/', estimate.get_material_from_formula),
@@ -203,20 +202,16 @@ url_estimate = [
     path('formula-grouping/add-formula/', estimate.POFormulaGroupingCreate.as_view()),
     path('formula-grouping/<int:pk>/add-existing-formula/', estimate.add_existing_formula),
     path('data-entry/', estimate.DataEntryList.as_view(), name='sales.estimate.data-entry'),
-    path('data-entry/delete/', estimate.delete_data_entries),
     path('data-entry/<int:pk>/', estimate.DataEntryDetail.as_view(), name='sales.estimate.data-entry.detail'),
     path('data-entry/<int:pk>/material/', estimate.get_material_by_data_entry),
     path('unit-library/', estimate.UnitLibraryList.as_view()),
-    path('unit-library/delete/', estimate.delete_unit_libraries),
     path('unit-library/<int:pk>/', estimate.UnitLibraryDetail.as_view()),
     path('description-library/', estimate.DescriptionLibraryList.as_view()),
     path('description-library/<int:pk>/', estimate.DescriptionLibraryDetail.as_view()),
     path('assemble/', estimate.AssembleList.as_view()),
-    path('assemble/delete/', estimate.delete_assembles),
     path('assemble-compact/', estimate.AssembleCompactList.as_view()),
     path('assemble/<int:pk>/', estimate.AssembleDetail.as_view()),
     path('estimate-template/', estimate.EstimateTemplateList.as_view()),
-    path('estimate-template/delete/', estimate.delete_estimates),
     path('estimate-template-compact/', estimate.EstimateTemplateCompactList.as_view()),
     path('estimate-template/<int:pk>/', estimate.EstimateTemplateDetail.as_view()),
     path('estimate-template/<int:pk>/tag-values/', estimate.get_formula_tag_value),
@@ -231,18 +226,16 @@ url_estimate = [
 url_proposal = [
     path('template/<int:pk>/html/', proposal.get_html_css_by_template),
     path('template/', proposal.ProposalTemplateGenericView.as_view(), name='proposal'),
-    path('template/delete/', proposal.delete_proposal_templates),
     path('template/<int:pk>/', proposal.ProposalTemplateDetailGenericView.as_view()),
     path('price-comparison/', proposal.PriceComparisonList.as_view()),
-    path('price-comparison/delete/', proposal.delete_price_comparisons),
     path('price-comparison-compact/', proposal.PriceComparisonCompactList.as_view()),
     path('price-comparison/<int:pk>/', proposal.PriceComparisonDetail.as_view()),
     path('proposal-writing/', proposal.ProposalWritingList.as_view()),
-    path('proposal-writing/delete/', proposal.delete_proposal_writings),
     path('proposal-writing-compact/', proposal.ProposalWritingCompactList.as_view()),
     path('proposal-writing/<int:pk>/', proposal.ProposalWritingDetail.as_view()),
     path('proposal-writing/<int:pk>/change-order/', change_order.ChangeOrderFromProposalWritingList.as_view()),
     path('proposal-writing/<int:pk>/formatting/', proposal.proposal_formatting_view),
+    path('proposal-writing/<int:pk>/reset-formatting/', proposal.reset_formatting),
     path('proposal-writing/<int:pk>/data/', proposal.get_data),
     path('proposal-writing/<int:pk>/image/', proposal.get_image),
     path('formatting/', proposal.ProposalFormattingTemplateGenericView.as_view(), name='proposal-formatting'),
@@ -252,14 +245,12 @@ url_proposal = [
 
 url_change_order = [
     path('', change_order.ChangeOderList.as_view()),
-    path('delete/', change_order.delete_change_orders),
     path('<int:pk>/', change_order.ChangeOderDetail.as_view()),
     path('<int:pk>/items/', change_order.get_items)
 ]
 
 url_invoice = [
     path('', invoice.InvoiceListView.as_view()),
-    path('delete/', invoice.delete_invoices),
     path('proposal/', invoice.InvoiceProposal.as_view()),
     path('<int:pk>/', invoice.InvoiceDetailGenericView.as_view()),
     path('<int:pk>/payment/', invoice.PaymentListView.as_view()),
