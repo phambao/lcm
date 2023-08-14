@@ -131,6 +131,26 @@ def check_private_code(request):
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"email": "Email or code is not valid"})
     return Response(status=status.HTTP_200_OK, data={'token': user.token})
 
+@api_view(['POST'])
+def check_private_code_create(request):
+    """
+    Payload: {"email": string, "code": int}
+    """
+    email = request.data.get('email')
+    code = request.data.get('code')
+    serializer = CheckCodeSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    try:
+        user = get_user_model().objects.get(email=email, create_code=code)
+        user.is_active = True
+        user.token = default_token_generator.make_token(user)
+        user.save()
+    except get_user_model().DoesNotExist:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={"email": "Email or code is not valid"})
+    data = UserSerializer(user, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data={'user': data})
+
 
 @api_view(['POST'])
 def reset_password(request):
@@ -176,18 +196,19 @@ def check_link(request):
     link = request.data.get('link')
     try:
         decoded_payload = jwt.decode(link, settings.SECRET_KEY, algorithms=['HS256'])
-
         data_check = PaymentHistoryStripe.objects.filter(
                 subscription_id=decoded_payload['sub'],
                 customer_stripe_id=decoded_payload['customer']
             )
+        data_company = CompanyBuilder.objects.get(customer_stripe=decoded_payload['customer'])
         if not data_check:
-            Response(status=status.HTTP_404_NOT_FOUND, data='link error')
+            Response(status=status.HTTP_404_NOT_FOUND, data={"data": 'link error'})
     except jwt.ExpiredSignatureError:
-        return Response(status=status.HTTP_404_NOT_FOUND, data='link error')
+        return Response(status=status.HTTP_404_NOT_FOUND, data={"data": 'link error'})
     except jwt.DecodeError:
-        return Response(status=status.HTTP_404_NOT_FOUND, data='link error')
+        return Response(status=status.HTTP_404_NOT_FOUND, data={"data": 'link error'})
     except jwt.InvalidTokenError:
-        return Response(status=status.HTTP_404_NOT_FOUND, data='link error')
+        return Response(status=status.HTTP_404_NOT_FOUND, data={"data": 'link error'})
 
-    return Response(status=status.HTTP_200_OK, data='link success')
+    return Response(status=status.HTTP_200_OK, data={"company": data_company.id,
+                                                     "stripe_customer": decoded_payload['customer']})

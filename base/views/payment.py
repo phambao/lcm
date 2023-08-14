@@ -12,6 +12,8 @@ from rest_framework.decorators import api_view, permission_classes
 from decouple import config
 
 import jwt
+
+from api.models import CompanyBuilder
 from base.tasks import celery_send_mail
 from base.models.payment import Product, PaymentHistoryStripe
 from base.serializers.payment import ProductSerializer, CheckoutSessionSerializer, PaymentHistoryStripeSerializer
@@ -136,6 +138,9 @@ def create_customer(request):
             name=data['name'],
             invoice_prefix=data['invoice_prefix']
         )
+        data_company = CompanyBuilder.objects.filter(pk=data['company'])
+        data_company.customer_stripe = customer.id
+        data_company.update(**{'customer_stripe': customer.id})
         resp = Response({'customer': customer})
         # resp.set_cookie('customer', customer.id)
 
@@ -274,20 +279,25 @@ def webhook_received(request):
     if event.type == 'payment_intent.succeeded':
         subscription_id = data_object.stripe_id
         customer_stripe_id = data_object.customer
-        PaymentHistoryStripe.objects.create(
+        data_payment_history = PaymentHistoryStripe.objects.filter(
             subscription_id=subscription_id,
             customer_stripe_id=customer_stripe_id
         )
-        payload = {
-            'sub': subscription_id,
-            'customer': customer_stripe_id,
-        }
-        customer = stripe.Customer.retrieve(customer_stripe_id)
-        jwt_token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-        registration_link = f'https://builder365-dev.fdssoft.com/register/&link={jwt_token.decode()}'
-        content = render_to_string('auth/link-create-account.html', {'registration_link': registration_link})
-        celery_send_mail.delay(f'Create account',
-                               content, settings.EMAIL_HOST_USER, [customer.email], False)
+        if not data_payment_history:
+            PaymentHistoryStripe.objects.create(
+                subscription_id=subscription_id,
+                customer_stripe_id=customer_stripe_id
+            )
+            payload = {
+                'sub': subscription_id,
+                'customer': customer_stripe_id,
+            }
+            customer = stripe.Customer.retrieve(customer_stripe_id)
+            jwt_token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+            registration_link = f'https://builder365-dev.fdssoft.com/register/&link={jwt_token.decode()}'
+            content = render_to_string('auth/link-create-account.html', {'registration_link': registration_link})
+            celery_send_mail.delay(f'Create account',
+                                   content, settings.EMAIL_HOST_USER, [customer.email], False)
     elif event.type == 'payment_method.attached':
         pass
 
