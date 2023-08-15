@@ -10,6 +10,13 @@ from ..models.invoice import (Invoice, TableInvoice, PaymentHistory, CustomTable
                               ProposalItem, GroupProposal)
 
 
+class UnitSerializerMixin:
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['unit'] = 'USD'
+        return data
+
+
 class PaymentHistorySerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
         model = PaymentHistory
@@ -21,14 +28,14 @@ class PaymentHistorySerializer(serializers.ModelSerializer, SerializerMixin):
         return super().create(validated_data)
 
 
-class ProposalItemSerializer(serializers.ModelSerializer):
+class ProposalItemSerializer(UnitSerializerMixin, serializers.ModelSerializer):
 
     class Meta:
         model = ProposalItem
         fields = ('id', 'type', 'owner_price', 'amount_paid', 'unit', 'formula', 'percentage_payment')
 
 
-class GroupProposalSerializer(serializers.ModelSerializer):
+class GroupProposalSerializer(UnitSerializerMixin, serializers.ModelSerializer):
     items = ProposalItemSerializer('group_proposal', many=True, allow_null=True, required=False)
 
     class Meta:
@@ -56,14 +63,14 @@ class GroupProposalSerializer(serializers.ModelSerializer):
         return instance
 
 
-class ChangeOrderItemSerializer(serializers.ModelSerializer):
+class ChangeOrderItemSerializer(UnitSerializerMixin, serializers.ModelSerializer):
 
     class Meta:
         model = ChangeOrderItem
         fields = ('id', 'type', 'owner_price', 'amount_paid', 'unit', 'formula', 'percentage_payment')
 
 
-class GroupChangeOrderSerializer(serializers.ModelSerializer):
+class GroupChangeOrderSerializer(UnitSerializerMixin, serializers.ModelSerializer):
     items = ChangeOrderItemSerializer('group_change_order', many=True, allow_null=True, required=False)
 
     class Meta:

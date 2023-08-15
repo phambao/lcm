@@ -4,7 +4,8 @@ from rest_framework import serializers
 from base.utils import pop, extra_kwargs_for_base_model
 from base.tasks import activity_log
 from sales.models import ChangeOrder, GroupEstimate, FlatRate, GroupFlatRate
-from sales.serializers.estimate import EstimateTemplateSerializer, POFormulaDataSerializer
+from sales.serializers.estimate import EstimateTemplateSerializer, POFormulaDataSerializer, \
+    POFormulaForInvoiceSerializer
 
 
 class GroupEstimateSerializer(serializers.ModelSerializer):
@@ -127,6 +128,20 @@ class ChangeOrderSerializer(serializers.ModelSerializer):
         return data
 
 
+class FlatRateForInvoiceSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FlatRate
+        fields = ('id', 'name', 'cost')
+        extra_kwargs = {**extra_kwargs_for_base_model(), **{'group': {'read_only': True}}}
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['unit'] = 'USD'
+        data['invoice_overview'] = 0
+        return data
+
+
 class ChangeOrderForInvoice(serializers.ModelSerializer):
     class Meta:
         model = ChangeOrder
@@ -134,7 +149,7 @@ class ChangeOrderForInvoice(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['formula_groups'] = POFormulaDataSerializer(instance._get_formulas(), many=True).data
+        data['formula_groups'] = POFormulaForInvoiceSerializer(instance._get_formulas(), many=True).data
         data['flat_rate_groups'] = instance._get_flat_rate().values(
             'id', 'name', 'quantity', 'cost', 'charge', 'markup', 'unit'
         )

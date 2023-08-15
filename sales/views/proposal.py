@@ -11,7 +11,7 @@ from base.views.base import CompanyFilterMixin
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter, ProposalTemplateFilter
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, POFormula
 from sales.serializers.catalog import CatalogImageSerializer
-from sales.serializers.estimate import POFormulaDataSerializer
+from sales.serializers.estimate import POFormulaDataSerializer, POFormulaForInvoiceSerializer
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
     ProposalWritingCompactSerializer, ProposalTemplateHtmlCssSerializer, ProposalWritingDataSerializer
@@ -145,9 +145,12 @@ def get_image(request, pk):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & ProposalPermissions])
 def get_items(request, pk):
+    """
+    Get items for invoice
+    """
     proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
     items = proposal_writing._get_poformula()
-    data = POFormulaDataSerializer(items, context={'request': request}, many=True).data
+    data = POFormulaForInvoiceSerializer(items, context={'request': request}, many=True).data
     return Response(status=status.HTTP_200_OK, data=data)
 
 
