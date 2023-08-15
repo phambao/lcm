@@ -20,6 +20,13 @@ class UserInline(admin.TabularInline):
     fields = ["username", "first_name", "last_name", "email", "is_active"]
 
 
+class AnswerInline(admin.TabularInline):
+    model = Answer
+    extra = 0
+    can_delete = False
+    fields = ["question", "name"]
+
+
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ["company_name", "logo", "description", "address", "field", "country", "city", "state",
                     "business_phone", "zip_code", "size", "tax", "email", "cell_mail", "cell_phone", "created_date",
@@ -128,6 +135,15 @@ class UserAdmin(admin.ModelAdmin):
 class QuestionAdmin(admin.ModelAdmin):
     list_display = ('id', 'type', 'name')
     search_fields = ['name']
+    inlines = [AnswerInline]
+
+    def response_change(self, request, obj):
+        if getattr(self, 'formset_saved', True):
+            question_id = obj.pk
+            change_url = reverse('admin:base_question_change', args=[question_id])
+            return HttpResponseRedirect(change_url)
+
+        return super().response_change(request, obj)
 
 
 class AnswerAdmin(admin.ModelAdmin):
