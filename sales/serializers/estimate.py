@@ -140,10 +140,23 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
     POFormulaToDataEntry.objects.bulk_create(data)
 
 
+class POFormulaForInvoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = POFormula
+        fields = ('id', 'name', 'total_cost')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['unit'] = 'USD'
+        data['invoice_overview'] = 0
+        data['cost_type'] = []
+        return data
+
+
 class POFormulaDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = POFormula
-        fields = ('id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
+        fields = ('id', 'name', 'markup', 'charge', 'material', 'unit',
                   'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario',
                   'material_data_entry', 'formula_for_data_view', 'order')
 
