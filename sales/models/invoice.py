@@ -58,8 +58,9 @@ class ChangeOrderItem(BaseModel):
                                            related_name='items')
     type = models.CharField(max_length=128, blank=True, default='')
     owner_price = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
-    amount_paid = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    amount_paid = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)  # new invoice amount
     unit = models.CharField(blank=True, default='', max_length=32)
+    percentage_payment = models.IntegerField(blank=True, default=100)
 
 
 class GroupProposal(BaseModel):
@@ -83,6 +84,7 @@ class ProposalItem(BaseModel):
     owner_price = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
     amount_paid = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
     unit = models.CharField(blank=True, default='', max_length=32)
+    percentage_payment = models.IntegerField(blank=True, default=100)
 
 
 class Invoice(BaseModel):
