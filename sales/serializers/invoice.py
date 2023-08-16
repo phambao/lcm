@@ -7,7 +7,7 @@ from base.utils import pop
 from base.tasks import activity_log
 from .lead_schedule import EventForInvoiceSerializer
 from ..models.invoice import (Invoice, TableInvoice, PaymentHistory, CustomTable, GroupChangeOrder, ChangeOrderItem,
-                              ProposalItem, GroupProposal)
+                              ProposalItem, GroupProposal, ProgressPayment)
 
 
 class UnitSerializerMixin:
@@ -63,6 +63,14 @@ class GroupProposalSerializer(UnitSerializerMixin, serializers.ModelSerializer):
         return instance
 
 
+class ProgressPaymentSerializer(UnitSerializerMixin, serializers.ModelSerializer):
+
+    class Meta:
+        model = ProgressPayment
+        fields = ('id', 'name', 'cost_type', 'percentage_payment', 'total_amount', 'quantity',
+                  'unit', 'invoice_amount', 'items')
+
+
 class ChangeOrderItemSerializer(UnitSerializerMixin, serializers.ModelSerializer):
 
     class Meta:
@@ -109,6 +117,7 @@ class TableInvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
     customs = CustomTableSerializer('table_invoice', many=True, allow_null=True, required=False)
     group_change_orders = GroupChangeOrderSerializer('table_invoice', many=True, allow_null=True, required=False)
     group_proposal = GroupProposalSerializer('table_invoice', many=True, allow_null=True, required=False)
+    progress_payment = ProgressPaymentSerializer('table_invoice', allow_null=True, required=False)
 
     class Meta:
         model = TableInvoice
@@ -132,43 +141,53 @@ class TableInvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
             serializer.is_valid(raise_exception=True)
             serializer.save(table_invoice=instance)
 
+    def create_progress_payment(self, progress_payment, instance):
+        if progress_payment:
+            serializer = ProgressPaymentSerializer(data=progress_payment, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(table_invoice=instance)
+
     def create(self, validated_data):
         customs = pop(validated_data, 'customs', [])
         group_change_orders = pop(validated_data, 'group_change_orders', [])
         group_proposal = pop(validated_data, 'group_proposal', [])
+        progress_payment = pop(validated_data, 'progress_payment', {})
         instance = super().create(validated_data)
         self.create_custom_table(customs, instance)
         self.create_group_change_orders(group_change_orders, instance)
         self.create_group_proposal(group_proposal, instance)
+        self.create_progress_payment(progress_payment, instance)
         return instance
 
     def update(self, instance, validated_data):
         customs = pop(validated_data, 'customs', [])
         group_change_orders = pop(validated_data, 'group_change_orders', [])
         group_proposal = pop(validated_data, 'group_proposal', [])
+        progress_payment = pop(validated_data, 'progress_payment', {})
         instance = super().update(instance, validated_data)
         instance.customs.all().delete()
         instance.group_change_orders.all().delete()
         instance.group_proposal.all().delete()
+        instance.progress_payment.all().delete()
         self.create_group_change_orders(group_change_orders, instance)
         self.create_custom_table(customs, instance)
         self.create_group_proposal(group_proposal, instance)
+        self.create_progress_payment(progress_payment, instance)
         return instance
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if self.is_param_exist('pk'):
-            pass
         return data
 
 
 class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
     tables = TableInvoiceSerializer('invoice', many=True, required=False, allow_null=True)
+    payment_histories = PaymentHistorySerializer('invoice', many=True, required=False, allow_null=True)
 
     class Meta:
         model = Invoice
         fields = ('id', 'name', 'tables', 'date_paid', 'status', 'deadline', 'deadline_date',
-                  'deadline_time', 'comment', 'note', 'proposal', 'link_to_event')
+                  'deadline_time', 'comment', 'note', 'proposal', 'link_to_event', 'payment_histories')
 
     def create_talbes(self, instance, tables):
         for table in tables:
@@ -176,19 +195,31 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
             serializer.is_valid(raise_exception=True)
             obj = serializer.save(invoice=instance)
 
+    def create_payment_history(self, instance, payment_histories):
+        for ph in payment_histories:
+            user = pop(ph, 'received_by', None)
+            serializer = PaymentHistorySerializer(data=ph, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save(invoice=instance, received_by=user)
+
     def create(self, validated_data):
         tables = pop(validated_data, 'tables', [])
+        payment_histories = pop(validated_data, 'payment_histories', [])
         instance = super().create(validated_data)
         self.create_talbes(instance, tables)
+        self.create_payment_history(instance, payment_histories)
         activity_log.delay(ContentType.objects.get_for_model(Invoice).pk, instance.pk, 1,
                            InvoiceSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
         tables = pop(validated_data, 'tables', [])
+        payment_histories = pop(validated_data, 'payment_histories', [])
         instance = super().update(instance, validated_data)
         instance.tables.all().delete()
+        instance.payment_histories.all().delete()
         self.create_talbes(instance, tables)
+        self.create_payment_history(instance, payment_histories)
         activity_log.delay(ContentType.objects.get_for_model(Invoice).pk, instance.pk, 2,
                            InvoiceSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
@@ -196,11 +227,8 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(Invoice).pk
-        if self.is_param_exist('pk'):
-            # if instance.proposal:
-            #     data['proposal'] = ProposalWritingSerializer(instance.proposal).data
-            if instance.link_to_event:
-                data['link_to_event'] = EventForInvoiceSerializer(instance.link_to_event).data
+        if instance.link_to_event:
+            data['link_to_event'] = EventForInvoiceSerializer(instance.link_to_event).data
         return data
 
 
