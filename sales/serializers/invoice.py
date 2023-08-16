@@ -142,15 +142,16 @@ class TableInvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
             serializer.save(table_invoice=instance)
 
     def create_progress_payment(self, progress_payment, instance):
-        serializer = ProgressPaymentSerializer(data=progress_payment, context=self.context)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(table_invoice=instance)
+        if progress_payment:
+            serializer = ProgressPaymentSerializer(data=progress_payment, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(table_invoice=instance)
 
     def create(self, validated_data):
         customs = pop(validated_data, 'customs', [])
         group_change_orders = pop(validated_data, 'group_change_orders', [])
         group_proposal = pop(validated_data, 'group_proposal', [])
-        progress_payment = pop(validated_data, 'progress_payment', [])
+        progress_payment = pop(validated_data, 'progress_payment', {})
         instance = super().create(validated_data)
         self.create_custom_table(customs, instance)
         self.create_group_change_orders(group_change_orders, instance)
@@ -162,7 +163,7 @@ class TableInvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
         customs = pop(validated_data, 'customs', [])
         group_change_orders = pop(validated_data, 'group_change_orders', [])
         group_proposal = pop(validated_data, 'group_proposal', [])
-        progress_payment = pop(validated_data, 'progress_payment', [])
+        progress_payment = pop(validated_data, 'progress_payment', {})
         instance = super().update(instance, validated_data)
         instance.customs.all().delete()
         instance.group_change_orders.all().delete()
