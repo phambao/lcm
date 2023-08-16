@@ -294,7 +294,7 @@ def webhook_received(request):
             }
             customer = stripe.Customer.retrieve(customer_stripe_id)
             jwt_token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-            registration_link = f'{settings.BASE_URL}/register/&link={jwt_token.decode()}'
+            registration_link = f'{settings.BASE_URL}/register/?link={jwt_token.decode()}'
             content = render_to_string('auth/link-create-account.html', {'registration_link': registration_link})
             celery_send_mail.delay(f'Create account',
                                    content, settings.EMAIL_HOST_USER, [customer.email], False)
