@@ -156,7 +156,17 @@ def create_subscription(request):
     # customer_id = request.COOKIES.get('customer')
     price_id = data['price_id']
     customer_id = data['customer_id']
+    promotion_code = data.get('coupon_code')
     try:
+        promotion_codes = stripe.PromotionCode.list()
+        coupon_id = None
+        for code in promotion_codes.data:
+            if code.code == promotion_code:
+                coupon_id = code.coupon.id
+                break
+
+        if coupon_id is None:
+            return Response({'error': {'message': 'Invalid promotion code'}}, status=400)
         subscription = stripe.Subscription.create(
             customer=customer_id,
             items=[{
@@ -164,6 +174,7 @@ def create_subscription(request):
             }],
             payment_behavior='default_incomplete',
             expand=['latest_invoice.payment_intent'],
+            coupon=coupon_id
         )
         return Response({'subscription_id': subscription.id,
                         'client_secret': subscription.latest_invoice.payment_intent.client_secret})
