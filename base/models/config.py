@@ -94,6 +94,9 @@ class CompanyAnswerQuestion(models.Model):
 class PersonalInformation(models.Model):
     class Meta:
         db_table = 'personal_information'
+
+    first_name = models.CharField(max_length=128, blank=True)
+    last_name = models.CharField(max_length=128, blank=True)
     fullname = models.CharField(max_length=128, blank=True)
     phone_number = models.CharField(blank=True, max_length=20)
     email = models.EmailField(blank=True, max_length=128)
