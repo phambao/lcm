@@ -142,9 +142,10 @@ class TableInvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
             serializer.save(table_invoice=instance)
 
     def create_progress_payment(self, progress_payment, instance):
-        serializer = ProgressPaymentSerializer(data=progress_payment, context=self.context)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(table_invoice=instance)
+        if progress_payment:
+            serializer = ProgressPaymentSerializer(data=progress_payment, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(table_invoice=instance)
 
     def create(self, validated_data):
         customs = pop(validated_data, 'customs', [])
