@@ -236,7 +236,7 @@ url_proposal = [
     path('proposal-writing/<int:pk>/change-order/', change_order.ChangeOrderFromProposalWritingList.as_view()),
     path('proposal-writing/<int:pk>/formatting/', proposal.proposal_formatting_view),
     path('proposal-writing/<int:pk>/reset-formatting/', proposal.reset_formatting),
-    path('proposal-writing/<int:pk>/data/', proposal.get_data),
+    path('proposal-writing/<int:pk>/table-formatting/', proposal.get_table_formatting),
     path('proposal-writing/<int:pk>/image/', proposal.get_image),
     path('formatting/', proposal.ProposalFormattingTemplateGenericView.as_view(), name='proposal-formatting'),
     path('view-proposal-formatting/<int:formatting_id>/', proposal.view_proposal_formatting),

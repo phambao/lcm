@@ -220,6 +220,16 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
                 data['group'] = group.pk
         return data
 
+    def validate_material(self, value):
+        if value:
+            try:
+                parsed_value = eval(value)
+                if not isinstance(parsed_value, dict):
+                    raise serializers.ValidationError("material is not valid")
+            except:
+                raise serializers.ValidationError("material is not valid")
+        return value
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         linked_descriptions = []

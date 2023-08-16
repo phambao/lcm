@@ -113,14 +113,26 @@ def get_html_css_by_template(request, *args, **kwargs):
 
 @api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated & ProposalPermissions])
-def get_data(request, pk):
+def get_table_formatting(request, pk):
+    """
+    Update row and column on proposal formatting
+
+    Parameters:
+
+        formulas: list id
+
+        show_fields: list str
+    """
+    data = {}
     if request.method == 'GET':
         proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
-        data = ProposalWritingDataSerializer(proposal_writing).data
+        data['formulas'] = ProposalWritingDataSerializer(proposal_writing).data
+        data['show_fields'] = proposal_writing.proposal_formatting.show_fields
 
     if request.method == 'PUT':
         """Update order po formula"""
-        ids = request.data
+        proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
+        ids = request.data.get('formulas')
         po_formulas = POFormula.objects.filter(id__in=ids)
         for po_formula in po_formulas:
             try:
@@ -128,7 +140,13 @@ def get_data(request, pk):
             except ValueError:
                 pass
         POFormula.objects.bulk_update(po_formulas, ['order'])
-        data = POFormulaDataSerializer(po_formulas.order_by('order'), context={'request': request}, many=True).data
+        data['formulas'] = POFormulaDataSerializer(po_formulas.order_by('order'), context={'request': request}, many=True).data
+
+        show_fields = request.data.get('show_fields')
+        proposal_formatting = proposal_writing.proposal_formatting
+        proposal_formatting.show_fields = show_fields
+        proposal_formatting.save()
+        data['show_fields'] = show_fields
 
     return Response(status=status.HTTP_200_OK, data=data)
 
