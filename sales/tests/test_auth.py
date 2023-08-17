@@ -7,7 +7,7 @@ from api.models import User
 class AuthTests(APITestCase):
     def setUp(self):
         User.objects.create_user(
-            username='admin', password='admin', email='admin@admin.com')
+            username='admin', password='admin', email='admin@admin.com', is_superuser=True)
 
     def test_auth(self):
         # register
