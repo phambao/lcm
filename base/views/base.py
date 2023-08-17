@@ -20,7 +20,7 @@ from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerialize
 from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer, \
     CompanySerializer, DivisionSerializer, QuestionSerializer, AnswerSerializer, CompanyAnswerQuestionSerializer, \
     CompanyAnswerQuestionResSerializer
-from api.models import ActivityLog, CompanyBuilder, DivisionCompany
+from api.models import ActivityLog, CompanyBuilder, DivisionCompany, Action
 
 
 class ContentTypeList(generics.ListAPIView):
@@ -333,12 +333,57 @@ class FileMessageTodoGenericView(GenericViewSet):
         return Response(status=status.HTTP_200_OK, data=data)
 
 
+def log_delete_action(objs, content_type):
+    ActivityLog.objects.bulk_create(
+        [
+            ActivityLog(content_type=content_type, content_object=obj, object_id=obj.pk,
+                        action=Action.DELETE, last_state={}, next_state={})
+            for obj in objs
+        ]
+    )
+
+
 @api_view(['DELETE'])
 @permission_classes([permissions.IsAuthenticated])
 def delete_models(request, content_type):
+    from sales import models
     ids = request.data
-    model = ContentType.objects.get_for_id(content_type)
-    deleted_data = model.model_class().objects.filter(pk__in=ids).delete()
+    model = ContentType.objects.get_for_id(content_type).model_class()
+    deleted_data = model.objects.filter(pk__in=ids)
+    can_delete = False
+    if model in [models.EstimateTemplate, models.Assemble, models.POFormula, models.DataEntry, models.UnitLibrary, models.DescriptionLibrary]:
+        if request.user.has_perm('sales.delete_estimatetemplate'):
+            can_delete = True
+
+    elif model in [models.PriceComparison, models.ProposalWriting, models.ProposalTemplate]:
+        if request.user.has_perm('sales.delete_proposalwriting'):
+            can_delete = True
+
+    elif model in [models.ChangeOrder]:
+        if request.user.has_perm('sales.delete_changeorder'):
+            can_delete = True
+
+    elif model in [models.Invoice]:
+        if request.user.has_perm('sales.delete_invoice'):
+            can_delete = True
+
+    elif model in [models.ScheduleEvent, models.ToDo, models.DailyLog]:
+        if request.user.has_perm('sales.delete_scheduleevent'):
+            can_delete = True
+
+    elif model in [models.Catalog, models.CatalogLevel]:
+        if request.user.has_perm('sales.delete_catalog'):
+            can_delete = True
+
+    elif model in [models.Catalog, models.LeadDetail]:
+        if request.user.has_perm('sales.delete_leaddetail'):
+            can_delete = True
+    else:
+        can_delete = True
+
+    if can_delete:
+        log_delete_action(deleted_data, ContentType.objects.get_for_model(model))
+        deleted_data.delete()
     return Response(status=status.HTTP_204_NO_CONTENT, data=deleted_data)
 
 
