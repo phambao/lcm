@@ -86,6 +86,8 @@ class ProposalWriting(BaseModel):
     estimated_end_date = models.DateTimeField(blank=True, null=True, default=timezone.now)
     additional_information = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
+    lead = models.ForeignKey('sales.LeadDetail', on_delete=models.SET_NULL, blank=True, null=True, related_name='proposals')
+
     def __str__(self):
         return self.name
 

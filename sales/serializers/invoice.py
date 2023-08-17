@@ -6,8 +6,8 @@ from api.serializers.base import SerializerMixin
 from base.utils import pop
 from base.tasks import activity_log
 from .lead_schedule import EventForInvoiceSerializer
-from ..models.invoice import (Invoice, TableInvoice, PaymentHistory, CustomTable, GroupChangeOrder, ChangeOrderItem,
-                              ProposalItem, GroupProposal, ProgressPayment)
+from ..models import (Invoice, TableInvoice, PaymentHistory, CustomTable, GroupChangeOrder, ChangeOrderItem,
+                      ProposalWriting, ProposalItem, GroupProposal, ProgressPayment)
 
 
 class UnitSerializerMixin:
@@ -240,4 +240,16 @@ class InvoicePaymentSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['payments'] = PaymentHistorySerializer(instance.payment_histories.all(), many=True, context=self.context).data
+        return data
+
+
+class ProposalForInvoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProposalWriting
+        fields = ('id', 'name', 'created_date', 'lead', 'total_project_price', 'total_project_cost')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['status'] = 'Approved'
+        data['owner_price'] = instance.total_project_price
         return data

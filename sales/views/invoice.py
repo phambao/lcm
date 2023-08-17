@@ -3,7 +3,8 @@ from rest_framework import generics, permissions
 from base.permissions import InvoicePermissions
 from base.views.base import CompanyFilterMixin
 from sales.models import Invoice, PaymentHistory
-from sales.serializers.invoice import InvoiceSerializer, PaymentHistorySerializer, InvoicePaymentSerializer
+from sales.serializers.invoice import InvoiceSerializer, PaymentHistorySerializer, InvoicePaymentSerializer, \
+    ProposalForInvoiceSerializer
 from sales.views.proposal import ProposalWritingCompactList
 
 
@@ -26,7 +27,7 @@ class InvoiceDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestro
 
 
 class InvoiceProposal(ProposalWritingCompactList):
-    pass
+    serializer_class = ProposalForInvoiceSerializer
 
 
 class PaymentListView(CompanyFilterMixin, generics.ListCreateAPIView):
