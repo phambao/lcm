@@ -30,8 +30,8 @@ class CacheRequestMiddleware:
         response = self.get_response(request)
 
         # All lru objects cleared
-        from sales.models.catalog import Catalog
-        Catalog().get_full_ancestor.cache_clear()
+        # from sales.models.catalog import Catalog
+        # Catalog().get_full_ancestor.cache_clear()
 
         # Code to be executed for each request/response after
         # the view is called.
