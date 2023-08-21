@@ -1,5 +1,6 @@
 import uuid
 
+from django.utils import timezone
 from django.utils.translation import gettext  as _
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
@@ -12,11 +13,12 @@ from rest_framework import generics, permissions, status
 from django_filters import rest_framework as filters
 from rest_framework.viewsets import GenericViewSet
 
+from api.middleware import get_request
 from api.serializers.base import ActivityLogSerializer
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter
 from ..models.config import Column, Search, Config, GridSetting, FileBuilder365, Question, Answer, CompanyAnswerQuestion
 from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerializer, \
-    FileBuilder365ResSerializer
+    FileBuilder365ResSerializer, DeleteDataSerializer
 from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer, \
     CompanySerializer, DivisionSerializer, QuestionSerializer, AnswerSerializer, CompanyAnswerQuestionSerializer, \
     CompanyAnswerQuestionResSerializer
@@ -334,10 +336,11 @@ class FileMessageTodoGenericView(GenericViewSet):
 
 
 def log_delete_action(objs, content_type):
+    company = get_request().user.company
     ActivityLog.objects.bulk_create(
         [
             ActivityLog(content_type=content_type, content_object=obj, object_id=obj.pk,
-                        action=Action.DELETE, last_state={}, next_state={})
+                        action=Action.DELETE, last_state=DeleteDataSerializer(obj).data, next_state={}, company=company)
             for obj in objs
         ]
     )
