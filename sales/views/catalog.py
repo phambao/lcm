@@ -304,7 +304,7 @@ def parse_c_table(children):
     for child in children:
         try:
             try:
-                ancestor = child.get_full_ancestor()
+                ancestor = child.get_full_ancestor
                 levels = [CatalogEstimateSerializer(c).data for c in ancestor[::-1]]
             except:
                 levels = []

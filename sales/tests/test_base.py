@@ -10,7 +10,7 @@ class BaseTest(APITestCase):
     def setUpClass(cls):
         super().setUpClass()
         user = User.objects.create_user(username='tester', email='test@example.com', last_name='test',
-                                        first_name='test')
+                                        first_name='test', is_superuser=True)
         user.set_password('1')
         user.save()
         cls.response = Client().post('/api/login',

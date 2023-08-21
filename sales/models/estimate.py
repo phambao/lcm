@@ -60,7 +60,7 @@ class POFormula(BaseModel):
         try:
             pk_catalog, _ = self.parse_material()
             catalog = Catalog.objects.get(pk=pk_catalog)
-            return catalog.get_full_ancestor()
+            return catalog.get_full_ancestor
         except:
             return []
 
