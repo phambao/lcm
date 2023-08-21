@@ -134,4 +134,4 @@ class CompanyAnswerQuestionResSerializer(serializers.ModelSerializer):
 class PersonalInformationSerializer(serializers.ModelSerializer):
     class Meta:
         model = PersonalInformation
-        fields = ('id', 'fullname', 'phone_number', 'email', 'position', 'address', 'company', 'first_name', 'last_name')
+        fields = ('id', 'fullname', 'phone_number', 'email', 'position', 'address', 'company', 'first_name', 'last_name', 'nick_name')

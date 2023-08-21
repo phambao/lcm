@@ -13,7 +13,7 @@ from base.views.base import update_language_user, QuestionGenericView, QuestionD
 from base.views.payment import stripe_webhook_view, ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
     stripe_cancel_subscription, get_config, create_customer, create_subscription, cancel_subscription, \
     list_subscriptions, preview_invoice, update_subscription, webhook_received, PaymentHistoryStripePreview, \
-    preview_subscription
+    preview_subscription, check_promotion_code
 
 url_base = [
     path('location/',
@@ -57,6 +57,7 @@ url_base = [
     path('payment/stripe/config/', get_config),
     path('payment/stripe/create-customer/', create_customer),
     path('payment/stripe/create-subscription/', create_subscription),
+    path('payment/stripe/check-promotion-code/', check_promotion_code),
     path('payment/stripe/cancel-subscription/', cancel_subscription),
     path('payment/stripe/subscriptions/', list_subscriptions),
     path('payment/stripe/subscription/<str:subscription_id>/', preview_subscription),

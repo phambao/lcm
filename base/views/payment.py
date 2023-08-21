@@ -1,3 +1,5 @@
+import datetime
+
 from django.conf import settings
 from django.http import HttpResponse
 from django.template.loader import render_to_string
@@ -98,7 +100,6 @@ def stripe_webhook_view(request):
     if event['type'] == 'customer.created':
         pass
     if event['type'] == 'invoice.created':
-
         customer_id = event['data']['object']['customer']
         stripe.Customer.delete(customer_id)
     return HttpResponse(status=200)
@@ -150,6 +151,24 @@ def create_customer(request):
 
 
 @api_view(['POST'])
+def check_promotion_code(request):
+    data = request.data
+    promotion_code = data.get('coupon_code')
+    try:
+        promotion_codes = stripe.PromotionCode.list()
+        coupon_id = None
+        for code in promotion_codes:
+            if code.code == promotion_code and code.active is True:
+                if code.coupon.valid is True:
+                    coupon_id = code
+        if coupon_id is None:
+            return Response({'error': {'message': 'Invalid promotion code'}}, status=400)
+        return Response({'promotion': coupon_id})
+    except Exception as e:
+        return Response({'error': {'message': str(e)}}, status=400)
+
+
+@api_view(['POST'])
 @csrf_exempt
 def create_subscription(request):
     data = request.data
@@ -189,7 +208,7 @@ def create_subscription(request):
                 coupon=coupon_id
             )
             return Response({'subscription_id': subscription.id,
-                            'client_secret': subscription.latest_invoice.payment_intent.client_secret})
+                             'client_secret': subscription.latest_invoice.payment_intent.client_secret})
     except Exception as e:
         return Response({'error': {'message': str(e)}}, status=400)
 
