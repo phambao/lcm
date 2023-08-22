@@ -1,9 +1,10 @@
-from datetime import timedelta, datetime, timezone
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
 from knox.models import AuthToken
@@ -145,7 +146,7 @@ def check_private_code_create(request):
     time_delta = timedelta(minutes=1, seconds=30)
     try:
         user = get_user_model().objects.get(email=email, create_code=code)
-        if user.expires + time_delta < datetime.now(timezone.utc):
+        if user.expire_code_register + time_delta < timezone.now():
             return Response(status=status.HTTP_400_BAD_REQUEST, data={"code": "code is not valid"})
         user.is_active = True
         user.token = default_token_generator.make_token(user)
@@ -165,7 +166,7 @@ def resend_mail(request):
     try:
         user = get_user_model().objects.get(email=email)
         user.create_code = code
-        user.expires = datetime.now()
+        user.expire_code_register = timezone.now()
         user.save()
         content = render_to_string('auth/create-user-otp.html', {'username': user.get_username(),
                                                                  'otp': user.create_code})

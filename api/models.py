@@ -20,7 +20,7 @@ class User(AbstractUser):
     stripe_customer = models.CharField(max_length=100, default=uuid.uuid4)
     is_admin_company = models.BooleanField(default=False, blank=True)
     create_code = models.IntegerField(blank=True, null=True)
-    expires = models.DateTimeField(auto_now=True)
+    expire_code_register = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.email
