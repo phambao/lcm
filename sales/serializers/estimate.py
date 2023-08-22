@@ -191,6 +191,7 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
     def create(self, validated_data):
         data_entries = pop(validated_data, 'self_data_entries', [])
         validated_data = self.reparse(validated_data)
+        pop(validated_data, 'id', None)
         instance = super().create(validated_data)
         create_po_formula_to_data_entry(instance, data_entries)
 
