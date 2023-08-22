@@ -76,6 +76,7 @@ url_leads = [
 # Define Path for Catalog -------------------------------------------------------
 url_catalog = [
     path('list/', catalog.CatalogList.as_view(), name='catalogs'),
+    path('list/export/', catalog.export_catalog),
     path('list/<int:pk>/', catalog.CatalogDetail.as_view()),
     path('list/<int:pk>/data-points/', catalog.get_datapoint_by_catalog),
     path('list/<int:pk>/children/', catalog.get_catalog_children),

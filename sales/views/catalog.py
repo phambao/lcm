@@ -1,15 +1,20 @@
+import io
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Value
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django_filters import rest_framework as filters
+from openpyxl.workbook import Workbook
 from rest_framework import generics, permissions, status, filters as rf_filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from base.permissions import CatalogPermissions
 from ..filters.catalog import CatalogFilter
-from ..models.catalog import Catalog, CatalogLevel, DataPointUnit
+from ..models.catalog import Catalog, CatalogLevel, DataPointUnit, DataPoint
 from ..serializers import catalog
 from ..serializers.catalog import CatalogEstimateSerializer
 from api.middleware import get_request
@@ -339,3 +344,42 @@ def get_materials(request):
     children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
     data = parse_c_table(children)
     return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
+def export_catalog(request):
+    workbook = Workbook()
+
+    catalog_sheet = workbook.create_sheet(title='Catalog')
+    level_sheet = workbook.create_sheet(title='Level')
+    data_points_sheet = workbook.create_sheet(title='Data Point')
+
+    catalog_fields = ['id', 'sequence', 'name', 'is_ancestor', 'c_table', 'icon', 'level', 'level_index']
+    catalog_sheet.append(catalog_fields)
+    catalogs = Catalog.objects.filter(company=request.user.company).values_list(*catalog_fields)
+    for c in catalogs:
+        c = list(c)
+        c[catalog_fields.index('c_table')] = str(c[catalog_fields.index('c_table')])
+        catalog_sheet.append(c)
+
+    level_fields = ['id', 'name', 'parent']
+    level_sheet.append(level_fields)
+    levels = CatalogLevel.objects.filter(company=request.user.company).values_list(*level_fields)
+    for l in levels:
+        level_sheet.append(l)
+
+    point_fields = ['id', 'value', 'unit', 'linked_description', 'catalog', 'unit__name']
+    data_points_sheet.append(point_fields)
+    data_points = DataPoint.objects.filter(company=request.user.company).values_list(*point_fields)
+    for data in data_points:
+        data_points_sheet.append(data)
+
+    workbook.remove(workbook['Sheet'])
+    current_datetime = timezone.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"Catalog_{current_datetime}.xlsx"
+    output = io.BytesIO()
+    workbook.save(output)
+    output.seek(0)
+    response = FileResponse(output, as_attachment=True, filename=filename)
+    return response
