@@ -1,7 +1,10 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
 from knox.models import AuthToken
@@ -140,14 +143,37 @@ def check_private_code_create(request):
     code = request.data.get('code')
     serializer = CheckCodeSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-
+    time_delta = timedelta(minutes=1, seconds=30)
     try:
         user = get_user_model().objects.get(email=email, create_code=code)
+        if user.expire_code_register + time_delta < timezone.now():
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={"code": "code is not valid"})
         user.is_active = True
         user.token = default_token_generator.make_token(user)
         user.save()
     except get_user_model().DoesNotExist:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"email": "Email or code is not valid"})
+    data = UserSerializer(user, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data={'user': data})
+
+
+@api_view(['POST'])
+def resend_mail(request):
+    email = request.data.get('email')
+    serializer = ForgotPasswordSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    code = get_random_string(length=6, allowed_chars='1234567890')
+    try:
+        user = get_user_model().objects.get(email=email)
+        user.create_code = code
+        user.expire_code_register = timezone.now()
+        user.save()
+        content = render_to_string('auth/create-user-otp.html', {'username': user.get_username(),
+                                                                 'otp': user.create_code})
+        celery_send_mail.delay(f'Create account for {user.get_username()}',
+                               content, settings.EMAIL_HOST_USER, [email], False)
+    except get_user_model().DoesNotExist:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={"email": "Email is not valid"})
     data = UserSerializer(user, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data={'user': data})
 

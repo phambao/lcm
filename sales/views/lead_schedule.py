@@ -1,6 +1,5 @@
 import datetime
 import uuid
-from datetime import datetime
 
 import pytz
 from django.core.files.base import ContentFile
