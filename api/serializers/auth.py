@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.utils.crypto import get_random_string
@@ -82,6 +84,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.first_name = validated_data['first_name']
         user.is_active = False
         user.create_code = code
+        user.expires = datetime.datetime.now()
         user.save()
         content = render_to_string('auth/create-user-otp.html', {'username': user.get_username(),
                                                                  'otp': user.create_code})

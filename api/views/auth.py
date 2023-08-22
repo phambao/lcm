@@ -1,3 +1,5 @@
+from datetime import timedelta, datetime, timezone
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
@@ -140,14 +142,37 @@ def check_private_code_create(request):
     code = request.data.get('code')
     serializer = CheckCodeSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-
+    time_delta = timedelta(minutes=1, seconds=30)
     try:
         user = get_user_model().objects.get(email=email, create_code=code)
+        if user.expires + time_delta < datetime.now(timezone.utc):
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={"code": "code is not valid"})
         user.is_active = True
         user.token = default_token_generator.make_token(user)
         user.save()
     except get_user_model().DoesNotExist:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"email": "Email or code is not valid"})
+    data = UserSerializer(user, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data={'user': data})
+
+
+@api_view(['POST'])
+def resend_mail(request):
+    email = request.data.get('email')
+    serializer = ForgotPasswordSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    code = get_random_string(length=6, allowed_chars='1234567890')
+    try:
+        user = get_user_model().objects.get(email=email)
+        user.create_code = code
+        user.expires = datetime.now()
+        user.save()
+        content = render_to_string('auth/create-user-otp.html', {'username': user.get_username(),
+                                                                 'otp': user.create_code})
+        celery_send_mail.delay(f'Create account for {user.get_username()}',
+                               content, settings.EMAIL_HOST_USER, [email], False)
+    except get_user_model().DoesNotExist:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={"email": "Email is not valid"})
     data = UserSerializer(user, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data={'user': data})
 
