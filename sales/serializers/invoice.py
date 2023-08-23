@@ -188,7 +188,8 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
         model = Invoice
         fields = ('id', 'name', 'tables', 'date_paid', 'status', 'deadline', 'deadline_date',
-                  'deadline_time', 'comment', 'note', 'proposal', 'link_to_event', 'payment_histories')
+                  'deadline_time', 'comment', 'note', 'proposal', 'link_to_event', 'payment_histories', 'created_date')
+        read_only_fields = ('created_date', )
 
     def create_talbes(self, instance, tables):
         for table in tables:
