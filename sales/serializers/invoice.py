@@ -1,13 +1,14 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.generics import get_object_or_404
 
 from api.serializers.base import SerializerMixin
 from base.utils import pop
 from base.tasks import activity_log
-from .lead_schedule import EventForInvoiceSerializer
+from base.serializers import base
 from ..models import (Invoice, TableInvoice, PaymentHistory, CustomTable, GroupChangeOrder, ChangeOrderItem,
-                      ProposalWriting, ProposalItem, GroupProposal, ProgressPayment)
+                      ProposalWriting, ProposalItem, GroupProposal, ProgressPayment, LeadDetail)
 
 
 class UnitSerializerMixin:
@@ -253,3 +254,16 @@ class ProposalForInvoiceSerializer(serializers.ModelSerializer):
         data['status'] = 'Approved'
         data['owner_price'] = instance.total_project_price
         return data
+
+
+class LeadInvoiceSerializer(serializers.ModelSerializer):
+    city = base.IDAndNameSerializer(allow_null=True, required=False)
+    state = base.IDAndNameSerializer(allow_null=True, required=False)
+    country = base.IDAndNameSerializer(allow_null=True, required=False)
+
+    class Meta:
+        model = LeadDetail
+        fields = ('id', 'lead_title', 'country', 'city', 'state', 'street_address')
+
+    def create(self, validated_data):
+        raise MethodNotAllowed('POST')

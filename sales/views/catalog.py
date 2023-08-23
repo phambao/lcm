@@ -7,6 +7,7 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_filters import rest_framework as filters
+from openpyxl.reader.excel import load_workbook
 from openpyxl.workbook import Workbook
 from rest_framework import generics, permissions, status, filters as rf_filters
 from rest_framework.decorators import api_view, permission_classes
@@ -355,7 +356,7 @@ def export_catalog(request):
     level_sheet = workbook.create_sheet(title='Level')
     data_points_sheet = workbook.create_sheet(title='Data Point')
 
-    catalog_fields = ['id', 'sequence', 'name', 'is_ancestor', 'c_table', 'icon', 'level', 'level_index']
+    catalog_fields = ['id', 'sequence', 'name', 'is_ancestor', 'c_table', 'icon', 'level', 'level_index', 'parents']
     catalog_sheet.append(catalog_fields)
     catalogs = Catalog.objects.filter(company=request.user.company).values_list(*catalog_fields)
     for c in catalogs:
@@ -383,3 +384,12 @@ def export_catalog(request):
     output.seek(0)
     response = FileResponse(output, as_attachment=True, filename=filename)
     return response
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
+def import_catalog(request):
+    file = request.FILES['file']
+
+    workbook = load_workbook(file)
+    pass
