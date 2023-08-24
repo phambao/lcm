@@ -1,14 +1,22 @@
 version: "3.3"
 
 services:
+  loadbalancing:
+    image: nginx:latest
+    restart: always
+    volumes:
+      - ./nginx-loadbalancing.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "${DOCKER_BACKEND_PORT:-8300}:8300"
+    depends_on:
+      - api
+
   api:
     build: .
     restart: always
     volumes:
       - ./static:/static
       - .:/code
-    ports:
-      - "${DOCKER_BACKEND_PORT:-8300}:8000"
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
