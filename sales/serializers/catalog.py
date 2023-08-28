@@ -44,6 +44,37 @@ class CatalogLevelValueSerializer(serializers.ModelSerializer):
         return data
 
 
+class CatalogImportSerializer(serializers.ModelSerializer):
+    icon = serializers.CharField(allow_blank=True, allow_null=True, required=False, default='')
+
+    class Meta:
+        model = catalog.Catalog
+        fields = ['id', 'parents', 'level', 'sequence', 'name', 'is_ancestor', 'c_table', 'icon', 'level_index']
+
+    def validate_icon(self, value):
+        if not value:
+            value = ''
+        return value
+
+
+class DataPointImportSerializer(serializers.ModelSerializer):
+    value = serializers.CharField(allow_blank=True, allow_null=True, required=False, default='')
+    linked_description = serializers.CharField(allow_blank=True, allow_null=True, required=False, default='')
+    class Meta:
+        model = catalog.DataPoint
+        fields = ['id', 'unit', 'catalog', 'value', 'linked_description']
+
+    def validate_value(self, value):
+        if not value:
+            value = ''
+        return value
+
+    def validate_linked_description(self, value):
+        if not value:
+            value = ''
+        return value
+
+
 class CatalogSerializer(serializers.ModelSerializer):
     data_points = serializers.CharField(required=False, max_length=256, allow_blank=True)
     parent = serializers.IntegerField(allow_null=True, required=False)
