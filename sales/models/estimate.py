@@ -26,7 +26,6 @@ class POFormula(BaseModel):
 
     name = models.CharField(max_length=128)
     linked_description = models.TextField(blank=True, default='')
-    show_color = models.BooleanField(default=False)
     formula = models.TextField()
     group = models.ForeignKey('sales.POFormulaGrouping', blank=True, related_name='group_formulas', null=True, on_delete=models.SET_NULL)
     assemble = models.ForeignKey('sales.Assemble', blank=True, related_name='assemble_formulas', null=True, on_delete=models.SET_NULL)
@@ -142,6 +141,8 @@ class EstimateTemplate(BaseModel):
     note = models.TextField(blank=True, default='')
     changed_items = ArrayField(models.JSONField(blank=True, default=dict, null=True),
                                default=list, blank=True, null=True)  # change order
+    quantity = models.ForeignKey('sales.DataEntry', on_delete=models.CASCADE, null=False, blank=False)
+    unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.CASCADE, null=False, blank=False)
 
     def __str__(self):
         return self.name
