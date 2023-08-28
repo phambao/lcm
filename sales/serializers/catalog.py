@@ -56,6 +56,11 @@ class CatalogImportSerializer(serializers.ModelSerializer):
             value = ''
         return value
 
+    def create(self, validated_data):
+        if validated_data['c_table']:
+            validated_data['c_table'] = eval(validated_data['c_table'])
+        return super().create(validated_data)
+
 
 class DataPointImportSerializer(serializers.ModelSerializer):
     value = serializers.CharField(allow_blank=True, allow_null=True, required=False, default='')

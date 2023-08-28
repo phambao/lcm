@@ -7,7 +7,7 @@ from api.models import BaseModel
 
 
 class DataPointUnit(BaseModel):
-    name = models.CharField(max_length=128, unique=True)
+    name = models.CharField(max_length=128)
 
 
 class CatalogLevel(BaseModel):
