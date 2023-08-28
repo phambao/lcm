@@ -432,7 +432,7 @@ def import_catalog(request):
         serializer = CatalogImportSerializer(data=data, many=False)
         if serializer.is_valid(raise_exception=True):
             if row[catalog_level_field]:
-                mapping_data[f'catalog_{row[0]}'] = serializer.save(level=mapping_data[f'level_{row[catalog_level_field]}'])
+                mapping_data[f'catalog_{row[0]}'] = serializer.save(level=mapping_data.get(f'level_{row[catalog_level_field]}'))
             else:
                 mapping_data[f'catalog_{row[0]}'] = serializer.save()
 
@@ -451,20 +451,20 @@ def import_catalog(request):
     for row in level_sheet.iter_rows(min_row=2, values_only=True):
         level = mapping_data[f'level_{row[0]}']
         if row[level_catalog_field]:
-            level.catalog = mapping_data[f'catalog_{row[level_catalog_field]}']
+            level.catalog = mapping_data.get(f'catalog_{row[level_catalog_field]}')
         if row[level_parent_field]:
-            level.parent = mapping_data[f'level_{row[level_parent_field]}']
+            level.parent = mapping_data.get(f'level_{row[level_parent_field]}')
         level.save()
 
     for row in catalog_sheet.iter_rows(min_row=2, values_only=True):
         catalog = mapping_data[f'catalog_{row[0]}']
         if row[catalog_parent_field]:
-            catalog.parents.add(mapping_data[f'catalog_{row[catalog_parent_field]}'])
+            catalog.parents.add(mapping_data.get(f'catalog_{row[catalog_parent_field]}'))
 
     for row in data_point_sheet.iter_rows(min_row=2, values_only=True):
         data_point = mapping_data[f'data_point_{row[0]}']
         if row[data_point_catalog_field]:
-            data_point.catalog = mapping_data[f'catalog_{row[data_point_catalog_field]}']
+            data_point.catalog = mapping_data.get(f'catalog_{row[data_point_catalog_field]}')
         data_point.save()
 
     return Response(status=status.HTTP_200_OK)
