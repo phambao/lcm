@@ -59,7 +59,6 @@ class CatalogImportSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         if validated_data['c_table']:
             validated_data['c_table'] = eval(validated_data['c_table'])
-        print(validated_data['c_table'])
         return super().create(validated_data)
 
 
