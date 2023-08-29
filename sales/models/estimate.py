@@ -26,7 +26,7 @@ class POFormula(BaseModel):
 
     name = models.CharField(max_length=128)
     linked_description = models.TextField(blank=True, default='')
-    formula = models.TextField()
+    formula = models.TextField(blank=True)
     group = models.ForeignKey('sales.POFormulaGrouping', blank=True, related_name='group_formulas', null=True, on_delete=models.SET_NULL)
     assemble = models.ForeignKey('sales.Assemble', blank=True, related_name='assemble_formulas', null=True, on_delete=models.SET_NULL)
     created_from = models.IntegerField(default=None, blank=True, null=True)

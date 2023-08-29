@@ -8,7 +8,8 @@ from base.utils import pop
 from base.tasks import activity_log
 from base.serializers import base
 from ..models import (Invoice, TableInvoice, PaymentHistory, CustomTable, GroupChangeOrder, ChangeOrderItem,
-                      ProposalWriting, ProposalItem, GroupProposal, ProgressPayment, LeadDetail)
+                      ProposalWriting, ProposalItem, GroupProposal, ProgressPayment, LeadDetail, CreditMemoAmount,
+                      CreditMemo)
 
 
 class UnitSerializerMixin:
@@ -268,3 +269,35 @@ class LeadInvoiceSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         raise MethodNotAllowed('POST')
+
+
+class CreditMemoAmountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CreditMemoAmount
+        fields = ('id', 'name', 'cost_type', 'unit_amount', 'quantity', 'invoice_amount')
+
+
+class CreditMemoSerializer(serializers.ModelSerializer):
+    credit_memo_amounts = CreditMemoAmountSerializer('credit_memo', many=True, allow_null=True, required=False)
+
+    class Meta:
+        model = CreditMemo
+        fields = ('id', 'name', 'description', 'credit_memo_amounts')
+
+    def create_memo_amount(self, instance, credit_memo_amounts):
+        for credit_memo_amount in credit_memo_amounts:
+            serializer = CreditMemoAmountSerializer(data=credit_memo_amount, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save(credit_memo=instance)
+
+    def create(self, validated_data):
+        credit_memo_amounts = pop(validated_data, 'credit_memo_amounts', [])
+        instance = super().create(validated_data)
+        self.create_memo_amount(instance, credit_memo_amounts)
+        return instance
+
+    def update(self, instance, validated_data):
+        credit_memo_amounts = pop(validated_data, 'credit_memo_amounts', [])
+        instance.credit_memo_amounts.all().delete()
+        self.create_memo_amount(instance, credit_memo_amounts)
+        return super().update(instance, validated_data)
