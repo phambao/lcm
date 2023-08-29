@@ -381,7 +381,7 @@ class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProposalFormatting
-        fields = ('id', 'html_code', 'css_code', 'config', 'screen_shot', 'show_fields', 'script', 'element')
+        fields = ('id', 'html_code', 'css_code', 'config', 'screen_shot', 'show_fields', 'script', 'element', 'html_view')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

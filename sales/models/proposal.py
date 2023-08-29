@@ -144,6 +144,7 @@ class ProposalFormatting(BaseModel):
     has_send_mail = models.BooleanField(default=False, blank=True)
     has_signed = models.BooleanField(default=False, blank=True)
     element = models.TextField(blank=True, null=True, default='')
+    html_view = models.TextField(blank=True, null=True, default='')
 
 
 class ProposalFormattingConfig(BaseModel):
