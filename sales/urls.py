@@ -76,6 +76,8 @@ url_leads = [
 # Define Path for Catalog -------------------------------------------------------
 url_catalog = [
     path('list/', catalog.CatalogList.as_view(), name='catalogs'),
+    path('list/export/', catalog.export_catalog),
+    path('list/import/', catalog.import_catalog),
     path('list/<int:pk>/', catalog.CatalogDetail.as_view()),
     path('list/<int:pk>/data-points/', catalog.get_datapoint_by_catalog),
     path('list/<int:pk>/children/', catalog.get_catalog_children),
@@ -251,6 +253,7 @@ url_change_order = [
 
 url_invoice = [
     path('', invoice.InvoiceListView.as_view()),
+    path('lead/', invoice.LeadInvoiceList.as_view()),
     path('proposal/', invoice.InvoiceProposal.as_view()),
     path('<int:pk>/', invoice.InvoiceDetailGenericView.as_view()),
     path('<int:pk>/payment/', invoice.PaymentListView.as_view()),

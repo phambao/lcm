@@ -26,7 +26,6 @@ class POFormula(BaseModel):
 
     name = models.CharField(max_length=128)
     linked_description = models.TextField(blank=True, default='')
-    show_color = models.BooleanField(default=False)
     formula = models.TextField()
     group = models.ForeignKey('sales.POFormulaGrouping', blank=True, related_name='group_formulas', null=True, on_delete=models.SET_NULL)
     assemble = models.ForeignKey('sales.Assemble', blank=True, related_name='assemble_formulas', null=True, on_delete=models.SET_NULL)
@@ -60,7 +59,7 @@ class POFormula(BaseModel):
         try:
             pk_catalog, _ = self.parse_material()
             catalog = Catalog.objects.get(pk=pk_catalog)
-            return catalog.get_full_ancestor()
+            return catalog.get_full_ancestor
         except:
             return []
 
@@ -129,7 +128,7 @@ class EstimateTemplate(BaseModel):
     name = models.CharField(max_length=128)
     proposal_name = models.CharField(max_length=128, blank=True, default='')
     assembles = models.ManyToManyField(Assemble, related_name='estimate_templates', blank=True, )
-    contact_description = models.TextField(blank=True, default='')
+    contract_description = models.TextField(blank=True, default='')
     catalog_links = ArrayField(models.CharField(max_length=128, blank=True, default=''), default=list, blank=True)
     group_by_proposal = models.ForeignKey('sales.GroupByEstimate', on_delete=models.CASCADE,
                                           related_name='estimate_templates', null=True, blank=True)
@@ -142,6 +141,8 @@ class EstimateTemplate(BaseModel):
     note = models.TextField(blank=True, default='')
     changed_items = ArrayField(models.JSONField(blank=True, default=dict, null=True),
                                default=list, blank=True, null=True)  # change order
+    quantity = models.ForeignKey('sales.DataEntry', on_delete=models.CASCADE, null=True, blank=False, default=None)
+    unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.CASCADE, null=True, blank=False, default=None)
 
     def __str__(self):
         return self.name

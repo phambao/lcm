@@ -23,3 +23,8 @@ class FileBuilder365ResSerializer(serializers.ModelSerializer):
 
 class FileBuilder365ReqSerializer(serializers.Serializer):
     file = serializers.FileField()
+
+
+class DeleteDataSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    created_date = serializers.DateTimeField()

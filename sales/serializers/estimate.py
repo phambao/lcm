@@ -191,6 +191,7 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
     def create(self, validated_data):
         data_entries = pop(validated_data, 'self_data_entries', [])
         validated_data = self.reparse(validated_data)
+        pop(validated_data, 'id', None)
         instance = super().create(validated_data)
         create_po_formula_to_data_entry(instance, data_entries)
 
@@ -258,7 +259,7 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
                 data['material_value'] = primary_key
                 pk_catalog, row_index = primary_key.get('id').split(':')
                 catalog = Catalog.objects.get(pk=pk_catalog)
-                ancestors = catalog.get_full_ancestor()
+                ancestors = catalog.get_full_ancestor
                 ancestor = ancestors[-1]
                 data['catalog_ancestor'] = ancestor.pk
                 data['catalog_link'] = [CatalogEstimateSerializer(c).data for c in ancestors[::-1]]
@@ -645,7 +646,7 @@ class TaggingSerializer(serializers.Serializer):
             data['value'] = instance.value
             ancestors = []
             try:
-                ancestors = instance.catalog.get_full_ancestor()
+                ancestors = instance.catalog.get_full_ancestor
             except IndexError:
                 """If data point is in the first category's level"""
             data['ancestors'] = [CatalogEstimateSerializer(c).data for c in ancestors]

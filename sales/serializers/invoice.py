@@ -1,13 +1,14 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.generics import get_object_or_404
 
 from api.serializers.base import SerializerMixin
 from base.utils import pop
 from base.tasks import activity_log
-from .lead_schedule import EventForInvoiceSerializer
+from base.serializers import base
 from ..models import (Invoice, TableInvoice, PaymentHistory, CustomTable, GroupChangeOrder, ChangeOrderItem,
-                      ProposalWriting, ProposalItem, GroupProposal, ProgressPayment)
+                      ProposalWriting, ProposalItem, GroupProposal, ProgressPayment, LeadDetail)
 
 
 class UnitSerializerMixin:
@@ -187,7 +188,8 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
         model = Invoice
         fields = ('id', 'name', 'tables', 'date_paid', 'status', 'deadline', 'deadline_date',
-                  'deadline_time', 'comment', 'note', 'proposal', 'link_to_event', 'payment_histories')
+                  'deadline_time', 'comment', 'note', 'proposal', 'link_to_event', 'payment_histories', 'created_date')
+        read_only_fields = ('created_date', )
 
     def create_talbes(self, instance, tables):
         for table in tables:
@@ -227,8 +229,8 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(Invoice).pk
-        if instance.link_to_event:
-            data['link_to_event'] = EventForInvoiceSerializer(instance.link_to_event).data
+        # if instance.link_to_event:
+        #     data['link_to_event'] = EventForInvoiceSerializer(instance.link_to_event).data
         return data
 
 
@@ -253,3 +255,16 @@ class ProposalForInvoiceSerializer(serializers.ModelSerializer):
         data['status'] = 'Approved'
         data['owner_price'] = instance.total_project_price
         return data
+
+
+class LeadInvoiceSerializer(serializers.ModelSerializer):
+    city = base.IDAndNameSerializer(allow_null=True, required=False)
+    state = base.IDAndNameSerializer(allow_null=True, required=False)
+    country = base.IDAndNameSerializer(allow_null=True, required=False)
+
+    class Meta:
+        model = LeadDetail
+        fields = ('id', 'lead_title', 'country', 'city', 'state', 'street_address')
+
+    def create(self, validated_data):
+        raise MethodNotAllowed('POST')

@@ -1,12 +1,13 @@
 import copy
-from functools import lru_cache
 
 from django.db import models
+from django.utils.functional import cached_property
 
 from api.models import BaseModel
 
+
 class DataPointUnit(BaseModel):
-    name = models.CharField(max_length=128, unique=True)
+    name = models.CharField(max_length=128)
 
 
 class CatalogLevel(BaseModel):
@@ -131,7 +132,7 @@ class Catalog(BaseModel):
             return []
         return ancester
 
-    @lru_cache(128)
+    @cached_property
     def get_full_ancestor(self):
         ancestor = self.get_ancestors()
         first_ancestor = ancestor[-1]
