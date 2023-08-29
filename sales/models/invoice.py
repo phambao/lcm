@@ -118,3 +118,18 @@ class Invoice(BaseModel):
     comment = models.TextField(blank=True)
     note = models.TextField(blank=True)
     proposal = models.ForeignKey('sales.ProposalWriting', on_delete=models.CASCADE, related_name='invoices', blank=True, null=True)
+
+
+class CreditMemoAmount(BaseModel):
+    name = models.CharField(max_length=64)
+    cost_type = models.CharField(max_length=64)
+    unit_amount = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    quantity = models.IntegerField(blank=True, default=0, null=True)
+    invoice_amount = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    credit_memo = models.ForeignKey('sales.CreditMemo', blank=True, null=True,
+                                    related_name='credit_memo_amounts', on_delete=models.CASCADE)
+
+
+class CreditMemo(BaseModel):
+    name = models.CharField(max_length=64)
+    description = models.TextField(blank=True, default='')
