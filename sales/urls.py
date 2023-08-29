@@ -69,8 +69,8 @@ url_leads = [
     path('sources/<int:pk>/', lead_list.SourceLeadDetailGenericView.as_view()),
     path('leads/summary/', lead_list.get_summaries),
     path('leads/events/', lead_list.LeadEventList.as_view()),
-    path('export-data/', export_data),
-    path('import-data/', import_data),
+    path('export/', export_data),
+    path('import/', import_data),
 ]
 
 # Define Path for Catalog -------------------------------------------------------
