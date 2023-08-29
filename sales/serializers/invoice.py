@@ -282,7 +282,7 @@ class CreditMemoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CreditMemo
-        fields = ('id', 'name', 'credit_memo_amounts')
+        fields = ('id', 'name', 'description', 'credit_memo_amounts')
 
     def create_memo_amount(self, instance, credit_memo_amounts):
         for credit_memo_amount in credit_memo_amounts:
