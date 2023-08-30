@@ -275,6 +275,8 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
         original = data.get('original')
         if not original:
             data['original'] = instance.pk
+
+        data['status'] = instance.status()
         return data
 
 

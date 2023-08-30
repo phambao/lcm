@@ -55,7 +55,7 @@ class CreditMemoList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = CreditMemo.objects.all()
 
 
-class CreditMemoDetail(CompanyFilterMixin, generics.ListCreateAPIView):
+class CreditMemoDetail(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CreditMemoSerializer
     permission_classes = [permissions.IsAuthenticated & InvoicePermissions]
     queryset = CreditMemo.objects.all()

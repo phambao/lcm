@@ -81,6 +81,11 @@ class POFormula(BaseModel):
         markup = self._parse_value('Markup', self.markup)
         return [quantity, cost, charge, markup]
 
+    def status(self):
+        if self.material and self.formula and self.formula_mentions:
+            return True
+        return False
+
 
 class POFormulaToDataEntry(BaseModel):
     data_entry = models.ForeignKey(DataEntry, on_delete=models.CASCADE, blank=True, null=True)
