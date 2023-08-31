@@ -63,5 +63,5 @@ def address_search(request, *args, **kwargs):
         response = requests.get(url)
         return Response(status=response.status_code, data={'error': response.reason})
     except Exception as e:
-        return Response(status=status.HTTP_404_NOT_FOUND, data={'error': 'An error occurred'})
+        return Response(status=status.HTTP_404_NOT_FOUND, data={'error': 'get location error'})
 
