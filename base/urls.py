@@ -10,6 +10,7 @@ from base.views.base import update_language_user, QuestionGenericView, QuestionD
     AnswerDetailGenericView, CompanyAnswerQuestionSerializerGenericView, \
     CompanyAnswerQuestionSerializerDetailGenericView, create_question_answer_company, update_question_answer_company
 # Define path for Base App ------------------------------------------------------
+from base.views.country_state_city import address_search
 from base.views.payment import stripe_webhook_view, ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
     stripe_cancel_subscription, get_config, create_customer, create_subscription, cancel_subscription, \
     list_subscriptions, preview_invoice, update_subscription, webhook_received, PaymentHistoryStripePreview, \
@@ -27,6 +28,7 @@ url_base = [
              path('zipcodes/', country_state_city.Zipcode.as_view()),
          ])
          ),
+    path('location-google/<str:address>', address_search),
     path('content-type/', base.ContentTypeList.as_view()),
     path('search/', base.SearchLeadGenericView.as_view()),
     path('search/<int:pk>/', base.SearchLeadDetailGenericView.as_view()),
