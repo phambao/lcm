@@ -61,7 +61,11 @@ def address_search(request, *args, **kwargs):
     url = f'https://maps.googleapis.com/maps/api/geocode/json?address={address}&key={key}'
     try:
         response = requests.get(url)
-        return Response(status=response.status_code, data={'error': response.reason})
+        if response.status_code == status.HTTP_200_OK:
+            return Response(status=status.HTTP_200_OK, data=response.json())
+        else:
+            return Response(status=response.status_code, data={'error': response.reason})
+
     except Exception as e:
-        return Response(status=status.HTTP_404_NOT_FOUND, data={'error': 'get location error'})
+        return Response(status=status.HTTP_404_NOT_FOUND, data={'error': 'get data location error'})
 
