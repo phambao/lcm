@@ -61,6 +61,19 @@ class GroupFlatRateSerializer(serializers.ModelSerializer):
         return instance
 
 
+class ChangeOrderSerializerCompact(serializers.ModelSerializer):
+    class Meta:
+        model = ChangeOrder
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        proposal_writing = instance.proposal_writing
+        data['proposal_name'] = proposal_writing.name if proposal_writing else None
+        data['content_type'] = ContentType.objects.get_for_model(ChangeOrder).pk
+        return data
+
+
 class ChangeOrderSerializer(serializers.ModelSerializer):
     existing_estimates = EstimateTemplateSerializer('change_order', many=True, required=False, allow_null=True)
     groups = GroupEstimateSerializer('change_order', many=True, required=False, allow_null=True)
