@@ -61,39 +61,7 @@ def address_search(request, *args, **kwargs):
     url = f'https://maps.googleapis.com/maps/api/geocode/json?address={address}&key={key}'
     try:
         response = requests.get(url)
-        if response.status_code == status.HTTP_200_OK:
-            return Response(status=status.HTTP_200_OK, data=response.json())
-
-        elif response.status_code == status.HTTP_400_BAD_REQUEST:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': response.reason})
-
-        elif response.status_code == status.HTTP_403_FORBIDDEN:
-            return Response(status=status.HTTP_403_FORBIDDEN, data={'error': response.reason})
-
-        elif response.status_code == status.HTTP_409_CONFLICT:
-            return Response(status=status.HTTP_409_CONFLICT, data={'error': response.reason})
-
-        elif response.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
-            return Response(status=status.HTTP_429_TOO_MANY_REQUESTS, data={'error': response.reason})
-
-        elif response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={'error': response.reason})
-
-        elif response.status_code == status.HTTP_501_NOT_IMPLEMENTED:
-            return Response(status=status.HTTP_501_NOT_IMPLEMENTED, data={'error': response.reason})
-
-        elif response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
-            return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE, data={'error': response.reason})
-
-        elif response.status_code == status.HTTP_504_GATEWAY_TIMEOUT:
-            return Response(status=status.HTTP_504_GATEWAY_TIMEOUT, data={'error': response.reason})
-
-        elif response.status_code == status.HTTP_401_UNAUTHORIZED:
-            return Response(status=status.HTTP_401_UNAUTHORIZED, data={'error': response.reason})
-
-        elif response.status_code == status.HTTP_404_NOT_FOUND:
-            return Response(status=status.HTTP_404_NOT_FOUND, data={'error': response.reason})
-
+        return Response(status=response.status_code, data={'error': response.reason})
     except Exception as e:
         return Response(status=status.HTTP_404_NOT_FOUND, data={'error': 'An error occurred'})
 
