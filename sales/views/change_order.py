@@ -16,6 +16,12 @@ class ChangeOderList(CompanyFilterMixin, generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated & ChangeOrderPermissions]
 
 
+class ChangeOderListCompact(CompanyFilterMixin, generics.ListCreateAPIView):
+    queryset = ChangeOrder.objects.all().select_related('proposal_writing')
+    serializer_class = change_order.ChangeOrderSerializerCompact
+    permission_classes = [permissions.IsAuthenticated & ChangeOrderPermissions]
+
+
 class ChangeOderDetail(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = ChangeOrder.objects.all()
     serializer_class = change_order.ChangeOrderSerializer
