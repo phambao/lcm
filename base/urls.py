@@ -29,7 +29,7 @@ url_base = [
          ])
          ),
     path('location-google/', address_search),
-    path('location-google-detail/', detail_location),
+    path('location-google-detail/<str:place_id>/', detail_location),
     path('content-type/', base.ContentTypeList.as_view()),
     path('search/', base.SearchLeadGenericView.as_view()),
     path('search/<int:pk>/', base.SearchLeadDetailGenericView.as_view()),

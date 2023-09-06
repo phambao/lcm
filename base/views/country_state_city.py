@@ -73,10 +73,8 @@ def address_search(request, *args, **kwargs):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
-def detail_location(request, *args, **kwargs):
-    data = request.query_params
+def detail_location(request, place_id):
     try:
-        place_id = data['place_id']
         key = config('GOOGLE_MAPS_API_KEY')
         url = f'https://maps.googleapis.com/maps/api/geocode/json?place_id={place_id}&key={key}'
         response = requests.get(url)
