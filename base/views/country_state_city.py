@@ -56,10 +56,11 @@ class Zipcode(generics.ListAPIView):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def address_search(request, *args, **kwargs):
-    address = kwargs.get('address')
-    key = config('GOOGLE_MAPS_API_KEY')
-    url = f'https://maps.googleapis.com/maps/api/geocode/json?address={address}&key={key}'
+    data = request.query_params
     try:
+        address = data['address']
+        key = config('GOOGLE_MAPS_API_KEY')
+        url = f'https://maps.googleapis.com/maps/api/geocode/json?address={address}&key={key}'
         response = requests.get(url)
         if response.status_code == status.HTTP_200_OK:
             return Response(status=status.HTTP_200_OK, data=response.json())
@@ -69,3 +70,18 @@ def address_search(request, *args, **kwargs):
     except Exception as e:
         return Response(status=status.HTTP_404_NOT_FOUND, data={'error': 'get data location error'})
 
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def detail_location(request, place_id):
+    try:
+        key = config('GOOGLE_MAPS_API_KEY')
+        url = f'https://maps.googleapis.com/maps/api/geocode/json?place_id={place_id}&key={key}'
+        response = requests.get(url)
+        if response.status_code == status.HTTP_200_OK:
+            return Response(status=status.HTTP_200_OK, data=response.json())
+        else:
+            return Response(status=response.status_code, data={'error': response.reason})
+
+    except Exception as e:
+        return Response(status=status.HTTP_404_NOT_FOUND, data={'error': 'get data location error'})
