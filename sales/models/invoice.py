@@ -1,4 +1,6 @@
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
@@ -133,3 +135,18 @@ class CreditMemoAmount(BaseModel):
 class CreditMemo(BaseModel):
     name = models.CharField(max_length=64)
     description = models.TextField(blank=True, default='')
+
+
+class AttachmentInvoice(BaseModel):
+    file = models.CharField(max_length=128)
+    name = models.CharField(max_length=128)
+    size = models.IntegerField(blank=True, null=True)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, default=1)
+    object_id = models.PositiveIntegerField(default=1)
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    class Meta:
+        db_table = 'attachment_invoice'
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
