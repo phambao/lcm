@@ -1,7 +1,6 @@
 import copy
 
 from django.db import models
-from django.utils.functional import cached_property
 
 from api.models import BaseModel
 
@@ -132,7 +131,7 @@ class Catalog(BaseModel):
             return []
         return ancester
 
-    @cached_property
+    @lru_cache(128)
     def get_full_ancestor(self):
         ancestor = self.get_ancestors()
         first_ancestor = ancestor[-1]
