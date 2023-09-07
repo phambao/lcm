@@ -359,25 +359,34 @@ def get_materials(request):
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def export_catalog(request):
     workbook = Workbook()
+    catagory = request.GET.get('catagory')
 
     catalog_sheet = workbook.create_sheet(title=CATALOG_SHEET_NAME)
     level_sheet = workbook.create_sheet(title=LEVEL_SHEET_NAME)
     data_points_sheet = workbook.create_sheet(title=DATA_POINT_SHEET_NAME)
 
+    if catagory:
+        catalogs = Catalog.objects.get(company=request.user.company, id=catagory)
+        catalogs = Catalog.objects.filter(pk__in=catalogs.get_all_descendant(have_self=True))
+        data_points = DataPoint.objects.filter(company=request.user.company, catalog__in=catalogs).values_list(*DATA_POINT_FIELDS)
+        levels = CatalogLevel.objects.filter(company=request.user.company, catalog__in=catalogs).values_list(*LEVEL_FIELDS)
+        catalogs = catalogs.values_list(*CATALOG_FIELDS)
+    else:
+        catalogs = Catalog.objects.filter(company=request.user.company).values_list(*CATALOG_FIELDS)
+        levels = CatalogLevel.objects.filter(company=request.user.company).values_list(*LEVEL_FIELDS)
+        data_points = DataPoint.objects.filter(company=request.user.company).values_list(*DATA_POINT_FIELDS)
+
     catalog_sheet.append(CATALOG_FIELDS)
-    catalogs = Catalog.objects.filter(company=request.user.company).values_list(*CATALOG_FIELDS)
     for c in catalogs:
         c = list(c)
         c[CATALOG_FIELDS.index('c_table')] = str(c[CATALOG_FIELDS.index('c_table')])
         catalog_sheet.append(c)
 
     level_sheet.append(LEVEL_FIELDS)
-    levels = CatalogLevel.objects.filter(company=request.user.company).values_list(*LEVEL_FIELDS)
     for l in levels:
         level_sheet.append(l)
 
     data_points_sheet.append(DATA_POINT_FIELDS)
-    data_points = DataPoint.objects.filter(company=request.user.company).values_list(*DATA_POINT_FIELDS)
     for data in data_points:
         data_points_sheet.append(data)
 
