@@ -612,13 +612,15 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         return instance
 
     def validate_quantity(self, value):
-        if not DataEntry.objects.filter(pk=value).exists():
-            raise serializers.ValidationError('DataEntry does not exsit')
+        if value:
+            if not DataEntry.objects.filter(pk=value).exists():
+                raise serializers.ValidationError('DataEntry does not exsit')
         return value
 
     def validate_unit(self, value):
-        if not UnitLibrary.objects.filter(pk=value).exists():
-            raise serializers.ValidationError('Unit does not exsit')
+        if value:
+            if not UnitLibrary.objects.filter(pk=value).exists():
+                raise serializers.ValidationError('Unit does not exsit')
         return value
 
     def to_internal_value(self, data):
