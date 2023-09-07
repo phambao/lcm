@@ -230,8 +230,8 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(Invoice).pk
-        if instance.link_to_event:
-            data['link_to_event'] = EventForInvoiceSerializer(instance.link_to_event).data
+        # if instance.link_to_event:
+        #     data['link_to_event'] = EventForInvoiceSerializer(instance.link_to_event).data
         return data
 
 
