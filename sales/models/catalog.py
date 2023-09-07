@@ -1,4 +1,5 @@
 import copy
+from functools import lru_cache
 
 from django.db import models
 
