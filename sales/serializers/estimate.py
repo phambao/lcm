@@ -611,6 +611,16 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
                            EstimateTemplateSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
+    def validate_quantity(self, value):
+        if not DataEntry.objects.filter(pk=value).exists():
+            raise serializers.ValidationError('DataEntry does not exsit')
+        return value
+
+    def validate_unit(self, value):
+        if not UnitLibrary.objects.filter(pk=value).exists():
+            raise serializers.ValidationError('Unit does not exsit')
+        return value
+
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
         if self.is_in_proposal_view():
