@@ -141,8 +141,8 @@ class AttachmentInvoice(BaseModel):
     file = models.CharField(max_length=128)
     name = models.CharField(max_length=128)
     size = models.IntegerField(blank=True, null=True)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, default=1)
-    object_id = models.PositiveIntegerField(default=1)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
 
     class Meta:
