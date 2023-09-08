@@ -9,7 +9,7 @@ from base.tasks import activity_log
 from base.serializers import base
 from ..models import (Invoice, TableInvoice, PaymentHistory, CustomTable, GroupChangeOrder, ChangeOrderItem,
                       ProposalWriting, ProposalItem, GroupProposal, ProgressPayment, LeadDetail, CreditMemoAmount,
-                      CreditMemo)
+                      CreditMemo, AttachmentInvoice)
 
 
 class UnitSerializerMixin:
@@ -182,15 +182,28 @@ class TableInvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
         return data
 
 
+class AttachmentInvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
+    class Meta:
+        model = AttachmentInvoice
+        fields = ('file', 'name', 'size')
+
+
 class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
     tables = TableInvoiceSerializer('invoice', many=True, required=False, allow_null=True)
     payment_histories = PaymentHistorySerializer('invoice', many=True, required=False, allow_null=True)
+    attachments = AttachmentInvoiceSerializer(many=True, required=False, allow_null=True)
 
     class Meta:
         model = Invoice
-        fields = ('id', 'name', 'tables', 'date_paid', 'status', 'deadline', 'deadline_date',
+        fields = ('id', 'name', 'tables', 'date_paid', 'status', 'deadline', 'deadline_date', 'attachments',
                   'deadline_time', 'comment', 'note', 'proposal', 'link_to_event', 'payment_histories', 'created_date')
         read_only_fields = ('created_date', )
+
+    def create_attachment(self, instance, attachments):
+        for attachment in attachments:
+            serializer = AttachmentInvoiceSerializer(data=attachment, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save(content_object=instance)
 
     def create_talbes(self, instance, tables):
         for table in tables:
@@ -208,9 +221,11 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
     def create(self, validated_data):
         tables = pop(validated_data, 'tables', [])
         payment_histories = pop(validated_data, 'payment_histories', [])
+        attachments = pop(validated_data, 'attachments', [])
         instance = super().create(validated_data)
         self.create_talbes(instance, tables)
         self.create_payment_history(instance, payment_histories)
+        self.create_attachment(instance, attachments)
         activity_log.delay(ContentType.objects.get_for_model(Invoice).pk, instance.pk, 1,
                            InvoiceSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
@@ -218,11 +233,14 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
     def update(self, instance, validated_data):
         tables = pop(validated_data, 'tables', [])
         payment_histories = pop(validated_data, 'payment_histories', [])
+        attachments = pop(validated_data, 'attachments', [])
         instance = super().update(instance, validated_data)
         instance.tables.all().delete()
         instance.payment_histories.all().delete()
+        instance.attachments.all().delete()
         self.create_talbes(instance, tables)
         self.create_payment_history(instance, payment_histories)
+        self.create_attachment(instance, attachments)
         activity_log.delay(ContentType.objects.get_for_model(Invoice).pk, instance.pk, 2,
                            InvoiceSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
@@ -230,6 +248,10 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(Invoice).pk
+        attachments = AttachmentInvoice.objects.filter(content_type=ContentType.objects.get_for_model(instance),
+                                                       object_id=instance.id)
+        attachment_data = AttachmentInvoiceSerializer(attachments, many=True).data
+        data['attachments'] = attachment_data
         # if instance.link_to_event:
         #     data['link_to_event'] = EventForInvoiceSerializer(instance.link_to_event).data
         return data

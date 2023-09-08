@@ -157,6 +157,7 @@ class ProposalTemplateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        data['content_type'] = ContentType.objects.get_for_model(ProposalTemplate).pk
         if self.context['request'].path != reverse('proposal') or (self.context['request'].method != 'GET' and self.context['request'].path == reverse('proposal')):
             temp = instance.proposal_formatting_template_config.first()
             rs = ProposalTemplateConfigSerializer(temp)

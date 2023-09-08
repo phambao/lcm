@@ -324,7 +324,8 @@ class FileMessageTodoGenericView(GenericViewSet):
                 file=content_file,
                 user_create=user,
                 user_update=user,
-                name=file.name
+                name=file.name,
+                size=file.size
             )
             attachment_create.append(attachment)
 

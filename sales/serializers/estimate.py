@@ -247,9 +247,15 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
                 if 'catalog' in linked_description or 'estimate' in linked_description:
                     pk = linked_description.split(':')[1]
                     if 'estimate' in linked_description:
-                        linked_description = DescriptionLibrary.objects.get(pk=pk)
+                        try:
+                            linked_description = DescriptionLibrary.objects.get(pk=pk)
+                        except DescriptionLibrary.DoesNotExist:
+                            continue
                     else:
-                        linked_description = DataPoint.objects.get(pk=pk)
+                        try:
+                            linked_description = DataPoint.objects.get(pk=pk)
+                        except DataPoint.DoesNotExist:
+                            continue
                     data['linked_description'].append(LinkedDescriptionSerializer(linked_description).data)
         data['linked_description'] = str(data['linked_description'])
 
