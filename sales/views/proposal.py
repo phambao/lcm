@@ -11,7 +11,7 @@ from base.views.base import CompanyFilterMixin
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter, ProposalTemplateFilter
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, POFormula
 from sales.serializers.catalog import CatalogImageSerializer
-from sales.serializers.estimate import POFormulaDataSerializer, POFormulaForInvoiceSerializer
+from sales.serializers.estimate import EstimateTemplateForFormattingSerializer, POFormulaDataSerializer, POFormulaForInvoiceSerializer
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
     ProposalWritingCompactSerializer, ProposalTemplateHtmlCssSerializer, ProposalWritingDataSerializer
@@ -128,6 +128,8 @@ def get_table_formatting(request, pk):
         proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
         data['formulas'] = ProposalWritingDataSerializer(proposal_writing).data
         data['show_fields'] = proposal_writing.proposal_formatting.show_fields
+        data['estimates'] = EstimateTemplateForFormattingSerializer(proposal_writing.get_estimates(), many=True).data
+
 
     if request.method == 'PUT':
         """Update order po formula"""
