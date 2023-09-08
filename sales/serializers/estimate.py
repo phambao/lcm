@@ -479,6 +479,30 @@ class MaterialViewSerializers(serializers.ModelSerializer):
         fields = ('id', 'name', 'material_value', 'copies_from', 'catalog_materials')
 
 
+class EstimateTemplateForFormattingSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = EstimateTemplate
+        fields = ('id', 'name')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['unit'] = ''
+        data['quantity'] = ''
+        if instance.unit:
+            try:
+                data['unit'] = UnitLibrary.objects.get(pk=data['unit']).name
+            except UnitLibrary.DoesNotExist:
+                pass
+        if instance.quantity:
+            try:
+                data['quantity'] = DataEntry.objects.get(pk=data['quantity']).name
+            except DataEntry.DoesNotExist:
+                pass
+        # data['total_charge'] = instance.data_views.get(type='charge')
+        return data
+
+
 class EstimateTemplateCompactSerializer(serializers.ModelSerializer, SerializerMixin):
 
     class Meta:

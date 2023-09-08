@@ -104,6 +104,13 @@ class ProposalWriting(BaseModel):
             poformulas |= assemble.assemble_formulas.all()
         return poformulas
 
+    def get_estimates(self):
+        groups = self.writing_groups.all()
+        estimates = EstimateTemplate.objects.none()
+        for group in groups:
+            estimates |= group.estimate_templates.all()
+        return estimates
+
     def get_data_formula(self):
         """Get data from po formula"""
         poformulas = self._get_poformula()
