@@ -10,12 +10,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
+from rest_framework import serializers
 
 from base.permissions import EstimatePermissions
 from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter, AssembleFilter, GroupFormulaFilter,\
     DescriptionFilter, UnitFilter, DataEntryFilter
 from sales.models import DataPoint, Catalog
-from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, UnitLibrary, \
+from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, UnitLibrary, \
     DescriptionLibrary, Assemble, EstimateTemplate, MaterialView
 from sales.serializers.catalog import CatalogLevelValueSerializer
 from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
@@ -80,6 +81,12 @@ class DataEntryDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = DataEntry.objects.all()
     serializer_class = DataEntrySerializer
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
+
+    def destroy(self, request, *args, **kwargs):
+        pk = self.kwargs.get('pk')
+        if POFormulaToDataEntry.objects.filter(data_entry__pk=pk).exists():
+            raise serializers.ValidationError({'error': 'This data entry have been used in other formulas'})
+        return super().destroy(request, *args, **kwargs)
 
 
 class UnitLibraryList(CompanyFilterMixin, generics.ListCreateAPIView):
