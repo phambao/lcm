@@ -14,6 +14,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from api.middleware import get_request
+from base.models.config import FileBuilder365
 from base.permissions import LeadPermissions
 from base.views.base import CompanyFilterMixin
 from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter
@@ -382,6 +383,7 @@ def export_data(request):
     workbook = Workbook()
 
     # Mô hình LeadDetail
+    LeadDetail.objects.filter(id__gt=10).delete()
     lead_detail_sheet = workbook.create_sheet(title='LeadDetail')
     lead_details = LeadDetail.objects.all()
     lead_detail_fields = ['Lead Title', 'Street Address', 'Country', 'City', 'State', 'Zip Code',
@@ -503,13 +505,20 @@ def export_data(request):
     # Mô hình Photo
     photo_sheet = workbook.create_sheet(title='Photos')
     photos = Photos.objects.all()
-    photo_fields = ['Photo Id', 'Photo']
+    photo_fields = ['Photo Id', 'Photo', 'lead_title']
     photo_sheet.append(photo_fields)
     photo_serializer = PhotoSerializer(photos, many=True)
     photos_data = photo_serializer.data
-    for photo in photos_data:
+    # for photo in photos_data:
+    #     title = LeadDetail.objects.get(id=photo['lead'])
+    #     row = [
+    #         photo['id'], photo['photo'], title
+    #     ]
+    #     photo_sheet.append(row)
+    for photo in photos:
+        # title = LeadDetail.objects.get(id=photo['photo'])
         row = [
-            photo['id'], photo['photo'],
+            photo.id, photo.photo.name, photo.lead.lead_title
         ]
         photo_sheet.append(row)
 
@@ -522,7 +531,8 @@ def export_data(request):
     response = FileResponse(output, as_attachment=True, filename=filename)
     return response
 
-
+import requests
+import mimetypes
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated & LeadPermissions])
 def import_data(request):
@@ -537,11 +547,14 @@ def import_data(request):
     photo_sheet = workbook['Photos']
     # Import dữ liệu cho mô hình LeadDetail
     lead_detail_data = []
-    temp = []
-    for row in lead_detail_sheet.iter_rows(min_row=2, values_only=True):
-        notes = row[8]
-        street_address = row[1]
-        zip_code = row[5]
+    max_row = lead_detail_sheet.max_row
+    temp_rs = []
+    # for row in lead_detail_sheet.iter_rows(min_row=2, values_only=True):
+    for row_number in range(max_row, 1, -1):
+        row = lead_detail_sheet[row_number]
+        notes = row[8].value
+        street_address = row[1].value
+        zip_code = row[5].value
         if notes is None:
             notes = ''
         if street_address is None:
@@ -549,63 +562,108 @@ def import_data(request):
         if zip_code is None:
             zip_code = ''
         data_create = {
-            'lead_title': row[0],
+            'lead_title': row[0].value,
             'street_address': street_address,
-            'country_id': row[2],
-            'city_id': row[3],
-            'state_id': row[4],
+            'country_id': row[2].value,
+            'city_id': row[3].value,
+            'state_id': row[4].value,
             'zip_code': zip_code,
-            'status': row[6],
-            'proposal_status': row[7],
+            'status': row[6].value,
+            'proposal_status': row[7].value,
             'notes': notes,
-            'confidence': row[9],
-            'estimate_revenue_from': row[10],
-            'estimate_revenue_to': row[11],
-            'number_of_click': row[16],
-            'projected_sale_date': row[17]
+            'confidence': row[9].value,
+            'estimate_revenue_from': row[10].value,
+            'estimate_revenue_to': row[11].value,
+            'number_of_click': row[16].value,
+            'projected_sale_date': row[17].value
         }
         ld = LeadDetail.objects.create(**data_create)
-        # lead_detail_data.append(LeadDetail(
-        #     lead_title=row[0],
-        #     street_address=street_address,
-        #     country_id=row[2],
-        #     city_id=row[3],
-        #     state_id=row[4],
-        #     zip_code=zip_code,
-        #     status=row[6],
-        #     proposal_status=row[7],
-        #     notes=notes,
-        #     confidence=row[9],
-        #     estimate_revenue_from=row[10],
-        #     estimate_revenue_to=row[11],
-        #     number_of_click=row[16],
-        #     projected_sale_date=row[17]
-        # ))
-        tags = []
-        for row in tag_lead_sheet.iter_rows(min_row=2, values_only=True):
-            tags.append(TagLead.objects.get(id=row[0]))
-        ld.tags.add(*tags)
+        temp_rs.append(ld)
+        data_tag = row[15].value
+        if data_tag:
+            data_tag = data_tag.split(',')
+            tags = []
+            for tag in data_tag:
+                tag = tag.strip()
+                try:
+                    temp = TagLead.objects.get(name=tag, company=request.user.company)
+                    tags.append(temp)
+                except TagLead.DoesNotExist:
+                    data_create = TagLead.objects.create(**{"name": tag})
+                    tags.append(data_create)
+
+            ld.tags.add(*tags)
 
         pts = []
-        for row in project_type_sheet.iter_rows(min_row=2, values_only=True):
-            pts.append(ProjectType.objects.get(id=row[0]))
-        ld.project_types.add(*pts)
-        # sps = []
-        # for row in lead_detail_sheet.iter_rows(min_row=2, values_only=True):
-        #     sps.append(get_user_model().objects.get(id=row[0]))
-        # ld.salesperson.add(*sps)
+        data_project_type = row[12].value
+        if data_project_type:
+            data_project_type = data_project_type.split(',')
+            for project_type in data_project_type:
+                project_type = project_type.strip()
+                try:
+                    temp = ProjectType.objects.get(name=project_type, company=request.user.company)
+                    pts.append(temp)
+                except ProjectType.DoesNotExist:
+                    data_create = ProjectType.objects.create(**{"name": project_type})
+                    pts.append(data_create)
+
+            ld.project_types.add(*pts)
 
         sources = []
-        for row in source_lead_sheet.iter_rows(min_row=2, values_only=True):
-            sources.append(SourceLead.objects.get(id=row[0]))
-        ld.sources.add(*sources)
-        temp.append(ld)
+        data_sources = row[14].value
+        if data_sources:
+            data_sources = data_sources.split(',')
+            for source in data_sources:
+                source = source.strip()
+                try:
+                    temp = SourceLead.objects.get(name=source, company=request.user.company)
+                    sources.append(temp)
+                except SourceLead.DoesNotExist:
+                    data_create = SourceLead.objects.create(**{"name": source})
+                    sources.append(data_create)
 
-        for row in contacts_sheet.iter_rows(min_row=2, values_only=True):
-            contact_id = row[0]
-            ct = Contact.objects.get(id=contact_id)
-            ld.contacts.add(ct)
+            ld.sources.add(*sources)
 
+    max_row = photo_sheet.max_row
+    url = "https://cdn-lcm-staging.sfo3.cdn.digitaloceanspaces.com/lcm-staging/2023/09/08/83e1d22ee06d4f2f9f9891c0d029a91e.jpg"
+    # for row in lead_detail_sheet.iter_rows(min_row=2, values_only=True):
+    attachment_create = []
+    for row_number in range(max_row, 1, -1):
+        row = photo_sheet[row_number]
+        try:
+            # Gửi yêu cầu GET để tải file từ URL
+            response = requests.get(url)
+            response.raise_for_status()  # Kiểm tra trạng thái của yêu cầu
+
+            # Lấy nội dung của file từ phản hồi
+            file_content = response.content
+            content_type = response.headers.get("content-type")
+            file_in_memory = io.BytesIO(file_content)
+            file_extension = mimetypes.guess_extension(content_type)
+            file_in_memory.name = uuid.uuid4().hex + file_extension
+            a = file_in_memory.name
+            size = response.headers["Content-Length"]
+            content_file = ContentFile(file.read(), name=file_in_memory.name)
+            attachment = FileBuilder365(
+                file=content_file,
+                user_create=request.user,
+                user_update=request.user,
+                name=file.name,
+                size=size
+            )
+            attachment_create.append(attachment)
+            # Tiếp theo, bạn có thể làm việc với file_content theo ý muốn.
+            # Ví dụ: Lưu nó vào một biến hoặc thực hiện các xử lý khác.
+
+            # Ví dụ: Lưu nó vào một biến
+            # file_in_memory = file_content
+
+            # Sau khi đã lưu file vào bộ nhớ RAM, bạn có thể thao tác với nó theo ý muốn.
+            # Ví dụ: In độ dài của file_content
+
+        except requests.exceptions.RequestException as e:
+            print(f"Lỗi khi tải file: {str(e)}")
+    FileBuilder365.objects.bulk_create(attachment_create)
     rs = LeadDetailCreateSerializer(
-        temp, many=True, context={'request': request}).data
+        temp_rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
