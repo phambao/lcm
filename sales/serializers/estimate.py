@@ -1,4 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Sum, DecimalField
+from django.db.models.functions import Cast
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -499,7 +501,9 @@ class EstimateTemplateForFormattingSerializer(serializers.ModelSerializer):
                 data['quantity'] = DataEntry.objects.get(pk=data['quantity']).name
             except DataEntry.DoesNotExist:
                 pass
-        # data['total_charge'] = instance.data_views.get(type='charge')
+        data['total_charge'] = instance.get_formula().aggregate(
+            total_charge=Sum('charge')
+        ).get('total_charge')
         return data
 
 
