@@ -91,9 +91,22 @@ class DataEntrySerializer(serializers.ModelSerializer):
         instance.material_selections.add(*catalogs)
 
         validated_data['unit_id'] = unit.get('id', None)
+        new_name = validated_data['name']
+        old_name = instance.name
+        update = super().update(instance, validated_data)
+        # Update all data entry mentioned on formula
+        if new_name != old_name:
+            objs = POFormulaToDataEntry.objects.filter(data_entry=instance).select_related('po_formula')
+            data = []
+            for obj in objs:
+                obj.formula = obj.formula.replace(old_name, new_name)
+                obj.formula_mentions = obj.formula_mentions.replace(old_name, new_name)
+                data.append(obj)
+            POFormula.objects.bulk_update(data, ['formula', 'formula_mentions'], batch_size=128)
+
         activity_log.delay(DATA_ENTRY_CONTENT_TYPE, instance.pk, 2,
                            DataEntrySerializer.__name__, __name__, self.context['request'].user.pk)
-        return super().update(instance, validated_data)
+        return update
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
