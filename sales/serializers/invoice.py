@@ -237,7 +237,8 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
         instance = super().update(instance, validated_data)
         instance.tables.all().delete()
         instance.payment_histories.all().delete()
-        instance.attachments.all().delete()
+        AttachmentInvoice.objects.filter(content_type=ContentType.objects.get_for_model(instance),
+                                         object_id=instance.id).delete()
         self.create_talbes(instance, tables)
         self.create_payment_history(instance, payment_histories)
         self.create_attachment(instance, attachments)
@@ -301,10 +302,17 @@ class CreditMemoAmountSerializer(serializers.ModelSerializer):
 
 class CreditMemoSerializer(serializers.ModelSerializer):
     credit_memo_amounts = CreditMemoAmountSerializer('credit_memo', many=True, allow_null=True, required=False)
+    attachments = AttachmentInvoiceSerializer(many=True, required=False, allow_null=True)
 
     class Meta:
         model = CreditMemo
-        fields = ('id', 'name', 'description', 'credit_memo_amounts')
+        fields = ('id', 'name', 'description', 'credit_memo_amounts', 'attachments')
+
+    def create_attachment(self, instance, attachments):
+        for attachment in attachments:
+            serializer = AttachmentInvoiceSerializer(data=attachment, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save(content_object=instance)
 
     def create_memo_amount(self, instance, credit_memo_amounts):
         for credit_memo_amount in credit_memo_amounts:
@@ -314,12 +322,27 @@ class CreditMemoSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         credit_memo_amounts = pop(validated_data, 'credit_memo_amounts', [])
+        attachments = pop(validated_data, 'attachments', [])
         instance = super().create(validated_data)
         self.create_memo_amount(instance, credit_memo_amounts)
+        self.create_attachment(instance, attachments)
         return instance
 
     def update(self, instance, validated_data):
         credit_memo_amounts = pop(validated_data, 'credit_memo_amounts', [])
+        attachments = pop(validated_data, 'attachments', [])
         instance.credit_memo_amounts.all().delete()
+        AttachmentInvoice.objects.filter(content_type=ContentType.objects.get_for_model(instance),
+                                         object_id=instance.id).delete()
         self.create_memo_amount(instance, credit_memo_amounts)
+        self.create_attachment(instance, attachments)
         return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['content_type'] = ContentType.objects.get_for_model(CreditMemo).pk
+        attachments = AttachmentInvoice.objects.filter(content_type=ContentType.objects.get_for_model(instance),
+                                                       object_id=instance.id)
+        attachment_data = AttachmentInvoiceSerializer(attachments, many=True).data
+        data['attachments'] = attachment_data
+        return data
