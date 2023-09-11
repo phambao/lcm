@@ -128,8 +128,6 @@ def get_table_formatting(request, pk):
         proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
         data['formulas'] = ProposalWritingDataSerializer(proposal_writing).data
         data['show_fields'] = proposal_writing.proposal_formatting.show_fields
-        data['estimates'] = EstimateTemplateForFormattingSerializer(proposal_writing.get_estimates(), many=True).data
-
 
     if request.method == 'PUT':
         """Update order po formula"""
@@ -186,8 +184,9 @@ def proposal_formatting_view(request, pk):
             proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
         except ProposalFormatting.DoesNotExist:
             proposal_formatting = ProposalFormatting.objects.create(proposal_writing=proposal_writing)
+        estimates = EstimateTemplateForFormattingSerializer(proposal_writing.get_estimates(), many=True).data
         serializer = ProposalFormattingTemplateSerializer(proposal_formatting, context={'request': request})
-        return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_fields': all_fields}})
+        return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_fields': all_fields, 'estimates': estimates}})
 
     if request.method == 'PUT':
         proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
