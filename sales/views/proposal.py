@@ -127,7 +127,8 @@ def get_table_formatting(request, pk):
     if request.method == 'GET':
         proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
         data['formulas'] = ProposalWritingDataSerializer(proposal_writing).data
-        data['show_fields'] = proposal_writing.proposal_formatting.show_fields
+        data['show_writing_fields'] = proposal_writing.proposal_formatting.show_writing_fields
+        data['show_estimate_fields'] = proposal_writing.proposal_formatting.show_estimate_fields
 
     if request.method == 'PUT':
         """Update order po formula"""
@@ -142,11 +143,14 @@ def get_table_formatting(request, pk):
         POFormula.objects.bulk_update(po_formulas, ['order'])
         data['formulas'] = POFormulaDataSerializer(po_formulas.order_by('order'), context={'request': request}, many=True).data
 
-        show_fields = request.data.get('show_fields')
+        show_writing_fields = request.data.get('show_writing_fields')
+        show_estimate_fields = request.data.get('show_estimate_fields')
         proposal_formatting = proposal_writing.proposal_formatting
-        proposal_formatting.show_fields = show_fields
+        proposal_formatting.show_writing_fields = show_writing_fields
+        proposal_formatting.show_estimate_fields = show_estimate_fields
         proposal_formatting.save()
-        data['show_fields'] = show_fields
+        data['show_writing_fields'] = show_writing_fields
+        data['show_estimate_fields'] = show_estimate_fields
 
     return Response(status=status.HTTP_200_OK, data=data)
 
@@ -177,8 +181,9 @@ def get_items(request, pk):
 def proposal_formatting_view(request, pk):
     proposal_writing = get_object_or_404(ProposalWriting.objects.filter(company=get_request().user.company),
                                          pk=pk)
-    all_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
-                  'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario']
+    all_writing_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
+                         'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario']
+    all_estimate_fields = ['id', 'name', 'quantity', 'unit', 'total_charge']
     if request.method == 'GET':
         try:
             proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
@@ -186,7 +191,10 @@ def proposal_formatting_view(request, pk):
             proposal_formatting = ProposalFormatting.objects.create(proposal_writing=proposal_writing)
         estimates = EstimateTemplateForFormattingSerializer(proposal_writing.get_estimates(), many=True).data
         serializer = ProposalFormattingTemplateSerializer(proposal_formatting, context={'request': request})
-        return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_fields': all_fields, 'estimates': estimates}})
+        return Response(status=status.HTTP_200_OK, data={**serializer.data,
+                                                         **{'all_writing_fields': all_writing_fields,
+                                                            'estimates': estimates,
+                                                            'all_estimate_fields': all_estimate_fields}})
 
     if request.method == 'PUT':
         proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
@@ -194,7 +202,8 @@ def proposal_formatting_view(request, pk):
                                                           partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_fields': all_fields}})
+        return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_writing_fields': all_writing_fields,
+                                                                               'all_estimate_fields': all_estimate_fields}})
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
