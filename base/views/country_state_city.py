@@ -59,8 +59,9 @@ def address_search(request, *args, **kwargs):
     data = request.query_params
     try:
         address = data['address']
+        region = data.get('region')
         key = config('GOOGLE_MAPS_API_KEY')
-        url = f'https://maps.googleapis.com/maps/api/geocode/json?address={address}&key={key}'
+        url = f'https://maps.googleapis.com/maps/api/place/textsearch/json?query={address}&region={region}&key={key}'
         response = requests.get(url)
         if response.status_code == status.HTTP_200_OK:
             return Response(status=status.HTTP_200_OK, data=response.json())
