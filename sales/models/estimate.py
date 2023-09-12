@@ -34,7 +34,7 @@ class POFormula(BaseModel):
     is_show = models.BooleanField(default=True, blank=True)  # Only show formula page
     quantity = models.CharField(max_length=64, blank=True)
     markup = models.CharField(max_length=64, blank=True)
-    charge = models.CharField(max_length=64, blank=True)
+    charge = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=2, blank=True, default=0)
     material = models.TextField(blank=True)
     unit = models.CharField(max_length=32, blank=True)
     unit_price = models.CharField(max_length=32, blank=True)

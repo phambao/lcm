@@ -10,8 +10,9 @@ from base.permissions import ProposalPermissions
 from base.views.base import CompanyFilterMixin
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter, ProposalTemplateFilter
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, POFormula
+from sales.models.estimate import EstimateTemplate
 from sales.serializers.catalog import CatalogImageSerializer
-from sales.serializers.estimate import POFormulaDataSerializer, POFormulaForInvoiceSerializer
+from sales.serializers.estimate import EstimateTemplateForFormattingSerializer, POFormulaDataSerializer, POFormulaForInvoiceSerializer
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
     ProposalWritingCompactSerializer, ProposalTemplateHtmlCssSerializer, ProposalWritingDataSerializer
@@ -111,6 +112,17 @@ def get_html_css_by_template(request, *args, **kwargs):
     return Response(status=status.HTTP_200_OK, data=data)
 
 
+def update_order(ids, model):
+    query_set = model.objects.filter(id__in=ids)
+    for obj in query_set:
+        try:
+            obj.order = ids.index(obj.pk)
+        except ValueError:
+            pass
+    model.objects.bulk_update(query_set, ['order'])
+    return query_set
+
+
 @api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated & ProposalPermissions])
 def get_table_formatting(request, pk):
@@ -120,6 +132,7 @@ def get_table_formatting(request, pk):
     Parameters:
 
         formulas: list id
+        estimates: list id
 
         show_fields: list str
     """
@@ -127,26 +140,28 @@ def get_table_formatting(request, pk):
     if request.method == 'GET':
         proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
         data['formulas'] = ProposalWritingDataSerializer(proposal_writing).data
-        data['show_fields'] = proposal_writing.proposal_formatting.show_fields
+        data['show_writing_fields'] = proposal_writing.proposal_formatting.show_writing_fields
+        data['show_estimate_fields'] = proposal_writing.proposal_formatting.show_estimate_fields
 
     if request.method == 'PUT':
         """Update order po formula"""
         proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
         ids = request.data.get('formulas')
-        po_formulas = POFormula.objects.filter(id__in=ids)
-        for po_formula in po_formulas:
-            try:
-                po_formula.order = ids.index(po_formula.pk)
-            except ValueError:
-                pass
-        POFormula.objects.bulk_update(po_formulas, ['order'])
-        data['formulas'] = POFormulaDataSerializer(po_formulas.order_by('order'), context={'request': request}, many=True).data
+        estimate_ids = request.data.get('estimates')
+        if ids:
+            po_formulas = update_order(ids, POFormula)
+            data['formulas'] = POFormulaDataSerializer(po_formulas.order_by('order'), context={'request': request}, many=True).data
+        if estimate_ids:
+            estimates = update_order(estimate_ids, EstimateTemplate)
 
-        show_fields = request.data.get('show_fields')
+        show_writing_fields = request.data.get('show_writing_fields')
+        show_estimate_fields = request.data.get('show_estimate_fields')
         proposal_formatting = proposal_writing.proposal_formatting
-        proposal_formatting.show_fields = show_fields
+        proposal_formatting.show_writing_fields = show_writing_fields
+        proposal_formatting.show_estimate_fields = show_estimate_fields
         proposal_formatting.save()
-        data['show_fields'] = show_fields
+        data['show_writing_fields'] = show_writing_fields
+        data['show_estimate_fields'] = show_estimate_fields
 
     return Response(status=status.HTTP_200_OK, data=data)
 
@@ -177,15 +192,20 @@ def get_items(request, pk):
 def proposal_formatting_view(request, pk):
     proposal_writing = get_object_or_404(ProposalWriting.objects.filter(company=get_request().user.company),
                                          pk=pk)
-    all_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
-                  'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario']
+    all_writing_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
+                         'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario']
+    all_estimate_fields = ['id', 'name', 'quantity', 'unit', 'total_charge']
     if request.method == 'GET':
         try:
             proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
         except ProposalFormatting.DoesNotExist:
             proposal_formatting = ProposalFormatting.objects.create(proposal_writing=proposal_writing)
+        estimates = EstimateTemplateForFormattingSerializer(proposal_writing.get_estimates(), many=True).data
         serializer = ProposalFormattingTemplateSerializer(proposal_formatting, context={'request': request})
-        return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_fields': all_fields}})
+        return Response(status=status.HTTP_200_OK, data={**serializer.data,
+                                                         **{'all_writing_fields': all_writing_fields,
+                                                            'estimates': estimates,
+                                                            'all_estimate_fields': all_estimate_fields}})
 
     if request.method == 'PUT':
         proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
@@ -193,7 +213,8 @@ def proposal_formatting_view(request, pk):
                                                           partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_fields': all_fields}})
+        return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_writing_fields': all_writing_fields,
+                                                                               'all_estimate_fields': all_estimate_fields}})
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 

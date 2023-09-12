@@ -1,4 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Sum, DecimalField
+from django.db.models.functions import Cast
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -477,6 +479,32 @@ class MaterialViewSerializers(serializers.ModelSerializer):
     class Meta:
         model = MaterialView
         fields = ('id', 'name', 'material_value', 'copies_from', 'catalog_materials')
+
+
+class EstimateTemplateForFormattingSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = EstimateTemplate
+        fields = ('id', 'name')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['unit'] = ''
+        data['quantity'] = ''
+        if instance.unit:
+            try:
+                data['unit'] = UnitLibrary.objects.get(pk=data['unit']).name
+            except UnitLibrary.DoesNotExist:
+                pass
+        if instance.quantity:
+            try:
+                data['quantity'] = DataEntry.objects.get(pk=data['quantity']).name
+            except DataEntry.DoesNotExist:
+                pass
+        data['total_charge'] = instance.get_formula().aggregate(
+            total_charge=Sum('charge')
+        ).get('total_charge')
+        return data
 
 
 class EstimateTemplateCompactSerializer(serializers.ModelSerializer, SerializerMixin):

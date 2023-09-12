@@ -104,6 +104,13 @@ class ProposalWriting(BaseModel):
             poformulas |= assemble.assemble_formulas.all()
         return poformulas
 
+    def get_estimates(self):
+        groups = self.writing_groups.all()
+        estimates = EstimateTemplate.objects.none()
+        for group in groups:
+            estimates |= group.estimate_templates.all()
+        return estimates
+
     def get_data_formula(self):
         """Get data from po formula"""
         poformulas = self._get_poformula()
@@ -140,7 +147,8 @@ class ProposalFormatting(BaseModel):
     script = models.TextField(blank=True, null=True, default='')
     proposal_writing = models.OneToOneField('sales.ProposalWriting', on_delete=models.SET_NULL,
                                             related_name='proposal_formatting', null=True, blank=True)
-    show_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
+    show_writing_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
+    show_estimate_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
     has_send_mail = models.BooleanField(default=False, blank=True)
     has_signed = models.BooleanField(default=False, blank=True)
     element = models.TextField(blank=True, null=True, default='')
