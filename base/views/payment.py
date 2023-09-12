@@ -150,6 +150,25 @@ def create_customer(request):
         return Response({'error': str(e)}, status=400)
 
 
+@api_view(['PUT'])
+@csrf_exempt
+def update_customer(request, *args, **kwargs):
+    customer_id = kwargs.get('customer_id')
+    data = request.data
+    try:
+        customer = stripe.Customer.modify(
+            customer_id,
+            email=data['email'],
+            name=data['name'],
+            invoice_prefix=data['invoice_prefix']
+        )
+        resp = Response({'customer': customer})
+
+        return resp
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+
+
 @api_view(['POST'])
 def check_promotion_code(request):
     data = request.data
