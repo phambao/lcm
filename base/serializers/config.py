@@ -73,7 +73,8 @@ class CompanySerializer(serializers.ModelSerializer):
 
     def validate(self, validated_data):
         short_name = validated_data['short_name']
-        if CompanyBuilder.objects.filter(short_name=short_name).exists():
+        request = self.context.get('request')
+        if CompanyBuilder.objects.filter(short_name=short_name).exists() and request.method == 'POST':
             raise serializers.ValidationError({"short_name": "This short_name already exists."})
         return validated_data
 
