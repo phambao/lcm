@@ -157,8 +157,10 @@ def get_table_formatting(request, pk):
         show_writing_fields = request.data.get('show_writing_fields')
         show_estimate_fields = request.data.get('show_estimate_fields')
         proposal_formatting = proposal_writing.proposal_formatting
-        proposal_formatting.show_writing_fields = show_writing_fields
-        proposal_formatting.show_estimate_fields = show_estimate_fields
+        if show_writing_fields:
+            proposal_formatting.show_writing_fields = show_writing_fields
+        if show_estimate_fields:
+            proposal_formatting.show_estimate_fields = show_estimate_fields
         proposal_formatting.save()
         data['show_writing_fields'] = show_writing_fields
         data['show_estimate_fields'] = show_estimate_fields
