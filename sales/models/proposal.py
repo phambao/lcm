@@ -147,7 +147,8 @@ class ProposalFormatting(BaseModel):
     script = models.TextField(blank=True, null=True, default='')
     proposal_writing = models.OneToOneField('sales.ProposalWriting', on_delete=models.SET_NULL,
                                             related_name='proposal_formatting', null=True, blank=True)
-    show_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
+    show_writing_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
+    show_estimate_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
     has_send_mail = models.BooleanField(default=False, blank=True)
     has_signed = models.BooleanField(default=False, blank=True)
     element = models.TextField(blank=True, null=True, default='')
