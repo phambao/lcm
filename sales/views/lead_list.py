@@ -383,7 +383,6 @@ def export_data(request):
     workbook = Workbook()
 
     # Mô hình LeadDetail
-    LeadDetail.objects.filter(id__gt=10).delete()
     lead_detail_sheet = workbook.create_sheet(title='LeadDetail')
     lead_details = LeadDetail.objects.all()
     lead_detail_fields = ['Lead Title', 'Street Address', 'Country', 'City', 'State', 'Zip Code',
