@@ -10,6 +10,7 @@ from base.permissions import ProposalPermissions
 from base.views.base import CompanyFilterMixin
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter, ProposalTemplateFilter
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, POFormula
+from sales.models.estimate import EstimateTemplate
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateForFormattingSerializer, POFormulaDataSerializer, POFormulaForInvoiceSerializer
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
@@ -111,6 +112,17 @@ def get_html_css_by_template(request, *args, **kwargs):
     return Response(status=status.HTTP_200_OK, data=data)
 
 
+def update_order(ids, model):
+    query_set = model.objects.filter(id__in=ids)
+    for obj in query_set:
+        try:
+            obj.order = ids.index(obj.pk)
+        except ValueError:
+            pass
+    model.objects.bulk_update(query_set, ['order'])
+    return query_set
+
+
 @api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated & ProposalPermissions])
 def get_table_formatting(request, pk):
@@ -120,6 +132,7 @@ def get_table_formatting(request, pk):
     Parameters:
 
         formulas: list id
+        estimates: list id
 
         show_fields: list str
     """
@@ -134,14 +147,12 @@ def get_table_formatting(request, pk):
         """Update order po formula"""
         proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
         ids = request.data.get('formulas')
-        po_formulas = POFormula.objects.filter(id__in=ids)
-        for po_formula in po_formulas:
-            try:
-                po_formula.order = ids.index(po_formula.pk)
-            except ValueError:
-                pass
-        POFormula.objects.bulk_update(po_formulas, ['order'])
-        data['formulas'] = POFormulaDataSerializer(po_formulas.order_by('order'), context={'request': request}, many=True).data
+        estimate_ids = request.data.get('estimates')
+        if ids:
+            po_formulas = update_order(ids, POFormula)
+            data['formulas'] = POFormulaDataSerializer(po_formulas.order_by('order'), context={'request': request}, many=True).data
+        if estimate_ids:
+            estimates = update_order(estimate_ids, EstimateTemplate)
 
         show_writing_fields = request.data.get('show_writing_fields')
         show_estimate_fields = request.data.get('show_estimate_fields')
