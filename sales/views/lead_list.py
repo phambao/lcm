@@ -508,15 +508,7 @@ def export_data(request):
     photo_fields = ['Photo Id', 'Photo', 'lead_title']
     photo_sheet.append(photo_fields)
     photo_serializer = PhotoSerializer(photos, many=True)
-    photos_data = photo_serializer.data
-    # for photo in photos_data:
-    #     title = LeadDetail.objects.get(id=photo['lead'])
-    #     row = [
-    #         photo['id'], photo['photo'], title
-    #     ]
-    #     photo_sheet.append(row)
     for photo in photos:
-        # title = LeadDetail.objects.get(id=photo['photo'])
         row = [
             photo.id, photo.photo.name, photo.lead.lead_title
         ]
@@ -531,8 +523,7 @@ def export_data(request):
     response = FileResponse(output, as_attachment=True, filename=filename)
     return response
 
-import requests
-import mimetypes
+
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated & LeadPermissions])
 def import_data(request):
@@ -624,46 +615,46 @@ def import_data(request):
 
             ld.sources.add(*sources)
 
-    max_row = photo_sheet.max_row
-    url = "https://cdn-lcm-staging.sfo3.cdn.digitaloceanspaces.com/lcm-staging/2023/09/08/83e1d22ee06d4f2f9f9891c0d029a91e.jpg"
-    # for row in lead_detail_sheet.iter_rows(min_row=2, values_only=True):
-    attachment_create = []
-    for row_number in range(max_row, 1, -1):
-        row = photo_sheet[row_number]
-        try:
-            # Gửi yêu cầu GET để tải file từ URL
-            response = requests.get(url)
-            response.raise_for_status()  # Kiểm tra trạng thái của yêu cầu
-
-            # Lấy nội dung của file từ phản hồi
-            file_content = response.content
-            content_type = response.headers.get("content-type")
-            file_in_memory = io.BytesIO(file_content)
-            file_extension = mimetypes.guess_extension(content_type)
-            file_in_memory.name = uuid.uuid4().hex + file_extension
-            a = file_in_memory.name
-            size = response.headers["Content-Length"]
-            content_file = ContentFile(file.read(), name=file_in_memory.name)
-            attachment = FileBuilder365(
-                file=content_file,
-                user_create=request.user,
-                user_update=request.user,
-                name=file.name,
-                size=size
-            )
-            attachment_create.append(attachment)
-            # Tiếp theo, bạn có thể làm việc với file_content theo ý muốn.
-            # Ví dụ: Lưu nó vào một biến hoặc thực hiện các xử lý khác.
-
-            # Ví dụ: Lưu nó vào một biến
-            # file_in_memory = file_content
-
-            # Sau khi đã lưu file vào bộ nhớ RAM, bạn có thể thao tác với nó theo ý muốn.
-            # Ví dụ: In độ dài của file_content
-
-        except requests.exceptions.RequestException as e:
-            print(f"Lỗi khi tải file: {str(e)}")
-    FileBuilder365.objects.bulk_create(attachment_create)
+    # max_row = photo_sheet.max_row
+    # url = "https://cdn-lcm-staging.sfo3.cdn.digitaloceanspaces.com/lcm-staging/2023/09/08/83e1d22ee06d4f2f9f9891c0d029a91e.jpg"
+    # # for row in lead_detail_sheet.iter_rows(min_row=2, values_only=True):
+    # attachment_create = []
+    # for row_number in range(max_row, 1, -1):
+    #     row = photo_sheet[row_number]
+    #     try:
+    #         # Gửi yêu cầu GET để tải file từ URL
+    #         response = requests.get(url)
+    #         response.raise_for_status()  # Kiểm tra trạng thái của yêu cầu
+    #
+    #         # Lấy nội dung của file từ phản hồi
+    #         file_content = response.content
+    #         content_type = response.headers.get("content-type")
+    #         file_in_memory = io.BytesIO(file_content)
+    #         file_extension = mimetypes.guess_extension(content_type)
+    #         file_in_memory.name = uuid.uuid4().hex + file_extension
+    #         a = file_in_memory.name
+    #         size = response.headers["Content-Length"]
+    #         content_file = ContentFile(file.read(), name=file_in_memory.name)
+    #         attachment = FileBuilder365(
+    #             file=content_file,
+    #             user_create=request.user,
+    #             user_update=request.user,
+    #             name=file.name,
+    #             size=size
+    #         )
+    #         attachment_create.append(attachment)
+    #         # Tiếp theo, bạn có thể làm việc với file_content theo ý muốn.
+    #         # Ví dụ: Lưu nó vào một biến hoặc thực hiện các xử lý khác.
+    #
+    #         # Ví dụ: Lưu nó vào một biến
+    #         # file_in_memory = file_content
+    #
+    #         # Sau khi đã lưu file vào bộ nhớ RAM, bạn có thể thao tác với nó theo ý muốn.
+    #         # Ví dụ: In độ dài của file_content
+    #
+    #     except requests.exceptions.RequestException as e:
+    #         print(f"Lỗi khi tải file: {str(e)}")
+    # FileBuilder365.objects.bulk_create(attachment_create)
     rs = LeadDetailCreateSerializer(
         temp_rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
