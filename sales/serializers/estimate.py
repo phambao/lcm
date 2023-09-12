@@ -99,6 +99,7 @@ class DataEntrySerializer(serializers.ModelSerializer):
             objs = POFormulaToDataEntry.objects.filter(data_entry=instance).select_related('po_formula')
             data = []
             for obj in objs:
+                obj = obj.po_formula
                 obj.formula = obj.formula.replace(old_name, new_name)
                 obj.formula_mentions = obj.formula_mentions.replace(old_name, new_name)
                 data.append(obj)
