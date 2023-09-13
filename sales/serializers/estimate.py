@@ -96,7 +96,8 @@ class DataEntrySerializer(serializers.ModelSerializer):
         update = super().update(instance, validated_data)
         # Update all data entry mentioned on formula
         if new_name != old_name:
-            objs = POFormulaToDataEntry.objects.filter(data_entry=instance).select_related('po_formula')
+            company = self.context.get('request').user.company
+            objs = POFormulaToDataEntry.objects.filter(data_entry=instance, company=company).select_related('po_formula')
             data = []
             for obj in objs:
                 obj = obj.po_formula
@@ -224,7 +225,20 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
         activity_log.delay(PO_FORMULA_CONTENT_TYPE, instance.pk, 2,
                            POFormulaSerializer.__name__, __name__, self.context['request'].user.pk)
         validated_data = self.reparse(validated_data)
-        return super().update(instance, validated_data)
+        new_name = validated_data['name']
+        old_name = instance.name
+        update = super().update(instance, validated_data)
+        # Update all formula mentioned on this formula
+        if new_name != old_name:
+            company = self.context.get('request').user.company
+            data = []
+            objs = POFormula.objects.filter(company=company, formula__icontains=old_name)
+            for obj in objs:
+                obj.formula = obj.formula.replace(old_name, new_name)
+                obj.formula_mentions = obj.formula_mentions.replace(old_name, new_name)
+                data.append(obj)
+            POFormula.objects.bulk_update(data, ['formula', 'formula_mentions'], batch_size=128)
+        return update
 
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
@@ -285,9 +299,11 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
                 ancestor = ancestors[-1]
                 data['catalog_ancestor'] = ancestor.pk
                 data['catalog_link'] = [CatalogEstimateSerializer(c).data for c in ancestors[::-1]]
+                data['catalog_materials'] = data['catalog_link'][0:3]
             except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError, AttributeError):
                 data['catalog_ancestor'] = None
                 data['catalog_link'] = []
+                data['catalog_materials'] = []
         else:
             data['material_value'] = {}
             data['catalog_ancestor'] = None
@@ -537,8 +553,7 @@ class POFormulaItemSerializer(serializers.ModelSerializer):
         model = POFormula
         fields = (
             'id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
-            'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario',
-            'material_data_entry', 'order'
+            'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario', 'order'
         )
 
     def to_representation(self, instance):
