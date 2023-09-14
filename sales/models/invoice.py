@@ -24,7 +24,7 @@ class PaymentHistory(BaseModel):
         OTHER = 'other', 'Other'
     invoice = models.ForeignKey('sales.Invoice', blank=True, null=True,
                                 on_delete=models.CASCADE, related_name='payment_histories')
-    date = models.DateField()
+    date = models.DateTimeField()
     amount = models.DecimalField(default=0, max_digits=32, decimal_places=2)
     payment_method = models.CharField(max_length=32, choices=PaymentStatus.choices, default=PaymentStatus.CREDIT_CARD)
     received_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, related_name='payments',
