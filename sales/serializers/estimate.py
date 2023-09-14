@@ -293,13 +293,16 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
         if data['material']:
             try:
                 primary_key = eval(data['material'])
-                data['material_value'] = primary_key
                 pk_catalog, row_index = primary_key.get('id').split(':')
                 catalog = Catalog.objects.get(pk=pk_catalog)
                 ancestors = catalog.get_full_ancestor()
                 ancestor = ancestors[-1]
                 data['catalog_ancestor'] = ancestor.pk
                 data['catalog_link'] = [CatalogEstimateSerializer(c).data for c in ancestors[::-1]]
+                if primary_key and isinstance(primary_key, dict):
+                    primary_key.update(catalog.get_material(primary_key.get('id')))
+                    primary_key.update({'levels': data['catalog_link']})
+                    data['material_value'] = primary_key
                 data['catalog_materials'] = data['catalog_link'][0:3]
             except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError, AttributeError):
                 data['catalog_ancestor'] = None
