@@ -141,7 +141,8 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
     for data_entry in data_entries:
         params = {"po_formula_id": instance.pk, "value": data_entry['value'], 'index': data_entry.get('index'),
                   'dropdown_value': data_entry.get('dropdown_value', ''), 'estimate_template_id': estimate_id,
-                  'material_value': data_entry.get('material_value', ''), 'copies_from': data_entry.get('copies_from')}
+                  'material_value': data_entry.get('material_value', ''), 'copies_from': data_entry.get('copies_from'),
+                  'group': data_entry.get('group', '')}
         try:
             data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
             if data_entry_pk:
