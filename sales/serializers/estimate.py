@@ -96,8 +96,7 @@ class DataEntrySerializer(serializers.ModelSerializer):
         update = super().update(instance, validated_data)
         # Update all data entry mentioned on formula
         if new_name != old_name:
-            company = self.context.get('request').user.company
-            objs = POFormulaToDataEntry.objects.filter(data_entry=instance, company=company).select_related('po_formula')
+            objs = POFormulaToDataEntry.objects.filter(data_entry=instance).select_related('po_formula')
             data = []
             for obj in objs:
                 obj = obj.po_formula
