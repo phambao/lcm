@@ -154,7 +154,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_METADATA_CLASS': 'base.metadata.SimpleMetadata',
     'DEFAULT_RENDERER_CLASSES': DEFAULT_RENDERER_CLASSES,
-    'UPLOADED_FILES_USE_URL': USE_CLOUD_STORAGE,
+    'UPLOADED_FILES_USE_URL': True,
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.UserRateThrottle'
     ],
