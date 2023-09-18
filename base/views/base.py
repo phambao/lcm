@@ -308,6 +308,7 @@ def active_column(request, pk):
 
 
 class FileMessageTodoGenericView(GenericViewSet):
+    queryset = FileBuilder365.objects.all()
     serializer_class = FileBuilder365ReqSerializer
     permission_classes = [permissions.IsAuthenticated]
 

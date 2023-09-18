@@ -468,7 +468,9 @@ def import_catalog(request):
     for row in catalog_sheet.iter_rows(min_row=2, values_only=True):
         catalog = mapping_data[f'catalog_{row[0]}']
         if row[catalog_parent_field]:
-            catalog.parents.add(mapping_data.get(f'catalog_{row[catalog_parent_field]}'))
+            data = mapping_data.get(f'catalog_{row[catalog_parent_field]}')
+            if data:
+                catalog.parents.add(data)
 
     for row in data_point_sheet.iter_rows(min_row=2, values_only=True):
         data_point = mapping_data[f'data_point_{row[0]}']
