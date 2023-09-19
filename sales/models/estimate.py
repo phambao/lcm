@@ -87,6 +87,51 @@ class POFormula(BaseModel):
             return True
         return False
 
+    def get_related_formula(self):
+        from sales.models.proposal import PriceComparison, ProposalWriting
+        data = {}
+        data['formulas'] = POFormula.objects.filter(is_show=True, formula__icontains=self.name).values('id', 'name')
+        assembles = Assemble.objects.filter(is_show=True, assemble_formulas__original=self.pk).distinct()
+        data['assembles'] = []
+        for assemble in assembles:
+            data['assembles'].append({
+                'id': assemble.id, 'name': assemble.name,
+                'formulas': POFormula.objects.filter(assemble__pk=assemble.id, original=self.pk).values('id', 'name')})
+
+        data['estimates'] = []
+        estimates = EstimateTemplate.objects.filter(
+            is_show=True, assembles__assemble_formulas__original=self.pk
+        ).distinct()
+        for estimate in estimates:
+            assembles = [assemble.id for assemble in estimate.assembles.all()]
+            data['estimates'].append({
+                'id': estimate.id, 'name': estimate.name,
+                'formulas': POFormula.objects.filter(assemble__pk__in=assembles, original=self.pk).values('id', 'name')
+            })
+
+        data['price_comparisons'] = []
+        price_comparisons = PriceComparison.objects.filter(
+            groups__estimate_templates__assembles__assemble_formulas__original=self.pk
+        ).distinct()
+        for price_comparison in price_comparisons:
+            formulas = price_comparison.get_formulas()
+            data['price_comparisons'].append({
+                'id': price_comparison.id, 'name': price_comparison.name,
+                'formulas': formulas.filter(original=self.pk).values('id', 'name')
+            })
+
+        data['proposal_writings'] = []
+        proposal_writings = ProposalWriting.objects.filter(
+            writing_groups__estimate_templates__assembles__assemble_formulas__original=self.pk
+        ).distinct()
+        for proposal_writing in proposal_writings:
+            formulas = proposal_writing.get_data_formula()
+            data['proposal_writings'].append({
+                'id': proposal_writing.id, 'name': proposal_writing.name,
+                'formulas': formulas.filter(original=self.pk).values('id', 'name')
+            })
+        return data
+
 
 class POFormulaToDataEntry(BaseModel):
     data_entry = models.ForeignKey(DataEntry, on_delete=models.CASCADE, blank=True, null=True)
@@ -174,3 +219,4 @@ class DataView(BaseModel):
                                           null=True, blank=True)
     index = models.IntegerField(blank=True, default=0, null=True)
     type = models.CharField(max_length=8, choices=Type.choices, default=Type.CUSTOM, blank=True)
+    value = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=2, blank=True, default=0)

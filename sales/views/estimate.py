@@ -339,3 +339,15 @@ def get_material_from_formula(request, pk):
     sub_categories = Catalog.objects.filter(pk__in=cat.get_all_descendant(have_self=True))
     data = parse_c_table(sub_categories)
     return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def action_related_formulas(request, pk):
+    if request.method == 'GET':
+        formula = get_object_or_404(POFormula.objects.all(), pk=pk)
+        data = formula.get_related_formula()
+        return Response(status=status.HTTP_200_OK, data=data)
+
+    if request.method == 'PUT':
+        return Response(status=status.HTTP_200_OK)

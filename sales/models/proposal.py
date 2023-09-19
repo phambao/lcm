@@ -55,6 +55,19 @@ class PriceComparison(BaseModel):
     name = models.CharField(max_length=128)
     cost_different = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
+    def get_formulas(self):
+        groups = self.groups.all()
+        estimates = EstimateTemplate.objects.none()
+        for group in groups:
+            estimates |= group.estimate_templates.all()
+        assembles = Assemble.objects.none()
+        for estimate in estimates:
+            assembles |= estimate.assembles.all()
+        poformulas = POFormula.objects.none()
+        for assemble in assembles:
+            poformulas |= assemble.assemble_formulas.all()
+        return poformulas
+
 
 class ProposalWriting(BaseModel):
     name = models.CharField(max_length=128)
