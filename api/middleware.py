@@ -49,4 +49,3 @@ class SettingTranslateMiddleware:
             if user.lang:
                 activate(user.lang)
         return self.get_response(request)
-
