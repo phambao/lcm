@@ -11,7 +11,7 @@ from base.views.base import update_language_user, QuestionGenericView, QuestionD
     CompanyAnswerQuestionSerializerDetailGenericView, create_question_answer_company, update_question_answer_company
 # Define path for Base App ------------------------------------------------------
 from base.views.country_state_city import address_search, detail_location
-from base.views.payment import stripe_webhook_view, ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
+from base.views.payment import ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
     stripe_cancel_subscription, get_config, create_customer, create_subscription, cancel_subscription, \
     list_subscriptions, preview_invoice, update_subscription, webhook_received, PaymentHistoryStripePreview, \
     preview_subscription, check_promotion_code, update_customer
@@ -52,7 +52,6 @@ url_base = [
     path('permission/<int:pk>/', auth.PermissionDetail.as_view()),
     path('roles/', auth.get_permission),
     path('lang/<str:lang>/', update_language_user),
-    path('stripe-webhook/', stripe_webhook_view, name='stripe-webhook'),
     path('product/<int:pk>/', ProductPreviewDetail.as_view()),
     path('product/', ProductPreview.as_view()),
     path('payment/stripe/create-checkout-session/', csrf_exempt(CreateCheckOutSession.as_view()), name='checkout_session'),
