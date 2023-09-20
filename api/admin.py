@@ -2,6 +2,7 @@
 import random
 import string
 
+import stripe
 from django.template.loader import render_to_string
 from django.contrib import admin, messages
 from django.core.mail import send_mail
@@ -11,6 +12,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from api.models import CompanyBuilder, User
 from base.models.config import Question, Answer
+from base.models.payment import Price, Product
 
 
 class UserInline(admin.TabularInline):
@@ -151,6 +153,52 @@ class AnswerAdmin(admin.ModelAdmin):
     search_fields = ['name', 'question']
 
 
+class PriceAdmin(admin.ModelAdmin):
+    list_display = ('product', 'amount', 'currency')
+    search_fields = ('product__name',)
+    list_filter = ('currency',)
+
+
+class PriceInline(admin.TabularInline):
+    model = Price
+    extra = 1
+
+
+class StripeProductAdmin(admin.ModelAdmin):
+    list_display = ('name', 'get_prices')
+    search_fields = ('name',)
+    inlines = [PriceInline]
+
+    def get_prices(self, obj):
+        prices = obj.price_product.all()
+        return ', '.join([f"{price.amount} {price.currency}" for price in prices])
+
+    get_prices.short_description = 'Prices'
+
+    def save_model(self, request, obj, form, change):
+        stripe_product = stripe.Product.create(
+            name=obj.name,
+            description=obj.description,
+        )
+        obj.stripe_product_id = stripe_product.id
+        obj.save()
+
+        total_forms = int(request.POST.get('price_product-TOTAL_FORMS'))
+
+        for i in range(total_forms):
+            amount = float(request.POST.get(f'price_product-{i}-amount'))
+            currency = request.POST.get(f'price_product-{i}-currency')
+
+            unit_amount = int(amount * 100)
+            price = stripe.Price.create(
+                unit_amount=unit_amount,
+                currency=currency,
+                product=stripe_product.id,
+            )
+
+
+admin.site.register(Price, PriceAdmin)
+admin.site.register(Product, StripeProductAdmin)
 admin.site.register(User, UserAdmin)
 admin.site.register(CompanyBuilder, CompanyAdmin)
 admin.site.register(Question, QuestionAdmin)

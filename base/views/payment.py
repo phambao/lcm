@@ -67,45 +67,6 @@ class CreateCheckOutSession(APIView):
 
 
 @api_view(['POST'])
-@csrf_exempt
-def stripe_webhook_view(request):
-    payload = request.body
-    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
-    event = None
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, config('STRIPE_SECRET_WEBHOOK')
-        )
-
-    except ValueError as e:
-        # Invalid payload
-        return Response(status=400)
-    except stripe.error.SignatureVerificationError as e:
-        # Invalid signature
-        return Response(status=400)
-    if event['type'] == 'charge.succeeded':
-        customer = stripe.Customer.create(
-            email='daylatruong1@gmail.com',
-            name='truonganh9988',
-            invoice_prefix='TTKEWYGGEL'
-        )
-        subscription = stripe.Subscription.create(
-            customer=customer.id,
-            items=[
-                {
-                    'price': 'price_1NSAw2E4OZckNkJ5fvwlIRxN',  # ID của giá cả hàng tháng/tuần/năm
-                }
-            ]
-        )
-    if event['type'] == 'customer.created':
-        pass
-    if event['type'] == 'invoice.created':
-        customer_id = event['data']['object']['customer']
-        stripe.Customer.delete(customer_id)
-    return HttpResponse(status=200)
-
-
-@api_view(['POST'])
 def stripe_cancel_subscription(request):
     try:
         stripe.Subscription.modify(
