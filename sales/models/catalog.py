@@ -225,6 +225,9 @@ class Catalog(BaseModel):
         """
         pk_catalog, row_index = material.split(':')
         pk_catalog, row_index = int(pk_catalog), int(row_index)
-        d = self.c_table['data'][row_index]
-        header = self.c_table['header']
-        return {**{header[i]: d[i] for i in range(len(header))}, **{"id": f'{self.pk}:{row_index}'}}
+        try:
+            d = self.c_table['data'][row_index]
+            header = self.c_table['header']
+            return {**{header[i]: d[i] for i in range(len(header))}, **{"id": f'{self.pk}:{row_index}'}}
+        except (KeyError, IndexError):
+            return {}
