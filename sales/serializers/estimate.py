@@ -519,21 +519,21 @@ class EstimateTemplateForFormattingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EstimateTemplate
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'quantity', 'unit')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['unit'] = ''
         data['quantity'] = ''
+        data['unit'] = ''
         if instance.unit:
             try:
-                data['unit'] = UnitLibrary.objects.get(pk=data.get('unit', None)).name
-            except UnitLibrary.DoesNotExist:
+                data['unit'] = UnitLibrary.objects.get(pk=instance.unit).name
+            except (UnitLibrary.DoesNotExist, ValueError):
                 pass
         if instance.quantity:
             try:
-                data['quantity'] = DataEntry.objects.get(pk=data.get('quantity', None)).name
-            except DataEntry.DoesNotExist:
+                data['quantity'] = DataEntry.objects.get(pk=instance.quantity).name
+            except (DataEntry.DoesNotExist):
                 pass
         data['total_charge'] = instance.get_formula().aggregate(
             total_charge=Sum('charge')
