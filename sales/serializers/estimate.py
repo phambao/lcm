@@ -304,11 +304,10 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
                     primary_key.update(catalog.get_material(primary_key.get('id')))
                     primary_key.update({'levels': data['catalog_link']})
                     data['material_value'] = primary_key
-                data['catalog_materials'] = data['catalog_link'][0:3]
+                data['catalog_materials'] = data['catalog_link']
             except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError, AttributeError):
                 data['catalog_ancestor'] = None
                 data['catalog_link'] = []
-                data['catalog_materials'] = []
         else:
             data['material_value'] = {}
             data['catalog_ancestor'] = None
