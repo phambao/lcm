@@ -527,12 +527,12 @@ class EstimateTemplateForFormattingSerializer(serializers.ModelSerializer):
         data['quantity'] = ''
         if instance.unit:
             try:
-                data['unit'] = UnitLibrary.objects.get(pk=data['unit']).name
+                data['unit'] = UnitLibrary.objects.get(pk=data.get('unit', None)).name
             except UnitLibrary.DoesNotExist:
                 pass
         if instance.quantity:
             try:
-                data['quantity'] = DataEntry.objects.get(pk=data['quantity']).name
+                data['quantity'] = DataEntry.objects.get(pk=data.get('quantity', None)).name
             except DataEntry.DoesNotExist:
                 pass
         data['total_charge'] = instance.get_formula().aggregate(
