@@ -7,7 +7,7 @@
 # Order is important. The last matching pattern has the most precedence.
 # So if a pull request only touches Python files, only these owners
 # will be requested to review.
-*.py * @baofds @nxtruong451999
+*.py @baofds @nxtruong451999
 
 # You can also use email addresses if you prefer.
-docs/*  docs@example.com
+.github/*  tri.phan@fdssoft.com
