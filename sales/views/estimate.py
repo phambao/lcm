@@ -344,10 +344,25 @@ def get_material_from_formula(request, pk):
 @api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def action_related_formulas(request, pk):
+    formula = get_object_or_404(POFormula.objects.all(), pk=pk)
     if request.method == 'GET':
-        formula = get_object_or_404(POFormula.objects.all(), pk=pk)
         data = formula.get_related_formula()
         return Response(status=status.HTTP_200_OK, data=data)
 
     if request.method == 'PUT':
+        serializer = POFormulaSerializer(formula, request.data, context={'request': request})
+        serializer.is_valid()
+        obj = serializer.save()
+
+        # Update related formulas
+        related_formulas_ids = request.data.pop('related_formulas', [])
+        data = request.data
+        delist_column = ['group', 'assemble', 'is_show', 'id']
+        for column in delist_column:
+            data.pop(column)
+        related_formulas = POFormula.objects.filter(pk__in=related_formulas_ids)
+        for formula in related_formulas:
+            serializer = POFormulaSerializer(formula, data, context={'request': request})
+            serializer.is_valid()
+            obj = serializer.save()
         return Response(status=status.HTTP_200_OK)
