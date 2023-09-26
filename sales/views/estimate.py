@@ -1,9 +1,12 @@
+import io
 from datetime import datetime
 from datetime import timedelta
 
+from django.http import FileResponse
 from django.utils.timezone import now
 from django.db.models import Value, Q, Subquery
 from django_filters.filters import _truncate
+from openpyxl import Workbook, load_workbook
 from rest_framework import generics, permissions, status, filters as rf_filters
 from django_filters import rest_framework as filters
 from rest_framework.decorators import api_view, permission_classes
@@ -351,3 +354,135 @@ def action_related_formulas(request, pk):
 
     if request.method == 'PUT':
         return Response(status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def export_data_unit_library(request):
+    workbook = Workbook()
+    unit_library_sheet = workbook.create_sheet(title='UnitLibrary')
+    unit_library = UnitLibrary.objects.all()
+    unit_library_fields = ['Name', 'Description', 'User Create', 'User Update', 'Create Date', 'Update Date']
+    unit_library_sheet.append(unit_library_fields)
+    for index, data_unit_library in enumerate(unit_library, 1):
+        user_create = data_unit_library.user_create.username
+        user_update = data_unit_library.user_update
+        create_date = data_unit_library.created_date
+        if user_update is not None:
+            user_update = user_update.username
+        else:
+            user_update = ''
+
+        if create_date is not None:
+            create_date = create_date.replace(tzinfo=None)
+        else:
+            create_date = ''
+
+        modified_date = data_unit_library.modified_date
+        if modified_date is not None:
+            modified_date = modified_date.replace(tzinfo=None)
+        else:
+            modified_date = ''
+        row_data = [
+            data_unit_library.name, data_unit_library.description, user_create, user_update, create_date, modified_date
+        ]
+
+        unit_library_sheet.append(row_data)
+
+    workbook.remove(workbook['Sheet'])
+    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"Unit_library_sheet_{current_datetime}.xlsx"
+    output = io.BytesIO()
+    workbook.save(output)
+    output.seek(0)
+    response = FileResponse(output, as_attachment=True, filename=filename)
+    return response
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def import_data_unit_library(request):
+    file = request.FILES['file']
+    workbook = load_workbook(file)
+    unit_library_sheet = workbook['UnitLibrary']
+
+    max_row = unit_library_sheet.max_row
+    temp_rs = []
+    for row_number in range(max_row, 1, -1):
+        row = unit_library_sheet[row_number]
+        data_create = {
+            'name': row[0].value,
+            'description': row[1].value
+        }
+        ul = UnitLibrary.objects.create(**data_create)
+        temp_rs.append(ul)
+
+    rs = UnitLibrarySerializer(
+        temp_rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=rs)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def export_data_description_library(request):
+    workbook = Workbook()
+    description_library_sheet = workbook.create_sheet(title='LinkDescriptionLibrary')
+    description_library = DescriptionLibrary.objects.all()
+    description_library_fields = ['Name', 'Link Description', 'User Create', 'User Update', 'Create Date', 'Update Date']
+    description_library_sheet.append(description_library_fields)
+    for index, data_description_library in enumerate(description_library, 1):
+        user_create = data_description_library.user_create.username
+        user_update = data_description_library.user_update
+        create_date = data_description_library.created_date
+        if user_update is not None:
+            user_update = user_update.username
+        else:
+            user_update = ''
+
+        if create_date is not None:
+            create_date = create_date.replace(tzinfo=None)
+        else:
+            create_date = ''
+
+        modified_date = data_description_library.modified_date
+        if modified_date is not None:
+            modified_date = modified_date.replace(tzinfo=None)
+        else:
+            modified_date = ''
+        row_data = [
+            data_description_library.name, data_description_library.linked_description, user_create, user_update, create_date, modified_date
+        ]
+
+        description_library_sheet.append(row_data)
+
+    workbook.remove(workbook['Sheet'])
+    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"Description_library_sheet_{current_datetime}.xlsx"
+    output = io.BytesIO()
+    workbook.save(output)
+    output.seek(0)
+    response = FileResponse(output, as_attachment=True, filename=filename)
+    return response
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def import_data_description_library(request):
+    file = request.FILES['file']
+    workbook = load_workbook(file)
+    description_library_sheet = workbook['LinkDescriptionLibrary']
+
+    max_row = description_library_sheet.max_row
+    temp_rs = []
+    for row_number in range(max_row, 1, -1):
+        row = description_library_sheet[row_number]
+        data_create = {
+            'name': row[0].value,
+            'linked_description': row[1].value
+        }
+        ul = DescriptionLibrary.objects.create(**data_create)
+        temp_rs.append(ul)
+
+    rs = DescriptionLibrarySerializer(
+        temp_rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=rs)
