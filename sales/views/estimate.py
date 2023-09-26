@@ -376,7 +376,7 @@ def action_related_formulas(request, pk):
 def export_data_unit_library(request):
     workbook = Workbook()
     unit_library_sheet = workbook.create_sheet(title='UnitLibrary')
-    unit_library = UnitLibrary.objects.all()
+    unit_library = UnitLibrary.objects.all(company=request.user.company)
     unit_library_fields = ['Name', 'Description', 'User Create', 'User Update', 'Create Date', 'Update Date']
     unit_library_sheet.append(unit_library_fields)
     for index, data_unit_library in enumerate(unit_library, 1):
@@ -442,7 +442,7 @@ def import_data_unit_library(request):
 def export_data_description_library(request):
     workbook = Workbook()
     description_library_sheet = workbook.create_sheet(title='LinkDescriptionLibrary')
-    description_library = DescriptionLibrary.objects.all()
+    description_library = DescriptionLibrary.objects.all(company=request.user.company)
     description_library_fields = ['Name', 'Link Description', 'User Create', 'User Update', 'Create Date', 'Update Date']
     description_library_sheet.append(description_library_fields)
     for index, data_description_library in enumerate(description_library, 1):
