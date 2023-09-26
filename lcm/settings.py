@@ -232,6 +232,15 @@ if DEBUG:
         'rest_framework.renderers.BrowsableAPIRenderer',
     )
 
+def show_toolbar(request):
+    if USE_DEBUG_TOOLBAR:
+        return True
+    return False
+
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': show_toolbar,
+}
+
 if USE_DEBUG_TOOLBAR:
 
     INSTALLED_APPS.append('debug_toolbar')
