@@ -304,11 +304,10 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
                     primary_key.update(catalog.get_material(primary_key.get('id')))
                     primary_key.update({'levels': data['catalog_link']})
                     data['material_value'] = primary_key
-                data['catalog_materials'] = data['catalog_link'][0:3]
+                data['catalog_materials'] = data['catalog_link']
             except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError, AttributeError):
                 data['catalog_ancestor'] = None
                 data['catalog_link'] = []
-                data['catalog_materials'] = []
         else:
             data['material_value'] = {}
             data['catalog_ancestor'] = None
@@ -520,21 +519,21 @@ class EstimateTemplateForFormattingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EstimateTemplate
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'quantity', 'unit')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['unit'] = ''
         data['quantity'] = ''
+        data['unit'] = ''
         if instance.unit:
             try:
-                data['unit'] = UnitLibrary.objects.get(pk=data['unit']).name
-            except UnitLibrary.DoesNotExist:
+                data['unit'] = UnitLibrary.objects.get(pk=instance.unit).name
+            except (UnitLibrary.DoesNotExist, ValueError):
                 pass
         if instance.quantity:
             try:
-                data['quantity'] = DataEntry.objects.get(pk=data['quantity']).name
-            except DataEntry.DoesNotExist:
+                data['quantity'] = DataEntry.objects.get(pk=instance.quantity).name
+            except (DataEntry.DoesNotExist):
                 pass
         data['total_charge'] = instance.get_formula().aggregate(
             total_charge=Sum('charge')

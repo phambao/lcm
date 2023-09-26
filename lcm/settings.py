@@ -232,12 +232,19 @@ if DEBUG:
         'rest_framework.renderers.BrowsableAPIRenderer',
     )
 
+def show_toolbar(request):
+    if USE_DEBUG_TOOLBAR:
+        return True
+    return False
+
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': show_toolbar,
+}
+
 if USE_DEBUG_TOOLBAR:
 
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(2, "debug_toolbar.middleware.DebugToolbarMiddleware")
-    INTERNAL_IPS = [
-        # ...
-        "127.0.0.1",
-        # ...
-    ]
+    import socket  # only if you haven't already imported this
+    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+    INTERNAL_IPS = [ip[: ip.rfind(".")] + ".1" for ip in ips] + ["127.0.0.1", "10.0.2.2"]
