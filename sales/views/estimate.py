@@ -21,7 +21,7 @@ from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter, Assemb
 from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, UnitLibrary, \
     DescriptionLibrary, Assemble, EstimateTemplate, MaterialView
-from sales.serializers.catalog import CatalogLevelValueSerializer
+from sales.serializers.catalog import CatalogEstimateSerializer, CatalogEstimateWithParentSerializer, CatalogLevelValueSerializer
 from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
     UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, AssembleSerializer, \
     EstimateTemplateSerializer, TaggingSerializer, GroupFormulasSerializer, POFormulaCompactSerializer, \
@@ -342,6 +342,18 @@ def get_material_from_formula(request, pk):
     sub_categories = Catalog.objects.filter(pk__in=cat.get_all_descendant(have_self=True))
     data = parse_c_table(sub_categories)
     return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def get_option_data_entry(request, pk):
+    de = DataEntry.objects.get(pk=pk)
+    categories = de.material_selections.all()
+    children = Catalog.objects.none()
+    for category in categories:
+        children |= Catalog.objects.filter(parents=category)
+    serializer = CatalogEstimateWithParentSerializer(children, many=True)
+    return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
 @api_view(['GET', 'PUT'])
