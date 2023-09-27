@@ -48,7 +48,7 @@ class POFormula(BaseModel):
     material_data_entry = models.JSONField(blank=True, default=dict, null=True)
     formula_for_data_view = models.IntegerField(blank=True, default=0, null=True)  # Used for dataview in other model
     original = models.IntegerField(default=0, blank=True, null=True)
-    catalog_materials = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True, null=True)
+    catalog_materials = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
     order = models.IntegerField(default=0, blank=True)
 
     def parse_material(self):

@@ -309,6 +309,7 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
                 data['catalog_ancestor'] = None
                 data['catalog_link'] = []
         else:
+            data['catalog_materials'] = [i for i in data['catalog_materials'] if i]
             data['material_value'] = {}
             data['catalog_ancestor'] = None
             data['catalog_link'] = []
