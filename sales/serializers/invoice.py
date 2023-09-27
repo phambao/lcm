@@ -29,6 +29,11 @@ class PaymentHistorySerializer(serializers.ModelSerializer, SerializerMixin):
         validated_data['invoice'] = invoice
         return super().create(validated_data)
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['content_type'] = ContentType.objects.get_for_model(PaymentHistory).pk
+        return data
+
 
 class ProposalItemSerializer(UnitSerializerMixin, serializers.ModelSerializer):
 

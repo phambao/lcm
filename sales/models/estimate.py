@@ -145,6 +145,7 @@ class POFormulaToDataEntry(BaseModel):
                                           blank=True, null=True, related_name='data_entries')
     copies_from = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True, null=True)
     group = models.CharField(blank=True, default='', max_length=128)
+    material_data_entry_link = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
 
 
 class MaterialView(BaseModel):
