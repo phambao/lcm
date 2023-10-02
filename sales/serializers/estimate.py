@@ -340,6 +340,13 @@ class GroupFormulasSerializer(serializers.ModelSerializer):
         return instance
 
 
+class POFormulaGroupCompactSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = POFormulaGrouping
+        fields = ('id', 'name')
+
+
 class POFormulaGroupingSerializer(serializers.ModelSerializer):
     group_formulas = POFormulaSerializer('group', many=True, allow_null=True, required=False)
 

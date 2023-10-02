@@ -22,7 +22,7 @@ from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, UnitLibrary, \
     DescriptionLibrary, Assemble, EstimateTemplate, MaterialView
 from sales.serializers.catalog import CatalogEstimateSerializer, CatalogEstimateWithParentSerializer, CatalogLevelValueSerializer
-from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
+from sales.serializers.estimate import POFormulaGroupCompactSerializer, POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
     UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, AssembleSerializer, \
     EstimateTemplateSerializer, TaggingSerializer, GroupFormulasSerializer, POFormulaCompactSerializer, \
     AssembleCompactSerializer, EstimateTemplateCompactSerializer
@@ -41,6 +41,13 @@ class POFormulaList(CompanyFilterMixin, generics.ListCreateAPIView):
     search_fields = ('name', )
 
 
+class POFormulaReMarkOnGroupList(POFormulaList):
+    queryset = POFormula.objects.filter(is_show=True).\
+        prefetch_related('self_data_entries').select_related('assemble', 'group').order_by('-modified_date')
+    search_fields = ('name', 'formula', 'quantity', 'markup', 'charge', 'material', 'cost',
+                     'unit', 'gross_profit', 'description_of_formula')
+
+
 class POFormulaCompactList(POFormulaList):
     serializer_class = POFormulaCompactSerializer
 
@@ -57,6 +64,10 @@ class POFormulaGroupingList(CompanyFilterMixin, generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = GroupFormulaFilter
+
+
+class POFormulaGroupCompactList(POFormulaGroupingList):
+    serializer_class = POFormulaGroupCompactSerializer
 
 
 class POFormulaGroupingCreate(CompanyFilterMixin, generics.CreateAPIView):

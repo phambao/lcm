@@ -194,11 +194,13 @@ url_schedule = [
 # URL Estimate
 url_estimate = [
     path('po-formula/', estimate.POFormulaList.as_view()),
+    path('formula/', estimate.POFormulaReMarkOnGroupList.as_view()),
     path('po-formula-compact/', estimate.POFormulaCompactList.as_view()),
     path('po-formula/<int:pk>/', estimate.POFormulaDetail.as_view()),
     path('po-formula/<int:pk>/check-action/', estimate.action_related_formulas),
     path('material/<int:pk>/', estimate.get_material_from_formula),
     path('formula-grouping/', estimate.POFormulaGroupingList.as_view()),
+    path('formula-grouping-compact/', estimate.POFormulaGroupCompactList.as_view()),
     path('formula-grouping-filter/', estimate.filter_group_fo_to_fo),
     path('formula-grouping/unlink/', estimate.unlink_group),
     path('formula-grouping/<int:pk>/', estimate.POFormulaGroupingDetail.as_view()),
