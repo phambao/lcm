@@ -204,7 +204,7 @@ class CatalogEstimateSerializer(serializers.ModelSerializer):
 class CatalogEstimateWithParentSerializer(CatalogEstimateSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['parent_name'] = instance.parents.first().name
+        data['name'] = f'{instance.parents.first().name} - {data["name"]}'
         return data
 
 
