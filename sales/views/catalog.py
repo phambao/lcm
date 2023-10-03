@@ -1,11 +1,7 @@
-import io
-
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Value
-from django.http import FileResponse
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from django_filters import rest_framework as filters
 from openpyxl.reader.excel import load_workbook
 from openpyxl.workbook import Workbook
@@ -14,6 +10,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from base.permissions import CatalogPermissions
+from base.utils import file_response
 from ..filters.catalog import CatalogFilter
 from ..models.catalog import Catalog, CatalogLevel, DataPointUnit, DataPoint
 from ..serializers import catalog
@@ -390,14 +387,7 @@ def export_catalog(request):
     for data in data_points:
         data_points_sheet.append(data)
 
-    workbook.remove(workbook['Sheet'])
-    current_datetime = timezone.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"Catalog_{current_datetime}.xlsx"
-    output = io.BytesIO()
-    workbook.save(output)
-    output.seek(0)
-    response = FileResponse(output, as_attachment=True, filename=filename)
-    return response
+    return file_response(workbook=workbook, title='Catalog')
 
 
 @api_view(['POST'])
