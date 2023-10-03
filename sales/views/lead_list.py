@@ -1,9 +1,6 @@
-import io
 import uuid
-from datetime import datetime
 
 from django.core.files.base import ContentFile
-from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_filters import rest_framework as filters
@@ -14,8 +11,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from api.middleware import get_request
-from base.models.config import FileBuilder365
 from base.permissions import LeadPermissions
+from base.utils import file_response
 from base.views.base import CompanyFilterMixin
 from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, Photos, ContactTypeName, \
@@ -513,14 +510,7 @@ def export_data(request):
         ]
         photo_sheet.append(row)
 
-    workbook.remove(workbook['Sheet'])
-    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"Lead_detail_{current_datetime}.xlsx"
-    output = io.BytesIO()
-    workbook.save(output)
-    output.seek(0)
-    response = FileResponse(output, as_attachment=True, filename=filename)
-    return response
+    return file_response(workbook=workbook, title='Lead_detail')
 
 
 @api_view(['POST'])

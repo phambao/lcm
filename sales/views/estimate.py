@@ -1,8 +1,6 @@
-import io
 from datetime import datetime
 from datetime import timedelta
 
-from django.http import FileResponse
 from django.utils.timezone import now
 from django.db.models import Value, Q, Subquery
 from django_filters.filters import _truncate
@@ -16,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework import serializers
 
 from base.permissions import EstimatePermissions
+from base.utils import file_response
 from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter, AssembleFilter, GroupFormulaFilter,\
     DescriptionFilter, UnitFilter, DataEntryFilter
 from sales.models import DataPoint, Catalog
@@ -427,14 +426,7 @@ def export_data_unit_library(request):
 
         unit_library_sheet.append(row_data)
 
-    workbook.remove(workbook['Sheet'])
-    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"Unit_library_sheet_{current_datetime}.xlsx"
-    output = io.BytesIO()
-    workbook.save(output)
-    output.seek(0)
-    response = FileResponse(output, as_attachment=True, filename=filename)
-    return response
+    return file_response(workbook=workbook, title='Unit_Library')
 
 
 @api_view(['POST'])
@@ -493,14 +485,7 @@ def export_data_description_library(request):
 
         description_library_sheet.append(row_data)
 
-    workbook.remove(workbook['Sheet'])
-    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"Description_library_sheet_{current_datetime}.xlsx"
-    output = io.BytesIO()
-    workbook.save(output)
-    output.seek(0)
-    response = FileResponse(output, as_attachment=True, filename=filename)
-    return response
+    return file_response(workbook=workbook, title='Description_Library')
 
 
 @api_view(['POST'])
