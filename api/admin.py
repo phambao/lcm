@@ -163,38 +163,108 @@ class PriceInline(admin.TabularInline):
     model = Price
     extra = 1
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.filter(is_activate=True)
+
 
 class StripeProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'get_prices')
+    list_display = ('name', 'stripe_product_id', 'get_prices')
     search_fields = ('name',)
     inlines = [PriceInline]
 
     def get_prices(self, obj):
-        prices = obj.price_product.all()
+        prices = obj.price_product.filter(is_activate=True)
         return ', '.join([f"{price.amount} {price.currency}" for price in prices])
 
     get_prices.short_description = 'Prices'
 
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        Price.objects.filter(product=form.instance).delete()
+        prices = stripe.Price.list(product=form.instance.stripe_product_id)
+        reversed_prices = list(reversed(prices.data))
+        for price in reversed_prices:
+            data_create = {
+                'amount': price['unit_amount'] / 100,
+                'currency': price['currency'],
+                'product': form.instance,
+                'stripe_price_id': price['id'],
+                'is_activate': price['active']
+            }
+            Price.objects.create(**data_create)
+
     def save_model(self, request, obj, form, change):
-        stripe_product = stripe.Product.create(
-            name=obj.name,
-            description=obj.description,
-        )
-        obj.stripe_product_id = stripe_product.id
-        obj.save()
+        if obj.stripe_product_id:
+            try:
+                product = stripe.Product.retrieve(obj.stripe_product_id)
+                prices = stripe.Price.list(product=obj.stripe_product_id, active=True)
 
-        total_forms = int(request.POST.get('price_product-TOTAL_FORMS'))
+                product.name = obj.name
+                product.name = obj.description
+                product.save()
+                data = Price.objects.filter(product=obj, is_activate=True)
+                reversed_prices = list(reversed(prices.data))
+                total_forms = int(request.POST.get('price_product-TOTAL_FORMS'))
+                length = len(data)
+                for i in range(total_forms):
+                    if length > i:
+                        amount = float(request.POST.get(f'price_product-{i}-amount'))
+                        currency = request.POST.get(f'price_product-{i}-currency')
 
-        for i in range(total_forms):
-            amount = float(request.POST.get(f'price_product-{i}-amount'))
-            currency = request.POST.get(f'price_product-{i}-currency')
+                        unit_amount = int(amount * 100)
+                        tmp_price = reversed_prices[i]['id']
+                        data_price = stripe.Price.retrieve(tmp_price)
+                        if unit_amount != data_price.unit_amount:
+                            data[i].amount = data_price.unit_amount/100
+                            data[i].save()
+                            data_price.active = False
+                            data_price.save()
+                            price = stripe.Price.create(
+                                unit_amount=unit_amount,
+                                currency=currency,
+                                product=obj.stripe_product_id,
+                            )
+                            data_create = {
+                                'amount': amount,
+                                'currency': currency,
+                                'product': obj
+                            }
+                            Price.objects.create(**data_create)
 
-            unit_amount = int(amount * 100)
-            price = stripe.Price.create(
-                unit_amount=unit_amount,
-                currency=currency,
-                product=stripe_product.id,
+                    else:
+                        amount = float(request.POST.get(f'price_product-{i}-amount'))
+                        currency = request.POST.get(f'price_product-{i}-currency')
+
+                        unit_amount = int(amount * 100)
+                        price = stripe.Price.create(
+                            unit_amount=unit_amount,
+                            currency=currency,
+                            product=obj.stripe_product_id,
+                        )
+
+            except stripe.error.StripeError as e:
+                messages.error(request, 'Create Error')
+
+        else:
+            stripe_product = stripe.Product.create(
+                name=obj.name,
+                description=obj.description,
             )
+            obj.stripe_product_id = stripe_product.id
+            obj.save()
+            total_forms = int(request.POST.get('price_product-TOTAL_FORMS'))
+
+            for i in range(total_forms):
+                amount = float(request.POST.get(f'price_product-{i}-amount'))
+                currency = request.POST.get(f'price_product-{i}-currency')
+
+                unit_amount = int(amount * 100)
+                price = stripe.Price.create(
+                    unit_amount=unit_amount,
+                    currency=currency,
+                    product=stripe_product.id,
+                )
 
 
 admin.site.register(Price, PriceAdmin)
