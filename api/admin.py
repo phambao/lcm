@@ -206,9 +206,9 @@ class StripeProductAdmin(admin.ModelAdmin):
                 data = Price.objects.filter(product=obj, is_activate=True)
                 reversed_prices = list(reversed(prices.data))
                 total_forms = int(request.POST.get('price_product-TOTAL_FORMS'))
-
+                length = len(data)
                 for i in range(total_forms):
-                    if len(data) > i:
+                    if length > i:
                         amount = float(request.POST.get(f'price_product-{i}-amount'))
                         currency = request.POST.get(f'price_product-{i}-currency')
 
