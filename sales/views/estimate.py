@@ -398,7 +398,7 @@ def action_related_formulas(request, pk):
 def export_data_unit_library(request):
     workbook = Workbook()
     unit_library_sheet = workbook.create_sheet(title='UnitLibrary')
-    unit_library = UnitLibrary.objects.all(company=request.user.company)
+    unit_library = UnitLibrary.objects.filter(company=request.user.company)
     unit_library_fields = ['Name', 'Description', 'User Create', 'User Update', 'Create Date', 'Update Date']
     unit_library_sheet.append(unit_library_fields)
     for index, data_unit_library in enumerate(unit_library, 1):
@@ -457,7 +457,7 @@ def import_data_unit_library(request):
 def export_data_description_library(request):
     workbook = Workbook()
     description_library_sheet = workbook.create_sheet(title='LinkDescriptionLibrary')
-    description_library = DescriptionLibrary.objects.all(company=request.user.company)
+    description_library = DescriptionLibrary.objects.filter(company=request.user.company)
     description_library_fields = ['Name', 'Link Description', 'User Create', 'User Update', 'Create Date', 'Update Date']
     description_library_sheet.append(description_library_fields)
     for index, data_description_library in enumerate(description_library, 1):
@@ -509,3 +509,16 @@ def import_data_description_library(request):
     rs = DescriptionLibrarySerializer(
         temp_rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def export_data_entry(request):
+    workbook = Workbook()
+    data_entry_sheet = workbook.create_sheet(title='Data_Entry')
+    data_entries = DataEntry.objects.filter(company=request.user.company)
+    data_entry_fields = ['Name', 'Unit', 'Is Dropdown', 'Dropdown', 'Is Material Selection', 'Material Selection']
+    data_entry_sheet.append(data_entry_fields)
+    for data_entry in data_entries:
+        data_entry_sheet.append(data_entry.export_to_json())
+    return file_response(workbook=workbook, title='Unit_Library')
