@@ -174,7 +174,7 @@ class StripeProductAdmin(admin.ModelAdmin):
     inlines = [PriceInline]
 
     def get_prices(self, obj):
-        prices = obj.price_product.all()
+        prices = obj.price_product.filter(is_activate=True)
         return ', '.join([f"{price.amount} {price.currency}" for price in prices])
 
     get_prices.short_description = 'Prices'
