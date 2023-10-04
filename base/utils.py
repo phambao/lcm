@@ -1,4 +1,8 @@
+from datetime import datetime
+import io
 import sys
+
+from django.http import FileResponse
 
 
 def pop(data, key, default_type):
@@ -22,3 +26,13 @@ def extra_kwargs_for_base_model():
 
 def str_to_class(base_path, classname):
     return getattr(sys.modules[base_path], classname)
+
+
+def file_response(workbook, title):
+    workbook.remove(workbook['Sheet'])
+    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{title}_{current_datetime}.xlsx"
+    output = io.BytesIO()
+    workbook.save(output)
+    output.seek(0)
+    return FileResponse(output, as_attachment=True, filename=filename)

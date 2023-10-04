@@ -201,6 +201,13 @@ class CatalogEstimateSerializer(serializers.ModelSerializer):
         extra_kwargs = {'id': {'read_only': False, 'required': False}}
 
 
+class CatalogEstimateWithParentSerializer(CatalogEstimateSerializer):
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['name'] = f'{instance.parents.first().name} - {data["name"]}'
+        return data
+
+
 class CatalogImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Catalog

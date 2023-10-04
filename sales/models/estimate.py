@@ -22,6 +22,12 @@ class DataEntry(BaseModel):
     material_selections = models.ManyToManyField('sales.Catalog', blank=True,
                                                  related_name='data_entries', symmetrical=False)
 
+    def export_to_json(self):
+        unit = self.unit.id if self.unit else None
+        material_selections = ','.join([str(i.id) for i in self.material_selections.all()])
+        return [self.name, unit, self.is_dropdown, str(self.dropdown), self.is_material_selection,
+                material_selections]
+
 
 class POFormula(BaseModel):
 
@@ -48,7 +54,7 @@ class POFormula(BaseModel):
     material_data_entry = models.JSONField(blank=True, default=dict, null=True)
     formula_for_data_view = models.IntegerField(blank=True, default=0, null=True)  # Used for dataview in other model
     original = models.IntegerField(default=0, blank=True, null=True)
-    catalog_materials = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True, null=True)
+    catalog_materials = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
     order = models.IntegerField(default=0, blank=True)
 
     def parse_material(self):
@@ -145,6 +151,7 @@ class POFormulaToDataEntry(BaseModel):
                                           blank=True, null=True, related_name='data_entries')
     copies_from = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True, null=True)
     group = models.CharField(blank=True, default='', max_length=128)
+    material_data_entry_link = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
 
 
 class MaterialView(BaseModel):
@@ -155,6 +162,7 @@ class MaterialView(BaseModel):
                                           blank=True, null=True, related_name='material_views')
     catalog_materials = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True,
                                    null=True)
+    material_data_entry_link = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
 
 
 class POFormulaGrouping(BaseModel):

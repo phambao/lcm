@@ -1,8 +1,6 @@
-import io
 from datetime import datetime
 from datetime import timedelta
 
-from django.http import FileResponse
 from django.utils.timezone import now
 from django.db.models import Value, Q, Subquery
 from django_filters.filters import _truncate
@@ -16,13 +14,14 @@ from rest_framework.response import Response
 from rest_framework import serializers
 
 from base.permissions import EstimatePermissions
+from base.utils import file_response
 from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter, AssembleFilter, GroupFormulaFilter,\
     DescriptionFilter, UnitFilter, DataEntryFilter
 from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, UnitLibrary, \
     DescriptionLibrary, Assemble, EstimateTemplate, MaterialView
-from sales.serializers.catalog import CatalogLevelValueSerializer
-from sales.serializers.estimate import POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
+from sales.serializers.catalog import CatalogEstimateSerializer, CatalogEstimateWithParentSerializer, CatalogLevelValueSerializer
+from sales.serializers.estimate import POFormulaGroupCompactSerializer, POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
     UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, AssembleSerializer, \
     EstimateTemplateSerializer, TaggingSerializer, GroupFormulasSerializer, POFormulaCompactSerializer, \
     AssembleCompactSerializer, EstimateTemplateCompactSerializer
@@ -41,6 +40,13 @@ class POFormulaList(CompanyFilterMixin, generics.ListCreateAPIView):
     search_fields = ('name', )
 
 
+class POFormulaReMarkOnGroupList(POFormulaList):
+    queryset = POFormula.objects.filter(is_show=True).\
+        prefetch_related('self_data_entries').select_related('assemble', 'group').order_by('-modified_date')
+    search_fields = ('name', 'formula', 'quantity', 'markup', 'charge', 'material', 'cost',
+                     'unit', 'gross_profit', 'description_of_formula')
+
+
 class POFormulaCompactList(POFormulaList):
     serializer_class = POFormulaCompactSerializer
 
@@ -57,6 +63,10 @@ class POFormulaGroupingList(CompanyFilterMixin, generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = GroupFormulaFilter
+
+
+class POFormulaGroupCompactList(POFormulaGroupingList):
+    serializer_class = POFormulaGroupCompactSerializer
 
 
 class POFormulaGroupingCreate(CompanyFilterMixin, generics.CreateAPIView):
@@ -344,6 +354,18 @@ def get_material_from_formula(request, pk):
     return Response(status=status.HTTP_200_OK, data=data)
 
 
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def get_option_data_entry(request, pk):
+    de = DataEntry.objects.get(pk=pk)
+    categories = de.material_selections.all()
+    children = Catalog.objects.none()
+    for category in categories:
+        children |= Catalog.objects.filter(parents=category)
+    serializer = CatalogEstimateWithParentSerializer(children, many=True)
+    return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+
 @api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def action_related_formulas(request, pk):
@@ -376,7 +398,7 @@ def action_related_formulas(request, pk):
 def export_data_unit_library(request):
     workbook = Workbook()
     unit_library_sheet = workbook.create_sheet(title='UnitLibrary')
-    unit_library = UnitLibrary.objects.all(company=request.user.company)
+    unit_library = UnitLibrary.objects.filter(company=request.user.company)
     unit_library_fields = ['Name', 'Description', 'User Create', 'User Update', 'Create Date', 'Update Date']
     unit_library_sheet.append(unit_library_fields)
     for index, data_unit_library in enumerate(unit_library, 1):
@@ -404,14 +426,7 @@ def export_data_unit_library(request):
 
         unit_library_sheet.append(row_data)
 
-    workbook.remove(workbook['Sheet'])
-    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"Unit_library_sheet_{current_datetime}.xlsx"
-    output = io.BytesIO()
-    workbook.save(output)
-    output.seek(0)
-    response = FileResponse(output, as_attachment=True, filename=filename)
-    return response
+    return file_response(workbook=workbook, title='Unit_Library')
 
 
 @api_view(['POST'])
@@ -442,7 +457,7 @@ def import_data_unit_library(request):
 def export_data_description_library(request):
     workbook = Workbook()
     description_library_sheet = workbook.create_sheet(title='LinkDescriptionLibrary')
-    description_library = DescriptionLibrary.objects.all(company=request.user.company)
+    description_library = DescriptionLibrary.objects.filter(company=request.user.company)
     description_library_fields = ['Name', 'Link Description', 'User Create', 'User Update', 'Create Date', 'Update Date']
     description_library_sheet.append(description_library_fields)
     for index, data_description_library in enumerate(description_library, 1):
@@ -470,14 +485,7 @@ def export_data_description_library(request):
 
         description_library_sheet.append(row_data)
 
-    workbook.remove(workbook['Sheet'])
-    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"Description_library_sheet_{current_datetime}.xlsx"
-    output = io.BytesIO()
-    workbook.save(output)
-    output.seek(0)
-    response = FileResponse(output, as_attachment=True, filename=filename)
-    return response
+    return file_response(workbook=workbook, title='Description_Library')
 
 
 @api_view(['POST'])
@@ -501,3 +509,16 @@ def import_data_description_library(request):
     rs = DescriptionLibrarySerializer(
         temp_rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def export_data_entry(request):
+    workbook = Workbook()
+    data_entry_sheet = workbook.create_sheet(title='Data_Entry')
+    data_entries = DataEntry.objects.filter(company=request.user.company)
+    data_entry_fields = ['Name', 'Unit', 'Is Dropdown', 'Dropdown', 'Is Material Selection', 'Material Selection']
+    data_entry_sheet.append(data_entry_fields)
+    for data_entry in data_entries:
+        data_entry_sheet.append(data_entry.export_to_json())
+    return file_response(workbook=workbook, title='Unit_Library')
