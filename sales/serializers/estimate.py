@@ -521,7 +521,7 @@ class DataViewSerializer(serializers.ModelSerializer, SerializerMixin):
 class MaterialViewSerializers(serializers.ModelSerializer):
     class Meta:
         model = MaterialView
-        fields = ('id', 'name', 'material_value', 'copies_from', 'catalog_materials')
+        fields = ('id', 'name', 'material_value', 'copies_from', 'catalog_materials', 'material_data_entry_link')
 
 
 class EstimateTemplateForFormattingSerializer(serializers.ModelSerializer):
