@@ -225,12 +225,12 @@ class StripeProductAdmin(admin.ModelAdmin):
                                 currency=currency,
                                 product=obj.stripe_product_id,
                             )
-                            a = {
+                            data_create = {
                                 'amount': amount,
                                 'currency': currency,
                                 'product': obj
                             }
-                            Price.objects.create(**a)
+                            Price.objects.create(**data_create)
 
                     else:
                         amount = float(request.POST.get(f'price_product-{i}-amount'))
