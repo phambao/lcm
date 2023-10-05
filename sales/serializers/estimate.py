@@ -264,6 +264,12 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
                 raise serializers.ValidationError("material is not valid")
         return value
 
+    def validate_material_data_entry(self, value):
+        if value:
+            serializer = POFormulaToDataEntrySerializer(data=value)
+            serializer.is_valid(raise_exception=True)
+        return value
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         linked_descriptions = []

@@ -342,7 +342,8 @@ def log_delete_action(objs, content_type):
     ActivityLog.objects.bulk_create(
         [
             ActivityLog(content_type=content_type, content_object=obj, object_id=obj.pk,
-                        action=Action.DELETE, last_state=DeleteDataSerializer(obj).data, next_state={}, company=company)
+                        action=Action.DELETE, last_state=DeleteDataSerializer(obj).data,
+                        next_state={}, company=company, user_create=get_request().user)
             for obj in objs
         ]
     )
