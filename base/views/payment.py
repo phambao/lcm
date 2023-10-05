@@ -17,7 +17,7 @@ import jwt
 
 from api.models import CompanyBuilder
 from base.tasks import celery_send_mail
-from base.models.payment import Product, PaymentHistoryStripe
+from base.models.payment import Product, PaymentHistoryStripe, Price
 from base.serializers.payment import ProductSerializer, CheckoutSessionSerializer, PaymentHistoryStripeSerializer
 
 stripe.api_key = config('STRIPE_SECRET_KEY', '')
@@ -285,6 +285,19 @@ def webhook_received(request):
     event_type = event['type']
     # Handle the event
     data_object = data['object']
+    if event_type == 'price.updated':
+        data_price = Price.objects.get(stripe_price_id=data_object['id'])
+        data_price.amount = data_object['unit_amount']/100
+        data_price.currency = data_object['currency']
+        data_price.is_activate = data_object['active']
+        data_price.save()
+
+    if event_type == 'product.updated':
+        data_product = Product.objects.get(stripe_product_id=data_object['id'])
+        data_product.name = data_object['name']
+        data_product.description = data_object['description']
+        data_product.save()
+
     if event_type == 'invoice.payment_succeeded':
         if data_object['billing_reason'] == 'subscription_create':
             subscription_id = data_object['subscription']

@@ -4,7 +4,7 @@ from django.db import models
 from api.models import BaseModel
 
 
-class Product(BaseModel):
+class Product(models.Model):
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=100, blank=True)
     stripe_product_id = models.CharField(max_length=100, blank=True)
