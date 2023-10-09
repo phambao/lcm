@@ -24,7 +24,7 @@ class DataEntry(BaseModel):
 
     def export_to_json(self):
         unit = self.unit.id if self.unit else None
-        material_selections = ','.join([str(i.id) for i in self.material_selections.all()])
+        material_selections = ','.join([str(i.name) for i in self.material_selections.all()])
         return [self.name, unit, self.is_dropdown, str(self.dropdown), self.is_material_selection,
                 material_selections]
 

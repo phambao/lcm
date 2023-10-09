@@ -521,4 +521,36 @@ def export_data_entry(request):
     data_entry_sheet.append(data_entry_fields)
     for data_entry in data_entries:
         data_entry_sheet.append(data_entry.export_to_json())
-    return file_response(workbook=workbook, title='Unit_Library')
+    return file_response(workbook=workbook, title='Data Entry')
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def import_data_entry(request):
+    file = request.FILES['file']
+    workbook = load_workbook(file)
+    data_entry_sheet = workbook['Data_Entry']
+
+    max_row = data_entry_sheet.max_row
+    temp_rs = []
+    for row_number in range(max_row, 1, -1):
+        row = data_entry_sheet[row_number]
+        unit = None
+        if row[1]:
+            unit = UnitLibrary.objects.get_or_create(name=row[1], company=request.user.company)[0]
+        data_create = {
+            'name': row[0].value,
+            'unit': unit,
+            'is_dropdown': row[2].value,
+            'dropdown': eval(row[3].value),
+            'is_material_selection': row[4].value,
+        }
+
+        ul = DataEntry.objects.create(**data_create)
+        if row[5].value:
+            ul.material_selections.add(*Catalog.objects.filter(id__in=row[5].value))
+        temp_rs.append(ul)
+
+    rs = DataEntrySerializer(
+        temp_rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=rs)
