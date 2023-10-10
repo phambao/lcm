@@ -536,7 +536,7 @@ class MaterialViewSerializers(serializers.ModelSerializer):
             try:
                 DataEntry.objects.get(pk=value)
             except DataEntry.DoesNotExist:
-                serializers.ValidationError('Data Entry is not exist')
+                raise serializers.ValidationError('Data Entry is not exist')
         return value
 
 
@@ -656,7 +656,10 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
             data_view['estimate_template'] = instance.pk
             data_entry = pop(data_view, 'data_entry', None)
             if data_entry:
-                data_entry = DataEntry.objects.get(pk=data_entry)
+                try:
+                    data_entry = DataEntry.objects.get(pk=data_entry)
+                except DataEntry.DoesNotExist:
+                    raise serializers.ValidationError('Data Entry is not exist')
             serializer = MaterialViewSerializers(data=data_view)
             serializer.is_valid(raise_exception=True)
             serializer.save(estimate_template_id=instance.pk, data_entry=data_entry)
