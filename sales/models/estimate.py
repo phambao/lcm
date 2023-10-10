@@ -28,6 +28,9 @@ class DataEntry(BaseModel):
         return [self.name, unit, self.is_dropdown, str(self.dropdown), self.is_material_selection,
                 material_selections]
 
+    def __int__(self):
+        return self.pk
+
 
 class POFormula(BaseModel):
 
@@ -155,6 +158,7 @@ class POFormulaToDataEntry(BaseModel):
 
 
 class MaterialView(BaseModel):
+    data_entry = models.ForeignKey(DataEntry, on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=128, default='', blank=True)
     material_value = models.JSONField(blank=True, default=dict)
     copies_from = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True, null=True)

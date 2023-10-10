@@ -525,9 +525,19 @@ class DataViewSerializer(serializers.ModelSerializer, SerializerMixin):
 
 
 class MaterialViewSerializers(serializers.ModelSerializer):
+    data_entry = serializers.IntegerField(allow_null=True, required=False)
     class Meta:
         model = MaterialView
-        fields = ('id', 'name', 'material_value', 'copies_from', 'catalog_materials', 'material_data_entry_link')
+        fields = ('id', 'name', 'material_value', 'copies_from', 'catalog_materials',
+                  'material_data_entry_link', 'data_entry')
+
+    def validate_data_entry(self, value):
+        if value:
+            try:
+                DataEntry.objects.get(pk=value)
+            except DataEntry.DoesNotExist:
+                raise serializers.ValidationError('Data Entry is not exist')
+        return value
 
 
 class EstimateTemplateForFormattingSerializer(serializers.ModelSerializer):
@@ -638,15 +648,21 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         for data_view in data_views:
             data_view['estimate_template'] = instance.pk
             serializer = DataViewSerializer(data=data_view)
-            serializer.is_valid()
+            serializer.is_valid(raise_exception=True)
             serializer.save(estimate_template_id=instance.pk)
 
     def create_material_view(self, material_views, instance):
         for data_view in material_views:
             data_view['estimate_template'] = instance.pk
+            data_entry = pop(data_view, 'data_entry', None)
+            if data_entry:
+                try:
+                    data_entry = DataEntry.objects.get(pk=data_entry)
+                except DataEntry.DoesNotExist:
+                    raise serializers.ValidationError('Data Entry is not exist')
             serializer = MaterialViewSerializers(data=data_view)
-            serializer.is_valid()
-            serializer.save(estimate_template_id=instance.pk)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(estimate_template_id=instance.pk, data_entry=data_entry)
 
     def create(self, validated_data):
         assembles = pop(validated_data, 'assembles', [])
