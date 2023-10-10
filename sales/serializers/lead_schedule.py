@@ -14,13 +14,14 @@ from base.serializers.base import IDAndNameSerializer
 from base.serializers import base
 from base.utils import pop, extra_kwargs_for_base_model
 from base.constants import true, null, false
+from base.views.base import remove_file_cloud, remove_file_local
 from ..models import lead_schedule
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging, CheckListItemsTemplate, \
     TodoTemplateChecklistItem, DataType, ItemFieldDropDown, TodoCustomField, CustomFieldScheduleSetting, \
     CustomFieldScheduleDailyLogSetting, DailyLogCustomField, ItemFieldDropDownDailyLog, \
     DataType, ItemFieldDropDown, ScheduleEventPhaseSetting, FileCheckListItems, FileCheckListItemsTemplate, \
     CommentDailyLog, AttachmentCommentDailyLog, ScheduleEventShift, Attachments, FileMessageToDo, FileMessageEvent
-
+from decouple import config
 
 class EventLinkSerializer(IDAndNameSerializer):
     lead_list = serializers.IntegerField(required=False)
@@ -1046,6 +1047,18 @@ class MessageEventSerialized(serializers.ModelSerializer):
         schedule_event_message = schedule_event_message.first()
         notify_object = get_user_model().objects.filter(pk__in=[at['id'] for at in notify])
         schedule_event_message.notify.add(*notify_object)
+
+        data_file = FileMessageEvent.objects.filter(message_event=schedule_event_message)
+        rs = True
+        if config('USE_CLOUD_STORAGE') == 'True':
+            rs = remove_file_cloud(data_file, files)
+
+        if config('USE_CLOUD_STORAGE') == 'False':
+            rs = remove_file_local(data_file, files)
+
+        if not rs:
+            raise serializers.ValidationError('remove file error')
+
         FileMessageEvent.objects.filter(message_event=schedule_event_message).delete()
         file_message_event_create = []
         for file in files:

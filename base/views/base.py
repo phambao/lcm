@@ -12,9 +12,12 @@ from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions, status
 from django_filters import rest_framework as filters
 from rest_framework.viewsets import GenericViewSet
+from django.conf import settings
+from storages.backends.s3boto3 import S3Boto3Storage
 
 from api.middleware import get_request
 from api.serializers.base import ActivityLogSerializer
+from ..constants import URL_CLOUD
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter
 from ..models.config import Column, Search, Config, GridSetting, FileBuilder365, Question, Answer, CompanyAnswerQuestion
 from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerializer, \
@@ -23,7 +26,7 @@ from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSeria
     CompanySerializer, DivisionSerializer, QuestionSerializer, AnswerSerializer, CompanyAnswerQuestionSerializer, \
     CompanyAnswerQuestionResSerializer
 from api.models import ActivityLog, CompanyBuilder, DivisionCompany, Action
-
+from decouple import config
 
 class ContentTypeList(generics.ListAPIView):
     """
@@ -401,3 +404,36 @@ def update_language_user(request, *args, **kwargs):
     user.lang = lang
     user.save()
     return Response(status=status.HTTP_200_OK)
+
+
+def remove_file_cloud(files, files_rq):
+    try:
+        for file in files:
+            if file not in files_rq:
+                prefix_to_remove = URL_CLOUD
+                result = file.file.replace(prefix_to_remove, "")
+                data = FileBuilder365.objects.get(file=result)
+                data.delete()
+                storage = S3Boto3Storage()
+                storage.delete(result)
+    except Exception as e:
+        return False
+    return True
+
+
+def remove_file_local(files, files_rq):
+    try:
+        tmp_file = []
+        for file in files_rq:
+            tmp_file.append(file['file'])
+
+        for file in files:
+            url_replace = config('BASE_URL') + settings.MEDIA_URL
+            relative_path = file.file.replace(url_replace, '')
+            if file not in tmp_file:
+                data = FileBuilder365.objects.get(file=relative_path)
+                data.file.delete()
+                data.delete()
+    except Exception as e:
+        return False
+    return True
