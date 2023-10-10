@@ -14,8 +14,7 @@ from base.serializers.base import IDAndNameSerializer
 from base.serializers import base
 from base.utils import pop, extra_kwargs_for_base_model
 from base.constants import true, null, false
-from base.views.base import remove_file_cloud, remove_file_local
-from lcm.settings import USE_CLOUD_STORAGE
+from base.views.base import remove_file
 from ..models import lead_schedule
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging, CheckListItemsTemplate, \
     TodoTemplateChecklistItem, DataType, ItemFieldDropDown, TodoCustomField, CustomFieldScheduleSetting, \
@@ -1050,16 +1049,7 @@ class MessageEventSerialized(serializers.ModelSerializer):
         schedule_event_message.notify.add(*notify_object)
 
         data_file = FileMessageEvent.objects.filter(message_event=schedule_event_message)
-        rs = True
-        if USE_CLOUD_STORAGE:
-            rs = remove_file_cloud(data_file, files)
-
-        if not USE_CLOUD_STORAGE:
-            rs = remove_file_local(data_file, files)
-
-        if not rs:
-            raise serializers.ValidationError('remove file error')
-
+        remove_file(data_file, files)
         FileMessageEvent.objects.filter(message_event=schedule_event_message).delete()
         file_message_event_create = []
         for file in files:
