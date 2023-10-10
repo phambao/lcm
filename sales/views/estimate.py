@@ -174,6 +174,7 @@ class EstimateTemplateDetail(generics.RetrieveUpdateDestroyAPIView):
 def filter_group_fo_to_fo(request):
     q = Q()
     temp = request.query_params.dict()
+
     if temp == {}:
         grouping_queryset = POFormulaGrouping.objects.filter(
             company=request.user.company,
