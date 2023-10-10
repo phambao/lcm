@@ -15,13 +15,14 @@ from base.serializers import base
 from base.utils import pop, extra_kwargs_for_base_model
 from base.constants import true, null, false
 from base.views.base import remove_file_cloud, remove_file_local
+from lcm.settings import USE_CLOUD_STORAGE
 from ..models import lead_schedule
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging, CheckListItemsTemplate, \
     TodoTemplateChecklistItem, DataType, ItemFieldDropDown, TodoCustomField, CustomFieldScheduleSetting, \
     CustomFieldScheduleDailyLogSetting, DailyLogCustomField, ItemFieldDropDownDailyLog, \
     DataType, ItemFieldDropDown, ScheduleEventPhaseSetting, FileCheckListItems, FileCheckListItemsTemplate, \
     CommentDailyLog, AttachmentCommentDailyLog, ScheduleEventShift, Attachments, FileMessageToDo, FileMessageEvent
-from decouple import config
+
 
 class EventLinkSerializer(IDAndNameSerializer):
     lead_list = serializers.IntegerField(required=False)
@@ -1050,10 +1051,10 @@ class MessageEventSerialized(serializers.ModelSerializer):
 
         data_file = FileMessageEvent.objects.filter(message_event=schedule_event_message)
         rs = True
-        if config('USE_CLOUD_STORAGE') == 'True':
+        if USE_CLOUD_STORAGE:
             rs = remove_file_cloud(data_file, files)
 
-        if config('USE_CLOUD_STORAGE') == 'False':
+        if not USE_CLOUD_STORAGE:
             rs = remove_file_local(data_file, files)
 
         if not rs:

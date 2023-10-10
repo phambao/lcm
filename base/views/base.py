@@ -407,33 +407,25 @@ def update_language_user(request, *args, **kwargs):
 
 
 def remove_file_cloud(files, files_rq):
-    try:
-        for file in files:
-            if file not in files_rq:
-                prefix_to_remove = URL_CLOUD
-                result = file.file.replace(prefix_to_remove, "")
-                data = FileBuilder365.objects.get(file=result)
-                data.delete()
-                storage = S3Boto3Storage()
-                storage.delete(result)
-    except Exception as e:
-        return False
-    return True
+    for file in files:
+        if file not in files_rq:
+            prefix_to_remove = URL_CLOUD
+            result = file.file.replace(prefix_to_remove, "")
+            data = FileBuilder365.objects.get(file=result)
+            data.delete()
+            storage = S3Boto3Storage()
+            storage.delete(result)
 
 
 def remove_file_local(files, files_rq):
-    try:
-        tmp_file = []
-        for file in files_rq:
-            tmp_file.append(file['file'])
+    tmp_file = []
+    for file in files_rq:
+        tmp_file.append(file['file'])
 
-        for file in files:
-            url_replace = config('BASE_URL') + settings.MEDIA_URL
-            relative_path = file.file.replace(url_replace, '')
-            if file not in tmp_file:
-                data = FileBuilder365.objects.get(file=relative_path)
-                data.file.delete()
-                data.delete()
-    except Exception as e:
-        return False
-    return True
+    for file in files:
+        url_replace = config('BASE_URL') + settings.MEDIA_URL
+        relative_path = file.file.replace(url_replace, '')
+        if file not in tmp_file:
+            data = FileBuilder365.objects.get(file=relative_path)
+            data.file.delete()
+            data.delete()
