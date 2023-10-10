@@ -17,7 +17,7 @@ from storages.backends.s3boto3 import S3Boto3Storage
 
 from api.middleware import get_request
 from api.serializers.base import ActivityLogSerializer
-from lcm.settings import USE_CLOUD_STORAGE
+
 from ..constants import URL_CLOUD
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter
 from ..models.config import Column, Search, Config, GridSetting, FileBuilder365, Question, Answer, CompanyAnswerQuestion
@@ -433,8 +433,8 @@ def remove_file_local(files, files_rq):
 
 
 def remove_file(files, files_rq):
-    if USE_CLOUD_STORAGE:
+    if settings.USE_CLOUD_STORAGE:
         remove_file_cloud(files, files_rq)
 
-    if not USE_CLOUD_STORAGE:
+    if settings.USE_CLOUD_STORAGE:
         remove_file_local(files, files_rq)
