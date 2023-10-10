@@ -174,6 +174,17 @@ class EstimateTemplateDetail(generics.RetrieveUpdateDestroyAPIView):
 def filter_group_fo_to_fo(request):
     q = Q()
     temp = request.query_params.dict()
+    if temp == {}:
+        grouping_queryset = POFormulaGrouping.objects.filter(
+            company=request.user.company,
+        ).order_by('-modified_date').distinct().values()
+        for data in grouping_queryset:
+            po = POFormula.objects.filter(Q(group_id=data['id']) & q)
+            data['group_formulas'] = po
+        paginator = LimitOffsetPagination()
+        grouping_po_rs = paginator.paginate_queryset(grouping_queryset, request)
+        serializer = POFormulaGroupingSerializer(grouping_po_rs, many=True)
+        return paginator.get_paginated_response(serializer.data)
     data_filter = {
         "today": {
                 "%s__year" % 'modified_date': now().year,
