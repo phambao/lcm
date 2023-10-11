@@ -17,6 +17,8 @@ from storages.backends.s3boto3 import S3Boto3Storage
 
 from api.middleware import get_request
 from api.serializers.base import ActivityLogSerializer
+from sales.models import LeadDetail, Priority, Type, Contact, PhoneOfContact, Activities, DataPoint, BuilderView, \
+    DataType, DataView, TableInvoice, PaymentHistory, Invoice
 
 from ..constants import URL_CLOUD
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter
@@ -407,6 +409,29 @@ def update_language_user(request, *args, **kwargs):
     return Response(status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_data_config(request, *args, **kwargs):
+    ld = LeadDetail
+    data_as_dict = dict()
+    data_as_dict['lead_status'] = [{'id': item[0], 'name': item[1]} for item in ld.Status.choices]
+    data_as_dict['lead_proposal_status'] = [{'id': item[0], 'name': item[1]} for item in ld.ProposalStatus.choices]
+    data_as_dict['lead_contact_gender'] = [{'id': item[0], 'name': item[1]} for item in Contact.Gender.choices]
+    data_as_dict['lead_phone_type'] = [{'id': item[0], 'name': item[1]} for item in PhoneOfContact.PhoneType.choices]
+    data_as_dict['lead_activities_status'] = [{'id': item[0], 'name': item[1]} for item in Activities.Status.choices]
+    data_as_dict['catalog_datapoint_unit'] = [{'id': item[0], 'name': item[1]} for item in DataPoint.Unit.choices]
+    data_as_dict['schedule_priority'] = [{'id': item[0], 'name': item[1]} for item in Priority.choices]
+    data_as_dict['schedule_event_type'] = [{'id': item[0], 'name': item[1]} for item in Type.choices]
+    data_as_dict['schedule_build_view'] = [{'id': item[0], 'name': item[1]} for item in BuilderView.choices]
+    data_as_dict['schedule_data_type'] = [{'id': item[0], 'name': item[1]} for item in DataType.choices]
+    data_as_dict['estimate_data_view_type'] = [{'id': item[0], 'name': item[1]} for item in DataView.Type.choices]
+    data_as_dict['invoice_table_type'] = [{'id': item[0], 'name': item[1]} for item in TableInvoice.TableTypeInvoice.choices]
+    data_as_dict['invoice_payment_status'] = [{'id': item[0], 'name': item[1]} for item in PaymentHistory.PaymentStatus.choices]
+    data_as_dict['invoice_status'] = [{'id': item[0], 'name': item[1]} for item in Invoice.InvoiceStatus.choices]
+
+    return Response(status=status.HTTP_200_OK, data=data_as_dict)
+
+
 def remove_file_cloud(files, files_rq):
     for file in files:
         if file not in files_rq:
@@ -438,3 +463,5 @@ def remove_file(files, files_rq):
 
     if settings.USE_CLOUD_STORAGE:
         remove_file_local(files, files_rq)
+
+
