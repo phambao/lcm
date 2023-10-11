@@ -8,7 +8,8 @@ from base.views import country_state_city, base, auth
 from base.views.auth import PersonalInformationView, PersonalInformationDetailView
 from base.views.base import update_language_user, QuestionGenericView, QuestionDetailGenericView, AnswerGenericView, \
     AnswerDetailGenericView, CompanyAnswerQuestionSerializerGenericView, \
-    CompanyAnswerQuestionSerializerDetailGenericView, create_question_answer_company, update_question_answer_company
+    CompanyAnswerQuestionSerializerDetailGenericView, create_question_answer_company, update_question_answer_company, \
+    get_data_config
 # Define path for Base App ------------------------------------------------------
 from base.views.country_state_city import address_search, detail_location
 from base.views.payment import ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
@@ -78,6 +79,7 @@ url_base = [
     path('company/update-question/<int:company_id>/', update_question_answer_company),
     path('personal-information/<int:pk>/', PersonalInformationDetailView.as_view()),
     path('personal-information/', PersonalInformationView.as_view()),
+    path('get-config/', get_data_config),
 
 ]
 # Create schema view for Swagger ------------------------------------------------
