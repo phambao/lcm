@@ -414,21 +414,15 @@ def update_language_user(request, *args, **kwargs):
 def get_data_config(request, *args, **kwargs):
     ld = LeadDetail
     data_as_dict = dict()
-    data_as_dict['lead_status'] = [{'id': item[0], 'name': item[1]} for item in ld.Status.choices]
-    data_as_dict['lead_proposal_status'] = [{'id': item[0], 'name': item[1]} for item in ld.ProposalStatus.choices]
-    data_as_dict['lead_contact_gender'] = [{'id': item[0], 'name': item[1]} for item in Contact.Gender.choices]
-    data_as_dict['lead_phone_type'] = [{'id': item[0], 'name': item[1]} for item in PhoneOfContact.PhoneType.choices]
-    data_as_dict['lead_activities_status'] = [{'id': item[0], 'name': item[1]} for item in Activities.Status.choices]
-    data_as_dict['catalog_datapoint_unit'] = [{'id': item[0], 'name': item[1]} for item in DataPoint.Unit.choices]
-    data_as_dict['schedule_priority'] = [{'id': item[0], 'name': item[1]} for item in Priority.choices]
-    data_as_dict['schedule_event_type'] = [{'id': item[0], 'name': item[1]} for item in Type.choices]
-    data_as_dict['schedule_build_view'] = [{'id': item[0], 'name': item[1]} for item in BuilderView.choices]
-    data_as_dict['schedule_data_type'] = [{'id': item[0], 'name': item[1]} for item in DataType.choices]
-    data_as_dict['estimate_data_view_type'] = [{'id': item[0], 'name': item[1]} for item in DataView.Type.choices]
-    data_as_dict['invoice_table_type'] = [{'id': item[0], 'name': item[1]} for item in TableInvoice.TableTypeInvoice.choices]
-    data_as_dict['invoice_payment_status'] = [{'id': item[0], 'name': item[1]} for item in PaymentHistory.PaymentStatus.choices]
-    data_as_dict['invoice_status'] = [{'id': item[0], 'name': item[1]} for item in Invoice.InvoiceStatus.choices]
-
+    arr = [('lead_status', ld.Status.choices), ('lead_proposal_status', ld.ProposalStatus.choices),
+           ('lead_contact_gender', Contact.Gender.choices), ('lead_phone_type', PhoneOfContact.PhoneType.choices),
+           ('lead_activities_status', Activities.Status.choices), ('catalog_datapoint_unit', DataPoint.Unit.choices),
+           ('schedule_priority', Priority.choices), ('schedule_event_type', Type.choices), ('schedule_build_view', BuilderView.choices),
+           ('schedule_data_type', DataType.choices), ('estimate_data_view_type', DataView.Type.choices), ('invoice_table_type', TableInvoice.TableTypeInvoice.choices),
+           ('invoice_payment_status', PaymentHistory.PaymentStatus.choices), ('invoice_status', Invoice.InvoiceStatus.choices)
+           ]
+    for data in arr:
+        data_as_dict[data[0]] = [{'id': item[0], 'name': item[1]} for item in data[1]]
     return Response(status=status.HTTP_200_OK, data=data_as_dict)
 
 
@@ -463,5 +457,3 @@ def remove_file(files, files_rq):
 
     if settings.USE_CLOUD_STORAGE:
         remove_file_local(files, files_rq)
-
-
