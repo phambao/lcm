@@ -654,7 +654,7 @@ def select_checklist_template(request, *args, **kwargs):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & SchedulePermissions])
 def select_event_predecessors(request, *args, **kwargs):
-    rs = ScheduleEvent.objects.filter(company=request.user.company.id).values('id', name=Lower('event_title'))
+    rs = ScheduleEvent.objects.filter(company=request.user.company.id).values('id', 'is_after', 'is_before', 'due_days', 'start_day', 'end_day', name=Lower('event_title'))
     rs = EventLinkSerializer(
         rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)

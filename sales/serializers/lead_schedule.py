@@ -25,6 +25,11 @@ from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging,
 
 class EventLinkSerializer(IDAndNameSerializer):
     lead_list = serializers.IntegerField(required=False)
+    is_after = serializers.BooleanField(required=False)
+    is_before = serializers.BooleanField(required=False)
+    due_days = serializers.IntegerField(required=False)
+    end_day = serializers.DateTimeField(required=False)
+    start_day = serializers.DateTimeField(required=False)
 
 
 class ScheduleAttachmentsModelSerializer(serializers.ModelSerializer):
