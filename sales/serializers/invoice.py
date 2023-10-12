@@ -359,3 +359,19 @@ class InvoiceTemplateSerializer(serializers.ModelSerializer):
         model = InvoiceTemplate
         fields = ('id', 'name', 'description', 'created_date', 'user_create')
         read_only_fields = ('user_create', )
+
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+        activity_log.delay(ContentType.objects.get_for_model(InvoiceTemplate).pk, instance.pk, 1,
+                           InvoiceTemplateSerializer.__name__, __name__, self.context['request'].user.pk)
+        return instance
+
+    def update(self, instance, validated_data):
+        activity_log.delay(ContentType.objects.get_for_model(InvoiceTemplate).pk, instance.pk, 2,
+                           InvoiceTemplateSerializer.__name__, __name__, self.context['request'].user.pk)
+        return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['content_type'] = ContentType.objects.get_for_model(InvoiceTemplate).pk
+        return data
