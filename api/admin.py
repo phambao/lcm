@@ -201,7 +201,7 @@ class StripeProductAdmin(admin.ModelAdmin):
                 prices = stripe.Price.list(product=obj.stripe_product_id, active=True)
 
                 product.name = obj.name
-                product.name = obj.description
+                product.description = obj.description
                 product.save()
                 data = Price.objects.filter(product=obj, is_activate=True)
                 reversed_prices = list(reversed(prices.data))
