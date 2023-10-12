@@ -114,8 +114,7 @@ class Invoice(BaseModel):
     date_paid = models.DateTimeField()
     status = models.CharField(max_length=16, choices=InvoiceStatus.choices, default=InvoiceStatus.PAID)
     deadline = models.BooleanField(default=False)
-    deadline_date = models.DateField(blank=True, null=True)
-    deadline_time = models.TimeField(blank=True, null=True)
+    deadline_datetime = models.DateTimeField(blank=True, null=True)
     link_to_event = models.ForeignKey('sales.ScheduleEvent', on_delete=models.CASCADE, related_name='invoice', blank=True, null=True)
     comment = models.TextField(blank=True)
     note = models.TextField(blank=True)
@@ -150,3 +149,8 @@ class AttachmentInvoice(BaseModel):
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
+
+
+class InvoiceTemplate(BaseModel):
+    name = models.CharField(max_length=128)
+    description = models.TextField(blank=True, default='')
