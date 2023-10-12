@@ -272,6 +272,8 @@ url_invoice = [
     path('payment/', invoice.InvoicePaymentListView.as_view()),
     path('credit-memo/', invoice.CreditMemoList.as_view()),
     path('credit-memo/<int:pk>/', invoice.CreditMemoDetail.as_view()),
+    path('template/', invoice.InvoiceTemplateList.as_view()),
+    path('template/<int:pk>/', invoice.InvoiceTemplateDetail.as_view())
 ]
 
 # URL Config

@@ -2,9 +2,9 @@ from rest_framework import generics, permissions
 
 from base.permissions import InvoicePermissions
 from base.views.base import CompanyFilterMixin
-from sales.models import Invoice, PaymentHistory, LeadDetail, CreditMemo
+from sales.models import Invoice, PaymentHistory, LeadDetail, CreditMemo, InvoiceTemplate
 from sales.serializers.invoice import InvoiceSerializer, PaymentHistorySerializer, InvoicePaymentSerializer, \
-    ProposalForInvoiceSerializer, LeadInvoiceSerializer, CreditMemoSerializer
+    ProposalForInvoiceSerializer, LeadInvoiceSerializer, CreditMemoSerializer, InvoiceTemplateSerializer
 from sales.views.lead_list import LeadDetailList
 from sales.views.proposal import ProposalWritingCompactList
 
@@ -59,3 +59,15 @@ class CreditMemoDetail(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView
     serializer_class = CreditMemoSerializer
     permission_classes = [permissions.IsAuthenticated & InvoicePermissions]
     queryset = CreditMemo.objects.all()
+
+
+class InvoiceTemplateList(CompanyFilterMixin, generics.ListCreateAPIView):
+    serializer_class = InvoiceTemplateSerializer
+    permission_classes = [permissions.IsAuthenticated & InvoicePermissions]
+    queryset = InvoiceTemplate.objects.all()
+
+
+class InvoiceTemplateDetail(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = InvoiceTemplateSerializer
+    permission_classes = [permissions.IsAuthenticated & InvoicePermissions]
+    queryset = InvoiceTemplate.objects.all()
