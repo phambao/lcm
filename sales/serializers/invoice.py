@@ -7,6 +7,7 @@ from api.serializers.base import SerializerMixin
 from base.utils import pop
 from base.tasks import activity_log
 from base.serializers import base
+from sales.models.invoice import InvoiceTemplate
 from ..models import (Invoice, TableInvoice, PaymentHistory, CustomTable, GroupChangeOrder, ChangeOrderItem,
                       ProposalWriting, ProposalItem, GroupProposal, ProgressPayment, LeadDetail, CreditMemoAmount,
                       CreditMemo, AttachmentInvoice)
@@ -351,3 +352,10 @@ class CreditMemoSerializer(serializers.ModelSerializer):
         attachment_data = AttachmentInvoiceSerializer(attachments, many=True).data
         data['attachments'] = attachment_data
         return data
+
+
+class InvoiceTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvoiceTemplate
+        fields = ('id', 'name', 'description', 'created_date', 'user_create')
+        read_only_fields = ('user_create', )
