@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db import IntegrityError
 from django.db.models import Sum, DecimalField
 from django.db.models.functions import Cast
 from rest_framework import serializers
@@ -402,7 +403,10 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'description', 'created_date', 'modified_date', 'user_create', 'user_update')
 
     def create(self, validated_data):
-        instance = super().create(validated_data)
+        try:
+            instance = super().create(validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError({'name': 'name is duplicated'})
 
         from sales.views.estimate import UnitLibraryList
         if isinstance(self.context.get('view'), UnitLibraryList):
@@ -411,9 +415,13 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
+        try:
+            obj = super().update(instance, validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError({'name': 'name is duplicated'})
         activity_log.delay(UNIT_LIBRARY_CONTENT_TYPE, instance.pk, 2,
                            UnitLibrarySerializer.__name__, __name__, self.context['request'].user.pk)
-        return super().update(instance, validated_data)
+        return obj
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

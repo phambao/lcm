@@ -10,6 +10,9 @@ class UnitLibrary(BaseModel):
     name = models.CharField(max_length=128)
     description = models.TextField(default='', blank=True)
 
+    class Meta:
+        unique_together = ('name', 'company')
+
 
 class DataEntry(BaseModel):
 
@@ -22,14 +25,14 @@ class DataEntry(BaseModel):
     material_selections = models.ManyToManyField('sales.Catalog', blank=True,
                                                  related_name='data_entries', symmetrical=False)
 
+    def __int__(self):
+        return self.pk
+
     def export_to_json(self):
-        unit = self.unit.id if self.unit else None
+        unit = self.unit.name if self.unit else None
         material_selections = ','.join([str(i.name) for i in self.material_selections.all()])
         return [self.name, unit, self.is_dropdown, str(self.dropdown), self.is_material_selection,
                 material_selections]
-
-    def __int__(self):
-        return self.pk
 
 
 class POFormula(BaseModel):
