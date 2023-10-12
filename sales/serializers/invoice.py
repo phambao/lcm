@@ -201,8 +201,8 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
 
     class Meta:
         model = Invoice
-        fields = ('id', 'name', 'tables', 'date_paid', 'status', 'deadline', 'deadline_date', 'attachments',
-                  'deadline_time', 'comment', 'note', 'proposal', 'link_to_event', 'payment_histories', 'created_date')
+        fields = ('id', 'name', 'tables', 'date_paid', 'status', 'deadline', 'attachments', 'deadline_datetime',
+                  'comment', 'note', 'proposal', 'link_to_event', 'payment_histories', 'created_date')
         read_only_fields = ('created_date', )
 
     def create_attachment(self, instance, attachments):
