@@ -144,6 +144,14 @@ class POFormula(BaseModel):
             })
         return data
 
+    def export_to_json(self):
+        return [
+            self.name, str(self.linked_description), self.formula, self.group, self.quantity, self.markup,
+            self.charge, str(self.material), self.unit, self.unit_price, self.cost, self.total_cost,
+            self.formula_mentions, self.gross_profit, self.description_of_formula, self.formula_scenario,
+            str(self.material_data_entry), str(self.catalog_materials)
+        ]
+
 
 class POFormulaToDataEntry(BaseModel):
     data_entry = models.ForeignKey(DataEntry, on_delete=models.CASCADE, blank=True, null=True)
