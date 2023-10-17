@@ -549,7 +549,7 @@ def import_data_entry(request):
         row = data_entry_sheet[row_number]
         unit = None
         if row[1]:
-            unit = UnitLibrary.objects.get_or_create(name=row[1], company=request.user.company)[0]
+            unit = UnitLibrary.objects.get_or_create(name=row[1].value, company=request.user.company)[0]
         data_create = {
             'name': row[0].value,
             'unit': unit,
@@ -564,5 +564,59 @@ def import_data_entry(request):
         temp_rs.append(ul)
 
     rs = DataEntrySerializer(
+        temp_rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=rs)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def export_formula(request):
+    workbook = Workbook()
+    formula_sheet = workbook.create_sheet(title='Formula')
+    formulas = POFormula.objects.filter(company=request.user.company, is_show=True)
+    formula_fields = ['Name', 'Linked Description', 'Formula', 'Group', 'Quantity', 'Markup', 'Charge',
+                      'Material', 'Unit', 'Unit Price', 'Cost', 'Total Cost', 'Formula Mention', 'Gross Profit',
+                      'Description', 'Scenario', 'Material Data Entry', 'Catalog Material']
+    formula_sheet.append(formula_fields)
+    for formula in formulas:
+        formula_sheet.append(formula.export_to_json())
+    return file_response(workbook=workbook, title='Formula')
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def import_formula(request):
+    file = request.FILES['file']
+    workbook = load_workbook(file)
+    formula_sheet = workbook['Formula']
+
+    max_row = formula_sheet.max_row
+    temp_rs = []
+    for row_number in range(max_row, 1, -1):
+        row = formula_sheet[row_number]
+        data_create = {
+            'name': row[0].value,
+            'linked_description': row[1].value or '',
+            'formula': row[2].value or '',
+            'quantity': row[4].value or '',
+            'markup': row[5].value or '',
+            'charge': row[6].value or '0',
+            'material': row[7].value or {},
+            'unit': row[8].value or '',
+            'unit_price': row[9].value or '0',
+            'cost': row[10].value or '0',
+            'total_cost': row[11].value or '0',
+            'formula_mentions': row[12].value or '',
+            'gross_profit': row[13].value or '',
+            'description_of_formula': row[14].value or '',
+            'formula_scenario': row[15].value or '',
+            'material_data_entry': eval(row[16].value),
+            'catalog_materials': eval(row[17].value),
+        }
+
+        ul = POFormula.objects.create(**data_create)
+        temp_rs.append(ul)
+
+    rs = POFormulaGroupCompactSerializer(
         temp_rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)

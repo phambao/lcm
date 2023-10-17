@@ -195,6 +195,8 @@ url_schedule = [
 url_estimate = [
     path('po-formula/', estimate.POFormulaList.as_view()),
     path('formula/', estimate.POFormulaReMarkOnGroupList.as_view()),
+    path('formula/export/', estimate.export_formula),
+    path('formula/import/', estimate.import_formula),
     path('po-formula-compact/', estimate.POFormulaCompactList.as_view()),
     path('po-formula/<int:pk>/', estimate.POFormulaDetail.as_view()),
     path('po-formula/<int:pk>/check-action/', estimate.action_related_formulas),
