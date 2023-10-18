@@ -398,7 +398,7 @@ def import_catalog(request):
     file = request.FILES['file']
     category = request.data.get('category')
     if category:
-        catalog = Catalog.objects.get(id=category)
+        ancestor = Catalog.objects.get(id=category)
 
     workbook = load_workbook(file)
     catalog_sheet = workbook[CATALOG_SHEET_NAME]
@@ -435,8 +435,8 @@ def import_catalog(request):
         data = {key: row[CATALOG_FIELDS.index(key)] for key in CATALOG_FIELDS[3:]}
 
         # Check import category
-        if row[CATALOG_FIELDS.index('is_ancestor')] and catalog:
-            mapping_data[f'catalog_{row[0]}'] = catalog
+        if row[CATALOG_FIELDS.index('is_ancestor')] and ancestor:
+            mapping_data[f'catalog_{row[0]}'] = ancestor
             continue
 
         serializer = CatalogImportSerializer(data=data, many=False)
