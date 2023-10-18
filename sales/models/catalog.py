@@ -108,7 +108,7 @@ class Catalog(BaseModel):
             'name': self.name,
             'is_ancestor': self.is_ancestor,
             'parents': self.parents.all().values_list('pk', flat=True),
-            'icon': self.icon.url if self.icon else None,
+            'icon': self.icon,
             'level': self.level.id if self.level else None,
             'children': tree
         }
