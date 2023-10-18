@@ -435,7 +435,7 @@ def import_catalog(request):
         data = {key: row[CATALOG_FIELDS.index(key)] for key in CATALOG_FIELDS[3:]}
 
         # Check import category
-        if row[CATALOG_FIELDS.index('is_ancestor')] and ancestor:
+        if row[CATALOG_FIELDS.index('is_ancestor')] and category:
             mapping_data[f'catalog_{row[0]}'] = ancestor
             continue
 
