@@ -190,6 +190,9 @@ class Assemble(BaseModel):
     is_show = models.BooleanField(default=True, blank=True)
     original = models.IntegerField(default=0, blank=True, null=True)
 
+    def export_to_json(self):
+        return [self.name]
+
 
 class DescriptionLibrary(BaseModel):
     name = models.CharField(max_length=128)
@@ -227,6 +230,9 @@ class EstimateTemplate(BaseModel):
         for assemble in assembles:
             poformulas |= assemble.assemble_formulas.all()
         return poformulas
+
+    def export_to_json(self):
+        return [self.name]
 
 
 class DataView(BaseModel):
