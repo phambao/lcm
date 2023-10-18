@@ -356,7 +356,7 @@ def get_materials(request):
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def export_catalog(request):
     workbook = Workbook()
-    catagory = request.GET.get('catagory')
+    catagory = request.GET.get('category')
 
     catalog_sheet = workbook.create_sheet(title=CATALOG_SHEET_NAME)
     level_sheet = workbook.create_sheet(title=LEVEL_SHEET_NAME)
@@ -364,7 +364,9 @@ def export_catalog(request):
 
     if catagory:
         catalogs = Catalog.objects.get(company=request.user.company, id=catagory)
-        catalogs = Catalog.objects.filter(pk__in=catalogs.get_all_descendant(have_self=True))
+        descendant = catalogs.get_all_descendant(have_self=True)
+        descendant.append(catalogs.parents.first().pk)
+        catalogs = Catalog.objects.filter(pk__in=descendant)
         data_points = DataPoint.objects.filter(company=request.user.company, catalog__in=catalogs).values_list(*DATA_POINT_FIELDS)
         levels = CatalogLevel.objects.filter(company=request.user.company, catalog__in=catalogs).values_list(*LEVEL_FIELDS)
         catalogs = catalogs.values_list(*CATALOG_FIELDS)
@@ -394,6 +396,9 @@ def export_catalog(request):
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def import_catalog(request):
     file = request.FILES['file']
+    category = request.data.get('category')
+    if category:
+        catalog = Catalog.objects.get(id=category)
 
     workbook = load_workbook(file)
     catalog_sheet = workbook[CATALOG_SHEET_NAME]
@@ -428,6 +433,12 @@ def import_catalog(request):
 
     for row in catalog_sheet.iter_rows(min_row=2, values_only=True):
         data = {key: row[CATALOG_FIELDS.index(key)] for key in CATALOG_FIELDS[3:]}
+
+        # Check import category
+        if row[CATALOG_FIELDS.index('is_ancestor')] and catalog:
+            mapping_data[f'catalog_{row[0]}'] = catalog
+            continue
+
         serializer = CatalogImportSerializer(data=data, many=False)
         if serializer.is_valid(raise_exception=True):
             if row[catalog_level_field]:
