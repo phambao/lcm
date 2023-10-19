@@ -498,5 +498,5 @@ def manage_sub(request):
         data_rs['next_payment'] = next_payment
 
     except Exception as e:
-        return Response(status=status.HTTP_404_NOT_FOUND, data='get payment error')
+        return Response(status=status.HTTP_404_NOT_FOUND, data={"status_code": status.HTTP_404_NOT_FOUND, "detail": "get payment info error"})
     return Response(status=status.HTTP_200_OK, data=data_rs)
