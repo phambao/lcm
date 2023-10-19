@@ -473,7 +473,6 @@ def manage_sub(request):
         upcoming_invoice = stripe.Invoice.upcoming(subscription=data_subscription.subscription_id)
         # default_payment_method = subscription.default_payment_method
         # payment_method = stripe.PaymentMethod.retrieve(data_subscription.payment_method_id)
-
         next_payment = dict()
         data_rs['status'] = subscription.status
         data_rs['description'] = subscription.plan.product.name
@@ -484,6 +483,7 @@ def manage_sub(request):
         data_rs['payment_method']['exp_month'] = subscription.default_payment_method.card.exp_month
         data_rs['payment_method']['exp_year'] = subscription.default_payment_method.card.exp_year
         data_rs['payment_method']['funding'] = subscription.default_payment_method.card.funding
+        data_rs['payment_method']['num'] = subscription.default_payment_method.card.last4
         data_rs['billing_address']['country'] = request.user.company.country
         data_rs['billing_address']['address'] = request.user.company.address
         data_rs['billing_address']['email'] = request.user.company.email
@@ -495,7 +495,6 @@ def manage_sub(request):
         next_payment['currency'] = upcoming_invoice.currency
         next_payment['next_day_payment'] = upcoming_invoice.next_payment_attempt
         data_rs['next_payment'] = next_payment
-
     except Exception as e:
-        return Response(status=status.HTTP_404_NOT_FOUND, data='get payment error')
+        return Response(status=status.HTTP_404_NOT_FOUND, data={"status_code": status.HTTP_404_NOT_FOUND, "detail": "get payment info error"})
     return Response(status=status.HTTP_200_OK, data=data_rs)
