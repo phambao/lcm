@@ -81,29 +81,13 @@ def stripe_cancel_subscription(request):
 @api_view(['GET'])
 @csrf_exempt
 def get_config(request):
-    # prices = stripe.Price.list(
-    #     # lookup_keys=['sample_basic', 'sample_premium']
-    #     expand=['data.product']
-    # )
-    # payment_history = stripe.PaymentIntent.list(customer='cus_OpkRCjvMKZIY3H')
-    # print('*******')
-    # print(len(payment_history.data))
-    # payment_history = stripe.Invoice.list(subscription='sub_1O2765E4OZckNkJ51NPi6SAY')
-    payments = stripe.PaymentIntent.list(customer='cus_OpkRCjvMKZIY3H')
-    subscriptions = stripe.Subscription.list(customer='cus_OpkRCjvMKZIY3H')
-    rs = subscriptions
-    # Lấy danh sách các lần đăng ký và thanh toán liên quan
-    for subscription in subscriptions.auto_paging_iter():
-        print(subscription.id)
-        # subscription_payments = stripe.Invoice.list(subscription=subscription.id)
-        # rs += subscription_payments.data
-
-    # Sắp xếp các thanh toán theo ngày tạo giảm dần
-    # sorted_payments = sorted(rs, key=lambda x: x.created, reverse=True)
-    # print(len(sorted_payments))
+    prices = stripe.Price.list(
+        # lookup_keys=['sample_basic', 'sample_premium']
+        expand=['data.product']
+    )
     return Response(
         {'publishable_key': config('STRIPE_PUBLIC_KEY'),
-         'prices': payments.data},
+         'prices': prices.data},
     )
 
 
