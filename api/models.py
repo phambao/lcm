@@ -164,7 +164,7 @@ class InvoiceSetting(models.Model):
     day_before = models.IntegerField(null=True, blank=True)
     default_owners_invoice = models.TextField(blank=True)
     create_invoice_after_approving = models.CharField(blank=True, choices=InvoiceApproveType.choices,
-                                                      default=InvoiceApproveType.OWN)
+                                                      default=InvoiceApproveType.OWN, max_length=8)
 
 
 class GroupCompany(models.Model):
