@@ -473,7 +473,7 @@ def manage_sub(request):
         upcoming_invoice = stripe.Invoice.upcoming(subscription=data_subscription.subscription_id)
         # default_payment_method = subscription.default_payment_method
         # payment_method = stripe.PaymentMethod.retrieve(data_subscription.payment_method_id)
-
+        print(subscription.default_payment_method)
         next_payment = dict()
         data_rs['status'] = subscription.status
         data_rs['description'] = subscription.plan.product.name
@@ -484,6 +484,7 @@ def manage_sub(request):
         data_rs['payment_method']['exp_month'] = subscription.default_payment_method.card.exp_month
         data_rs['payment_method']['exp_year'] = subscription.default_payment_method.card.exp_year
         data_rs['payment_method']['funding'] = subscription.default_payment_method.card.funding
+        data_rs['payment_method']['num'] = subscription.default_payment_method.card.last4
         data_rs['billing_address']['country'] = request.user.company.country
         data_rs['billing_address']['address'] = request.user.company.address
         data_rs['billing_address']['email'] = request.user.company.email
