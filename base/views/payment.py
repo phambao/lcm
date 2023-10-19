@@ -81,12 +81,29 @@ def stripe_cancel_subscription(request):
 @api_view(['GET'])
 @csrf_exempt
 def get_config(request):
-    prices = stripe.Price.list(
-        # lookup_keys=['sample_basic', 'sample_premium']
-    )
+    # prices = stripe.Price.list(
+    #     # lookup_keys=['sample_basic', 'sample_premium']
+    #     expand=['data.product']
+    # )
+    # payment_history = stripe.PaymentIntent.list(customer='cus_OpkRCjvMKZIY3H')
+    # print('*******')
+    # print(len(payment_history.data))
+    # payment_history = stripe.Invoice.list(subscription='sub_1O2765E4OZckNkJ51NPi6SAY')
+    payments = stripe.PaymentIntent.list(customer='cus_OpkRCjvMKZIY3H')
+    subscriptions = stripe.Subscription.list(customer='cus_OpkRCjvMKZIY3H')
+    rs = subscriptions
+    # Lấy danh sách các lần đăng ký và thanh toán liên quan
+    for subscription in subscriptions.auto_paging_iter():
+        print(subscription.id)
+        # subscription_payments = stripe.Invoice.list(subscription=subscription.id)
+        # rs += subscription_payments.data
+
+    # Sắp xếp các thanh toán theo ngày tạo giảm dần
+    # sorted_payments = sorted(rs, key=lambda x: x.created, reverse=True)
+    # print(len(sorted_payments))
     return Response(
         {'publishable_key': config('STRIPE_PUBLIC_KEY'),
-         'prices': prices.data},
+         'prices': payments.data},
     )
 
 
@@ -308,21 +325,48 @@ def webhook_received(request):
                 default_payment_method=payment_intent.payment_method
             )
 
-    if event_type == 'customer.subscription.created':
-        pass
+    if event_type == 'payment_intent.payment_failed':
+        payment_intent = stripe.PaymentIntent.retrieve(data_object.stripe_id,
+                                                       expand=['invoice', 'source', 'payment_method'])
+        subscription = stripe.Subscription.retrieve(payment_intent.invoice.lines.data[0].subscription,
+                                                    expand=['plan.product'])
+        subscription_id = payment_intent.invoice.subscription
+        customer_stripe_id = data_object.customer
+        PaymentHistoryStripe.objects.create(
+            subscription_id=subscription_id,
+            customer_stripe_id=customer_stripe_id,
+            payment_method_id=payment_intent.payment_method.id,
+            subscription_name=subscription.plan.product.name,
+            status=payment_intent.status,
+            payment_method=payment_intent.payment_method.card.brand,
+            card_number=payment_intent.payment_method.card.last4,
+            price=payment_intent.amount,
+            payment_day=payment_intent.created,
+        )
 
     if event.type == 'payment_intent.succeeded':
-        subscription_id = data_object.stripe_id
+        # subscription_id = data_object.stripe_id
+        payment_intent = stripe.PaymentIntent.retrieve(data_object.stripe_id, expand=['invoice', 'source', 'payment_method'])
+        subscription = stripe.Subscription.retrieve(payment_intent.invoice.lines.data[0].subscription, expand=['plan.product'])
+        subscription_id = payment_intent.invoice.subscription
         customer_stripe_id = data_object.customer
+
         data_payment_history = PaymentHistoryStripe.objects.filter(
             subscription_id=subscription_id,
             customer_stripe_id=customer_stripe_id
         )
+        PaymentHistoryStripe.objects.create(
+            subscription_id=subscription_id,
+            customer_stripe_id=customer_stripe_id,
+            payment_method_id=payment_intent.payment_method.id,
+            subscription_name=subscription.plan.product.name,
+            status=payment_intent.status,
+            payment_method=payment_intent.payment_method.card.brand,
+            card_number=payment_intent.payment_method.card.last4,
+            price=payment_intent.amount,
+            payment_day=payment_intent.created,
+        )
         if not data_payment_history:
-            PaymentHistoryStripe.objects.create(
-                subscription_id=subscription_id,
-                customer_stripe_id=customer_stripe_id
-            )
             payload = {
                 'sub': subscription_id,
                 'customer': customer_stripe_id,

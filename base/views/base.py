@@ -1,5 +1,6 @@
 import uuid
 
+import stripe
 from django.utils import timezone
 from django.utils.translation import gettext  as _
 from django.core.files.base import ContentFile
@@ -23,12 +24,13 @@ from sales.models import LeadDetail, Priority, Type, Contact, PhoneOfContact, Ac
 from ..constants import URL_CLOUD
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter
 from ..models.config import Column, Search, Config, GridSetting, FileBuilder365, Question, Answer, CompanyAnswerQuestion
+from ..models.payment import PaymentHistoryStripe
 from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerializer, \
     FileBuilder365ResSerializer, DeleteDataSerializer
 from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer, \
     CompanySerializer, DivisionSerializer, QuestionSerializer, AnswerSerializer, CompanyAnswerQuestionSerializer, \
     CompanyAnswerQuestionResSerializer
-from api.models import ActivityLog, CompanyBuilder, DivisionCompany, Action
+from api.models import ActivityLog, CompanyBuilder, DivisionCompany, Action, User
 from decouple import config
 
 class ContentTypeList(generics.ListAPIView):
@@ -457,3 +459,42 @@ def remove_file(files, files_rq):
 
     if settings.USE_CLOUD_STORAGE:
         remove_file_local(files, files_rq)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def manage_sub(request):
+    try:
+        data_rs = dict()
+        customer_stripe_id = request.user.company.customer_stripe
+        data_subscription = PaymentHistoryStripe.objects.filter(customer_stripe_id=customer_stripe_id).first()
+        subscription = stripe.Subscription.retrieve(data_subscription.subscription_id, expand=['latest_invoice', 'plan.product', 'default_payment_method'])
+        upcoming_invoice = stripe.Invoice.upcoming(subscription=data_subscription.subscription_id)
+        # default_payment_method = subscription.default_payment_method
+        # payment_method = stripe.PaymentMethod.retrieve(data_subscription.payment_method_id)
+
+        next_payment = dict()
+        data_rs['status'] = subscription.status
+        data_rs['description'] = subscription.plan.product.name
+        data_rs['interval'] = subscription.plan.interval
+        data_rs['payment_method'] = dict()
+        data_rs['billing_address'] = dict()
+        data_rs['payment_method']['brand'] = subscription.default_payment_method.card.brand
+        data_rs['payment_method']['exp_month'] = subscription.default_payment_method.card.exp_month
+        data_rs['payment_method']['exp_year'] = subscription.default_payment_method.card.exp_year
+        data_rs['payment_method']['funding'] = subscription.default_payment_method.card.funding
+        data_rs['billing_address']['country'] = request.user.company.country
+        data_rs['billing_address']['address'] = request.user.company.address
+        data_rs['billing_address']['email'] = request.user.company.email
+        data_rs['billing_address']['size'] = request.user.company.size
+        data_rs['billing_address']['short_name'] = request.user.company.short_name
+        data_rs['billing_address']['field'] = request.user.company.field
+        data_rs['billing_address']['company_name'] = request.user.company.company_name
+        next_payment['amount'] = upcoming_invoice.amount_remaining/100
+        next_payment['currency'] = upcoming_invoice.currency
+        next_payment['next_day_payment'] = upcoming_invoice.next_payment_attempt
+        data_rs['next_payment'] = next_payment
+
+    except Exception as e:
+        return Response(status=status.HTTP_404_NOT_FOUND, data='get payment error')
+    return Response(status=status.HTTP_200_OK, data=data_rs)

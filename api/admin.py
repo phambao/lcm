@@ -35,7 +35,7 @@ class CompanyAdmin(admin.ModelAdmin):
                     "modified_date", "user_create", "user_update", "currency", "company_timezone", "short_name", "customer_stripe"]
     fields = ["company_name", "logo", "description", "address", "field", "country", "city", "state",
                     "business_phone", "zip_code", "size", "tax", "email", "cell_mail", "cell_phone",
-                    "user_create", "user_update", "currency", "company_timezone", "short_name"]
+                    "user_create", "user_update", "currency", "company_timezone", "short_name", "customer_stripe"]
     list_filter = ["company_name"]
     search_fields = ['company_name', 'business_phone']
     inlines = [UserInline]
