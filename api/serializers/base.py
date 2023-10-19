@@ -45,5 +45,6 @@ class InvoiceSettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvoiceSetting
         fields = ('id', 'prefix', 'is_notify_internal_deadline', 'is_notify_owners_deadline',
-                  'is_notify_owners_after_deadline', 'is_default_show', 'day_before', 'default_owners_invoice', 'company')
+                  'is_notify_owners_after_deadline', 'is_default_show', 'day_before', 'default_owners_invoice',
+                  'create_invoice_after_approving', 'company')
         read_only_fields = ['company']

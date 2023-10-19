@@ -5,6 +5,7 @@ from django.contrib.auth.models import AbstractUser, Group
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from .middleware import get_request
 
@@ -147,6 +148,12 @@ class ChangeOrderSetting(models.Model):
     default_change_order = models.TextField(blank=True)
 
 
+class InvoiceApproveType(models.TextChoices):
+    OWN = '0', _('User Themselves create invoice for change order')
+    SYSTEM = '1', _('the system automatically create invoice')
+    AUTO_SEND = '2', _('the system automatically create invoice and send it to the client')
+
+
 class InvoiceSetting(models.Model):
     company = models.OneToOneField(CompanyBuilder, on_delete=models.CASCADE, null=True)
     prefix = models.CharField(max_length=128, blank=True)
@@ -156,6 +163,8 @@ class InvoiceSetting(models.Model):
     is_default_show = models.BooleanField(default=False)
     day_before = models.IntegerField(null=True, blank=True)
     default_owners_invoice = models.TextField(blank=True)
+    create_invoice_after_approving = models.CharField(blank=True, choices=InvoiceApproveType.choices,
+                                                      default=InvoiceApproveType.OWN)
 
 
 class GroupCompany(models.Model):
