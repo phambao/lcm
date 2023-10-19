@@ -496,7 +496,6 @@ def manage_sub(request):
         next_payment['currency'] = upcoming_invoice.currency
         next_payment['next_day_payment'] = upcoming_invoice.next_payment_attempt
         data_rs['next_payment'] = next_payment
-
     except Exception as e:
         return Response(status=status.HTTP_404_NOT_FOUND, data={"status_code": status.HTTP_404_NOT_FOUND, "detail": "get payment info error"})
     return Response(status=status.HTTP_200_OK, data=data_rs)
