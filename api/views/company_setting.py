@@ -60,19 +60,9 @@ def setting_invoice(request):
         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
     if request.method == 'PUT':
-        serializer = InvoiceSettingSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data_insert = dict(serializer.validated_data)
         invoice_setting = InvoiceSetting.objects.get(company=request.user.company)
-        invoice_setting.prefix = data_insert['prefix']
-        invoice_setting.is_notify_internal_deadline = data_insert['is_notify_internal_deadline']
-        invoice_setting.is_notify_owners_deadline = data_insert['is_notify_owners_deadline']
-        invoice_setting.is_notify_owners_after_deadline = data_insert['is_notify_owners_after_deadline']
-        invoice_setting.is_default_show = data_insert['is_default_show']
-        invoice_setting.day_before = data_insert['day_before']
-        invoice_setting.default_owners_invoice = data_insert['default_owners_invoice']
-        invoice_setting.save()
-        invoice_setting.refresh_from_db()
-        serializer = InvoiceSettingSerializer(invoice_setting)
+        serializer = InvoiceSettingSerializer(instance=invoice_setting, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(status=status.HTTP_200_OK, data=serializer.data)
     return Response(status=status.HTTP_204_NO_CONTENT)
