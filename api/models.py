@@ -149,7 +149,7 @@ class ChangeOrderSetting(models.Model):
 
 
 class InvoiceApproveType(models.TextChoices):
-    OWN = '0', _('User Themselves create invoice for change order')
+    OWN = '0', _('User themselves create invoice for change order')
     SYSTEM = '1', _('the system automatically create invoice')
     AUTO_SEND = '2', _('the system automatically create invoice and send it to the client')
 

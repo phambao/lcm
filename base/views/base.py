@@ -30,7 +30,7 @@ from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerialize
 from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer, \
     CompanySerializer, DivisionSerializer, QuestionSerializer, AnswerSerializer, CompanyAnswerQuestionSerializer, \
     CompanyAnswerQuestionResSerializer
-from api.models import ActivityLog, CompanyBuilder, DivisionCompany, Action, User
+from api.models import ActivityLog, CompanyBuilder, DivisionCompany, Action, InvoiceApproveType, User
 from decouple import config
 
 class ContentTypeList(generics.ListAPIView):
@@ -421,7 +421,8 @@ def get_data_config(request, *args, **kwargs):
            ('lead_activities_status', Activities.Status.choices), ('catalog_datapoint_unit', DataPoint.Unit.choices),
            ('schedule_priority', Priority.choices), ('schedule_event_type', Type.choices), ('schedule_build_view', BuilderView.choices),
            ('schedule_data_type', DataType.choices), ('estimate_data_view_type', DataView.Type.choices), ('invoice_table_type', TableInvoice.TableTypeInvoice.choices),
-           ('invoice_payment_status', PaymentHistory.PaymentStatus.choices), ('invoice_status', Invoice.InvoiceStatus.choices)
+           ('invoice_payment_status', PaymentHistory.PaymentStatus.choices), ('invoice_status', Invoice.InvoiceStatus.choices),
+           ('setting_invoice_type', InvoiceApproveType.choices)
            ]
     for data in arr:
         data_as_dict[data[0]] = [{'id': item[0], 'name': item[1]} for item in data[1]]
