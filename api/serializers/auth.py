@@ -25,8 +25,8 @@ class UserSerializer(serializers.ModelSerializer):
 class InternalUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'last_name', 'first_name', 'image', 'groups', 'is_active', 'is_admin_company',
-                  'phone')
+        fields = ('id', 'last_name', 'first_name', 'email', 'image', 'groups', 'is_active', 'is_admin_company',
+                  'phone', 'is_staff')
 
     def create(self, validated_data):
         validated_data['username'] = validated_data['email']
@@ -43,6 +43,7 @@ class InternalUserSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['groups'] = instance.groups.all().values()
+        data['auto_access'] = True
         return data
 
 

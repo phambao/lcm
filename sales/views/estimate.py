@@ -549,7 +549,7 @@ def import_data_entry(request):
         row = data_entry_sheet[row_number]
         unit = None
         if row[1]:
-            unit = UnitLibrary.objects.get_or_create(name=row[1], company=request.user.company)[0]
+            unit = UnitLibrary.objects.get_or_create(name=row[1].value, company=request.user.company)[0]
         data_create = {
             'name': row[0].value,
             'unit': unit,
@@ -564,5 +564,131 @@ def import_data_entry(request):
         temp_rs.append(ul)
 
     rs = DataEntrySerializer(
+        temp_rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=rs)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def export_formula(request):
+    workbook = Workbook()
+    formula_sheet = workbook.create_sheet(title='Formula')
+    formulas = POFormula.objects.filter(company=request.user.company, is_show=True)
+    formula_fields = ['Name', 'Linked Description', 'Formula', 'Group', 'Quantity', 'Markup', 'Charge',
+                      'Material', 'Unit', 'Unit Price', 'Cost', 'Total Cost', 'Formula Mention', 'Gross Profit',
+                      'Description', 'Scenario', 'Material Data Entry', 'Catalog Material']
+    formula_sheet.append(formula_fields)
+    for formula in formulas:
+        formula_sheet.append(formula.export_to_json())
+    return file_response(workbook=workbook, title='Formula')
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def import_formula(request):
+    file = request.FILES['file']
+    workbook = load_workbook(file)
+    formula_sheet = workbook['Formula']
+
+    max_row = formula_sheet.max_row
+    temp_rs = []
+    for row_number in range(max_row, 1, -1):
+        row = formula_sheet[row_number]
+        data_create = {
+            'name': row[0].value,
+            'linked_description': row[1].value or '',
+            'formula': row[2].value or '',
+            'quantity': row[4].value or '',
+            'markup': row[5].value or '',
+            'charge': row[6].value or '0',
+            'material': row[7].value or {},
+            'unit': row[8].value or '',
+            'unit_price': row[9].value or '0',
+            'cost': row[10].value or '0',
+            'total_cost': row[11].value or '0',
+            'formula_mentions': row[12].value or '',
+            'gross_profit': row[13].value or '',
+            'description_of_formula': row[14].value or '',
+            'formula_scenario': row[15].value or '',
+            'material_data_entry': eval(row[16].value),
+            'catalog_materials': eval(row[17].value),
+        }
+
+        ul = POFormula.objects.create(**data_create)
+        temp_rs.append(ul)
+
+    rs = POFormulaGroupCompactSerializer(
+        temp_rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=rs)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def export_assemble(request):
+    workbook = Workbook()
+    assemble_sheet = workbook.create_sheet(title='Assemble')
+    assembles = Assemble.objects.filter(company=request.user.company, is_show=True)
+    assemble_fields = ['Name']
+    assemble_sheet.append(assemble_fields)
+    for assemble in assembles:
+        assemble_sheet.append(assemble.export_to_json())
+    return file_response(workbook=workbook, title='Assemble')
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def export_estimate(request):
+    workbook = Workbook()
+    estimate_sheet = workbook.create_sheet(title='Estimate')
+    estimates = EstimateTemplate.objects.filter(company=request.user.company, is_show=True)
+    estimate_fields = ['Name']
+    estimate_sheet.append(estimate_fields)
+    for estimate in estimates:
+        estimate_sheet.append(estimate.export_to_json())
+    return file_response(workbook=workbook, title='Estimate')
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def import_assemble(request):
+    file = request.FILES['file']
+    workbook = load_workbook(file)
+    assemble_sheet = workbook['Assemble']
+
+    max_row = assemble_sheet.max_row
+    temp_rs = []
+    for row_number in range(max_row, 1, -1):
+        row = assemble_sheet[row_number]
+        data_create = {
+            'name': row[0].value,
+        }
+
+        ul = Assemble.objects.create(**data_create)
+        temp_rs.append(ul)
+
+    rs = AssembleCompactSerializer(
+        temp_rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=rs)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def import_estimate(request):
+    file = request.FILES['file']
+    workbook = load_workbook(file)
+    estimate_sheet = workbook['Estimate']
+
+    max_row = estimate_sheet.max_row
+    temp_rs = []
+    for row_number in range(max_row, 1, -1):
+        row = estimate_sheet[row_number]
+        data_create = {
+            'name': row[0].value,
+        }
+
+        ul = EstimateTemplate.objects.create(**data_create)
+        temp_rs.append(ul)
+
+    rs = EstimateTemplateCompactSerializer(
         temp_rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)

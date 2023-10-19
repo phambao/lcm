@@ -10,6 +10,9 @@ class UnitLibrary(BaseModel):
     name = models.CharField(max_length=128)
     description = models.TextField(default='', blank=True)
 
+    class Meta:
+        unique_together = ('name', 'company')
+
 
 class DataEntry(BaseModel):
 
@@ -22,14 +25,14 @@ class DataEntry(BaseModel):
     material_selections = models.ManyToManyField('sales.Catalog', blank=True,
                                                  related_name='data_entries', symmetrical=False)
 
+    def __int__(self):
+        return self.pk
+
     def export_to_json(self):
-        unit = self.unit.id if self.unit else None
+        unit = self.unit.name if self.unit else None
         material_selections = ','.join([str(i.name) for i in self.material_selections.all()])
         return [self.name, unit, self.is_dropdown, str(self.dropdown), self.is_material_selection,
                 material_selections]
-
-    def __int__(self):
-        return self.pk
 
 
 class POFormula(BaseModel):
@@ -141,6 +144,14 @@ class POFormula(BaseModel):
             })
         return data
 
+    def export_to_json(self):
+        return [
+            self.name, str(self.linked_description), self.formula, self.group, self.quantity, self.markup,
+            self.charge, str(self.material), self.unit, self.unit_price, self.cost, self.total_cost,
+            self.formula_mentions, self.gross_profit, self.description_of_formula, self.formula_scenario,
+            str(self.material_data_entry), str(self.catalog_materials)
+        ]
+
 
 class POFormulaToDataEntry(BaseModel):
     data_entry = models.ForeignKey(DataEntry, on_delete=models.CASCADE, blank=True, null=True)
@@ -179,6 +190,9 @@ class Assemble(BaseModel):
     is_show = models.BooleanField(default=True, blank=True)
     original = models.IntegerField(default=0, blank=True, null=True)
 
+    def export_to_json(self):
+        return [self.name]
+
 
 class DescriptionLibrary(BaseModel):
     name = models.CharField(max_length=128)
@@ -216,6 +230,9 @@ class EstimateTemplate(BaseModel):
         for assemble in assembles:
             poformulas |= assemble.assemble_formulas.all()
         return poformulas
+
+    def export_to_json(self):
+        return [self.name]
 
 
 class DataView(BaseModel):
