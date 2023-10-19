@@ -473,7 +473,6 @@ def manage_sub(request):
         upcoming_invoice = stripe.Invoice.upcoming(subscription=data_subscription.subscription_id)
         # default_payment_method = subscription.default_payment_method
         # payment_method = stripe.PaymentMethod.retrieve(data_subscription.payment_method_id)
-        print(subscription.default_payment_method)
         next_payment = dict()
         data_rs['status'] = subscription.status
         data_rs['description'] = subscription.plan.product.name
