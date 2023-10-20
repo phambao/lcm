@@ -336,8 +336,21 @@ class ProposalWritingCompactSerializer(serializers.ModelSerializer):
         return data
 
 
+class CostBreakDownSerializer(serializers.Serializer):
+    id = serializers.CharField(required=False, allow_null=True)
+    avg_markup = serializers.FloatField(required=False, allow_null=True)
+    cost = serializers.FloatField(required=False, allow_null=True)
+    count = serializers.FloatField(required=False, allow_null=True)
+    markup = serializers.FloatField(required=False, allow_null=True)
+    name = serializers.CharField(required=False, allow_null=True)
+    profit = serializers.FloatField(required=False, allow_null=True)
+    profit_percent = serializers.FloatField(required=False, allow_null=True)
+    total_price = serializers.FloatField(required=False, allow_null=True)
+
+
 class ProposalWritingSerializer(serializers.ModelSerializer):
     writing_groups = GroupByEstimateSerializers('writing', many=True, allow_null=True, required=False)
+    cost_breakdown = CostBreakDownSerializer(many=True, allow_null=True, required=False)
 
     class Meta:
         model = ProposalWriting
