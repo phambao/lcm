@@ -498,3 +498,43 @@ def manage_sub(request):
     except Exception as e:
         return Response(status=status.HTTP_404_NOT_FOUND, data={"status_code": status.HTTP_404_NOT_FOUND, "detail": "get payment info error"})
     return Response(status=status.HTTP_200_OK, data=data_rs)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def manage_sub_detail(request, *args, **kwargs):
+    try:
+        subscription_id = kwargs.get('subscription_id')
+        data_rs = dict()
+        customer_stripe_id = request.user.company.customer_stripe
+        data_subscription = PaymentHistoryStripe.objects.filter(customer_stripe_id=customer_stripe_id).first()
+        subscription = stripe.Subscription.retrieve(subscription_id, expand=['latest_invoice', 'plan.product', 'default_payment_method'])
+        upcoming_invoice = stripe.Invoice.upcoming(subscription=data_subscription.subscription_id)
+        # default_payment_method = subscription.default_payment_method
+        # payment_method = stripe.PaymentMethod.retrieve(data_subscription.payment_method_id)
+        next_payment = dict()
+        data_rs['status'] = subscription.status
+        data_rs['description'] = subscription.plan.product.name
+        data_rs['interval'] = subscription.plan.interval
+        data_rs['payment_method'] = dict()
+        data_rs['billing_info'] = dict()
+        data_rs['customer_info'] = dict()
+        data_rs['payment_method']['brand'] = subscription.default_payment_method.card.brand
+        data_rs['payment_method']['exp_month'] = subscription.default_payment_method.card.exp_month
+        data_rs['payment_method']['exp_year'] = subscription.default_payment_method.card.exp_year
+        data_rs['payment_method']['funding'] = subscription.default_payment_method.card.funding
+        data_rs['payment_method']['num'] = subscription.default_payment_method.card.last4
+        data_rs['billing_info']['sub_total'] = subscription.latest_invoice.subtotal
+        data_rs['billing_info']['tax'] = subscription.latest_invoice.tax
+        data_rs['billing_info']['total'] = subscription.latest_invoice.total
+        data_rs['billing_info']['discount'] = subscription.latest_invoice.total_discount_amounts
+        data_rs['customer_info']['customer_name'] = subscription.latest_invoice.customer_name
+        data_rs['customer_info']['email'] = subscription.latest_invoice.customer_email
+        data_rs['customer_info']['phone'] = subscription.latest_invoice.customer_phone
+        next_payment['amount'] = upcoming_invoice.amount_remaining/100
+        next_payment['currency'] = upcoming_invoice.currency
+        next_payment['next_day_payment'] = upcoming_invoice.next_payment_attempt
+        data_rs['next_payment'] = next_payment
+    except Exception as e:
+        return Response(status=status.HTTP_404_NOT_FOUND, data={"status_code": status.HTTP_404_NOT_FOUND, "detail": "get payment info error"})
+    return Response(status=status.HTTP_200_OK, data=data_rs)

@@ -308,6 +308,26 @@ def webhook_received(request):
                 subscription_id,
                 default_payment_method=payment_intent.payment_method
             )
+            subscription_id = data_object['subscription']
+            subscription = stripe.Subscription.retrieve(subscription_id,
+                                                        expand=['plan.product'])
+            payment_intent_id = data_object['payment_intent']
+            payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id,
+                                                           expand=['invoice', 'source', 'payment_method'])
+            subscription_id = payment_intent.invoice.subscription
+            customer_stripe_id = data_object.customer
+            PaymentHistoryStripe.objects.create(
+                subscription_id=subscription_id,
+                customer_stripe_id=customer_stripe_id,
+                payment_method_id=payment_intent.payment_method.id,
+                subscription_name=subscription.plan.product.name,
+                status=payment_intent.status,
+                payment_method=payment_intent.payment_method.card.brand,
+                card_number=payment_intent.payment_method.card.last4,
+                price=payment_intent.amount,
+                payment_day=payment_intent.created,
+            )
+
         if data_object['billing_reason'] == 'subscription_cycle':
             subscription_id = data_object['subscription']
             subscription = stripe.Subscription.retrieve(subscription_id,
@@ -334,16 +354,24 @@ def webhook_received(request):
         subscription = stripe.Subscription.retrieve(payment_intent.invoice.lines.data[0].subscription,
                                                     expand=['plan.product'])
 
+        brand = ''
+        last4 = ''
+        payment_method_id = ''
+        payment_method = payment_intent.payment_method
+        if payment_method:
+            brand = payment_intent.payment_method.card.brand
+            last4 = payment_intent.payment_method.card.last4
+            payment_method_id = payment_intent.payment_method.id
         subscription_id = payment_intent.invoice.subscription
         customer_stripe_id = data_object.customer
         PaymentHistoryStripe.objects.create(
             subscription_id=subscription_id,
             customer_stripe_id=customer_stripe_id,
-            payment_method_id=payment_intent.payment_method.id,
+            payment_method_id=payment_method_id,
             subscription_name=subscription.plan.product.name,
             status=payment_intent.status,
-            payment_method=payment_intent.payment_method.card.brand,
-            card_number=payment_intent.payment_method.card.last4,
+            payment_method=brand,
+            card_number=last4,
             price=payment_intent.amount,
             payment_day=payment_intent.created,
         )
@@ -358,17 +386,17 @@ def webhook_received(request):
             subscription_id=subscription_id,
             customer_stripe_id=customer_stripe_id
         )
-        PaymentHistoryStripe.objects.create(
-            subscription_id=subscription_id,
-            customer_stripe_id=customer_stripe_id,
-            payment_method_id=payment_intent.payment_method.id,
-            subscription_name=subscription.plan.product.name,
-            status=payment_intent.status,
-            payment_method=payment_intent.payment_method.card.brand,
-            card_number=payment_intent.payment_method.card.last4,
-            price=payment_intent.amount,
-            payment_day=payment_intent.created,
-        )
+        # PaymentHistoryStripe.objects.create(
+        #     subscription_id=subscription_id,
+        #     customer_stripe_id=customer_stripe_id,
+        #     payment_method_id=payment_intent.payment_method.id,
+        #     subscription_name=subscription.plan.product.name,
+        #     status=payment_intent.status,
+        #     payment_method=payment_intent.payment_method.card.brand,
+        #     card_number=payment_intent.payment_method.card.last4,
+        #     price=payment_intent.amount,
+        #     payment_day=payment_intent.created,
+        # )
         if not data_payment_history:
             payload = {
                 'sub': subscription_id,
