@@ -25,8 +25,9 @@ class UserSerializer(serializers.ModelSerializer):
 class InternalUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'last_name', 'first_name', 'email', 'image', 'groups', 'is_active', 'is_admin_company',
-                  'phone', 'is_staff')
+        fields = ('id', 'username', 'last_name', 'first_name', 'email', 'image', 'groups', 'is_active', 'is_admin_company',
+                  'phone', 'is_staff', 'date_joined')
+        read_only_fields = ['date_joined']
 
     def create(self, validated_data):
         validated_data['username'] = validated_data['email']
@@ -44,6 +45,10 @@ class InternalUserSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         data['groups'] = instance.groups.all().values()
         data['auto_access'] = True
+        data['role'] = ''
+        role = instance.groups.all()
+        if role:
+            data['role'] = role.first().name
         return data
 
 
