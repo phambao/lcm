@@ -1,5 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
+import json
 
 from django.utils.timezone import now
 from django.db.models import Value, Q, Subquery
@@ -28,6 +29,7 @@ from sales.serializers.estimate import POFormulaGroupCompactSerializer, POFormul
 from sales.views.catalog import parse_c_table
 from api.middleware import get_request
 from base.views.base import CompanyFilterMixin
+from base.constants import null, true, false
 
 
 class POFormulaList(CompanyFilterMixin, generics.ListCreateAPIView):
@@ -628,10 +630,10 @@ def export_assemble(request):
     workbook = Workbook()
     assemble_sheet = workbook.create_sheet(title='Assemble')
     assembles = Assemble.objects.filter(company=request.user.company, is_show=True)
-    assemble_fields = ['Name']
+    assemble_fields = ['Name', 'Meta']
     assemble_sheet.append(assemble_fields)
     for assemble in assembles:
-        assemble_sheet.append(assemble.export_to_json())
+        assemble_sheet.append([*assemble.export_to_json(), str(json.dumps(AssembleSerializer(assemble).data))])
     return file_response(workbook=workbook, title='Assemble')
 
 
@@ -641,10 +643,10 @@ def export_estimate(request):
     workbook = Workbook()
     estimate_sheet = workbook.create_sheet(title='Estimate')
     estimates = EstimateTemplate.objects.filter(company=request.user.company, is_show=True)
-    estimate_fields = ['Name']
+    estimate_fields = ['Name', 'Meta']
     estimate_sheet.append(estimate_fields)
     for estimate in estimates:
-        estimate_sheet.append(estimate.export_to_json())
+        estimate_sheet.append([*estimate.export_to_json(), str(json.dumps(EstimateTemplateSerializer(estimate).data))])
     return file_response(workbook=workbook, title='Estimate')
 
 
@@ -661,12 +663,14 @@ def import_assemble(request):
         row = assemble_sheet[row_number]
         data_create = {
             'name': row[0].value,
+            **eval(row[1].value)
         }
 
-        ul = Assemble.objects.create(**data_create)
-        temp_rs.append(ul)
+        serializer = AssembleSerializer(data=data_create, context={'request': request})
+        if serializer.is_valid(raise_exception=False):
+            temp_rs.append(serializer.save())
 
-    rs = AssembleCompactSerializer(
+    rs = AssembleSerializer(
         temp_rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
 
@@ -684,11 +688,12 @@ def import_estimate(request):
         row = estimate_sheet[row_number]
         data_create = {
             'name': row[0].value,
+            **eval(row[1].value)
         }
+        serializer = EstimateTemplateSerializer(data=data_create, context={'request': request})
+        if serializer.is_valid(raise_exception=False):
+            temp_rs.append(serializer.save())
 
-        ul = EstimateTemplate.objects.create(**data_create)
-        temp_rs.append(ul)
-
-    rs = EstimateTemplateCompactSerializer(
+    rs = EstimateTemplateSerializer(
         temp_rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
