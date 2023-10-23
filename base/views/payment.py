@@ -300,21 +300,20 @@ def webhook_received(request):
         data_product.save()
 
     if event_type == 'invoice.payment_succeeded':
+        subscription_id = data_object['subscription']
+        payment_intent_id = data_object['payment_intent']
+        payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        stripe.Subscription.modify(
+            subscription_id,
+            default_payment_method=payment_intent.payment_method
+        )
+        subscription = stripe.Subscription.retrieve(subscription_id,
+                                                    expand=['plan.product'])
+        payment_intent_id = data_object['payment_intent']
+        payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id,
+                                                       expand=['invoice', 'source', 'payment_method'])
         if data_object['billing_reason'] == 'subscription_create':
-            subscription_id = data_object['subscription']
-            payment_intent_id = data_object['payment_intent']
-            payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
-            stripe.Subscription.modify(
-                subscription_id,
-                default_payment_method=payment_intent.payment_method
-            )
-            subscription_id = data_object['subscription']
-            subscription = stripe.Subscription.retrieve(subscription_id,
-                                                        expand=['plan.product'])
-            payment_intent_id = data_object['payment_intent']
-            payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id,
-                                                           expand=['invoice', 'source', 'payment_method'])
-            subscription_id = payment_intent.invoice.subscription
+
             customer_stripe_id = data_object.customer
             PaymentHistoryStripe.objects.create(
                 subscription_id=subscription_id,
@@ -329,12 +328,6 @@ def webhook_received(request):
             )
 
         if data_object['billing_reason'] == 'subscription_cycle':
-            subscription_id = data_object['subscription']
-            subscription = stripe.Subscription.retrieve(subscription_id,
-                                                        expand=['plan.product'])
-            payment_intent_id = data_object['payment_intent']
-            payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id, expand=['invoice', 'source', 'payment_method'])
-            subscription_id = payment_intent.invoice.subscription
             customer_stripe_id = data_object.customer
             PaymentHistoryStripe.objects.create(
                 subscription_id=subscription_id,
