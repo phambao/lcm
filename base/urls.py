@@ -15,7 +15,7 @@ from base.views.country_state_city import address_search, detail_location
 from base.views.payment import ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
     stripe_cancel_subscription, get_config, create_customer, create_subscription, cancel_subscription, \
     list_subscriptions, preview_invoice, update_subscription, webhook_received, PaymentHistoryStripePreview, \
-    preview_subscription, check_promotion_code, update_customer
+    preview_subscription, check_promotion_code, update_customer, get_payment_history
 
 url_base = [
     path('location/',
@@ -83,6 +83,7 @@ url_base = [
     path('company/setting/payment/manage/', manage_sub),
     path('company/setting/payment/manage/<str:subscription_id>/', manage_sub_detail),
     path('company/setting/payment/storage/', get_data_storage),
+    path('company/setting/payment/history/', get_payment_history),
 
 ]
 # Create schema view for Swagger ------------------------------------------------

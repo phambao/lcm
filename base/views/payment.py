@@ -405,3 +405,11 @@ def webhook_received(request):
         pass
 
     return HttpResponse(status=200)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_payment_history(request):
+    payment_history = PaymentHistoryStripe.objects.filter(customer_stripe_id=request.user.company.customer_stripe)
+    data = PaymentHistoryStripeSerializer(payment_history, context={'request': request}, many=True).data
+    return Response(status=status.HTTP_200_OK, data=data)
