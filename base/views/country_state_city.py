@@ -6,6 +6,7 @@ from django_filters import rest_framework as filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
+from ..constants import POSTAL_CODE, ADMINISTRATIVE_AREA_LEVEL_2, ADMINISTRATIVE_AREA_LEVEL_1, COUNTRY
 from ..filters import CountryFilter
 from ..models.country_state_city import Country, State, City, ZipCode
 from ..serializers import country_state_city
@@ -84,17 +85,20 @@ def detail_location(request, place_id):
             data = response.json()
             address_components = data['results'][0]['address_components']
             data_rs['address'] = data['results'][0]["formatted_address"]
+            data_rs['country'] = ''
+            data_rs['state'] = ''
+            data_rs['code'] = ''
             for address_component in address_components:
-                if 'country' in address_component['types']:
+                if COUNTRY in address_component['types']:
                     data_rs['country'] = address_component['long_name']
 
-                if 'administrative_area_level_1' in address_component['types']:
+                if ADMINISTRATIVE_AREA_LEVEL_1 in address_component['types']:
                     data_rs['state'] = address_component['long_name']
 
-                if 'administrative_area_level_2' in address_component['types']:
+                if ADMINISTRATIVE_AREA_LEVEL_2 in address_component['types']:
                     data_rs['city'] = address_component['long_name']
 
-                if 'postal_code' in address_component['types']:
+                if POSTAL_CODE in address_component['types']:
                     data_rs['code'] = address_component['long_name']
 
             return Response(status=status.HTTP_200_OK, data=data_rs)
