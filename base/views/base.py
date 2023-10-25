@@ -334,7 +334,8 @@ class FileMessageTodoGenericView(GenericViewSet):
                 user_create=user,
                 user_update=user,
                 name=file.name,
-                size=file.size
+                size=file.size,
+                company=request.user.company
             )
             attachment_create.append(attachment)
 
@@ -537,4 +538,29 @@ def manage_sub_detail(request, *args, **kwargs):
         data_rs['next_payment'] = next_payment
     except Exception as e:
         return Response(status=status.HTTP_404_NOT_FOUND, data={"status_code": status.HTTP_404_NOT_FOUND, "detail": "get payment info error"})
+    return Response(status=status.HTTP_200_OK, data=data_rs)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_data_storage(request, *args, **kwargs):
+    try:
+        subscription_id = kwargs.get('subscription_id')
+        data_rs = dict()
+        size_use = 0
+        files = FileBuilder365.objects.filter(company=request.user.company)
+        for file in files:
+            size_file = file.file.size
+            size_use += size_file
+
+        subscription = stripe.Subscription.retrieve(subscription_id, expand=['plan.product'])
+        storage_usage = int(subscription.plan.product.metadata.size)
+        module = subscription.plan.product.metadata.module
+        module = module.strip('[]')
+        module = module.split(',')
+        data_rs['size_use'] = size_use
+        data_rs['storage_usage'] = storage_usage
+        data_rs['module'] = module
+    except Exception as e:
+        return Response(status=status.HTTP_404_NOT_FOUND, data={"status_code": status.HTTP_404_NOT_FOUND, "detail": "data storage error"})
     return Response(status=status.HTTP_200_OK, data=data_rs)

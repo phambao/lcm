@@ -61,7 +61,7 @@ def address_search(request, *args, **kwargs):
         address = data['address']
         region = data.get('region')
         key = config('GOOGLE_MAPS_API_KEY')
-        url = f'https://maps.googleapis.com/maps/api/place/textsearch/json?query={address}&region={region}&key={key}'
+        url = f'https://maps.googleapis.com/maps/api/place/autocomplete/json?input={address}&key={key}'
         response = requests.get(url)
         if response.status_code == status.HTTP_200_OK:
             return Response(status=status.HTTP_200_OK, data=response.json())
