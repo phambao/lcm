@@ -81,7 +81,7 @@ class DataPointImportSerializer(serializers.ModelSerializer):
 
 
 class CatalogSerializer(serializers.ModelSerializer):
-    data_points = serializers.CharField(required=False, max_length=256, allow_blank=True)
+    data_points = serializers.CharField(required=False, max_length=1024, allow_blank=True)
     parent = serializers.IntegerField(allow_null=True, required=False)
 
     class Meta:
