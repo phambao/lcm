@@ -80,7 +80,24 @@ def detail_location(request, place_id):
         url = f'https://maps.googleapis.com/maps/api/geocode/json?place_id={place_id}&key={key}'
         response = requests.get(url)
         if response.status_code == status.HTTP_200_OK:
-            return Response(status=status.HTTP_200_OK, data=response.json())
+            data_rs = {}
+            data = response.json()
+            address_components = data['results'][0]['address_components']
+            data_rs['address'] = data['results'][0]["formatted_address"]
+            for address_component in address_components:
+                if 'country' in address_component['types']:
+                    data_rs['country'] = address_component['long_name']
+
+                if 'administrative_area_level_1' in address_component['types']:
+                    data_rs['state'] = address_component['long_name']
+
+                if 'administrative_area_level_2' in address_component['types']:
+                    data_rs['city'] = address_component['long_name']
+
+                if 'postal_code' in address_component['types']:
+                    data_rs['code'] = address_component['long_name']
+
+            return Response(status=status.HTTP_200_OK, data=data_rs)
         else:
             return Response(status=response.status_code, data={'error': response.reason})
 
