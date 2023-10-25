@@ -88,6 +88,7 @@ def detail_location(request, place_id):
             data_rs['country'] = ''
             data_rs['state'] = ''
             data_rs['code'] = ''
+            data_rs['city'] = ''
             for address_component in address_components:
                 if COUNTRY in address_component['types']:
                     data_rs['country'] = address_component['long_name']

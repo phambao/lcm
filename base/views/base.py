@@ -475,6 +475,8 @@ def manage_sub(request):
         # default_payment_method = subscription.default_payment_method
         # payment_method = stripe.PaymentMethod.retrieve(data_subscription.payment_method_id)
         next_payment = dict()
+        data_rs['subscription_id'] = data_subscription.subscription_id
+        data_rs['customer_stripe'] = request.user.company.customer_stripe
         data_rs['status'] = subscription.status
         data_rs['description'] = subscription.plan.product.name
         data_rs['interval'] = subscription.plan.interval
@@ -514,6 +516,8 @@ def manage_sub_detail(request, *args, **kwargs):
         # default_payment_method = subscription.default_payment_method
         # payment_method = stripe.PaymentMethod.retrieve(data_subscription.payment_method_id)
         next_payment = dict()
+        data_rs['subscription_id'] = data_subscription.subscription_id
+        data_rs['customer_stripe'] = request.user.company.customer_stripe
         data_rs['status'] = subscription.status
         data_rs['description'] = subscription.plan.product.name
         data_rs['interval'] = subscription.plan.interval
@@ -532,6 +536,7 @@ def manage_sub_detail(request, *args, **kwargs):
         data_rs['customer_info']['customer_name'] = subscription.latest_invoice.customer_name
         data_rs['customer_info']['email'] = subscription.latest_invoice.customer_email
         data_rs['customer_info']['phone'] = subscription.latest_invoice.customer_phone
+        data_rs['customer_info']['instagram'] = None
         next_payment['amount'] = upcoming_invoice.amount_remaining/100
         next_payment['currency'] = upcoming_invoice.currency
         next_payment['next_day_payment'] = upcoming_invoice.next_payment_attempt

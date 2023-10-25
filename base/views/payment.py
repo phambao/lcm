@@ -7,12 +7,12 @@ import stripe
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import redirect
 from rest_framework import permissions, status
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.decorators import api_view, permission_classes
 from decouple import config
-
 import jwt
 
 from api.models import CompanyBuilder
@@ -411,5 +411,8 @@ def webhook_received(request):
 @permission_classes([permissions.IsAuthenticated])
 def get_payment_history(request):
     payment_history = PaymentHistoryStripe.objects.filter(customer_stripe_id=request.user.company.customer_stripe)
-    data = PaymentHistoryStripeSerializer(payment_history, context={'request': request}, many=True).data
-    return Response(status=status.HTTP_200_OK, data=data)
+    paginator = LimitOffsetPagination()
+    data_rs = paginator.paginate_queryset(payment_history, request)
+    serializer = PaymentHistoryStripeSerializer(data_rs, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
