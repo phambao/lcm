@@ -62,7 +62,7 @@ class DataPoint(BaseModel):
         EMPTY = '', ''
 
     value = models.CharField(max_length=128, blank=True)
-    unit = models.ForeignKey(DataPointUnit, on_delete=models.CASCADE, null=True, blank=True)
+    unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.CASCADE, null=True, blank=True)
     linked_description = models.CharField(max_length=128, blank=True)
     is_linked = models.BooleanField(default=False)
     catalog = models.ForeignKey('Catalog', on_delete=models.CASCADE, related_name='data_points',
