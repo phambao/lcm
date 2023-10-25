@@ -536,6 +536,7 @@ def manage_sub_detail(request, *args, **kwargs):
         data_rs['customer_info']['customer_name'] = subscription.latest_invoice.customer_name
         data_rs['customer_info']['email'] = subscription.latest_invoice.customer_email
         data_rs['customer_info']['phone'] = subscription.latest_invoice.customer_phone
+        data_rs['customer_info']['instagram'] = None
         next_payment['amount'] = upcoming_invoice.amount_remaining/100
         next_payment['currency'] = upcoming_invoice.currency
         next_payment['next_day_payment'] = upcoming_invoice.next_payment_attempt
