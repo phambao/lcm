@@ -53,9 +53,6 @@ class ContactTypeNameCustomSerializer(serializers.Serializer):
 
 
 class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
-    city = base.IDAndNameSerializer(allow_null=True, required=False)
-    state = base.IDAndNameSerializer(allow_null=True, required=False)
-    country = base.IDAndNameSerializer(allow_null=True, required=False)
     phone_contacts = PhoneContactsSerializer(
         'contact', many=True, allow_null=True, required=False)
     contact_types = ContactTypeNameCustomSerializer(many=True, allow_null=True)
@@ -73,11 +70,7 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         if self.is_param_exist('pk_lead'):
             phone_contacts = validated_data.pop('phone_contacts')
             contact_types = validated_data.pop('contact_types')
-            state = validated_data.pop('state') or {}
-            city = validated_data.pop('city') or {}
-            country = validated_data.pop('country') or {}
-            ct = lead_list.Contact.objects.create(country_id=country.get('id'), state_id=state.get('id'),
-                                                  city_id=city.get('id'), **validated_data)
+            ct = lead_list.Contact.objects.create(**validated_data)
             ld = lead_list.LeadDetail.objects.get(pk=self.get_params()['pk_lead'])
             ct.leads.add(ld)
             for contact_type in contact_types:
@@ -103,13 +96,9 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         phone_contacts = validated_data.pop('phone_contacts')
         contact_types = validated_data.pop('contact_types')
         lead_id = validated_data.pop('lead_id')
-        state = validated_data.pop('state') or {}
-        city = validated_data.pop('city') or {}
-        country = validated_data.pop('country') or {}
 
         instance = lead_list.Contact.objects.filter(pk=self.get_params()['pk'])
-        instance.update(country_id=country.get('id'), state_id=state.get('id'),
-                        city_id=city.get('id'), **validated_data)
+        instance.update(**validated_data)
         instance = instance.first()
 
         instance.phone_contacts.all().delete()
@@ -327,15 +316,11 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
                 contact_types = pop(contact, 'contact_types', [])
                 phones = pop(contact, 'phone_contacts', [])
                 contact_id = contact.get('id', None)
-                ct_state = pop(contact, 'state', {})
-                ct_city = pop(contact, 'city', {})
-                ct_country = pop(contact, 'country', {})
                 if contact_id:
                     # If contact has exist in database
                     ct = lead_list.Contact.objects.get(id=contact_id)
                 else:
-                    ct = lead_list.Contact.objects.create(country_id=ct_country.get('id'), state_id=ct_state.get('id'),
-                                                          city_id=ct_city.get('id'), **contact)
+                    ct = lead_list.Contact.objects.create(**contact)
                 ld.contacts.add(ct)
                 for contact_type in contact_types:
                     ctn = lead_list.ContactTypeName.objects.get(name=contact_type['name'])

@@ -84,12 +84,9 @@ class Contact(BaseModel):
         max_length=6, choices=Gender.choices, default=Gender.MALE)
     email = models.EmailField(max_length=128, blank=True)
     street = models.CharField(max_length=64, null=True, blank=True)
-    city = models.ForeignKey('base.City', on_delete=models.SET_NULL,
-                             related_name='contact_cities', null=True, blank=True)
-    state = models.ForeignKey('base.State', on_delete=models.SET_NULL,
-                              related_name='contact_states', null=True, blank=True)
-    country = models.ForeignKey('base.Country', on_delete=models.SET_NULL,
-                                related_name='contact_countries', null=True, blank=True)
+    country = models.CharField('Country', max_length=128, blank=True, default='', null=True)
+    city = models.CharField('City', max_length=128, blank=True, default='', null=True)
+    state = models.CharField('State', max_length=128, blank=True, default='', null=True)
     zip_code = models.CharField(verbose_name='Zip Code', max_length=32, blank=True)
     image = models.ImageField(upload_to='contact_image', blank=True, null=True)
     leads = models.ManyToManyField(LeadDetail, related_name='contacts',
