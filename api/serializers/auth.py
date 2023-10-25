@@ -8,6 +8,8 @@ from django.conf import settings
 from rest_framework import serializers
 
 from base.tasks import celery_send_mail
+from base.utils import pop
+
 User = get_user_model()
 
 
@@ -85,12 +87,13 @@ class RegisterSerializer(serializers.ModelSerializer):
                                         password=validated_data['password'],
                                         is_admin_company=True
                                         )
+        stripe_customer = pop(validated_data, 'stripe_customer', '')
         user.last_name = validated_data['last_name']
         user.first_name = validated_data['first_name']
         user.is_active = False
         user.create_code = code
         user.expire_code_register = timezone.now()
-        user.stripe_customer = validated_data['stripe_customer']
+        user.stripe_customer = stripe_customer
         user.save()
         content = render_to_string('auth/create-user-otp.html', {'username': user.get_username(),
                                                                  'otp': user.create_code})

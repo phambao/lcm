@@ -18,7 +18,7 @@ class User(AbstractUser):
     lang = models.CharField(max_length=128, blank=True, null=True)
     email = models.EmailField(unique=True, blank=True)
     phone = models.CharField(max_length=16, blank=True, default='')
-    stripe_customer = models.CharField(max_length=100, default=uuid.uuid4)
+    stripe_customer = models.CharField(max_length=100, default=uuid.uuid4, blank=True)
     is_admin_company = models.BooleanField(default=False, blank=True)
     create_code = models.IntegerField(blank=True, null=True)
     expire_code_register = models.DateTimeField(auto_now=True)
