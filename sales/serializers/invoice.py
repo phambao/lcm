@@ -288,9 +288,6 @@ class ProposalForInvoiceSerializer(serializers.ModelSerializer):
 
 
 class LeadInvoiceSerializer(serializers.ModelSerializer):
-    city = base.IDAndNameSerializer(allow_null=True, required=False)
-    state = base.IDAndNameSerializer(allow_null=True, required=False)
-    country = base.IDAndNameSerializer(allow_null=True, required=False)
 
     class Meta:
         model = LeadDetail

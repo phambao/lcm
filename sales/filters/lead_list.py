@@ -93,14 +93,14 @@ class LeadDetailFilter(filters.FilterSet):
         return queryset.exclude(contacts__email__regex=valid_email).distinct()
 
 
-class ContactsFilter(filters.FilterSet, CountryStateCityBaseFilter):
+class ContactsFilter(filters.FilterSet):
     first_name = filters.CharFilter(field_name="first_name", lookup_expr='icontains')
     last_name = filters.CharFilter(field_name="last_name", lookup_expr='icontains')
     email = filters.CharFilter(field_name="email", lookup_expr='icontains')
     phone_number = filters.CharFilter(field_name="phone_contacts__phone_number", lookup_expr='icontains')
-    city = filters.NumberFilter(method='filter_city_id')
-    state = filters.NumberFilter(method='filter_state_id')
-    country = filters.NumberFilter(method='filter_country_id')
+    city = filters.CharFilter(field_name="city", lookup_expr='icontains')
+    state = filters.CharFilter(field_name="state", lookup_expr='icontains')
+    country = filters.CharFilter(field_name="country", lookup_expr='icontains')
 
     class Meta:
         model = Contact
