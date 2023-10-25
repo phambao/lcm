@@ -82,7 +82,7 @@ url_base = [
     path('get-config/', get_data_config),
     path('company/setting/payment/manage/', manage_sub),
     path('company/setting/payment/manage/<str:subscription_id>/', manage_sub_detail),
-    path('company/setting/payment/storage/', get_data_storage),
+    path('company/setting/payment/storage/<str:subscription_id>/', get_data_storage),
     path('company/setting/payment/history/', get_payment_history),
 
 ]
