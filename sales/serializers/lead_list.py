@@ -259,9 +259,6 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
     activities = ActivitiesSerializer('lead', many=True, allow_null=True, required=False)
     contacts = ContactsSerializer('leads', many=True, allow_null=True, required=False)
     photos = PhotoSerializer('lead', many=True, allow_null=True, required=False)
-    city = base.IDAndNameSerializer(allow_null=True, required=False)
-    state = base.IDAndNameSerializer(allow_null=True, required=False)
-    country = base.IDAndNameSerializer(allow_null=True, required=False)
     project_types = base.IDAndNameSerializer(many=True, allow_null=True, required=False)
     salesperson = UserCustomSerializer(many=True, allow_null=True, required=False)
     tags = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
@@ -283,17 +280,12 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         photos = pop(data, 'photos', [])
         project_types = pop(data, 'project_types', [])
         salesperson = pop(data, 'salesperson', [])
-        lead_state = pop(data, 'state', {})
-        lead_city = pop(data, 'city', {})
-        lead_country = pop(data, 'country', {})
         lead_tags = pop(data, 'tags', [])
         lead_sources = pop(data, 'sources', [])
 
         [data.pop(field) for field in PASS_FIELDS if field in data]
 
-        ld = lead_list.LeadDetail.objects.create(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
-                                                 user_create=user_create, user_update=user_update,
-                                                 country_id=lead_country.get('id'), **data)
+        ld = lead_list.LeadDetail.objects.create(user_create=user_create, user_update=user_update, **data)
         if lead_tags:
             tags = []
             for lt in lead_tags:
@@ -360,17 +352,13 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         user_create = pop(data, 'user_create', None)
         photos = pop(data, 'photos', [])
         contacts = pop(data, 'contacts', [])
-        lead_state = pop(data, 'state', {})
-        lead_city = pop(data, 'city', {})
-        lead_country = pop(data, 'country', {})
         lead_tags = pop(data, 'tags', [])
         lead_sources = pop(data, 'sources', [])
 
         ld = instance
         ld = lead_list.LeadDetail.objects.filter(pk=instance.pk)
 
-        ld.update(city_id=lead_city.get('id'), state_id=lead_state.get('id'),
-                  country_id=lead_country.get('id'), **data)
+        ld.update(**data)
         ld = ld.first()
         # ld.update does not update modified Date
         ld.save()

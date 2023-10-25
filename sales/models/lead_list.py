@@ -41,12 +41,9 @@ class LeadDetail(BaseModel):
     # Lead information
     lead_title = models.CharField('Lead Title', max_length=128)
     street_address = models.CharField('Street Address', max_length=128, blank=True)
-    country = models.ForeignKey('base.Country', on_delete=models.SET_NULL,
-                                related_name='lead_countries', null=True, blank=True)
-    city = models.ForeignKey('base.City', on_delete=models.SET_NULL,
-                             related_name='lead_cities', null=True, blank=True)
-    state = models.ForeignKey('base.State', on_delete=models.SET_NULL,
-                              related_name='lead_states', null=True, blank=True)
+    country = models.CharField('Country', max_length=128, blank=True, default='', null=True)
+    city = models.CharField('City', max_length=128, blank=True, default='', null=True)
+    state = models.CharField('State', max_length=128, blank=True, default='', null=True)
     zip_code = models.CharField(verbose_name='Zip Code', max_length=6, blank=True)
     status = models.CharField(
         max_length=16, choices=Status.choices, default=Status.OPEN)
