@@ -475,6 +475,8 @@ def manage_sub(request):
         # default_payment_method = subscription.default_payment_method
         # payment_method = stripe.PaymentMethod.retrieve(data_subscription.payment_method_id)
         next_payment = dict()
+        data_rs['subscription_id'] = data_subscription.subscription_id
+        data_rs['customer_stripe'] = request.user.company.customer_stripe
         data_rs['status'] = subscription.status
         data_rs['description'] = subscription.plan.product.name
         data_rs['interval'] = subscription.plan.interval
@@ -514,6 +516,8 @@ def manage_sub_detail(request, *args, **kwargs):
         # default_payment_method = subscription.default_payment_method
         # payment_method = stripe.PaymentMethod.retrieve(data_subscription.payment_method_id)
         next_payment = dict()
+        data_rs['subscription_id'] = data_subscription.subscription_id
+        data_rs['customer_stripe'] = request.user.company.customer_stripe
         data_rs['status'] = subscription.status
         data_rs['description'] = subscription.plan.product.name
         data_rs['interval'] = subscription.plan.interval
