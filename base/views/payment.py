@@ -12,10 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.decorators import api_view, permission_classes
-from django_filters import rest_framework as filters
-from rest_framework import filters as rf_filters
 from decouple import config
-
 import jwt
 
 from api.models import CompanyBuilder
