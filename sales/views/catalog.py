@@ -212,6 +212,8 @@ def duplicate_catalogs(request, pk):
     """
 
     parent_catalog = get_object_or_404(Catalog, pk=pk)
+    new_c = []
+    data = []
     # duplicate by level
     if isinstance(request.data, list):
         for d in request.data:
@@ -219,10 +221,13 @@ def duplicate_catalogs(request, pk):
             data_points = d.get('data_points', [])
             try:
                 c = Catalog.objects.get(pk=d.get('id'))
-                c.duplicate(parent=parent_catalog, depth=depth, data_points=data_points)
+                new_c.append(c.duplicate(parent=parent_catalog, depth=depth, data_points=data_points))
             except Catalog.DoesNotExist:
                 pass
-        return Response(status=status.HTTP_201_CREATED, data={})
+        for new in new_c:
+            data.extend(new.get_all_descendant(have_self=True))
+        return Response(status=status.HTTP_201_CREATED,
+                        data=catalog.CatalogSerializer(Catalog.objects.filter(id__in=data)).data)
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
