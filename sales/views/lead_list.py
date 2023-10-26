@@ -395,9 +395,9 @@ def export_data(request):
             projected_sale_date = ''
         row_data = [
             lead_detail.lead_title, lead_detail.street_address,
-            lead_detail.country.id if lead_detail.country else '',
-            lead_detail.city.id if lead_detail.city else '',
-            lead_detail.state.id if lead_detail.state else '',
+            lead_detail.country,
+            lead_detail.city,
+            lead_detail.state,
             lead_detail.zip_code, lead_detail.get_status_display(),
             lead_detail.get_proposal_status_display(), lead_detail.notes,
             lead_detail.confidence, lead_detail.estimate_revenue_from,
@@ -467,9 +467,9 @@ def export_data(request):
 
         row = [
             contact.id, contact.first_name, contact.last_name, contact.gender, contact.email,contact.street,
-            contact.city.id if contact.city else '',
-            contact.state.id if contact.state else '',
-            contact.country.id if contact.country else '',
+            contact.city,
+            contact.state,
+            contact.country,
             contact.zip_code,
             ', '.join(str(ct.id)for ct in contact.leads.all()),
             contact.user_create.id if contact.user_create else '',
@@ -544,9 +544,9 @@ def import_data(request):
         data_create = {
             'lead_title': row[0].value,
             'street_address': street_address,
-            'country_id': row[2].value,
-            'city_id': row[3].value,
-            'state_id': row[4].value,
+            'country': row[2].value,
+            'city': row[3].value,
+            'state': row[4].value,
             'zip_code': zip_code,
             'status': row[6].value,
             'proposal_status': row[7].value,
