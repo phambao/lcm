@@ -519,7 +519,8 @@ def manage_sub_detail(request, *args, **kwargs):
         data_rs['subscription_id'] = data_subscription.subscription_id
         data_rs['customer_stripe'] = request.user.company.customer_stripe
         data_rs['status'] = subscription.status
-        data_rs['description'] = subscription.plan.product.name
+        data_rs['product_name'] = subscription.plan.product.name
+        data_rs['image'] = subscription.plan.product.images
         data_rs['interval'] = subscription.plan.interval
         data_rs['payment_method'] = dict()
         data_rs['billing_info'] = dict()
