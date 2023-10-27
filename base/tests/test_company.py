@@ -21,8 +21,7 @@ class CompanyTests(BaseTest):
             "email": "user@example.com",
             "cell_mail": "string",
             "user_create": self.user_id,
-            "user_update": self.user_id,
-            'short_name': 'string'
+            "user_update": self.user_id
         }
         self.company = self.client.post(
             f'/api/base/company/',

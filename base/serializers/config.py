@@ -69,15 +69,7 @@ class CompanySerializer(serializers.ModelSerializer):
         model = CompanyBuilder
         fields = ('id', 'logo', 'company_name', 'address', 'country', 'city', 'state', 'zip_code', 'tax', 'size',
                   'business_phone', 'fax', 'email', 'cell_phone', 'cell_mail', 'created_date', 'modified_date',
-                  'user_create', 'user_update', 'currency', 'description', 'company_timezone', 'field', 'short_name')
-
-    def validate(self, validated_data):
-        short_name = validated_data['short_name']
-        request = self.context.get('request')
-        if CompanyBuilder.objects.filter(short_name=short_name).exists() and request.method == 'POST':
-            raise serializers.ValidationError({"short_name": "This short_name already exists."})
-        return validated_data
-
+                  'user_create', 'user_update', 'currency', 'description', 'company_timezone', 'field')
 
 class DivisionSerializer(serializers.ModelSerializer):
     class Meta:
