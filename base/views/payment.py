@@ -98,8 +98,7 @@ def create_customer(request):
     try:
         customer = stripe.Customer.create(
             email=data['email'],
-            name=data['name'],
-            invoice_prefix=data['invoice_prefix']
+            name=data['name']
         )
         data_company = CompanyBuilder.objects.filter(pk=data['company'])
         data_company.customer_stripe = customer.id
