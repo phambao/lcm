@@ -44,9 +44,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     "corsheaders",
+    'rest_framework_simplejwt',
+    'knox', # Need to remove
     'drf_yasg',
     'django_filters',
-    'knox',
     'base.apps.BaseConfig',
     'api.apps.ApiConfig',
     'sales.apps.SalesConfig',
@@ -147,7 +148,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES':
         (
          'rest_framework.authentication.SessionAuthentication',
-         'knox.auth.TokenAuthentication',
+         'rest_framework_simplejwt.authentication.JWTAuthentication',
          ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 25,
@@ -163,11 +164,6 @@ REST_FRAMEWORK = {
         'user': '1000/min'
     }
     # 'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema'
-}
-
-REST_KNOX = {
-    # Never expire token
-    'TOKEN_TTL': None,
 }
 
 # Build for local development
