@@ -1,8 +1,11 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path, include
-from knox import views as knox_views
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
-from api.views.auth import SignInAPI, SignUpAPI, MainUser, UserList, forgot_password, check_private_code, \
+from api.views.auth import SignUpAPI, MainUser, UserList, forgot_password, check_private_code, \
     reset_password, SignUpUserCompanyAPI, InternalUserListView, InternalUserDetailView, check_link, \
     check_private_code_create, resend_mail
 from api.views.company_setting import setting_change_order, setting_invoice
@@ -11,8 +14,9 @@ urlpatterns = [
     # For authenticate
     path('check-link', check_link),
     path('register', SignUpAPI.as_view()),
-    path('login', SignInAPI.as_view()),
-    path('logoutall/', knox_views.LogoutAllView.as_view(), name='knox_logoutall'),
+    path('login', TokenObtainPairView.as_view()),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # path('logoutall/', knox_views.LogoutAllView.as_view(), name='knox_logoutall'),
     path('user/<int:pk>/', MainUser.as_view()),
     path('internal-user/', InternalUserListView.as_view()),
     path('internal-user/<int:pk>/', InternalUserDetailView.as_view()),
