@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 from decouple import config
 import os
@@ -164,6 +165,11 @@ REST_FRAMEWORK = {
         'user': '1000/min'
     }
     # 'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema'
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=5*60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(minutes=30),
 }
 
 # Build for local development
