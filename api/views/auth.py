@@ -7,12 +7,12 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
-from knox.models import AuthToken
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 import jwt
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from base.models.payment import PaymentHistoryStripe
 from base.tasks import celery_send_mail
@@ -22,22 +22,33 @@ from ..serializers.auth import UserSerializer, RegisterSerializer, LoginSerializ
     ForgotPasswordSerializer, CheckCodeSerializer, ChangePasswordSerializer, InternalUserSerializer
 
 
-class SignUpAPI(generics.GenericAPIView):
+class TokenMixin:
+    @classmethod
+    def get_token(cls, user):
+        return cls.token_class.for_user(user)
+
+
+class SignUpAPI(generics.GenericAPIView, TokenMixin):
     serializer_class = RegisterSerializer
+    token_class = RefreshToken
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        token = AuthToken.objects.create(user)
-        return Response({
+        data = {
             "users": UserSerializer(user, context=self.get_serializer_context()).data,
-            "token": token[1],
             "message": "Register successfully"
-        })
+        }
+        
+        refresh = self.get_token(user)
+
+        data["refresh"] = str(refresh)
+        data["access"] = str(refresh.access_token)
+        return Response(data=data)
 
 
-class SignUpUserCompanyAPI(generics.GenericAPIView):
+class SignUpUserCompanyAPI(generics.GenericAPIView, TokenMixin):
     serializer_class = RegisterSerializer
 
     def post(self, request, *args, **kwargs):
@@ -53,26 +64,10 @@ class SignUpUserCompanyAPI(generics.GenericAPIView):
         user.company = data_company
         user.save()
         # user = serializer.save()
-        token = AuthToken.objects.create(user)
+
         return Response({
             "users": UserSerializer(user, context=self.get_serializer_context()).data,
-            "token": token[1],
             "message": "Register successfully"
-        })
-
-
-class SignInAPI(generics.GenericAPIView):
-    serializer_class = LoginSerializer
-    throttle_classes = [UserRateThrottle]
-
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data
-        return Response({
-            "user": UserSerializer(user, context=self.get_serializer_context()).data,
-            "token": AuthToken.objects.create(user)[1],
-            "message": "Login successfully"
         })
 
 

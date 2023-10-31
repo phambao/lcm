@@ -202,6 +202,7 @@ class Catalog(BaseModel):
             children = Catalog.objects.filter(parents__id=self.pk)
             for child in children:
                 child.duplicate(parent=c, depth=depth-1, data_points=data_points)
+        return c
 
     def duplicate_by_catalog(self, parent=None, descendant=[], data_points=[]):
         """

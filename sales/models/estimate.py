@@ -145,6 +145,9 @@ class POFormula(BaseModel):
         return data
 
     def export_to_json(self):
+        group = self.group
+        if group:
+            group = group.id
         return [
             self.name, str(self.linked_description), self.formula, self.group, self.quantity, self.markup,
             self.charge, str(self.material), self.unit, self.unit_price, self.cost, self.total_cost,
