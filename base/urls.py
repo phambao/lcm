@@ -56,7 +56,7 @@ url_base = [
     path('product/<int:pk>/', ProductPreviewDetail.as_view()),
     path('product/', ProductPreview.as_view()),
     path('payment/stripe/create-checkout-session/', csrf_exempt(CreateCheckOutSession.as_view()), name='checkout_session'),
-    path('payment/stripe/stripe-cancel-subscription/', stripe_cancel_subscription),
+    path('payment/stripe/stripe-cancel-subscription/<str:subscription_id>/', stripe_cancel_subscription),
     path('payment/stripe/config/', get_config),
     path('payment/stripe/create-customer/', create_customer),
     path('payment/stripe/update-customer/<str:customer_id>/', update_customer),

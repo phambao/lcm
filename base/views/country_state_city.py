@@ -62,7 +62,7 @@ def address_search(request, *args, **kwargs):
         address = data['address']
         region = data.get('region')
         key = config('GOOGLE_MAPS_API_KEY')
-        url = f'https://maps.googleapis.com/maps/api/place/autocomplete/json?input={address}&key={key}'
+        url = f'https://maps.googleapis.com/maps/api/place/autocomplete/json?input={address}&key={key}&language=en'
         response = requests.get(url)
         if response.status_code == status.HTTP_200_OK:
             return Response(status=status.HTTP_200_OK, data=response.json())
@@ -78,7 +78,7 @@ def address_search(request, *args, **kwargs):
 def detail_location(request, place_id):
     try:
         key = config('GOOGLE_MAPS_API_KEY')
-        url = f'https://maps.googleapis.com/maps/api/geocode/json?place_id={place_id}&key={key}'
+        url = f'https://maps.googleapis.com/maps/api/geocode/json?place_id={place_id}&key={key}&language=en'
         response = requests.get(url)
         if response.status_code == status.HTTP_200_OK:
             data_rs = {}
@@ -101,6 +101,9 @@ def detail_location(request, place_id):
 
                 if POSTAL_CODE in address_component['types']:
                     data_rs['code'] = address_component['long_name']
+
+            if data_rs['city'] == '':
+                data_rs['city'] = data_rs['state']
 
             return Response(status=status.HTTP_200_OK, data=data_rs)
         else:

@@ -66,13 +66,15 @@ class CreateCheckOutSession(APIView):
             return Response({'msg': 'something went wrong while creating stripe session', 'error': str(e)}, status=500)
 
 
-@api_view(['POST'])
-def stripe_cancel_subscription(request):
+@api_view(['DELETE'])
+def stripe_cancel_subscription(request, *args, **kwargs):
+    subscription_id = kwargs.get('subscription_id')
     try:
         stripe.Subscription.modify(
-            "sub_1NOBmEE4OZckNkJ5HNCkDDmn",
+            subscription_id,
             cancel_at_period_end=True,
         )
+        # deleted_subscription = stripe.Subscription.delete(subscription_id)
     except Exception as ex:
         return HttpResponse(status=400)
     return HttpResponse(status=200)
@@ -200,6 +202,10 @@ def cancel_subscription(request):
     try:
         deleted_subscription = stripe.Subscription.delete(data['subscriptionId'])
         return Response({'subscription': deleted_subscription})
+        # stripe.Subscription.modify(
+        #     "sub_49ty4767H20z6a",
+        #     cancel_at_period_end=True,
+        # )
     except Exception as e:
         return Response({'error': str(e)}, status=403)
 
