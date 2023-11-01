@@ -1,6 +1,7 @@
 import datetime
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 import stripe
@@ -15,7 +16,7 @@ from rest_framework.decorators import api_view, permission_classes
 from decouple import config
 import jwt
 
-from api.models import CompanyBuilder
+from api.models import CompanyBuilder, User
 from base.tasks import celery_send_mail
 from base.models.payment import Product, PaymentHistoryStripe, Price
 from base.serializers.payment import ProductSerializer, CheckoutSessionSerializer, PaymentHistoryStripeSerializer
@@ -291,6 +292,13 @@ def webhook_received(request):
     event_type = event['type']
     # Handle the event
     data_object = data['object']
+    if event_type == 'customer.subscription.deleted':
+        customer_stripe_id = data_object.customer
+        user = User.objects.get(stripe_customer=customer_stripe_id)
+        company = user.company
+        company.is_payment = False
+        company.save()
+
     if event_type == 'price.updated':
         data_price = Price.objects.get(stripe_price_id=data_object['id'])
         data_price.amount = data_object['unit_amount']/100
