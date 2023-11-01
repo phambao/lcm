@@ -19,8 +19,8 @@ class AuthTests(APITestCase):
             '/api/login', {'email': 'admin@admin.com', 'password': 'admin', 'username': 'admin'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # get token
-        token = response.data['token']
+        token = response.data['access']
         # logout
         response = self.client.post(
-            '/api/logoutall/', HTTP_AUTHORIZATION='Token {}'.format(token))
+            '/api/logoutall/', HTTP_AUTHORIZATION='Bearer {}'.format(token))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
