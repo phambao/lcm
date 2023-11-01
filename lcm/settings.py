@@ -148,8 +148,8 @@ DEFAULT_RENDERER_CLASSES = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES':
         (
-         'rest_framework.authentication.SessionAuthentication',
          'rest_framework_simplejwt.authentication.JWTAuthentication',
+         'rest_framework.authentication.SessionAuthentication',
          ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 25,
@@ -168,8 +168,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=5*60),
-    "REFRESH_TOKEN_LIFETIME": timedelta(minutes=30),
+    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(minutes=5),
 }
 
 # Build for local development
