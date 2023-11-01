@@ -88,6 +88,7 @@ class CompanyBuilder(models.Model):
     currency = models.CharField(blank=True, max_length=128)
     company_timezone = models.CharField(blank=True, max_length=128)
     customer_stripe = models.CharField(blank=True, max_length=128, null=True)
+    is_payment = models.BooleanField(default=True)
 
     def __str__(self):
         return self.company_name

@@ -15,7 +15,7 @@ from rest_framework.decorators import api_view, permission_classes
 from decouple import config
 import jwt
 
-from api.models import CompanyBuilder
+from api.models import CompanyBuilder, User
 from base.tasks import celery_send_mail
 from base.models.payment import Product, PaymentHistoryStripe, Price
 from base.serializers.payment import ProductSerializer, CheckoutSessionSerializer, PaymentHistoryStripeSerializer
@@ -66,13 +66,15 @@ class CreateCheckOutSession(APIView):
             return Response({'msg': 'something went wrong while creating stripe session', 'error': str(e)}, status=500)
 
 
-@api_view(['POST'])
-def stripe_cancel_subscription(request):
+@api_view(['DELETE'])
+def stripe_cancel_subscription(request, *args, **kwargs):
+    subscription_id = kwargs.get('subscription_id')
     try:
         stripe.Subscription.modify(
-            "sub_1NOBmEE4OZckNkJ5HNCkDDmn",
+            subscription_id,
             cancel_at_period_end=True,
         )
+        # deleted_subscription = stripe.Subscription.delete(subscription_id)
     except Exception as ex:
         return HttpResponse(status=400)
     return HttpResponse(status=200)
@@ -200,6 +202,10 @@ def cancel_subscription(request):
     try:
         deleted_subscription = stripe.Subscription.delete(data['subscriptionId'])
         return Response({'subscription': deleted_subscription})
+        # stripe.Subscription.modify(
+        #     "sub_49ty4767H20z6a",
+        #     cancel_at_period_end=True,
+        # )
     except Exception as e:
         return Response({'error': str(e)}, status=403)
 
@@ -285,6 +291,13 @@ def webhook_received(request):
     event_type = event['type']
     # Handle the event
     data_object = data['object']
+    if event_type == 'customer.subscription.deleted':
+        customer_stripe_id = data_object.customer
+        user = User.objects.get(stripe_customer=customer_stripe_id)
+        company = user.company
+        company.is_payment = False
+        company.save()
+
     if event_type == 'price.updated':
         data_price = Price.objects.get(stripe_price_id=data_object['id'])
         data_price.amount = data_object['unit_amount']/100

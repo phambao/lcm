@@ -23,6 +23,8 @@ class FullDjangoModelPermissions(permissions.DjangoModelPermissions):
 
 class CatalogPermissions(FullDjangoModelPermissions):
     def has_permission(self, request, view):
+        if request.user.is_superuser == False and request.user.company.is_payment == False:
+            return False
         if request.user.is_admin_company == True:
             return True
         perms = self.get_required_permissions(request.method, Catalog)
@@ -31,6 +33,8 @@ class CatalogPermissions(FullDjangoModelPermissions):
 
 class ChangeOrderPermissions(FullDjangoModelPermissions):
     def has_permission(self, request, view):
+        if request.user.is_superuser == False and request.user.company.is_payment == False:
+            return False
         if request.user.is_admin_company == True:
             return True
         perms = self.get_required_permissions(request.method, ChangeOrder)
@@ -39,6 +43,8 @@ class ChangeOrderPermissions(FullDjangoModelPermissions):
 
 class EstimatePermissions(FullDjangoModelPermissions):
     def has_permission(self, request, view):
+        if request.user.is_superuser == False and request.user.company.is_payment == False:
+            return False
         if request.user.is_admin_company == True:
             return True
         perms = self.get_required_permissions(request.method, EstimateTemplate)
@@ -47,6 +53,8 @@ class EstimatePermissions(FullDjangoModelPermissions):
 
 class InvoicePermissions(FullDjangoModelPermissions):
     def has_permission(self, request, view):
+        if request.user.is_superuser == False and request.user.company.is_payment == False:
+            return False
         if request.user.is_admin_company == True:
             return True
         perms = self.get_required_permissions(request.method, Invoice)
@@ -55,6 +63,8 @@ class InvoicePermissions(FullDjangoModelPermissions):
 
 class LeadPermissions(FullDjangoModelPermissions):
     def has_permission(self, request, view):
+        if request.user.is_superuser == False and request.user.company.is_payment == False:
+            return False
         if request.user.is_admin_company == True:
             return True
         perms = self.get_required_permissions(request.method, LeadDetail)
@@ -63,6 +73,8 @@ class LeadPermissions(FullDjangoModelPermissions):
 
 class SchedulePermissions(FullDjangoModelPermissions):
     def has_permission(self, request, view):
+        if request.user.is_superuser == False and request.user.company.is_payment == False:
+            return False
         if request.user.is_admin_company == True:
             return True
         perms = self.get_required_permissions(request.method, ScheduleEvent)
@@ -71,6 +83,8 @@ class SchedulePermissions(FullDjangoModelPermissions):
 
 class ProposalPermissions(FullDjangoModelPermissions):
     def has_permission(self, request, view):
+        if request.user.is_superuser == False and request.user.company.is_payment == False:
+            return False
         if request.user.is_admin_company == True:
             return True
         perms = self.get_required_permissions(request.method, ProposalWriting)
