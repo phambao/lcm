@@ -1,7 +1,6 @@
 import datetime
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 import stripe
