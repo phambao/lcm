@@ -388,7 +388,6 @@ def webhook_received(request):
         subscription_id = payment_intent.invoice.subscription
         customer_stripe_id = data_object.customer
         data_payment_history = PaymentHistoryStripe.objects.filter(
-            subscription_id=subscription_id,
             customer_stripe_id=customer_stripe_id
         )
         # PaymentHistoryStripe.objects.create(
