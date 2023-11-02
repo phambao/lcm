@@ -11,7 +11,6 @@ class ChangeOrderFilter(filters.FilterSet):
         fields = ('lead', )
 
     def filter_by_leads(self, queryset, name, value):
-        print(value)
         if value:
             return queryset.filter(proposal_writing__lead__in=value).distinct()
         return queryset
