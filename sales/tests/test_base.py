@@ -17,4 +17,4 @@ class BaseTest(APITestCase):
                                      {'username': 'tester', 'password': '1', 'email': 'test@example.com'},
                                      format='json')
         cls.user_id = cls.response.data['user']['id']
-        cls.token = 'Token {}'.format(cls.response.data['token'])
+        cls.token = 'Bearer {}'.format(cls.response.data['access'])

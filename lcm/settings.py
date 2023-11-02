@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 from decouple import config
 import os
@@ -147,8 +148,8 @@ DEFAULT_RENDERER_CLASSES = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES':
         (
-         'rest_framework.authentication.SessionAuthentication',
          'rest_framework_simplejwt.authentication.JWTAuthentication',
+         'rest_framework.authentication.SessionAuthentication',
          ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 25,
@@ -164,6 +165,11 @@ REST_FRAMEWORK = {
         'user': '1000/min'
     }
     # 'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema'
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(weeks=52),
 }
 
 # Build for local development
