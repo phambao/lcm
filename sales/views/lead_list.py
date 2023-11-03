@@ -35,6 +35,18 @@ class LeadDetailList(CompanyFilterMixin, generics.ListCreateAPIView):
     search_fields = ['lead_title', 'street_address', 'notes']
 
 
+class LeadWithChangeOrderList(CompanyFilterMixin, generics.ListAPIView):
+    queryset = LeadDetail.objects.filter(proposals__change_orders__isnull=False).prefetch_related(
+    'activities', 'contacts', 'contacts__phone_contacts', 'project_types', 'salesperson',
+    'sources', 'tags', 'photos'
+    )
+    serializer_class = lead_list.LeadFilterChangeOrderSerializer
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = LeadDetailFilter
+    search_fields = ['lead_title', 'street_address', 'notes']
+
+
 class LeadEventList(CompanyFilterMixin, generics.ListAPIView):
     queryset = LeadDetail.objects.all().prefetch_related('schedule_event_lead_list')
     serializer_class = lead_list.LeadViewEventSerializer

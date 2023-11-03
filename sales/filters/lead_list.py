@@ -67,6 +67,7 @@ FILTERS = {
 
 
 class LeadDetailFilter(filters.FilterSet):
+    id = filters.ModelMultipleChoiceFilter(method='filter_by_leads', queryset=LeadDetail.objects.all())
     lead_title = filters.CharFilter(field_name='lead_title', lookup_expr='icontains')
     salesperson = filters.ModelMultipleChoiceFilter(queryset=get_user_model().objects.all())
     status = filters.MultipleChoiceFilter(choices=LeadDetail.Status.choices)
@@ -91,6 +92,13 @@ class LeadDetailFilter(filters.FilterSet):
         if value:
             return queryset.filter(contacts__email__regex=valid_email).distinct()
         return queryset.exclude(contacts__email__regex=valid_email).distinct()
+
+    
+    def filter_by_leads(self, queryset, name, value):
+        if value:
+            queryset = queryset.filter(id__in=[lead.id for lead in value])
+            return queryset.distinct()
+        return queryset
 
 
 class ContactsFilter(filters.FilterSet):
