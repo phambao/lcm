@@ -67,10 +67,6 @@ class ChangeOrderSerializerMixin:
         proposal_writing = instance.proposal_writing
         data['proposal_name'] = proposal_writing.name if proposal_writing else None
         data['content_type'] = ContentType.objects.get_for_model(ChangeOrder).pk
-        data['lead'] = {}
-        if data['proposal_name']:
-            lead = proposal_writing.lead
-            data['lead'] = {'lead_title': lead.lead_title, 'id': lead.id} if lead else {}
         return data
 
 

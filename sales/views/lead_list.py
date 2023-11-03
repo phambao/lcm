@@ -36,7 +36,7 @@ class LeadDetailList(CompanyFilterMixin, generics.ListCreateAPIView):
 
 
 class LeadWithChangeOrderList(CompanyFilterMixin, generics.ListAPIView):
-    queryset = LeadDetail.objects.all().prefetch_related(
+    queryset = LeadDetail.objects.filter(proposals__change_orders__isnull=False).prefetch_related(
     'activities', 'contacts', 'contacts__phone_contacts', 'project_types', 'salesperson',
     'sources', 'tags', 'photos'
     )

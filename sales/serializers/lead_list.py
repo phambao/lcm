@@ -387,11 +387,9 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
 
 
 class LeadFilterChangeOrderSerializer(LeadDetailCreateSerializer):
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        change_orders = instance.get_change_order()
-        data['change_orders'] = ChangeOrderSerializer(change_orders, many=True).data
-        return data
+    class Meta:
+        model = lead_list.LeadDetail
+        fields = ('id', 'lead_title')
 
 
 class LeadViewEventSerializer(serializers.ModelSerializer):
