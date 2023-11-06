@@ -1,7 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
-from django.db.models import Sum, DecimalField
-from django.db.models.functions import Cast
+from django.apps import apps
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -415,12 +414,20 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
+        old_name = instance.name
         try:
             obj = super().update(instance, validated_data)
         except IntegrityError:
             raise serializers.ValidationError({'name': 'name is duplicated'})
         activity_log.delay(UNIT_LIBRARY_CONTENT_TYPE, instance.pk, 2,
                            UnitLibrarySerializer.__name__, __name__, self.context['request'].user.pk)
+        catalogs = instance.get_related_cost_table(old_name)
+        cs = []
+        for c in catalogs:
+            c.c_table = c.update_unit_c_table(old_name, validated_data.get('name'))
+            cs.append(c)
+        model = apps.get_model(app_label='sales', model_name='Catalog')
+        model.objects.bulk_update(cs, ['c_table'])
         return obj
 
     def to_representation(self, instance):
