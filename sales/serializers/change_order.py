@@ -61,11 +61,7 @@ class GroupFlatRateSerializer(serializers.ModelSerializer):
         return instance
 
 
-class ChangeOrderSerializerCompact(serializers.ModelSerializer):
-    class Meta:
-        model = ChangeOrder
-        fields = '__all__'
-
+class ChangeOrderSerializerMixin:
     def to_representation(self, instance):
         data = super().to_representation(instance)
         proposal_writing = instance.proposal_writing
@@ -74,7 +70,13 @@ class ChangeOrderSerializerCompact(serializers.ModelSerializer):
         return data
 
 
-class ChangeOrderSerializer(serializers.ModelSerializer):
+class ChangeOrderSerializerCompact(ChangeOrderSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = ChangeOrder
+        fields = '__all__'
+
+
+class ChangeOrderSerializer(ChangeOrderSerializerMixin, serializers.ModelSerializer):
     existing_estimates = EstimateTemplateSerializer('change_order', many=True, required=False, allow_null=True)
     groups = GroupEstimateSerializer('change_order', many=True, required=False, allow_null=True)
     flat_rate_groups = GroupFlatRateSerializer('change_order', many=True, required=False, allow_null=True)
@@ -132,13 +134,6 @@ class ChangeOrderSerializer(serializers.ModelSerializer):
         activity_log.delay(ContentType.objects.get_for_model(ChangeOrder).pk, instance.pk, 2,
                            ChangeOrderSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        proposal_writing = instance.proposal_writing
-        data['proposal_name'] = proposal_writing.name if proposal_writing else None
-        data['content_type'] = ContentType.objects.get_for_model(ChangeOrder).pk
-        return data
 
 
 class FlatRateForInvoiceSerializer(serializers.ModelSerializer):

@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.apps import apps
 
 from api.models import BaseModel
 
@@ -65,6 +66,13 @@ class LeadDetail(BaseModel):
 
     def __str__(self):
         return self.lead_title
+
+    def get_change_order(self):
+        proposals = self.proposals.all()
+        change_orders = apps.get_model(app_label='sales', model_name='ChangeOrder').objects.none()
+        for proposal in proposals:
+            change_orders |= proposal.change_orders.all()
+        return change_orders
 
 
 class Contact(BaseModel):

@@ -78,7 +78,7 @@ class Catalog(BaseModel):
     name = models.CharField(max_length=128)
     is_ancestor = models.BooleanField(default=False, blank=True)
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False)
-    c_table = models.JSONField(default=dict, blank=True)
+    c_table = models.JSONField(default=dict, blank=True)  # {"header": [col1, col2], "data": [[col2, col2],]}
     icon = models.TextField(blank=True)
     level = models.ForeignKey(CatalogLevel, on_delete=models.CASCADE, null=True,
                               blank=True, default=None, related_name='catalogs')
@@ -232,3 +232,10 @@ class Catalog(BaseModel):
             return {**{header[i]: d[i] for i in range(len(header))}, **{"id": f'{self.pk}:{row_index}'}}
         except (KeyError, IndexError):
             return {}
+
+    def update_unit_c_table(self, old_name, new_name):
+        c_table = self.c_table
+        for d in c_table.get('data', []):
+            if d[1] == old_name:
+                d[1] = new_name
+        return c_table

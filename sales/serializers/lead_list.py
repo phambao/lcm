@@ -8,6 +8,7 @@ from api.serializers.auth import UserCustomSerializer
 from api.serializers.base import SerializerMixin
 from base.serializers import base
 from base.utils import pop, extra_kwargs_for_base_model
+from sales.serializers.change_order import ChangeOrderSerializer
 from .lead_schedule import ScheduleEventSerializer
 from ..models import lead_list
 
@@ -382,6 +383,19 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         data = super().to_representation(instance)
         if not data.get('currency'):
             data['currency'] = 'USD'
+        return data
+
+
+class LeadFilterChangeOrderSerializer(LeadDetailCreateSerializer):
+    class Meta:
+        model = lead_list.LeadDetail
+        fields = ('id', 'lead_title', 'street_address')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['facebook'] = ''
+        data['gmail'] = ''
+        data['telegram'] = ''
         return data
 
 
