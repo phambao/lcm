@@ -55,7 +55,6 @@ class Zipcode(generics.ListAPIView):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
 def address_search(request, *args, **kwargs):
     data = request.query_params
     try:
@@ -74,7 +73,6 @@ def address_search(request, *args, **kwargs):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
 def detail_location(request, place_id):
     try:
         key = config('GOOGLE_MAPS_API_KEY')
