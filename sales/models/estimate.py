@@ -1,5 +1,7 @@
 from django.db import models
+from django.apps import apps
 from django.contrib.postgres.fields import ArrayField
+from api.middleware import get_request
 
 from api.models import BaseModel
 from base.constants import MAX_DIGIT
@@ -12,6 +14,11 @@ class UnitLibrary(BaseModel):
 
     class Meta:
         unique_together = ('name', 'company')
+
+    def get_related_cost_table(self, unit_name):
+        model = apps.get_model(app_label='sales', model_name='Catalog')
+        catalogs = model.objects.filter(c_table__data__0__contains=unit_name, company=get_request().user.company)
+        return catalogs
 
 
 class DataEntry(BaseModel):

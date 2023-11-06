@@ -39,7 +39,7 @@ class LeadWithChangeOrderList(CompanyFilterMixin, generics.ListAPIView):
     queryset = LeadDetail.objects.filter(proposals__change_orders__isnull=False).prefetch_related(
     'activities', 'contacts', 'contacts__phone_contacts', 'project_types', 'salesperson',
     'sources', 'tags', 'photos'
-    )
+    ).distinct()
     serializer_class = lead_list.LeadFilterChangeOrderSerializer
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
