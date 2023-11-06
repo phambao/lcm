@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -15,7 +15,7 @@ from rest_framework.decorators import api_view, permission_classes
 from decouple import config
 import jwt
 
-from api.models import CompanyBuilder, User
+from api.models import CompanyBuilder, User, SubscriptionStripeCompany
 from base.tasks import celery_send_mail
 from base.models.payment import Product, PaymentHistoryStripe, Price
 from base.serializers.payment import ProductSerializer, CheckoutSessionSerializer, PaymentHistoryStripeSerializer
@@ -100,7 +100,8 @@ def create_customer(request):
     try:
         customer = stripe.Customer.create(
             email=data['email'],
-            name=data['name']
+            name=data['name'],
+            metadata={"company": data['company']}
         )
         data_company = CompanyBuilder.objects.filter(pk=data['company'])
         data_company.customer_stripe = customer.id
@@ -292,7 +293,10 @@ def webhook_received(request):
     # Handle the event
     data_object = data['object']
     if event_type == 'customer.subscription.deleted':
-        customer_stripe_id = data_object.customer
+        subscription_id = data_object['id']
+        data_subscription = SubscriptionStripeCompany.objects.filter(subscription_id=subscription_id)
+        data_subscription.delete()
+        customer_stripe_id = data_object['customer']
         user = User.objects.get(stripe_customer=customer_stripe_id)
         company = user.company
         company.is_payment = False
@@ -325,8 +329,19 @@ def webhook_received(request):
         payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id,
                                                        expand=['invoice', 'source', 'payment_method'])
         if data_object['billing_reason'] == 'subscription_create':
-
+            expiration_date = datetime.fromtimestamp(subscription.current_period_end)
             customer_stripe_id = data_object.customer
+            customer = stripe.Customer.retrieve(customer_stripe_id)
+            subscription_name = subscription.plan.product.name
+            SubscriptionStripeCompany.objects.create(
+                subscription_id=subscription_id,
+                customer_stripe=customer_stripe_id,
+                company_id=int(customer.metadata['company']),
+                subscription_name=subscription_name,
+                expiration_date=expiration_date,
+                is_activate=True
+            )
+
             PaymentHistoryStripe.objects.create(
                 subscription_id=subscription_id,
                 customer_stripe_id=customer_stripe_id,

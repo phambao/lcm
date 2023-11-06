@@ -10,7 +10,7 @@ from django.conf import settings
 from django.utils.timesince import timesince
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from api.models import CompanyBuilder, User
+from api.models import CompanyBuilder, User, SubscriptionStripeCompany
 from base.models.config import Question, Answer
 from base.models.payment import Price, Product
 
@@ -267,6 +267,40 @@ class StripeProductAdmin(admin.ModelAdmin):
                 )
 
 
+class SubcriptionCompanyAdmin(admin.ModelAdmin):
+    list_display = ('company', 'customer_stripe', 'subscription_id', 'subscription_name', 'expiration_date', 'is_activate')
+    search_fields = ('subscription_name',)
+    actions = ['cancel_subscription', 're_subscription']
+    # list_filter = ('currency',)
+
+    def cancel_subscription(self, request, queryset):
+        for subscription in queryset:
+            subscription_id = subscription.subscription_id
+            try:
+                stripe.Subscription.modify(
+                    subscription_id,
+                    cancel_at_period_end=True,
+                )
+                subscription.is_activate = False
+                subscription.save()
+            except Exception as ex:
+                messages.error(request, 'cancel subscription error')
+
+    def re_subscription(self, request, queryset):
+        for subscription in queryset:
+            subscription_id = subscription.subscription_id
+            try:
+                stripe.Subscription.modify(
+                    subscription_id,
+                    cancel_at_period_end=False
+                )
+                subscription.is_activate = True
+                subscription.save()
+            except Exception as ex:
+                messages.error(request, 'cancel subscription error')
+
+
+admin.site.register(SubscriptionStripeCompany, SubcriptionCompanyAdmin)
 admin.site.register(Price, PriceAdmin)
 admin.site.register(Product, StripeProductAdmin)
 admin.site.register(User, UserAdmin)

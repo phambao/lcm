@@ -167,3 +167,13 @@ class GroupCompany(models.Model):
                                 related_name='groups', blank=True)
     group = models.OneToOneField(Group, null=True, on_delete=models.CASCADE,
                                  related_name='group', blank=True)
+
+
+class SubscriptionStripeCompany(models.Model):
+    company = models.ForeignKey(CompanyBuilder, null=True, on_delete=models.CASCADE,
+                                related_name='subscription_company', blank=True)
+    customer_stripe = models.CharField(blank=True, max_length=128, null=True)
+    subscription_id = models.CharField(blank=True, max_length=128, null=True)
+    subscription_name = models.CharField(blank=True, max_length=128, null=True)
+    expiration_date = models.DateTimeField()
+    is_activate = models.BooleanField(default=False)
