@@ -389,7 +389,14 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
 class LeadFilterChangeOrderSerializer(LeadDetailCreateSerializer):
     class Meta:
         model = lead_list.LeadDetail
-        fields = ('id', 'lead_title')
+        fields = ('id', 'lead_title', 'street_address')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['facebook'] = ''
+        data['gmail'] = ''
+        data['telegram'] = ''
+        return data
 
 
 class LeadViewEventSerializer(serializers.ModelSerializer):
