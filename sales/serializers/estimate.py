@@ -196,6 +196,7 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
         model = POFormula
         fields = '__all__'
         extra_kwargs = {**{'id': {'read_only': False, 'required': False}}, **extra_kwargs_for_base_model()}
+        read_only_fields = ('assemble', )
 
     def reparse(self, data):
         # Serializer is auto convert pk to model, But when reuse serializer in others, it is required to have int field.
@@ -632,6 +633,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         model = EstimateTemplate
         fields = '__all__'
         extra_kwargs = {**{'id': {'read_only': False, 'required': False}}, **extra_kwargs_for_base_model()}
+        read_only_fields = ('group_by_proposal', )
 
     def reparse(self, data):
         # Serializer is auto convert pk to model, But when reuse serializer in others, it is required to have int field.
