@@ -492,7 +492,6 @@ class AssembleSerializer(serializers.ModelSerializer):
 
     def create_po_formula(self, po_formulas, instance):
         for po_formula in po_formulas:
-            po_formula['assemble'] = instance.pk
             po_formula['is_show'] = False
             created_from = po_formula.get('created_from')
             if not created_from:
@@ -504,7 +503,7 @@ class AssembleSerializer(serializers.ModelSerializer):
             del po_formula['id']
             po = POFormulaSerializer(data=po_formula, context=self.context)
             po.is_valid(raise_exception=True)
-            po.save()
+            po.save(assemble=instance)
 
     def create(self, validated_data):
         po_formulas = pop(validated_data, 'assemble_formulas', [])
