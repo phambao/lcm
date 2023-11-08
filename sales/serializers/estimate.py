@@ -56,7 +56,7 @@ class DataEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = DataEntry
         fields = ('id', 'name', 'unit', 'dropdown', 'is_dropdown', 'is_material_selection', 'material_selections',
-                  'created_date', 'modified_date')
+                  'created_date', 'modified_date', 'levels', 'material')
         extra_kwargs = {'id': {'read_only': False, 'required': False}}
         read_only_fields = ('created_date', 'modified_date')
 
@@ -110,6 +110,14 @@ class DataEntrySerializer(serializers.ModelSerializer):
         activity_log.delay(DATA_ENTRY_CONTENT_TYPE, instance.pk, 2,
                            DataEntrySerializer.__name__, __name__, self.context['request'].user.pk)
         return update
+
+    def validate_levels(self, value):
+        if value:
+            if isinstance(value, list):
+                for v in value:
+                    if 'id' not in v or 'name' not in v or len(v.keys()) != 2:
+                        raise serializers.ValidationError('Need 2 parameters id and name, for Ex: [{"id": "id", "name": "name"}]')
+        return value
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
