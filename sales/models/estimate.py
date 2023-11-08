@@ -31,6 +31,8 @@ class DataEntry(BaseModel):
     is_material_selection = models.BooleanField(default=False, blank=True, null=True)
     material_selections = models.ManyToManyField('sales.Catalog', blank=True,
                                                  related_name='data_entries', symmetrical=False)
+    levels = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
+    material = models.JSONField(blank=True, null=True, default=dict)
 
     def __int__(self):
         return self.pk
