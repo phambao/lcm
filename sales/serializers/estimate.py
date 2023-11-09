@@ -139,7 +139,7 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = POFormulaToDataEntry
         fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value',
-                  'copies_from', 'group', 'material_data_entry_link')
+                  'copies_from', 'group', 'material_data_entry_link', 'levels')
 
     def to_representation(self, instance):
         data = super(POFormulaToDataEntrySerializer, self).to_representation(instance)
@@ -152,7 +152,8 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
         params = {"po_formula_id": instance.pk, "value": data_entry['value'], 'index': data_entry.get('index'),
                   'dropdown_value': data_entry.get('dropdown_value', ''), 'estimate_template_id': estimate_id,
                   'material_value': data_entry.get('material_value', ''), 'copies_from': data_entry.get('copies_from'),
-                  'group': data_entry.get('group', ''), 'material_data_entry_link': data_entry.get('material_data_entry_link')}
+                  'group': data_entry.get('group', ''), 'material_data_entry_link': data_entry.get('material_data_entry_link'),
+                  'levels': data_entry.get('levels', [])}
         try:
             data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
             if data_entry_pk:
@@ -209,9 +210,7 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
     def reparse(self, data):
         # Serializer is auto convert pk to model, But when reuse serializer in others, it is required to have int field.
         # So we reparse this case
-        assemble = data.get('assemble')
-        if isinstance(assemble, int):
-            data['assemble'] = Assemble.objects.get(pk=assemble)
+        # !!! Change to read only field to ignore this case
         group = data.get('group')
         if isinstance(group, int):
             data['group'] = POFormulaGrouping.objects.get(pk=group)
