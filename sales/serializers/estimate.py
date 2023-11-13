@@ -536,13 +536,10 @@ class DataViewSerializer(serializers.ModelSerializer, SerializerMixin):
     class Meta:
         model = DataView
         fields = ('id', 'formula', 'name', 'estimate_template', 'type')
+        read_only_fields = ('estimate_template', )
 
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
-        if self.is_in_proposal_view():
-            estimate_template = data['estimate_template']
-            if isinstance(estimate_template, EstimateTemplate):
-                data['estimate_template'] = estimate_template.pk
         return data
 
 
