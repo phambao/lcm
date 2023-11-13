@@ -551,7 +551,7 @@ class MaterialViewSerializers(serializers.ModelSerializer):
     class Meta:
         model = MaterialView
         fields = ('id', 'name', 'material_value', 'copies_from', 'catalog_materials',
-                  'material_data_entry_link', 'data_entry')
+                  'levels', 'data_entry')
 
     def validate_data_entry(self, value):
         if value:
