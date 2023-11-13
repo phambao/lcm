@@ -190,7 +190,7 @@ class MaterialView(BaseModel):
                                           blank=True, null=True, related_name='material_views')
     catalog_materials = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True,
                                    null=True)
-    material_data_entry_link = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
+    levels = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
 
 
 class POFormulaGrouping(BaseModel):
