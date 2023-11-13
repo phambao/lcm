@@ -243,10 +243,13 @@ def view_proposal_formatting(request, formatting_id):
 
 @api_view(['POST'])
 def duplicate_proposal(request):
-    lead_ids = request.data.keys()
+    """
+    Payloads: {"proposal_id": [lead_id,..]}
+    """
+    proposal_ids = request.data.keys()
     objs = []
-    for lead in lead_ids:
-        for proposal_id in request.data[lead]:
+    for proposal_id in proposal_ids:
+        for lead in request.data[proposal_id]:
             p = ProposalWriting.objects.get(pk=proposal_id)
             serializer = ProposalWritingSerializer(p).data
             dup = ProposalWritingSerializer(data=serializer, context={'request': request})
