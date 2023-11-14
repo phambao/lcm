@@ -4,6 +4,7 @@ from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django_filters import rest_framework as filters
+from django.apps import apps
 from openpyxl import Workbook, load_workbook
 from rest_framework import generics, permissions
 from rest_framework import status, filters as rf_filters
@@ -14,6 +15,8 @@ from api.middleware import get_request
 from base.permissions import LeadPermissions
 from base.utils import file_response
 from base.views.base import CompanyFilterMixin
+from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter
+from sales.serializers.proposal import PriceComparisonCompactSerializer, ProposalWritingCompactSerializer
 from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, Photos, ContactTypeName, \
     ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead
@@ -264,6 +267,40 @@ class SourceLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SourceLead.objects.all()
     serializer_class = lead_list.SourceLeadSerializer
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
+
+
+class PriceComparisonByLeadViewSet(generics.ListAPIView):
+    serializer_class = PriceComparisonCompactSerializer
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = PriceComparisonFilter
+    search_fields = ('name',)
+
+    def get_queryset(self):
+        model = apps.get_model('sales', 'PriceComparison')
+        try:
+            qs = model.objects.filter(lead=self.kwargs['pk_lead'], company=get_request().user.company)
+            return qs
+        except KeyError:
+            pass
+        return model.objects.none()
+
+
+class ProposalWritingByLeadViewSet(generics.ListAPIView):
+    serializer_class = ProposalWritingCompactSerializer
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = ProposalWritingFilter
+    search_fields = ('name',)
+
+    def get_queryset(self):
+        model = apps.get_model('sales', 'ProposalWriting')
+        try:
+            qs = model.objects.filter(lead=self.kwargs['pk_lead'], company=get_request().user.company)
+            return qs
+        except KeyError:
+            pass
+        return model.objects.none()
 
 
 @api_view(['DELETE'])

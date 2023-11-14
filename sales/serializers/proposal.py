@@ -257,6 +257,7 @@ class PriceComparisonCompactSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(PriceComparison).pk
+        data['status'] = ''
         return data
 
 
@@ -333,8 +334,15 @@ class ProposalWritingCompactSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(ProposalWriting).pk
+        data['status'] = ''
         return data
 
+
+class ProposalWritingByLeadSerializer(ProposalWritingCompactSerializer):
+    class Meta:
+        model = ProposalWriting
+        fields = ('id', 'name', 'created_date', 'modified_date',)
+        extra_kwargs = extra_kwargs_for_base_model()
 
 class CostBreakDownSerializer(serializers.Serializer):
     id = serializers.CharField(required=False, allow_null=True)
