@@ -54,6 +54,8 @@ class ProposalWidget(BaseModel):
 class PriceComparison(BaseModel):
     name = models.CharField(max_length=128)
     cost_different = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
+    lead = models.ForeignKey('sales.LeadDetail', on_delete=models.CASCADE, related_name='price_comparisons',
+                             blank=True, null=True)
 
     def get_formulas(self):
         groups = self.groups.all()

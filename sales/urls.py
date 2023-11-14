@@ -38,6 +38,8 @@ url_leads = [
     path('leads/<int:pk_lead>/contacts/link/', lead_list.link_contacts_to_lead),
     path('leads/<int:pk_lead>/contacts/unlink/', lead_list.unlink_contact_from_lead),
     path('leads/<int:pk_lead>/not-added-contact/', lead_list.LeadNoContactsViewSet.as_view()),
+    path('leads/<int:pk_lead>/price-comparison/', lead_list.PriceComparisonByLeadViewSet.as_view()),
+    path('leads/<int:pk_lead>/proposal-writing/', lead_list.ProposalWritingByLeadViewSet.as_view()),
     # Activities
     path('leads/<int:pk_lead>/activities/',
          lead_list.LeadActivitiesViewSet.as_view()),
