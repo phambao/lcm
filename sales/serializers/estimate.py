@@ -432,8 +432,9 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
         catalogs = instance.get_related_cost_table(old_name)
         cs = []
         for c in catalogs:
-            c.c_table = c.update_unit_c_table(old_name, validated_data.get('name'))
-            cs.append(c)
+            c.c_table, have_changed = c.update_unit_c_table(old_name, validated_data.get('name'))
+            if have_changed:
+                cs.append(c)
         model = apps.get_model(app_label='sales', model_name='Catalog')
         model.objects.bulk_update(cs, ['c_table'])
         return obj

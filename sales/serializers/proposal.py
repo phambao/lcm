@@ -341,8 +341,9 @@ class ProposalWritingCompactSerializer(serializers.ModelSerializer):
 class ProposalWritingByLeadSerializer(ProposalWritingCompactSerializer):
     class Meta:
         model = ProposalWriting
-        fields = ('id', 'name', 'created_date', 'modified_date',)
+        fields = ('id', 'name', 'created_date', 'modified_date', 'total_project_cost', 'avg_markup')
         extra_kwargs = extra_kwargs_for_base_model()
+
 
 class CostBreakDownSerializer(serializers.Serializer):
     id = serializers.CharField(required=False, allow_null=True)
