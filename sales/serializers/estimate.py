@@ -209,7 +209,6 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         data_entries = pop(validated_data, 'self_data_entries', [])
-        validated_data = self.reparse(validated_data)
         pop(validated_data, 'id', None)
         instance = super().create(validated_data)
         create_po_formula_to_data_entry(instance, data_entries)
@@ -226,7 +225,6 @@ class POFormulaSerializer(serializers.ModelSerializer):
         create_po_formula_to_data_entry(instance, data_entries)
         activity_log.delay(PO_FORMULA_CONTENT_TYPE, instance.pk, 2,
                            POFormulaSerializer.__name__, __name__, self.context['request'].user.pk)
-        validated_data = self.reparse(validated_data)
         new_name = validated_data['name']
         old_name = instance.name
         update = super().update(instance, validated_data)
@@ -652,7 +650,6 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         pk = pop(validated_data, 'id', None)
 
         pk_assembles = self.create_assembles(assembles)
-        validated_data = self.reparse(validated_data)
         instance = super().create(validated_data)
         create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk)
         self.create_data_view(data_views, instance)
@@ -676,7 +673,6 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk)
         pk_assembles = self.create_assembles(assembles)
 
-        validated_data = self.reparse(validated_data)
         instance = super().update(instance, validated_data)
         instance.data_views.all().delete()
         self.create_data_view(data_views, instance)
