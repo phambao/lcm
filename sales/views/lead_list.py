@@ -16,7 +16,7 @@ from base.permissions import LeadPermissions
 from base.utils import file_response
 from base.views.base import CompanyFilterMixin
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter
-from sales.serializers.proposal import PriceComparisonCompactSerializer, ProposalWritingCompactSerializer
+from sales.serializers.proposal import PriceComparisonCompactSerializer, ProposalWritingByLeadSerializer
 from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, Photos, ContactTypeName, \
     ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead
@@ -287,7 +287,7 @@ class PriceComparisonByLeadViewSet(generics.ListAPIView):
 
 
 class ProposalWritingByLeadViewSet(generics.ListAPIView):
-    serializer_class = ProposalWritingCompactSerializer
+    serializer_class = ProposalWritingByLeadSerializer
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = ProposalWritingFilter

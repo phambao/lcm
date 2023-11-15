@@ -17,7 +17,7 @@ class UnitLibrary(BaseModel):
 
     def get_related_cost_table(self, unit_name):
         model = apps.get_model(app_label='sales', model_name='Catalog')
-        catalogs = model.objects.filter(c_table__data__0__contains=unit_name, company=get_request().user.company)
+        catalogs = model.objects.filter(c_table__data__icontains=unit_name, company=get_request().user.company)
         return catalogs
 
 

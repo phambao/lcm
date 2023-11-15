@@ -235,7 +235,9 @@ class Catalog(BaseModel):
 
     def update_unit_c_table(self, old_name, new_name):
         c_table = self.c_table
+        have_changed = False
         for d in c_table.get('data', []):
             if d[1] == old_name:
                 d[1] = new_name
-        return c_table
+                have_changed = True
+        return c_table, have_changed
