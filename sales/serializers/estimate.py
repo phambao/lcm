@@ -190,7 +190,7 @@ class POFormulaDataSerializer(serializers.ModelSerializer):
                   'material_data_entry', 'formula_for_data_view', 'order')
 
 
-class POFormulaCompactSerializer(serializers.ModelSerializer, SerializerMixin):
+class POFormulaCompactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormula
@@ -198,27 +198,17 @@ class POFormulaCompactSerializer(serializers.ModelSerializer, SerializerMixin):
                    'formula_scenario', 'formula_for_data_view', 'original', 'catalog_materials', 'company', 'created_from')
 
 
-class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
+class POFormulaSerializer(serializers.ModelSerializer):
     self_data_entries = POFormulaToDataEntrySerializer('po_formula', many=True, required=False, read_only=False)
 
     class Meta:
         model = POFormula
         fields = '__all__'
         extra_kwargs = {**{'id': {'read_only': False, 'required': False}}, **extra_kwargs_for_base_model()}
-        read_only_fields = ('assemble', )
-
-    def reparse(self, data):
-        # Serializer is auto convert pk to model, But when reuse serializer in others, it is required to have int field.
-        # So we reparse this case
-        # !!! Change to read only field to ignore this case
-        group = data.get('group')
-        if isinstance(group, int):
-            data['group'] = POFormulaGrouping.objects.get(pk=group)
-        return data
+        read_only_fields = ('assemble', 'group')
 
     def create(self, validated_data):
         data_entries = pop(validated_data, 'self_data_entries', [])
-        validated_data = self.reparse(validated_data)
         pop(validated_data, 'id', None)
         instance = super().create(validated_data)
         create_po_formula_to_data_entry(instance, data_entries)
@@ -235,7 +225,6 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
         create_po_formula_to_data_entry(instance, data_entries)
         activity_log.delay(PO_FORMULA_CONTENT_TYPE, instance.pk, 2,
                            POFormulaSerializer.__name__, __name__, self.context['request'].user.pk)
-        validated_data = self.reparse(validated_data)
         new_name = validated_data['name']
         old_name = instance.name
         update = super().update(instance, validated_data)
@@ -250,17 +239,6 @@ class POFormulaSerializer(serializers.ModelSerializer, SerializerMixin):
                 data.append(obj)
             POFormula.objects.bulk_update(data, ['formula', 'formula_mentions'], batch_size=128)
         return update
-
-    def to_internal_value(self, data):
-        data = super().to_internal_value(data)
-        if self.is_in_proposal_view():
-            assemble = data.get('assemble')
-            if isinstance(assemble, Assemble):
-                data['assemble'] = assemble.pk
-            group = data.get('group')
-            if isinstance(group, POFormulaGrouping):
-                data['group'] = group.pk
-        return data
 
     def validate_material(self, value):
         if value:
@@ -375,11 +353,9 @@ class POFormulaGroupingSerializer(serializers.ModelSerializer):
             if pk:
                 po_pk.append(pk)
             else:
-                po_formula['group'] = instance.pk
-                po_formula['is_show'] = True
                 po = POFormulaSerializer(data=po_formula)
                 po.is_valid(raise_exception=True)
-                po.save()
+                po.save(is_show=True, group=instance)
         return po_pk
 
     def create(self, validated_data):
@@ -492,18 +468,16 @@ class AssembleSerializer(serializers.ModelSerializer):
 
     def create_po_formula(self, po_formulas, instance):
         for po_formula in po_formulas:
-            po_formula['is_show'] = False
             created_from = po_formula.get('created_from')
             if not created_from:
                 po_formula['created_from'] = po_formula['id']
             from sales.views.estimate import EstimateTemplateList
             if self.context.get('request').method == 'POST' and isinstance(self.context.get('view'), EstimateTemplateList):
                 po_formula['formula_for_data_view'] = po_formula.get('id')
-            del po_formula['group']
             del po_formula['id']
             po = POFormulaSerializer(data=po_formula, context=self.context)
             po.is_valid(raise_exception=True)
-            po.save(assemble=instance)
+            po.save(assemble=instance, is_show=False)
 
     def create(self, validated_data):
         po_formulas = pop(validated_data, 'assemble_formulas', [])
@@ -639,26 +613,9 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         extra_kwargs = {**{'id': {'read_only': False, 'required': False}}, **extra_kwargs_for_base_model()}
         read_only_fields = ('group_by_proposal', )
 
-    def reparse(self, data):
-        # Serializer is auto convert pk to model, But when reuse serializer in others, it is required to have int field.
-        # So we reparse this case
-        from sales.models import GroupByEstimate
-        group_by_proposal = data.get('group_by_proposal')
-        if isinstance(group_by_proposal, int):
-            data['group_by_proposal'] = GroupByEstimate.objects.get(pk=group_by_proposal)
-        return data
-
     def create_assembles(self, assembles):
         pk_assembles = []
         for assemble in assembles:
-            for po in assemble.get('assemble_formulas', []):
-                ### Need to clean this up
-                if po.get('assemble'):
-                    if isinstance(po['assemble'], Assemble):
-                        po['assemble'] = po['assemble'].pk
-                if po.get('group'):
-                    if isinstance(po['group'], POFormulaGrouping):
-                        po['group'] = po['group'].pk
             serializer = AssembleSerializer(data=assemble, context=self.context)
             serializer.is_valid(raise_exception=True)
             obj = serializer.save(is_show=False)
@@ -693,7 +650,6 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         pk = pop(validated_data, 'id', None)
 
         pk_assembles = self.create_assembles(assembles)
-        validated_data = self.reparse(validated_data)
         instance = super().create(validated_data)
         create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk)
         self.create_data_view(data_views, instance)
@@ -717,7 +673,6 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
         create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk)
         pk_assembles = self.create_assembles(assembles)
 
-        validated_data = self.reparse(validated_data)
         instance = super().update(instance, validated_data)
         instance.data_views.all().delete()
         self.create_data_view(data_views, instance)
@@ -741,15 +696,6 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
             if not UnitLibrary.objects.filter(pk=value).exists():
                 raise serializers.ValidationError('Unit does not exsit')
         return value
-
-    def to_internal_value(self, data):
-        data = super().to_internal_value(data)
-        if self.is_in_proposal_view():
-            from sales.models import proposal
-            group_by_proposal = data.get('group_by_proposal')
-            if isinstance(group_by_proposal, proposal.GroupByEstimate):
-                data['group_by_proposal'] = group_by_proposal.pk
-        return data
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

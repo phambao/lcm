@@ -215,18 +215,8 @@ class GroupByEstimateSerializers(serializers.ModelSerializer):
             serializer.is_valid(raise_exception=True)
             obj = serializer.save(group_by_proposal_id=instance.pk, is_show=False)
 
-    def reparse(self, data):
-        writing = data.get('writing')
-        if writing:
-            data['writing'] = ProposalWriting.objects.get(pk=writing)
-        comparison = data.get('comparison')
-        if comparison:
-            data['comparison'] = PriceComparison.objects.get(pk=comparison)
-        return data
-
     def create(self, validated_data):
         estimate_templates = pop(validated_data, 'estimate_templates', [])
-        validated_data = self.reparse(validated_data)
         instance = super().create(validated_data)
         self.create_estimate_template(estimate_templates, instance)
         return instance
@@ -234,18 +224,7 @@ class GroupByEstimateSerializers(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         estimate_templates = pop(validated_data, 'estimate_templates', [])
         self.create_estimate_template(estimate_templates, instance)
-        validated_data = self.reparse(validated_data)
         return super().update(instance, validated_data)
-
-    def to_internal_value(self, data):
-        data = super().to_internal_value(data)
-        writing = data.get('writing')
-        if writing:
-            data['writing'] = writing.pk
-        comparison = data.get('comparison')
-        if comparison:
-            data['comparison'] = comparison.pk
-        return data
 
 
 class PriceComparisonCompactSerializer(serializers.ModelSerializer):
