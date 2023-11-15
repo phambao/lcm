@@ -18,17 +18,6 @@ from base.views.payment import ProductPreviewDetail, ProductPreview, CreateCheck
     preview_subscription, check_promotion_code, update_customer, get_payment_history
 
 url_base = [
-    path('location/',
-         include([
-             path('countries/', country_state_city.CountryList.as_view()),
-             path('mcountries/', country_state_city.CountryV2List.as_view()),
-             path('countries/<int:pk_country>/states/',
-                  country_state_city.CountryStateList.as_view()),
-             path('countries/<int:pk_country>/states/<int:pk_state>/cities/',
-                  country_state_city.CountryStateCityList.as_view()),
-             path('zipcodes/', country_state_city.Zipcode.as_view()),
-         ])
-         ),
     path('location-google/', address_search),
     path('location-google-detail/<str:place_id>/', detail_location),
     path('content-type/', base.ContentTypeList.as_view()),
