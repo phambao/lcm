@@ -3,22 +3,6 @@ from django_filters import rest_framework as filters
 
 from api.models import ActivityLog
 from base.models.config import Search, Column, Config, GridSetting
-from base.models.country_state_city import Country
-
-
-class CountryStateCityBaseFilter:
-    """
-    Filter Country, State and City
-    """
-
-    def filter_city_id(self, queryset, name, value):
-        return queryset.filter(city__id=value)
-
-    def filter_state_id(self, queryset, name, value):
-        return queryset.filter(state__id=value)
-
-    def filter_country_id(self, queryset, name, value):
-        return queryset.filter(country__id=value)
 
 
 class SearchFilter(filters.FilterSet):
@@ -62,12 +46,6 @@ class ConfigFilter(filters.FilterSet):
     class Meta:
         model = Config
         fields = ('content_type',)
-
-
-class CountryFilter(filters.FilterSet):
-    class Meta:
-        model = Country
-        fields = ('name',)
 
 
 class ActivityLogFilter(filters.FilterSet):

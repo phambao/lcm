@@ -5,7 +5,6 @@ from django.utils.timezone import now
 from django_filters import rest_framework as filters
 from django_filters.filters import _truncate
 
-from base.filters import CountryStateCityBaseFilter
 from ..models import lead_list
 from ..models.lead_list import Contact, Activities, LeadDetail, TagActivity, PhaseActivity
 
