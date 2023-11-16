@@ -16,23 +16,6 @@ from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFor
 from sales.serializers.catalog import CatalogEstimateSerializer
 
 
-class SerializerMixin:
-    def is_in_proposal_view(self):
-        if self.context.get('view'):
-            from sales.views import proposal
-            from sales.views import change_order
-            views = [proposal.PriceComparisonList, proposal.PriceComparisonDetail,
-                     proposal.ProposalWritingList, proposal.ProposalWritingDetail,
-                     change_order.ChangeOderDetail, change_order.ChangeOderList]
-            return any([isinstance(self.context['view'], view) for view in views])
-
-    def is_in_proposal_writing_view(self):
-        if self.context.get('view'):
-            from sales.views import proposal
-            views = [proposal.ProposalWritingList, proposal.ProposalWritingDetail]
-            return any([isinstance(self.context['view'], view) for view in views])
-
-
 class LinkedDescriptionSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     linked_description = serializers.CharField()
@@ -507,7 +490,7 @@ class AssembleSerializer(serializers.ModelSerializer):
         return data
 
 
-class DataViewSerializer(serializers.ModelSerializer, SerializerMixin):
+class DataViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataView
         fields = ('id', 'formula', 'name', 'estimate_template', 'type')
@@ -560,7 +543,7 @@ class EstimateTemplateForFormattingSerializer(serializers.ModelSerializer):
         return data
 
 
-class EstimateTemplateCompactSerializer(serializers.ModelSerializer, SerializerMixin):
+class EstimateTemplateCompactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EstimateTemplate
@@ -601,7 +584,7 @@ class EstimateTemplateMiniSerializer(serializers.ModelSerializer):
         return data
 
 
-class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
+class EstimateTemplateSerializer(serializers.ModelSerializer):
     assembles = AssembleSerializer(many=True, required=False, allow_null=True,)
     data_views = DataViewSerializer('estimate_template', many=True, required=False, allow_null=True)
     data_entries = POFormulaToDataEntrySerializer('estimate_template', many=True, required=False, allow_null=True)
@@ -688,13 +671,13 @@ class EstimateTemplateSerializer(serializers.ModelSerializer, SerializerMixin):
     def validate_quantity(self, value):
         if value:
             if not DataEntry.objects.filter(pk=value).exists():
-                raise serializers.ValidationError('DataEntry does not exsit')
+                return None
         return value
 
     def validate_unit(self, value):
         if value:
             if not UnitLibrary.objects.filter(pk=value).exists():
-                raise serializers.ValidationError('Unit does not exsit')
+                return None
         return value
 
     def to_representation(self, instance):
