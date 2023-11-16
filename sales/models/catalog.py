@@ -2,6 +2,7 @@ import copy
 from functools import lru_cache
 
 from django.db import models
+from api.middleware import get_request
 
 from api.models import BaseModel
 
@@ -181,14 +182,15 @@ class Catalog(BaseModel):
         c.save()
         if parent:
             c.parents.add(parent)
-        points = self.data_points.filter(id__in=data_points)
+        points = self.data_points.filter(id__in=data_points) if data_points else self.data_points.all()
         d_points = []
         for p in points:
             params = {'value': p.value,
                       'unit_id': p.unit_id,
                       'linked_description': p.linked_description,
                       'is_linked': p.is_linked,
-                      'catalog_id': c.id}
+                      'catalog_id': c.id,
+                      'company': get_request().user.company}
             d_points.append(DataPoint(**params))
         DataPoint.objects.bulk_create(d_points)
         return c

@@ -5,11 +5,10 @@ from django.urls import reverse
 from base.tasks import activity_log
 from base.utils import pop, extra_kwargs_for_base_model
 from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting, \
-    ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig, GroupEstimatePrice, \
-    EstimateTemplate
+    ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig, GroupEstimatePrice
 from sales.serializers import estimate
 from sales.serializers.catalog import CatalogImageSerializer
-from sales.serializers.estimate import EstimateTemplateSerializer, POFormulaDataSerializer
+from sales.serializers.estimate import EstimateTemplateSerializer
 
 
 class ProposalWidgetSerializer(serializers.ModelSerializer):
