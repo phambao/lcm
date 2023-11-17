@@ -50,6 +50,13 @@ class LeadWithChangeOrderList(CompanyFilterMixin, generics.ListAPIView):
     search_fields = ['lead_title', 'street_address', 'notes']
 
 
+class LeadWithProposal(LeadWithChangeOrderList):
+    queryset = LeadDetail.objects.filter(proposals__isnull=False).prefetch_related(
+    'activities', 'contacts', 'contacts__phone_contacts', 'project_types', 'salesperson',
+    'sources', 'tags', 'photos'
+    ).distinct()
+
+
 class LeadEventList(CompanyFilterMixin, generics.ListAPIView):
     queryset = LeadDetail.objects.all().prefetch_related('schedule_event_lead_list')
     serializer_class = lead_list.LeadViewEventSerializer

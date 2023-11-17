@@ -29,6 +29,7 @@ url_leads = [
     # Leads
     path('leads/', lead_list.LeadDetailList.as_view()),
     path('filter-for-change-order/', lead_list.LeadWithChangeOrderList.as_view()),
+    path('filter-for-proposal/', lead_list.LeadWithProposal.as_view()),
     path('leads/uploads', FileUploadView.as_view()),
     path('leads/<int:pk>/', lead_list.LeadDetailGeneric.as_view()),
     path('leads/delete/', lead_list.delete_leads),
