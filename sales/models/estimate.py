@@ -17,7 +17,7 @@ class UnitLibrary(BaseModel):
 
     def get_related_cost_table(self, unit_name):
         model = apps.get_model(app_label='sales', model_name='Catalog')
-        catalogs = model.objects.filter(c_table__data__0__contains=unit_name, company=get_request().user.company)
+        catalogs = model.objects.filter(c_table__data__icontains=unit_name, company=get_request().user.company)
         return catalogs
 
 
@@ -31,6 +31,8 @@ class DataEntry(BaseModel):
     is_material_selection = models.BooleanField(default=False, blank=True, null=True)
     material_selections = models.ManyToManyField('sales.Catalog', blank=True,
                                                  related_name='data_entries', symmetrical=False)
+    levels = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
+    material = models.JSONField(blank=True, null=True, default=dict)
 
     def __int__(self):
         return self.pk
@@ -175,7 +177,8 @@ class POFormulaToDataEntry(BaseModel):
                                           blank=True, null=True, related_name='data_entries')
     copies_from = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True, null=True)
     group = models.CharField(blank=True, default='', max_length=128)
-    material_data_entry_link = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
+    material_data_entry_link = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)  # Need delete
+    levels = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)  # Next level of data entry
 
 
 class MaterialView(BaseModel):
@@ -187,7 +190,7 @@ class MaterialView(BaseModel):
                                           blank=True, null=True, related_name='material_views')
     catalog_materials = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True,
                                    null=True)
-    material_data_entry_link = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
+    levels = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
 
 
 class POFormulaGrouping(BaseModel):

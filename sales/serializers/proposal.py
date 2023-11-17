@@ -5,11 +5,10 @@ from django.urls import reverse
 from base.tasks import activity_log
 from base.utils import pop, extra_kwargs_for_base_model
 from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting, \
-    ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig, GroupEstimatePrice, \
-    EstimateTemplate
+    ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig, GroupEstimatePrice
 from sales.serializers import estimate
 from sales.serializers.catalog import CatalogImageSerializer
-from sales.serializers.estimate import EstimateTemplateSerializer, POFormulaDataSerializer
+from sales.serializers.estimate import EstimateTemplateSerializer
 
 
 class ProposalWidgetSerializer(serializers.ModelSerializer):
@@ -215,18 +214,8 @@ class GroupByEstimateSerializers(serializers.ModelSerializer):
             serializer.is_valid(raise_exception=True)
             obj = serializer.save(group_by_proposal_id=instance.pk, is_show=False)
 
-    def reparse(self, data):
-        writing = data.get('writing')
-        if writing:
-            data['writing'] = ProposalWriting.objects.get(pk=writing)
-        comparison = data.get('comparison')
-        if comparison:
-            data['comparison'] = PriceComparison.objects.get(pk=comparison)
-        return data
-
     def create(self, validated_data):
         estimate_templates = pop(validated_data, 'estimate_templates', [])
-        validated_data = self.reparse(validated_data)
         instance = super().create(validated_data)
         self.create_estimate_template(estimate_templates, instance)
         return instance
@@ -234,18 +223,7 @@ class GroupByEstimateSerializers(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         estimate_templates = pop(validated_data, 'estimate_templates', [])
         self.create_estimate_template(estimate_templates, instance)
-        validated_data = self.reparse(validated_data)
         return super().update(instance, validated_data)
-
-    def to_internal_value(self, data):
-        data = super().to_internal_value(data)
-        writing = data.get('writing')
-        if writing:
-            data['writing'] = writing.pk
-        comparison = data.get('comparison')
-        if comparison:
-            data['comparison'] = comparison.pk
-        return data
 
 
 class PriceComparisonCompactSerializer(serializers.ModelSerializer):
@@ -257,6 +235,7 @@ class PriceComparisonCompactSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(PriceComparison).pk
+        data['status'] = ''
         return data
 
 
@@ -333,7 +312,15 @@ class ProposalWritingCompactSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(ProposalWriting).pk
+        data['status'] = ''
         return data
+
+
+class ProposalWritingByLeadSerializer(ProposalWritingCompactSerializer):
+    class Meta:
+        model = ProposalWriting
+        fields = ('id', 'name', 'created_date', 'modified_date', 'total_project_cost', 'avg_markup')
+        extra_kwargs = extra_kwargs_for_base_model()
 
 
 class CostBreakDownSerializer(serializers.Serializer):

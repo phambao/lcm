@@ -1,16 +1,17 @@
 from django_filters import rest_framework as filters
 
-from ..models.proposal import PriceComparison, ProposalWriting, ProposalTemplate
+from ..models import PriceComparison, ProposalWriting, ProposalTemplate, LeadDetail
 
 
 class PriceComparisonFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
     created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
     modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
+    lead = filters.ModelChoiceFilter(queryset=LeadDetail.objects.all())
 
     class Meta:
         model = PriceComparison
-        fields = ('name', 'created_date', 'modified_date')
+        fields = ('name', 'created_date', 'modified_date', 'lead')
 
 
 class ProposalWritingFilter(filters.FilterSet):
@@ -19,10 +20,11 @@ class ProposalWritingFilter(filters.FilterSet):
     modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
     total_project_cost = filters.NumberFilter(field_name='total_project_cost', lookup_expr='gt')
     avg_markup = filters.NumberFilter(field_name='avg_markup', lookup_expr='gt')
+    lead = filters.ModelChoiceFilter(queryset=LeadDetail.objects.all())
 
     class Meta:
         model = ProposalWriting
-        fields = ('name', 'created_date', 'modified_date', 'total_project_cost', 'avg_markup')
+        fields = ('name', 'created_date', 'modified_date', 'total_project_cost', 'avg_markup', 'lead')
 
 
 class ProposalTemplateFilter(filters.FilterSet):

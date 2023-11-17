@@ -29,6 +29,7 @@ url_leads = [
     # Leads
     path('leads/', lead_list.LeadDetailList.as_view()),
     path('filter-for-change-order/', lead_list.LeadWithChangeOrderList.as_view()),
+    path('filter-for-proposal/', lead_list.LeadWithProposal.as_view()),
     path('leads/uploads', FileUploadView.as_view()),
     path('leads/<int:pk>/', lead_list.LeadDetailGeneric.as_view()),
     path('leads/delete/', lead_list.delete_leads),
@@ -38,6 +39,8 @@ url_leads = [
     path('leads/<int:pk_lead>/contacts/link/', lead_list.link_contacts_to_lead),
     path('leads/<int:pk_lead>/contacts/unlink/', lead_list.unlink_contact_from_lead),
     path('leads/<int:pk_lead>/not-added-contact/', lead_list.LeadNoContactsViewSet.as_view()),
+    path('leads/<int:pk_lead>/price-comparison/', lead_list.PriceComparisonByLeadViewSet.as_view()),
+    path('leads/<int:pk_lead>/proposal-writing/', lead_list.ProposalWritingByLeadViewSet.as_view()),
     # Activities
     path('leads/<int:pk_lead>/activities/',
          lead_list.LeadActivitiesViewSet.as_view()),
@@ -250,6 +253,7 @@ url_proposal = [
     path('price-comparison-compact/', proposal.PriceComparisonCompactList.as_view()),
     path('price-comparison/<int:pk>/', proposal.PriceComparisonDetail.as_view()),
     path('proposal-writing/', proposal.ProposalWritingList.as_view()),
+    path('proposal-writing/duplicate/', proposal.duplicate_proposal),
     path('proposal-writing-compact/', proposal.ProposalWritingCompactList.as_view()),
     path('proposal-writing/<int:pk>/', proposal.ProposalWritingDetail.as_view()),
     path('proposal-writing/<int:pk>/change-order/', change_order.ChangeOrderFromProposalWritingList.as_view()),

@@ -239,3 +239,21 @@ def view_proposal_formatting(request, formatting_id):
         raise Http404("ProposalFormatting does not exist")
     data_html = data_proposal.element
     return render(request, 'proposal_formatting.html', context={'javascript_code': data_html})
+
+
+@api_view(['POST'])
+def duplicate_proposal(request):
+    """
+    Payloads: {"proposal_id": [lead_id,..]}
+    """
+    proposal_ids = request.data.keys()
+    objs = []
+    for proposal_id in proposal_ids:
+        for lead in request.data[proposal_id]:
+            p = ProposalWriting.objects.get(pk=proposal_id)
+            serializer = ProposalWritingSerializer(p).data
+            dup = ProposalWritingSerializer(data=serializer, context={'request': request})
+            dup.is_valid(raise_exception=True)
+            objs.append(dup.save(lead_id=lead).id)
+    serializer = ProposalWritingCompactSerializer(ProposalWriting.objects.filter(id__in=objs), many=True)
+    return Response(status=status.HTTP_201_CREATED, data=serializer.data)
