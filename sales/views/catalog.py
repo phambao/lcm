@@ -359,7 +359,8 @@ def get_materials(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
-def export_catalog(request, pk):
+def export_catalog(request, *args, **kwargs):
+    pk = request.GET.get('pk_catalog', None)
     root_catalogs = Catalog.objects.filter(id=pk)
     level = Catalog.objects.get(id=pk).get_ordered_levels()
     all_paths = []
@@ -382,6 +383,7 @@ def export_catalog(request, pk):
                     temp_list = []
                     for data_point in data.data_points.all():
                         temp_list.append(data.name)
+                        temp_list.append(data.icon)
                         temp_list.append(data_point.unit.name)
                         temp_list.append(data_point.value)
                         temp_list.append(data_point.linked_description)
@@ -390,8 +392,8 @@ def export_catalog(request, pk):
                     temp.append(tmp)
                 else:
                     if idx != 0:
-                        temp.append([data.name])
-                        temp_catalog_not_dtp.append([data.name])
+                        temp.append([data.id])
+                        temp_catalog_not_dtp.append([data.id])
         if temp == []:
             rs.append(temp_catalog_not_dtp)
 
@@ -410,7 +412,7 @@ def export_catalog(request, pk):
     catalog_sheet = workbook.create_sheet(title='Catalog')
     headers = []
     for i in range(1, len(level) + 1):
-        iteration_headers = [f"lv{i}", f"value", f"unit", f"des"]
+        iteration_headers = [f"lv{i}", "image", f"value", f"unit", f"des"]
         headers.extend(iteration_headers)
 
     all_key = []
@@ -426,21 +428,32 @@ def export_catalog(request, pk):
 
     # write all data into excel
     for path in result_paths:
-        number = len(level) * 4
+        number = len(level) * 5
         row = [""] * (number + len(all_key))
         for idx, data in enumerate(path):
             # write catalog data
-            if isinstance(data, list):
+            if isinstance(data, int):
+                data_catalog = Catalog.objects.get(id=data)
+                if idx == 0:
+                    row[idx] = data_catalog.name
+                    row[idx + 1] = data_catalog.name
+                else:
+                    row[idx * 5] = data_catalog.name
+                    row[idx * 5 + 1] = data_catalog.icon
+
+            elif isinstance(data, list):
                 if idx == 0:
                     row[idx] = data[0]
                     row[idx + 1] = data[1]
                     row[idx + 2] = data[2]
                     row[idx + 3] = data[3]
+                    row[idx + 4] = data[4]
                 else:
-                    row[idx * 4] = data[0]
-                    row[idx * 4 + 1] = data[1]
-                    row[idx * 4 + 2] = data[2]
-                    row[idx * 4 + 3] = data[3]
+                    row[idx * 5] = data[0]
+                    row[idx * 5 + 1] = data[1]
+                    row[idx * 5 + 2] = data[2]
+                    row[idx * 5 + 3] = data[3]
+                    row[idx * 5 + 4] = data[4]
             # write cost table
             elif isinstance(data, dict):
                 temp_len = len(headers) - number
@@ -455,7 +468,7 @@ def export_catalog(request, pk):
                 if idx == 0:
                     row[idx] = data
                 else:
-                    row[idx * 4] = data
+                    row[idx * 5] = data
         catalog_sheet.append(row)
     workbook.save("output.xlsx")
     return file_response(workbook=workbook, title='catalog')
@@ -466,6 +479,9 @@ def generate_paths(categories, current_path, result):
         current_category = categories[0]
 
     elif isinstance(categories[0][0], list):
+        current_category = categories[0]
+
+    elif isinstance(categories[0][0], int):
         current_category = categories[0]
     else:
         current_category = set(categories[0])
