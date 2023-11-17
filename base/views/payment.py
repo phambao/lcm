@@ -162,12 +162,13 @@ def create_subscription(request):
     try:
         if promotion_code == str():
             subscription = stripe.Subscription.create(
-                customer=customer_id,
+                customer='cus_OxHZLXc6oAN9Q0',
                 items=[{
                     'price': price_id,
                 }],
-                payment_behavior='default_incomplete',
+                # payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
+                trial_end=1699848320
             )
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
@@ -186,9 +187,10 @@ def create_subscription(request):
                 items=[{
                     'price': price_id,
                 }],
-                payment_behavior='default_incomplete',
+                # payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
-                coupon=coupon_id
+                coupon=coupon_id,
+                trial_end=1699848320
             )
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
@@ -430,6 +432,9 @@ def webhook_received(request):
     elif event.type == 'payment_method.attached':
         pass
 
+    elif event.type == 'charge.failed':
+        customer = data_object['customer']
+        user = User.objects.get(stripe_customer=customer)
     return HttpResponse(status=200)
 
 
