@@ -359,42 +359,164 @@ def get_materials(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
-def export_catalog(request):
+def export_catalog(request, *args, **kwargs):
+    pk = request.GET.get('pk_catalog', None)
+    root_catalogs = Catalog.objects.filter(id=pk)
+    level = Catalog.objects.get(id=pk).get_ordered_levels()
+    all_paths = []
+    # get all path catalog to cost table
+    for root_catalog in root_catalogs:
+        find_all_paths(root_catalog, [], all_paths)
+
+    # get all data point with catalog on path
+    rs = []
+    for path in all_paths:
+        temp = list()
+        temp_catalog_not_dtp = list()
+        for idx, data in enumerate(path):
+            if isinstance(data, list):
+                temp.append(data)
+                temp_catalog_not_dtp.append(data)
+            elif isinstance(data, Catalog):
+                tmp = list()
+                if data.data_points.all():
+                    temp_list = []
+                    for data_point in data.data_points.all():
+                        temp_list.append(data.name)
+                        temp_list.append(data.icon)
+                        temp_list.append(data_point.unit.name)
+                        temp_list.append(data_point.value)
+                        temp_list.append(data_point.linked_description)
+                        tmp.append(temp_list)
+                        temp_list = []
+                    temp.append(tmp)
+                else:
+                    if idx != 0:
+                        temp.append([data.id])
+                        temp_catalog_not_dtp.append([data.id])
+        if temp == []:
+            rs.append(temp_catalog_not_dtp)
+
+        elif len(temp) == 1 and isinstance(temp[0], list):
+            rs.append(temp_catalog_not_dtp)
+        else:
+            rs.append(temp)
+
+    # get all path with data point
+    result_paths = []
+    for i in rs:
+        generate_paths(i, [], result_paths)
+
+    # handle write headers all catalog and cost table
     workbook = Workbook()
-    catagory = request.GET.get('category')
+    catalog_sheet = workbook.create_sheet(title='Catalog')
+    headers = []
+    for i in range(1, len(level) + 1):
+        iteration_headers = [f"lv{i}", "image", f"value", f"unit", f"des"]
+        headers.extend(iteration_headers)
 
-    catalog_sheet = workbook.create_sheet(title=CATALOG_SHEET_NAME)
-    level_sheet = workbook.create_sheet(title=LEVEL_SHEET_NAME)
-    data_points_sheet = workbook.create_sheet(title=DATA_POINT_SHEET_NAME)
+    all_key = []
+    for path in result_paths:
+        for data in path:
+            if isinstance(data, dict):
+                for key in data.keys():
+                    if key not in all_key:
+                        all_key.append(key)
+                break
+    headers.extend(all_key)
+    catalog_sheet.append(headers)
 
-    if catagory:
-        catalogs = Catalog.objects.get(company=request.user.company, id=catagory)
-        descendant = catalogs.get_all_descendant(have_self=True)
-        descendant.append(catalogs.parents.first().pk)
-        catalogs = Catalog.objects.filter(pk__in=descendant)
-        data_points = DataPoint.objects.filter(company=request.user.company, catalog__in=catalogs).values_list(*DATA_POINT_FIELDS)
-        levels = CatalogLevel.objects.filter(company=request.user.company, catalog__in=catalogs).values_list(*LEVEL_FIELDS)
-        catalogs = catalogs.values_list(*CATALOG_FIELDS)
+    # write all data into excel
+    for path in result_paths:
+        number = len(level) * 5
+        row = [""] * (number + len(all_key))
+        for idx, data in enumerate(path):
+            # write catalog data
+            if isinstance(data, int):
+                data_catalog = Catalog.objects.get(id=data)
+                if idx == 0:
+                    row[idx] = data_catalog.name
+                    row[idx + 1] = data_catalog.name
+                else:
+                    row[idx * 5] = data_catalog.name
+                    row[idx * 5 + 1] = data_catalog.icon
+
+            elif isinstance(data, list):
+                if idx == 0:
+                    row[idx] = data[0]
+                    row[idx + 1] = data[1]
+                    row[idx + 2] = data[2]
+                    row[idx + 3] = data[3]
+                    row[idx + 4] = data[4]
+                else:
+                    row[idx * 5] = data[0]
+                    row[idx * 5 + 1] = data[1]
+                    row[idx * 5 + 2] = data[2]
+                    row[idx * 5 + 3] = data[3]
+                    row[idx * 5 + 4] = data[4]
+            # write cost table
+            elif isinstance(data, dict):
+                temp_len = len(headers) - number
+                temp_length = headers[-temp_len:]
+                for index, header in enumerate(temp_length, number):
+                    if header in data:
+                        row[index] = data[header]
+                    else:
+                        row[index] = ""
+            # write catalog not data point
+            else:
+                if idx == 0:
+                    row[idx] = data
+                else:
+                    row[idx * 5] = data
+        catalog_sheet.append(row)
+    workbook.save("output.xlsx")
+    return file_response(workbook=workbook, title='catalog')
+
+
+def generate_paths(categories, current_path, result):
+    if isinstance(categories[0][0], dict):
+        current_category = categories[0]
+
+    elif isinstance(categories[0][0], list):
+        current_category = categories[0]
+
+    elif isinstance(categories[0][0], int):
+        current_category = categories[0]
     else:
-        catalogs = Catalog.objects.filter(company=request.user.company).values_list(*CATALOG_FIELDS)
-        levels = CatalogLevel.objects.filter(company=request.user.company).values_list(*LEVEL_FIELDS)
-        data_points = DataPoint.objects.filter(company=request.user.company).values_list(*DATA_POINT_FIELDS)
+        current_category = set(categories[0])
+    for item in current_category:
+        new_path = current_path + [item]
 
-    catalog_sheet.append(CATALOG_FIELDS)
-    for c in catalogs:
-        c = list(c)
-        c[CATALOG_FIELDS.index('c_table')] = str(c[CATALOG_FIELDS.index('c_table')])
-        catalog_sheet.append(c)
+        if len(categories) == 1:
+            result.append(new_path)
+        else:
+            generate_paths(categories[1:], new_path, result)
 
-    level_sheet.append(LEVEL_FIELDS)
-    for l in levels:
-        level_sheet.append(l)
 
-    data_points_sheet.append(DATA_POINT_FIELDS)
-    for data in data_points:
-        data_points_sheet.append(data)
+def find_all_paths(node, current_path, all_paths):
+    if node is None:
+        return
 
-    return file_response(workbook=workbook, title='Catalog')
+    current_path.append(node)
+    if not node.children.exists():
+        path = list(current_path)
+        if hasattr(node, 'c_table') and node.c_table:
+            result_list = []
+            headers = node.c_table['header']
+            for row in node.c_table["data"]:
+                result_dict = dict(zip(headers, row))
+                result_list.append(result_dict)
+            all_paths.append(path + [result_list])
+
+        elif hasattr(node, 'c_table') and not node.c_table:
+            all_paths.append(path + [node.name])
+        current_path.pop()
+    else:
+        for child in node.children.all():
+            find_all_paths(child, list(current_path), all_paths)
+
+    current_path.pop()
 
 
 @api_view(['POST'])
