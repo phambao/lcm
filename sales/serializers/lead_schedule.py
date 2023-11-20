@@ -1531,6 +1531,7 @@ class ScheduleSetupWordDaySerializer(serializers.ModelSerializer):
         fields = ('id', 'setup_workday_holiday', 'start_day', 'end_day', 'time', 'is_full_day')
 
     def create(self, validated_data):
+        request = self.context['request']
         holidays = pop(validated_data, 'setup_workday_holiday', [])
 
         setup_workday = lead_schedule.SetupWorkDay.objects.create(
@@ -1543,12 +1544,14 @@ class ScheduleSetupWordDaySerializer(serializers.ModelSerializer):
                 start_holiday=holiday['start_holiday'],
                 end_holiday=holiday['end_holiday'],
                 type_holiday=holiday['type_holiday'],
+                company=request.user.company
             )
             data_create.append(temp)
         lead_schedule.Holiday.objects.bulk_create(data_create)
         return setup_workday
 
     def update(self, instance, data):
+        request = self.context['request']
         holidays = pop(data, 'setup_workday_holiday', [])
         setup_workday = lead_schedule.SetupWorkDay.objects.filter(pk=instance.pk)
         setup_workday.update(**data)
@@ -1562,6 +1565,7 @@ class ScheduleSetupWordDaySerializer(serializers.ModelSerializer):
                 start_holiday=holiday['start_holiday'],
                 end_holiday=holiday['end_holiday'],
                 type_holiday=holiday['type_holiday'],
+                company=request.user.company
             )
             data_create.append(temp)
 
