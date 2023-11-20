@@ -227,7 +227,8 @@ def duplicate_catalogs(request, pk):
         for new in new_c:
             data.extend(new.get_all_descendant(have_self=True))
         return Response(status=status.HTTP_201_CREATED,
-                        data=catalog.CatalogSerializer(Catalog.objects.filter(id__in=data), many=True).data)
+                        data=catalog.CatalogSerializer(Catalog.objects.filter(id__in=data),
+                                                       many=True, context={'request': request}).data)
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 

@@ -127,6 +127,7 @@ class CatalogSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         data_points = validated_data.pop('data_points', '[]')
+        company = self.context['request'].user.company
         if data_points:
             data_points = eval(data_points)
         else:
@@ -136,12 +137,10 @@ class CatalogSerializer(serializers.ModelSerializer):
             validated_data['parents'] = [parent]
         instance = super().update(instance, validated_data)
         instance.data_points.all().delete()
-        instance.user_update = self.context['request'].user
-        instance.modified_date = timezone.now()
         instance.save()
         catalog.DataPoint.objects.bulk_create(
-            [catalog.DataPoint(catalog=instance, unit_id=data_point.pop('unit').get('id'), **data_point) for data_point
-             in data_points]
+            [catalog.DataPoint(catalog=instance, company=company, unit_id=data_point.pop('unit').get('id'),
+                               **data_point) for data_point in data_points]
         )
         return instance
 
