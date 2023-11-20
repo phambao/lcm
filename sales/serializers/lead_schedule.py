@@ -1518,6 +1518,60 @@ class ScheduleEventPhaseSettingSerializer(serializers.ModelSerializer):
         return data_event_phase
 
 
+class ScheduleHolidaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_schedule.Holiday
+        fields = ('id', 'start_holiday', 'end_holiday', 'type_holiday')
+
+
+class ScheduleSetupWordDaySerializer(serializers.ModelSerializer):
+    setup_workday_holiday = ScheduleHolidaySerializer(allow_null=True, required=False, many=True)
+    class Meta:
+        model = lead_schedule.SetupWorkDay
+        fields = ('id', 'setup_workday_holiday', 'start_day', 'end_day', 'time', 'is_full_day')
+
+    def create(self, validated_data):
+        request = self.context['request']
+        holidays = pop(validated_data, 'setup_workday_holiday', [])
+
+        setup_workday = lead_schedule.SetupWorkDay.objects.create(
+            **validated_data
+        )
+        data_create = []
+        for holiday in holidays:
+            temp = lead_schedule.Holiday(
+                setup_workday=setup_workday,
+                start_holiday=holiday['start_holiday'],
+                end_holiday=holiday['end_holiday'],
+                type_holiday=holiday['type_holiday'],
+                company=request.user.company
+            )
+            data_create.append(temp)
+        lead_schedule.Holiday.objects.bulk_create(data_create)
+        return setup_workday
+
+    def update(self, instance, data):
+        request = self.context['request']
+        holidays = pop(data, 'setup_workday_holiday', [])
+        super().update(instance, data)
+        data_holidays = lead_schedule.Holiday.objects.filter(setup_workday=instance.pk)
+        data_holidays.delete()
+        data_create = []
+        for holiday in holidays:
+            temp = lead_schedule.Holiday(
+                setup_workday=instance,
+                start_holiday=holiday['start_holiday'],
+                end_holiday=holiday['end_holiday'],
+                type_holiday=holiday['type_holiday'],
+                company=request.user.company
+            )
+            data_create.append(temp)
+
+        lead_schedule.Holiday.objects.bulk_create(data_create)
+
+        return instance
+
+
 class AttachmentsDailyLogSerializer(ScheduleAttachmentsSerializer):
     pass
 

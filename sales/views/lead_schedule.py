@@ -23,7 +23,8 @@ from ..models.lead_schedule import ToDo, TagSchedule, CheckListItems, Attachment
     AttachmentDailyLog, DailyLogTemplateNotes, TodoTemplateChecklistItem, ScheduleEvent, CheckListItemsTemplate, \
     FileScheduleEvent, CustomFieldScheduleSetting, TodoCustomField, ScheduleToDoSetting, ScheduleDailyLogSetting, \
     CustomFieldScheduleDailyLogSetting, Messaging, ScheduleEventSetting, ScheduleEventPhaseSetting, DailyLogCustomField, \
-    FileCheckListItems, FileCheckListItemsTemplate, MessageEvent, CommentDailyLog, EventShiftReason, ShiftReason
+    FileCheckListItems, FileCheckListItemsTemplate, MessageEvent, CommentDailyLog, EventShiftReason, ShiftReason, \
+    SetupWorkDay
 from ..serializers import lead_schedule
 from ..serializers.lead_schedule import EventLinkSerializer
 
@@ -543,6 +544,18 @@ class ScheduleEventMessageGenericView(CompanyFilterMixin, generics.ListCreateAPI
 class ScheduleEventMessageDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = MessageEvent.objects.all().prefetch_related('file_message_event')
     serializer_class = lead_schedule.MessageEventSerialized
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
+
+
+class ScheduleSetUpWorkDayGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
+    queryset = SetupWorkDay.objects.all().prefetch_related('setup_workday_holiday')
+    serializer_class = lead_schedule.ScheduleSetupWordDaySerializer
+    permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
+
+
+class ScheduleSetUpWorkDayDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
+    queryset = SetupWorkDay.objects.all().prefetch_related('setup_workday_holiday')
+    serializer_class = lead_schedule.ScheduleSetupWordDaySerializer
     permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
 
