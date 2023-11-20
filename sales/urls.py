@@ -192,7 +192,8 @@ url_schedule = [
     path('schedule-todo/custom-field/', lead_schedule.ScheduleToDoCustomFieldGenericView.as_view()),
     path('schedule-todo/custom-field/<int:pk>/', lead_schedule.ScheduleToDoCustomFieldDetailGenericView.as_view()),
     path('schedule-todo/delete-custom-field/<int:pk>/', lead_schedule.delete_custom_field),
-
+    path('setup-workday/', lead_schedule.ScheduleSetUpWorkDayGenericView.as_view()),
+    path('setup-workday/<int:pk>/', lead_schedule.ScheduleSetUpWorkDayDetailGenericView.as_view()),
 ]
 
 # URL Estimate

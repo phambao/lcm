@@ -506,3 +506,37 @@ class DailyLogCustomField(BaseModel):
     value_number = models.IntegerField(default=0, blank=True, null=True)
     custom_field = models.ForeignKey(CustomFieldScheduleDailyLogSetting, related_name='custom_filed_setting_daily_log',
                                      null=True, blank=True, on_delete=models.SET_NULL)
+
+
+class Day(models.TextChoices):
+    MONDAY = 'monday', 'MONDAY'
+    TUESDAY = 'tuesday', 'TUESDAY'
+    WEDNESDAY = 'wednesday', 'WEDNESDAY'
+    THURSDAY = 'thursday', 'THURSDAY'
+    FRIDAY = 'friday', 'FRIDAY'
+    SATURDAY = 'saturday', 'SATURDAY'
+    SUNDAY = 'sunday', 'SUNDAY'
+
+
+class HolidayType(models.TextChoices):
+    NEW_YEAR = 'new_year', 'New Year'
+    INTERNATION_PROGRAMMERS_DAY = 'internation_programmers_day', 'Internation Programmers Day'
+    INTERNATION_CUSTOM_DAY = 'internation_custom_day', 'Internation Custom Day'
+    WORLD_LEPROSY_DAY = 'world_leprosy_day', 'World Leprosy Day'
+    WORLD_DAY_OF_THE_SICK = 'world_day_of_the_sick', 'World Day Of The Sick'
+    INTERNATION_DAY_FOR_MONUMENTS_AND_SITES = 'internation_day_for_monuments_and_sites', 'Internation Day For Monuments And Sites'
+
+
+class SetupWorkDay(BaseModel):
+    start_day = models.CharField(max_length=128, choices=Day.choices, default=Day.MONDAY)
+    end_day = models.CharField(max_length=128, choices=Day.choices, default=Day.FRIDAY)
+    time = models.IntegerField(default=0, blank=True, null=True)
+    is_full_day = models.BooleanField(default=False, null=True, blank=True)
+
+
+class Holiday(BaseModel):
+    setup_workday = models.ForeignKey(SetupWorkDay, related_name='setup_workday_holiday', null=True, on_delete=models.SET_NULL)
+    start_holiday = models.DateTimeField(null=True, blank=True)
+    end_holiday = models.DateTimeField(null=True, blank=True)
+    type_holiday = models.CharField(max_length=128, choices=HolidayType.choices, default=HolidayType.NEW_YEAR)
+

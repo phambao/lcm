@@ -162,13 +162,12 @@ def create_subscription(request):
     try:
         if promotion_code == str():
             subscription = stripe.Subscription.create(
-                customer='cus_OxHZLXc6oAN9Q0',
+                customer=customer_id,
                 items=[{
                     'price': price_id,
                 }],
                 # payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
-                trial_end=1699848320
             )
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
