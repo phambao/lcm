@@ -379,7 +379,7 @@ def export_catalog(request, *args, **kwargs):
                 temp_catalog_not_dtp.append(data)
             elif isinstance(data, Catalog):
                 tmp = list()
-                if not data.data_points.exists():
+                if data.data_points.exists():
                     temp_list = []
                     for data_point in data.data_points.all():
                         temp_list.append(data.name)
