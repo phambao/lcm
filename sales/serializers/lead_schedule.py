@@ -1553,15 +1553,13 @@ class ScheduleSetupWordDaySerializer(serializers.ModelSerializer):
     def update(self, instance, data):
         request = self.context['request']
         holidays = pop(data, 'setup_workday_holiday', [])
-        setup_workday = lead_schedule.SetupWorkDay.objects.filter(pk=instance.pk)
-        setup_workday.update(**data)
-        setup_workday = setup_workday.first()
+        super().update(instance, data)
         data_holidays = lead_schedule.Holiday.objects.filter(setup_workday=instance.pk)
         data_holidays.delete()
         data_create = []
         for holiday in holidays:
             temp = lead_schedule.Holiday(
-                setup_workday=setup_workday,
+                setup_workday=instance,
                 start_holiday=holiday['start_holiday'],
                 end_holiday=holiday['end_holiday'],
                 type_holiday=holiday['type_holiday'],
@@ -1571,7 +1569,7 @@ class ScheduleSetupWordDaySerializer(serializers.ModelSerializer):
 
         lead_schedule.Holiday.objects.bulk_create(data_create)
 
-        return setup_workday
+        return instance
 
 
 class AttachmentsDailyLogSerializer(ScheduleAttachmentsSerializer):
