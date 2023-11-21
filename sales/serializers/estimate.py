@@ -105,6 +105,13 @@ class DataEntrySerializer(serializers.ModelSerializer):
             data['category'] = CatalogEstimateSerializer(parent).data
             parent = parent.parents.first()
             data['catalog'] = CatalogEstimateSerializer(parent).data
+
+        if data['levels']:
+            for level in data['levels']:
+                try:
+                    level['data_points'] = Catalog.objects.get(pk=level.get('id')).data_points.all().values('id', 'linked_description')
+                except (Catalog.DoesNotExist, ValueError):
+                    level['data_points'] = []
         return data
 
 
