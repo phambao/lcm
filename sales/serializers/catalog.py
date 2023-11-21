@@ -24,6 +24,17 @@ class DataPointSerializer(serializers.ModelSerializer):
         fields = ('id', 'value', 'unit', 'linked_description', 'is_linked')
 
 
+class DataPointForLinkDescription(serializers.ModelSerializer):
+    class Meta:
+        model = catalog.DataPoint
+        fields = ('id', 'linked_description')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['name'] = instance.catalog.name
+        return data
+
+
 class CatalogLevelValueSerializer(serializers.ModelSerializer):
     class Meta:
         model = catalog.Catalog

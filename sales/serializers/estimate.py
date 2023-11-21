@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
 from django.apps import apps
+from django.db.models import Sum
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -13,7 +14,7 @@ from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE
 from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, \
     UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView, MaterialView
-from sales.serializers.catalog import CatalogEstimateSerializer
+from sales.serializers.catalog import CatalogEstimateSerializer, DataPointForLinkDescription
 
 
 class LinkedDescriptionSerializer(serializers.Serializer):
@@ -109,7 +110,8 @@ class DataEntrySerializer(serializers.ModelSerializer):
         if data['levels']:
             for level in data['levels']:
                 try:
-                    level['data_points'] = Catalog.objects.get(pk=level.get('id')).data_points.all().values('id', 'linked_description')
+                    c = Catalog.objects.get(pk=level.get('id'))
+                    level['data_points'] = DataPointForLinkDescription(c.data_points.all(), many=True).data
                 except (Catalog.DoesNotExist, ValueError):
                     level['data_points'] = []
         return data
