@@ -94,14 +94,6 @@ class DataEntrySerializer(serializers.ModelSerializer):
                            DataEntrySerializer.__name__, __name__, self.context['request'].user.pk)
         return update
 
-    def validate_levels(self, value):
-        if value:
-            if isinstance(value, list):
-                for v in value:
-                    if 'id' not in v or 'name' not in v or len(v.keys()) != 2:
-                        raise serializers.ValidationError('Need 2 parameters id and name, for Ex: [{"id": "id", "name": "name"}]')
-        return value
-
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = DATA_ENTRY_CONTENT_TYPE
