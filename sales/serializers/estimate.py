@@ -488,7 +488,7 @@ class MaterialViewSerializers(serializers.ModelSerializer):
             try:
                 DataEntry.objects.get(pk=value)
             except DataEntry.DoesNotExist:
-                raise serializers.ValidationError('Data Entry is not exist')
+                return None
         return value
 
 
