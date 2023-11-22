@@ -242,32 +242,6 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        linked_descriptions = []
-        try:
-            linked_descriptions = eval(data['linked_description'])
-        except:
-            pass
-        data['linked_description'] = []
-        for linked_description in linked_descriptions:
-            if isinstance(linked_description, dict):
-                linked_description = linked_description.get('id', '')
-                if not isinstance(linked_description, str):
-                    continue
-                if 'catalog' in linked_description or 'estimate' in linked_description:
-                    pk = linked_description.split(':')[1]
-                    if 'estimate' in linked_description:
-                        try:
-                            linked_description = DescriptionLibrary.objects.get(pk=pk)
-                        except DescriptionLibrary.DoesNotExist:
-                            continue
-                    else:
-                        try:
-                            linked_description = DataPoint.objects.get(pk=pk)
-                        except DataPoint.DoesNotExist:
-                            continue
-                    data['linked_description'].append(LinkedDescriptionSerializer(linked_description).data)
-        data['linked_description'] = str(data['linked_description'])
-
         if data['material']:
             try:
                 primary_key = eval(data['material'])

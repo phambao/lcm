@@ -47,7 +47,7 @@ class DataEntry(BaseModel):
 class POFormula(BaseModel):
 
     name = models.CharField(max_length=128)
-    linked_description = models.TextField(blank=True, default='')
+    linked_description = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
     formula = models.TextField(blank=True)
     group = models.ForeignKey('sales.POFormulaGrouping', blank=True, related_name='group_formulas', null=True, on_delete=models.SET_NULL)
     assemble = models.ForeignKey('sales.Assemble', blank=True, related_name='assemble_formulas', null=True, on_delete=models.SET_NULL)
