@@ -19,14 +19,6 @@ from api.middleware import get_request
 from base.views.base import CompanyFilterMixin
 
 
-CATALOG_SHEET_NAME = 'Catalog'
-LEVEL_SHEET_NAME = 'Level'
-DATA_POINT_SHEET_NAME = 'Data Point'
-CATALOG_FIELDS = ['id', 'parents', 'level', 'sequence', 'name', 'is_ancestor', 'c_table', 'icon', 'level_index']
-LEVEL_FIELDS = ['id', 'name', 'parent', 'catalog']
-DATA_POINT_FIELDS = ['id', 'unit', 'unit__name', 'catalog', 'value', 'linked_description']
-
-
 class CatalogList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = Catalog.objects.all().prefetch_related('data_points', 'parents')
     serializer_class = catalog.CatalogSerializer
@@ -227,7 +219,8 @@ def duplicate_catalogs(request, pk):
         for new in new_c:
             data.extend(new.get_all_descendant(have_self=True))
         return Response(status=status.HTTP_201_CREATED,
-                        data=catalog.CatalogSerializer(Catalog.objects.filter(id__in=data), many=True).data)
+                        data=catalog.CatalogSerializer(Catalog.objects.filter(id__in=data),
+                                                       many=True, context={'request': request}).data)
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -523,88 +516,4 @@ def find_all_paths(node, current_path, all_paths):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def import_catalog(request):
-    file = request.FILES['file']
-    category = request.data.get('category')
-    if category:
-        ancestor = Catalog.objects.get(id=category)
-
-    workbook = load_workbook(file)
-    catalog_sheet = workbook[CATALOG_SHEET_NAME]
-    level_sheet = workbook[LEVEL_SHEET_NAME]
-    data_point_sheet = workbook[DATA_POINT_SHEET_NAME]
-
-    # validate column
-    for row in catalog_sheet.iter_rows(min_row=1, max_row=1, values_only=True):
-        if tuple(CATALOG_FIELDS) != row:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data='Catalog column is not a valid format')
-
-    for row in level_sheet.iter_rows(min_row=1, max_row=1, values_only=True):
-        if tuple(LEVEL_FIELDS) != row:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data='Level column is not a valid format')
-
-    for row in data_point_sheet.iter_rows(min_row=1, max_row=1, values_only=True):
-        if tuple(DATA_POINT_FIELDS) != row:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data='Data point column is not a valid format')
-
-    # import data, create basic data
-    name_level_field = LEVEL_FIELDS.index('name')
-    catalog_level_field = CATALOG_FIELDS.index("level")
-    catalog_parent_field = CATALOG_FIELDS.index("parents")
-    data_point_unit_name_field = DATA_POINT_FIELDS.index("unit__name")
-    data_point_catalog_field = DATA_POINT_FIELDS.index("catalog")
-    level_catalog_field = LEVEL_FIELDS.index("catalog")
-    level_parent_field = LEVEL_FIELDS.index("parent")
-    mapping_data = {}
-    for row in level_sheet.iter_rows(min_row=2, values_only=True):
-        data = {'name': row[name_level_field]}
-        mapping_data[f'level_{row[0]}'] = CatalogLevel.objects.create(**data)
-
-    for row in catalog_sheet.iter_rows(min_row=2, values_only=True):
-        data = {key: row[CATALOG_FIELDS.index(key)] for key in CATALOG_FIELDS[3:]}
-
-        # Check import category
-        if row[CATALOG_FIELDS.index('is_ancestor')] and category:
-            mapping_data[f'catalog_{row[0]}'] = ancestor
-            continue
-
-        serializer = CatalogImportSerializer(data=data, many=False)
-        if serializer.is_valid(raise_exception=True):
-            if row[catalog_level_field]:
-                mapping_data[f'catalog_{row[0]}'] = serializer.save(level=mapping_data.get(f'level_{row[catalog_level_field]}'))
-            else:
-                mapping_data[f'catalog_{row[0]}'] = serializer.save()
-
-    for row in data_point_sheet.iter_rows(min_row=2, values_only=True):
-        if row[data_point_unit_name_field]:
-            mapping_data[f'unit_{row[DATA_POINT_FIELDS.index("unit")]}'] = DataPointUnit.objects.get_or_create(
-                name=row[data_point_unit_name_field],
-                company=request.user.company
-            )
-        data = {key: row[DATA_POINT_FIELDS.index(key)] for key in DATA_POINT_FIELDS[4:]}
-        serializer = DataPointImportSerializer(data=data, many=False)
-        if serializer.is_valid(raise_exception=True):
-            mapping_data[f'data_point_{row[0]}'] = serializer.save()
-
-    # Make connection between data
-    for row in level_sheet.iter_rows(min_row=2, values_only=True):
-        level = mapping_data[f'level_{row[0]}']
-        if row[level_catalog_field]:
-            level.catalog = mapping_data.get(f'catalog_{row[level_catalog_field]}')
-        if row[level_parent_field]:
-            level.parent = mapping_data.get(f'level_{row[level_parent_field]}')
-        level.save()
-
-    for row in catalog_sheet.iter_rows(min_row=2, values_only=True):
-        catalog = mapping_data[f'catalog_{row[0]}']
-        if row[catalog_parent_field]:
-            data = mapping_data.get(f'catalog_{row[catalog_parent_field]}')
-            if data:
-                catalog.parents.add(data)
-
-    for row in data_point_sheet.iter_rows(min_row=2, values_only=True):
-        data_point = mapping_data[f'data_point_{row[0]}']
-        if row[data_point_catalog_field]:
-            data_point.catalog = mapping_data.get(f'catalog_{row[data_point_catalog_field]}')
-        data_point.save()
-
     return Response(status=status.HTTP_200_OK)

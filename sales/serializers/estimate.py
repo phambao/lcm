@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
 from django.apps import apps
+from django.db.models import Sum
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -13,7 +14,7 @@ from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE
 from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, \
     UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView, MaterialView
-from sales.serializers.catalog import CatalogEstimateSerializer
+from sales.serializers.catalog import CatalogEstimateSerializer, DataPointForLinkDescription
 
 
 class LinkedDescriptionSerializer(serializers.Serializer):
@@ -94,14 +95,6 @@ class DataEntrySerializer(serializers.ModelSerializer):
                            DataEntrySerializer.__name__, __name__, self.context['request'].user.pk)
         return update
 
-    def validate_levels(self, value):
-        if value:
-            if isinstance(value, list):
-                for v in value:
-                    if 'id' not in v or 'name' not in v or len(v.keys()) != 2:
-                        raise serializers.ValidationError('Need 2 parameters id and name, for Ex: [{"id": "id", "name": "name"}]')
-        return value
-
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = DATA_ENTRY_CONTENT_TYPE
@@ -113,6 +106,14 @@ class DataEntrySerializer(serializers.ModelSerializer):
             data['category'] = CatalogEstimateSerializer(parent).data
             parent = parent.parents.first()
             data['catalog'] = CatalogEstimateSerializer(parent).data
+
+        if data['levels']:
+            for level in data['levels']:
+                try:
+                    c = Catalog.objects.get(pk=level.get('id'))
+                    level['data_points'] = DataPointForLinkDescription(c.data_points.all(), many=True).data
+                except (Catalog.DoesNotExist, ValueError):
+                    level['data_points'] = []
         return data
 
 
@@ -241,32 +242,6 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        linked_descriptions = []
-        try:
-            linked_descriptions = eval(data['linked_description'])
-        except:
-            pass
-        data['linked_description'] = []
-        for linked_description in linked_descriptions:
-            if isinstance(linked_description, dict):
-                linked_description = linked_description.get('id', '')
-                if not isinstance(linked_description, str):
-                    continue
-                if 'catalog' in linked_description or 'estimate' in linked_description:
-                    pk = linked_description.split(':')[1]
-                    if 'estimate' in linked_description:
-                        try:
-                            linked_description = DescriptionLibrary.objects.get(pk=pk)
-                        except DescriptionLibrary.DoesNotExist:
-                            continue
-                    else:
-                        try:
-                            linked_description = DataPoint.objects.get(pk=pk)
-                        except DataPoint.DoesNotExist:
-                            continue
-                    data['linked_description'].append(LinkedDescriptionSerializer(linked_description).data)
-        data['linked_description'] = str(data['linked_description'])
-
         if data['material']:
             try:
                 primary_key = eval(data['material'])

@@ -8,7 +8,6 @@ from api.serializers.auth import UserCustomSerializer
 from api.serializers.base import SerializerMixin
 from base.serializers import base
 from base.utils import pop, extra_kwargs_for_base_model
-from sales.serializers.change_order import ChangeOrderSerializer
 from .lead_schedule import ScheduleEventSerializer
 from ..models import lead_list
 
@@ -68,6 +67,7 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
 
     def create(self, validated_data):
         validated_data['user_create'] = self.context['request'].user
+        company = self.context['request'].user.company
         if self.is_param_exist('pk_lead'):
             phone_contacts = validated_data.pop('phone_contacts')
             contact_types = validated_data.pop('contact_types')
@@ -79,7 +79,7 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
                 lead_list.ContactType.objects.create(contact=ct, lead=ld, contact_type_name=ctn)
             if phone_contacts:
                 lead_list.PhoneOfContact.objects.bulk_create(
-                    [lead_list.PhoneOfContact(contact=ct, **pct) for pct in phone_contacts]
+                    [lead_list.PhoneOfContact(contact=ct, company=company, **pct) for pct in phone_contacts]
                 )
             return ct
 
@@ -103,9 +103,10 @@ class ContactsSerializer(serializers.ModelSerializer, SerializerMixin):
         instance = instance.first()
 
         instance.phone_contacts.all().delete()
+        company = self.context['request'].user.company
         if phone_contacts:
             lead_list.PhoneOfContact.objects.bulk_create(
-                [lead_list.PhoneOfContact(contact=instance, **pct) for pct in phone_contacts]
+                [lead_list.PhoneOfContact(contact=instance, company=company, **pct) for pct in phone_contacts]
             )
 
         if self.is_param_exist('pk_lead'):
@@ -272,6 +273,7 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
         salesperson = pop(data, 'salesperson', [])
         lead_tags = pop(data, 'tags', [])
         lead_sources = pop(data, 'sources', [])
+        company = self.context['request'].user.company
 
         [data.pop(field) for field in PASS_FIELDS if field in data]
 
@@ -327,7 +329,7 @@ class LeadDetailCreateSerializer(serializers.ModelSerializer, SerializerMixin):
                     ctn = lead_list.ContactTypeName.objects.get(name=contact_type['name'])
                     lead_list.ContactType.objects.create(contact=ct, lead=ld, contact_type_name=ctn)
                 lead_list.PhoneOfContact.objects.bulk_create(
-                    [lead_list.PhoneOfContact(contact=ct, **phone) for phone in phones])
+                    [lead_list.PhoneOfContact(contact=ct, company=company, **phone) for phone in phones])
         return ld
 
     def update(self, instance, data):
