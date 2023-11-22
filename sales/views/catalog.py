@@ -412,7 +412,8 @@ def export_catalog(request, *args, **kwargs):
     catalog_sheet = workbook.create_sheet(title='Catalog')
     headers = []
     for i in range(1, len(level) + 1):
-        iteration_headers = [f"lv{i}", "image", f"value", f"unit", f"des"]
+        data_level = level[i-1]
+        iteration_headers = [f"{data_level.name}", "image", f"value", f"unit", f"des"]
         headers.extend(iteration_headers)
 
     all_key = []
