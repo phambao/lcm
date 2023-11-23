@@ -441,10 +441,13 @@ def webhook_received(request):
         user = User.objects.get(stripe_customer=customer)
         company_name = user.company.company_name
         customer_name = user.username
+        # url = BASE_URL
+        url_login = config('BASE_URL') + '/login/'
         content = render_to_string('auth/payment-failse.html', {
             'subscription_name': subscription.plan.product.name,
             'company_name': company_name,
-            'customer_name': customer_name
+            'customer_name': customer_name,
+            'url_login': url_login
         })
         celery_send_mail.delay(f'Stripe Fail Payment - this is a test',
                                content, settings.EMAIL_HOST_USER, [user.email], False)
