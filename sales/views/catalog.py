@@ -377,7 +377,10 @@ def export_catalog(request, *args, **kwargs):
                     for data_point in data.data_points.all():
                         temp_list.append(data.name)
                         temp_list.append(data.icon)
-                        temp_list.append(data_point.unit.name)
+                        if data_point.unit:
+                            temp_list.append(data_point.unit.name)
+                        else:
+                            temp_list.append('')
                         temp_list.append(data_point.value)
                         temp_list.append(data_point.linked_description)
                         tmp.append(temp_list)
