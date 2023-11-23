@@ -257,13 +257,10 @@ def get_linked_descriptions(request):
     """
     search_query = {'linked_description__icontains': request.GET.get('search', '')}
     dl = DescriptionLibrary.objects.filter(**search_query, company=get_request().user.company)
-    dp = DataPoint.objects.filter(**search_query, company=get_request().user.company)
     paginator = LimitOffsetPagination()
     estimate_result = paginator.paginate_queryset(dl, request)
-    catalog_result = paginator.paginate_queryset(dp, request)
     estimate_serializer = LinkedDescriptionSerializer(estimate_result, many=True)
-    catalog_serializer = LinkedDescriptionSerializer(catalog_result, many=True)
-    return paginator.get_paginated_response(estimate_serializer.data + catalog_serializer.data)
+    return paginator.get_paginated_response(estimate_serializer.data)
 
 
 @api_view(['GET'])
