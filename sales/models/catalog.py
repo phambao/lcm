@@ -57,11 +57,6 @@ class DataPoint(BaseModel):
     class Meta:
         db_table = 'data_point'
 
-    class Unit(models.TextChoices):
-        INCHES = 'in', 'inches'
-        METERS = 'm', 'meters'
-        EMPTY = '', ''
-
     value = models.CharField(max_length=128, blank=True)
     unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.CASCADE, null=True, blank=True)
     linked_description = models.CharField(max_length=128, blank=True)
@@ -76,7 +71,7 @@ class Catalog(BaseModel):
         ordering = ['-modified_date']
 
     sequence = models.IntegerField(default=0)
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=256)
     is_ancestor = models.BooleanField(default=False, blank=True)
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False)
     c_table = models.JSONField(default=dict, blank=True)  # {"header": [col1, col2], "data": [[col2, col2],]}
@@ -84,6 +79,7 @@ class Catalog(BaseModel):
     level = models.ForeignKey(CatalogLevel, on_delete=models.CASCADE, null=True,
                               blank=True, default=None, related_name='catalogs')
     level_index = models.IntegerField(default=0, blank=True, null=True)
+    childrens = models.ManyToManyField('self', blank=True, symmetrical=False)
 
     def __str__(self):
         return self.name
