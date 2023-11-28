@@ -3,6 +3,7 @@ from django.db import transaction
 from django.db.models import Value
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
+from django.apps import apps
 from openpyxl.reader.excel import load_workbook
 from openpyxl.workbook import Workbook
 from rest_framework import generics, permissions, status, filters as rf_filters
@@ -139,7 +140,7 @@ def get_catalog_tree(request, pk):
 def get_catalog_list(request, pk):
     catalog_obj = get_object_or_404(Catalog, pk=pk)
     catalog_ids = catalog_obj.get_all_descendant()
-    catalogs = Catalog.objects.filter(pk__in=catalog_ids).prefetch_related('data_points', 'parents')
+    catalogs = Catalog.objects.filter(pk__in=catalog_ids).prefetch_related('data_points', 'parents', 'data_points__unit', 'childrens')
     serializer = catalog.CatalogSerializer(catalogs, many=True, context={'request': request})
     return Response(status=status.HTTP_200_OK, data=serializer.data)
 
@@ -512,7 +513,95 @@ def find_all_paths(node, current_path, all_paths):
     current_path.pop()
 
 
+def count_level(header, level_catalog):
+    """
+    Parameters:
+        header: tuple
+        level_catalog: catalog object
+    """
+    length = len(header)
+    length_level = header.index('cost_table_name')
+    parent = None
+    levels = []
+    for i in range(int(length_level/4)-1):
+        parent = CatalogLevel.objects.create(name=header[i*5], parent=parent, catalog=level_catalog)
+        levels.append(parent)
+    else:
+        c_table_header = header[i*5 + 5:]
+    return int(length_level/4), length - length_level, levels, c_table_header
+
+
+UnitLibrary = apps.get_model(app_label='sales', model_name='UnitLibrary')
+
+
+def create_catalog_by_row(row, length_level, company, root, levels, level_header):
+    """
+    Parameters:
+        row: tuple
+        length_level: int
+        company: company object
+        root: catalog object
+        levels: list level objects
+    """
+    unit = None
+    parent = root
+    for i in range(length_level-1):
+        name = row[i*5]
+        if not name:
+            continue
+
+        if parent:
+            catalog = parent.children.get_or_create(name=name, company=company, level=levels[i])
+            catalog = catalog[0]
+            catalog.parents.add(parent)
+        else:
+            catalog = Catalog.objects.create(name=name, company=company)
+
+        unit = None
+        if row[i*5 + 3]:
+            unit = UnitLibrary.objects.get_or_create(name=row[i*5 + 3], company=company)
+            unit = unit[0]
+
+        data_point = {'value': row[i*5 + 2] or '', 'unit': unit, 'linked_description': row[i*5 + 4] or ''}
+        DataPoint.objects.get_or_create(catalog=catalog, **data_point)
+        parent = catalog
+    else:
+        c_table = parent.c_table
+        # Validate cost table data
+        if all(row[i*5 + 5:]):
+            # cost table has created
+            if c_table:
+                data = c_table['data']
+                if row[i*5 + 5:] not in data:
+                    data.append(row[i*5 + 5:])
+            else:
+                if row[i*5 + 5:]:
+                    parent.c_table = {'header': level_header,
+                        'data': [row[i*5 + 5:]]}
+            parent.save()
+        unit = row[i*5 + 6]
+    return unit
+
+
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def import_catalog(request):
+    file = request.FILES['file']
+    workbook = load_workbook(file)
+    company = request.user.company
+    catalog_sheet = workbook['Catalog']
+    parent = Catalog.objects.get(pk=request.GET['pk_catalog'])
+
+    for row in catalog_sheet.iter_rows(min_row=0, max_row=1, values_only=True):
+        header = row
+    length_level, length_cost_table, levels, c_table_header = count_level(header, parent)
+    c_table_header = ['name', 'unit', 'cost', *c_table_header[3:]]
+
+    unit = set()
+    for row in catalog_sheet.iter_rows(min_row=2, values_only=True):
+        unit.add(create_catalog_by_row(row, length_level, company, parent, levels, c_table_header))
+
+    unit_library = set(UnitLibrary.objects.filter(company=company).values_list('name', flat=True))
+    UnitLibrary.objects.bulk_create([UnitLibrary(name=i, company=company) for i in unit.difference(unit_library) if i])
+
     return Response(status=status.HTTP_200_OK)
