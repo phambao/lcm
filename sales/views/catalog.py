@@ -354,10 +354,26 @@ def get_materials(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def export_catalog(request, *args, **kwargs):
+    workbook = Workbook()
     pk = request.GET.get('pk_catalog', None)
+    check_catalog = Catalog.objects.get(id=pk)
+    if check_catalog.is_ancestor:
+        child_catalogs = Catalog.objects.filter(parents=pk)
+        for data_catalog in child_catalogs:
+            handle_export(data_catalog.id, workbook)
+
+    else:
+        handle_export(pk, workbook)
+
+    workbook.save("output.xlsx")
+    return file_response(workbook=workbook, title='catalog')
+
+
+def handle_export(pk, workbook):
     root_catalogs = Catalog.objects.filter(id=pk)
-    level = Catalog.objects.get(id=pk).get_ordered_levels()
     all_paths = []
+    name = root_catalogs.first().name
+    level = Catalog.objects.get(id=pk).get_ordered_levels()
     # get all path catalog to cost table
     for root_catalog in root_catalogs:
         find_all_paths(root_catalog, [], all_paths)
@@ -386,6 +402,8 @@ def export_catalog(request, *args, **kwargs):
                         temp_list.append(data_point.linked_description)
                         tmp.append(temp_list)
                         temp_list = []
+                        if idx != 0 and len(path) == 2:
+                            temp_catalog_not_dtp.append([data.id])
                     temp.append(tmp)
                 else:
                     if idx != 0:
@@ -405,11 +423,11 @@ def export_catalog(request, *args, **kwargs):
         generate_paths(i, [], result_paths)
 
     # handle write headers all catalog and cost table
-    workbook = Workbook()
-    catalog_sheet = workbook.create_sheet(title='Catalog')
+    # workbook = Workbook()
+    catalog_sheet = workbook.create_sheet(title=name)
     headers = []
     for i in range(1, len(level) + 1):
-        data_level = level[i-1]
+        data_level = level[i - 1]
         iteration_headers = [f"{data_level.name}", "image", f"value", f"unit", f"des"]
         headers.extend(iteration_headers)
 
@@ -468,8 +486,6 @@ def export_catalog(request, *args, **kwargs):
                 else:
                     row[idx * 5] = data
         catalog_sheet.append(row)
-    workbook.save("output.xlsx")
-    return file_response(workbook=workbook, title='catalog')
 
 
 def generate_paths(categories, current_path, result):
@@ -481,6 +497,7 @@ def generate_paths(categories, current_path, result):
 
     elif isinstance(categories[0][0], int):
         current_category = categories[0]
+
     else:
         current_category = set(categories[0])
     for item in current_category:
@@ -508,7 +525,8 @@ def find_all_paths(node, current_path, all_paths):
             all_paths.append(path + [result_list])
 
         elif hasattr(node, 'c_table') and not node.c_table:
-            all_paths.append(path + [node.name])
+            # all_paths.append(path + [node.name])
+            all_paths.append(path)
         current_path.pop()
     else:
         for child in node.children.all():
