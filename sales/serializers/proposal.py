@@ -318,7 +318,10 @@ class ProposalWritingCompactSerializer(serializers.ModelSerializer):
         data['customer_contact'] = []
         if instance.lead:
             data['house_address'] = instance.lead.street_address
-            data['customer_contact'] = ContactsSerializer(instance.lead.contacts.all(), many=True).data
+            data['customer_contact'] = instance.lead.contacts.all().values(
+                'first_name', 'last_name', 'gender', 'email', 'phone_contacts', 'street',
+                'city', 'state', 'zip_code', 'country'
+                )
         return data
 
 
