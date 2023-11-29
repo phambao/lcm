@@ -9,6 +9,7 @@ from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, Pric
 from sales.serializers import estimate
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateSerializer
+from sales.serializers.lead_list import ContactsSerializer
 
 
 class ProposalWidgetSerializer(serializers.ModelSerializer):
@@ -312,7 +313,12 @@ class ProposalWritingCompactSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(ProposalWriting).pk
-        data['status'] = ''
+        data['status'] = 'Draft'
+        data['house_address'] = ''
+        data['customer_contact'] = []
+        if instance.lead:
+            data['house_address'] = instance.lead.street_address
+            data['customer_contact'] = ContactsSerializer(instance.lead.contacts.all(), many=True).data
         return data
 
 
