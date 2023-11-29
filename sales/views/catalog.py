@@ -356,7 +356,6 @@ def get_materials(request):
 def export_catalog(request, *args, **kwargs):
     workbook = Workbook()
     pk = request.GET.get('pk_catalog', None)
-    root_catalogs = Catalog.objects.filter(id=pk)
     check_catalog = Catalog.objects.get(id=pk)
     if check_catalog.is_ancestor:
         child_catalogs = Catalog.objects.filter(parents=pk)
@@ -366,7 +365,6 @@ def export_catalog(request, *args, **kwargs):
     else:
         handle_export(pk, workbook)
 
-    # get all data point with catalog on path
     workbook.save("output.xlsx")
     return file_response(workbook=workbook, title='catalog')
 
