@@ -26,11 +26,6 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
-    def check_perm(self, perm: str, obj: object=None) -> bool:
-        if self.is_admin_company:
-            return True
-        return self.has_perm(str, obj)
-
 
 class BaseModel(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)

@@ -4,12 +4,12 @@ from django.urls import reverse
 
 from base.tasks import activity_log
 from base.utils import pop, extra_kwargs_for_base_model
-from api.middleware import get_request
 from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting, \
     ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig, GroupEstimatePrice
 from sales.serializers import estimate
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateSerializer
+from sales.serializers.lead_list import ContactsSerializer
 
 
 class ProposalWidgetSerializer(serializers.ModelSerializer):
@@ -378,12 +378,6 @@ class ProposalWritingSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['content_type'] = ContentType.objects.get_for_model(ProposalWriting).pk
-        user = get_request().user
-        data['permissions'] = {
-            'internal_view': user.check_perm('internal_view'),
-            'client_view': user.check_perm('client_view')
-        }
-
         return data
 
 
