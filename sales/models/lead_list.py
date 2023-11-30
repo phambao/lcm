@@ -91,7 +91,7 @@ class Contact(BaseModel):
     gender = models.CharField(
         max_length=6, choices=Gender.choices, default=Gender.MALE)
     email = models.EmailField(max_length=128, blank=True)
-    street = models.CharField(max_length=64, null=True, blank=True)
+    street = models.CharField(max_length=256, null=True, blank=True)
     country = models.CharField('Country', max_length=128, blank=True, default='', null=True)
     city = models.CharField('City', max_length=128, blank=True, default='', null=True)
     state = models.CharField('State', max_length=128, blank=True, default='', null=True)
