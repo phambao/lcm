@@ -103,9 +103,6 @@ class ProposalWriting(BaseModel):
 
     lead = models.ForeignKey('sales.LeadDetail', on_delete=models.SET_NULL, blank=True, null=True, related_name='proposals')
 
-    class Meta:
-        permissions = [('client_view', 'Client View'), ('internal_view', 'Internal View')]
-
     def __str__(self):
         return self.name
 
