@@ -179,6 +179,7 @@ class POFormulaToDataEntry(BaseModel):
     group = models.CharField(blank=True, default='', max_length=128)
     material_data_entry_link = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)  # Need delete
     levels = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)  # Next level of data entry
+    is_client_view = models.BooleanField(blank=True, default=True)
 
 
 class MaterialView(BaseModel):
