@@ -468,7 +468,7 @@ class AssembleSerializer(serializers.ModelSerializer):
 class DataViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataView
-        fields = ('id', 'formula', 'name', 'estimate_template', 'type')
+        fields = ('id', 'formula', 'name', 'estimate_template', 'type', 'is_client_view')
         read_only_fields = ('estimate_template', )
 
     def to_internal_value(self, data):
@@ -481,7 +481,7 @@ class MaterialViewSerializers(serializers.ModelSerializer):
     class Meta:
         model = MaterialView
         fields = ('id', 'name', 'material_value', 'copies_from', 'catalog_materials',
-                  'levels', 'data_entry')
+                  'levels', 'data_entry', 'is_client_view')
 
     def validate_data_entry(self, value):
         if value:
