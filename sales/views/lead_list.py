@@ -24,13 +24,12 @@ from ..serializers import lead_list
 from ..serializers.lead_list import PhotoSerializer, LeadDetailCreateSerializer
 
 PASS_FIELDS = ['user_create', 'user_update', 'lead']
+LEAD_FIELDS = ('activities', 'contacts', 'contacts__phone_contacts', 'project_types', 'salesperson',
+               'sources', 'tags', 'photos')
 
 
 class LeadDetailList(CompanyFilterMixin, generics.ListCreateAPIView):
-    queryset = LeadDetail.objects.all().prefetch_related(
-        'activities', 'contacts', 'contacts__phone_contacts', 'project_types', 'salesperson',
-        'sources', 'tags', 'photos'
-        )
+    queryset = LeadDetail.objects.all().prefetch_related(*LEAD_FIELDS)
     serializer_class = lead_list.LeadDetailCreateSerializer
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -39,10 +38,7 @@ class LeadDetailList(CompanyFilterMixin, generics.ListCreateAPIView):
 
 
 class LeadWithChangeOrderList(CompanyFilterMixin, generics.ListAPIView):
-    queryset = LeadDetail.objects.filter(proposals__change_orders__isnull=False).prefetch_related(
-    'activities', 'contacts', 'contacts__phone_contacts', 'project_types', 'salesperson',
-    'sources', 'tags', 'photos'
-    ).distinct()
+    queryset = LeadDetail.objects.filter(proposals__change_orders__isnull=False).prefetch_related(*LEAD_FIELDS).distinct()
     serializer_class = lead_list.LeadFilterChangeOrderSerializer
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -51,10 +47,11 @@ class LeadWithChangeOrderList(CompanyFilterMixin, generics.ListAPIView):
 
 
 class LeadWithProposal(LeadWithChangeOrderList):
-    queryset = LeadDetail.objects.filter(proposals__isnull=False).prefetch_related(
-    'activities', 'contacts', 'contacts__phone_contacts', 'project_types', 'salesperson',
-    'sources', 'tags', 'photos'
-    ).distinct()
+    queryset = LeadDetail.objects.filter(proposals__isnull=False).prefetch_related(*LEAD_FIELDS).distinct()
+
+
+class LeadWithInvoice(LeadWithChangeOrderList):
+    queryset = LeadDetail.objects.filter(proposals__invoices__isnull=False).prefetch_related(*LEAD_FIELDS).distinct()
 
 
 class LeadEventList(CompanyFilterMixin, generics.ListAPIView):
