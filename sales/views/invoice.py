@@ -1,4 +1,6 @@
 from rest_framework import generics, permissions
+from rest_framework import status, filters as rf_filters
+from django_filters import rest_framework as filters
 
 from base.permissions import InvoicePermissions
 from base.views.base import CompanyFilterMixin
@@ -7,12 +9,16 @@ from sales.serializers.invoice import InvoiceSerializer, PaymentHistorySerialize
     ProposalForInvoiceSerializer, LeadInvoiceSerializer, CreditMemoSerializer, InvoiceTemplateSerializer
 from sales.views.lead_list import LeadDetailList
 from sales.views.proposal import ProposalWritingCompactList
+from sales.filters.invoice import InvoiceFilter
 
 
 class InvoiceListView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = Invoice.objects.all()
     serializer_class = InvoiceSerializer
     permission_classes = [permissions.IsAuthenticated & InvoicePermissions]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = InvoiceFilter
+    search_fields = ('name',)
 
 
 class InvoicePaymentListView(CompanyFilterMixin, generics.ListAPIView):

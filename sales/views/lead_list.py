@@ -54,6 +54,12 @@ class LeadWithInvoice(LeadWithChangeOrderList):
     queryset = LeadDetail.objects.filter(proposals__invoices__isnull=False).prefetch_related(*LEAD_FIELDS).distinct()
 
 
+class LeadWithInvoicePayment(LeadWithChangeOrderList):
+    queryset = LeadDetail.objects.filter(
+        proposals__invoices__payment_histories__isnull=False
+    ).prefetch_related(*LEAD_FIELDS).distinct()
+
+
 class LeadEventList(CompanyFilterMixin, generics.ListAPIView):
     queryset = LeadDetail.objects.all().prefetch_related('schedule_event_lead_list')
     serializer_class = lead_list.LeadViewEventSerializer
