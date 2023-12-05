@@ -160,9 +160,6 @@ class CatalogSerializer(serializers.ModelSerializer):
         )
         return instance
 
-    def validate_c_table(self, value):
-        return value
-
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if data['parents']:
