@@ -34,7 +34,7 @@ class BuilderView(models.TextChoices):
 
 
 class ReminderType(models.IntegerChoices):
-    NO = 0,
+    NO = 2,
     YES = 1,
 
 

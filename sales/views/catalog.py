@@ -542,7 +542,9 @@ def count_level(header, level_catalog):
         level_catalog: catalog object
     """
     length = len(header)
-    length_level = header.index('cost_table_name')
+    for i, element in enumerate(header):
+        if element == 'name':
+            length_level = i
     parent = None
     levels = []
     for i in range(int(length_level/4)-1):
@@ -611,7 +613,7 @@ def import_catalog(request):
     file = request.FILES['file']
     workbook = load_workbook(file)
     company = request.user.company
-    catalog_sheet = workbook['Catalog']
+    catalog_sheet = workbook[workbook.sheetnames[0]]
     parent = Catalog.objects.get(pk=request.GET['pk_catalog'])
 
     for row in catalog_sheet.iter_rows(min_row=0, max_row=1, values_only=True):
