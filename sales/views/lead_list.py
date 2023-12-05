@@ -376,17 +376,17 @@ def unlink_contact_from_lead(request, pk_lead):
 @permission_classes([permissions.IsAuthenticated])
 def get_summaries(request):
     data = {
-        'closed_job': {'title': 'TOTAL CLOSED JOBS',
-                       'number': 350,
+        'closed_job': {'title': 'Total $ of Proposals Sent & Awaiting Approval',
+                       'number': '$5,000,000',
                        'content': 200},
-        'number_of_job': {'title': 'TOTAL # OF JOBS IN PROGRESS',
-                          'number': 89,
+        'number_of_job': {'title': 'Proposal Win Ratio',
+                          'number': '75%',
                           'content': 200},
-        'closed_ratio': {'title': 'CLOSED RATIO',
-                         'number': 45,
+        'closed_ratio': {'title': '$ of Projects Awarded in Last 90 Days',
+                         'number': '$5,500,000',
                          'content': -200},
-        'dollar_of_job': {'title': 'TOTAL $ OF JOBS IN PROGRESS',
-                          'number': 60090,
+        'dollar_of_job': {'title': 'Total Awarded Projects YTD',
+                          'number': '$15,000,000',
                           'content': 2000},
     }
     if request.method == 'GET':
