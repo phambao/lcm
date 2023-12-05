@@ -269,6 +269,7 @@ class ScheduleEvent(BaseModel):
     end_hour = models.DateTimeField(null=True, blank=True)
     due_days = models.IntegerField(default=None, null=True, blank=True)
     time = models.IntegerField(blank=True, null=True)
+    is_hourly = models.BooleanField(blank=True, default=False)
     is_before = models.BooleanField(default=False, blank=True)
     is_after = models.BooleanField(default=False, blank=True)
     viewing = models.ManyToManyField(get_user_model(), related_name='schedule_event_viewing',
