@@ -353,6 +353,24 @@ def get_materials(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
+def get_all_cost_table(request):
+    """
+    Get cost table from ancestor catalog
+    """
+    filter_query = request.GET.get('catalog', None)
+    if filter_query:
+        c = get_object_or_404(Catalog.objects.all(), pk=filter_query)
+        children = Catalog.objects.filter(
+            pk__in=c.get_all_descendant(have_self=True)
+        )
+    else:
+        children = Catalog.objects.filter(company=get_request().user.company)
+    children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
+    return Response(status=status.HTTP_200_OK, data=children.values('id', 'name', 'c_table'))
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def export_catalog(request, *args, **kwargs):
     workbook = Workbook()
     pk = request.GET.get('pk_catalog', None)
