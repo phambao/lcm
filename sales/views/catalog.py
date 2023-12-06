@@ -15,9 +15,11 @@ from base.utils import file_response
 from ..filters.catalog import CatalogFilter
 from ..models.catalog import Catalog, CatalogLevel, DataPointUnit, DataPoint
 from ..serializers import catalog
-from ..serializers.catalog import CatalogEstimateSerializer, CatalogImportSerializer, DataPointImportSerializer
+from ..serializers.catalog import CatalogEstimateSerializer
 from api.middleware import get_request
 from base.views.base import CompanyFilterMixin
+
+UnitLibrary = apps.get_model(app_label='sales', model_name='UnitLibrary')
 
 
 class CatalogList(CompanyFilterMixin, generics.ListCreateAPIView):
@@ -571,9 +573,6 @@ def count_level(header, level_catalog):
     else:
         c_table_header = header[i*5 + 5:]
     return int(length_level/4), length - length_level, levels, c_table_header
-
-
-UnitLibrary = apps.get_model(app_label='sales', model_name='UnitLibrary')
 
 
 def create_catalog_by_row(row, length_level, company, root, levels, level_header):

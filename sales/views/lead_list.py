@@ -380,7 +380,7 @@ def get_summaries(request):
                        'number': '$5,000,000',
                        'content': 200},
         'number_of_job': {'title': 'Proposal Win Ratio',
-                          'number': '75%',
+                          'number': '80%',
                           'content': 200},
         'closed_ratio': {'title': '$ of Projects Awarded in Last 90 Days',
                          'number': '$5,500,000',
