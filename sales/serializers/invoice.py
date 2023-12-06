@@ -259,6 +259,10 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
                                                        object_id=instance.id)
         attachment_data = AttachmentInvoiceSerializer(attachments, many=True).data
         data['attachments'] = attachment_data
+        data['lead_name'] = ''
+        if instance.proposal:
+            if instance.proposal.lead:
+                data['lead_name'] = instance.proposal.lead.lead_title
         # if instance.link_to_event:
         #     data['link_to_event'] = EventForInvoiceSerializer(instance.link_to_event).data
         return data

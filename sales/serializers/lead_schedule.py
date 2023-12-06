@@ -786,7 +786,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_schedule.ScheduleEvent
         fields = ('id', 'lead_list', 'event_title', 'assigned_user', 'reminder', 'start_day', 'end_day', 'due_days',
-                  'time', 'viewing', 'notes', 'internal_notes', 'sub_notes', 'owner_notes', 'links',
+                  'time', 'viewing', 'notes', 'internal_notes', 'sub_notes', 'owner_notes', 'links', 'is_hourly',
                   'start_hour', 'end_hour', 'is_before', 'is_after', 'predecessor_id', 'type', 'lag_day',
                   'link_to_outside_calendar', 'tags', 'phase_label', 'phase_display_order', 'phase_color',
                   'phase_setting', 'todo', 'daily_log', 'color', 'shift', 'user_create', 'created_date', 'modified_date', 'user_update', 'company')

@@ -179,6 +179,7 @@ class POFormulaToDataEntry(BaseModel):
     group = models.CharField(blank=True, default='', max_length=128)
     material_data_entry_link = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)  # Need delete
     levels = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)  # Next level of data entry
+    is_client_view = models.BooleanField(blank=True, default=False)
 
 
 class MaterialView(BaseModel):
@@ -191,6 +192,7 @@ class MaterialView(BaseModel):
     catalog_materials = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True,
                                    null=True)
     levels = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
+    is_client_view = models.BooleanField(blank=True, default=False)
 
 
 class POFormulaGrouping(BaseModel):
@@ -262,3 +264,4 @@ class DataView(BaseModel):
     index = models.IntegerField(blank=True, default=0, null=True)
     type = models.CharField(max_length=8, choices=Type.choices, default=Type.CUSTOM, blank=True)
     value = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=2, blank=True, default=0)
+    is_client_view = models.BooleanField(blank=True, default=False)

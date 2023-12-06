@@ -123,7 +123,7 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = POFormulaToDataEntry
         fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value',
-                  'copies_from', 'group', 'material_data_entry_link', 'levels')
+                  'copies_from', 'group', 'material_data_entry_link', 'levels', 'is_client_view')
 
     def to_representation(self, instance):
         data = super(POFormulaToDataEntrySerializer, self).to_representation(instance)
@@ -137,7 +137,7 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
                   'dropdown_value': data_entry.get('dropdown_value', ''), 'estimate_template_id': estimate_id,
                   'material_value': data_entry.get('material_value', ''), 'copies_from': data_entry.get('copies_from'),
                   'group': data_entry.get('group', ''), 'material_data_entry_link': data_entry.get('material_data_entry_link'),
-                  'levels': data_entry.get('levels', [])}
+                  'levels': data_entry.get('levels', []), 'is_client_view': data_entry.get('is_client_view', True)}
         try:
             data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
             if data_entry_pk:
@@ -468,7 +468,7 @@ class AssembleSerializer(serializers.ModelSerializer):
 class DataViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataView
-        fields = ('id', 'formula', 'name', 'estimate_template', 'type')
+        fields = ('id', 'formula', 'name', 'estimate_template', 'type', 'is_client_view')
         read_only_fields = ('estimate_template', )
 
     def to_internal_value(self, data):
@@ -481,7 +481,7 @@ class MaterialViewSerializers(serializers.ModelSerializer):
     class Meta:
         model = MaterialView
         fields = ('id', 'name', 'material_value', 'copies_from', 'catalog_materials',
-                  'levels', 'data_entry')
+                  'levels', 'data_entry', 'is_client_view')
 
     def validate_data_entry(self, value):
         if value:

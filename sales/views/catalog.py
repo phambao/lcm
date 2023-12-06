@@ -353,6 +353,24 @@ def get_materials(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
+def get_all_cost_table(request):
+    """
+    Get cost table from ancestor catalog
+    """
+    filter_query = request.GET.get('catalog', None)
+    if filter_query:
+        c = get_object_or_404(Catalog.objects.all(), pk=filter_query)
+        children = Catalog.objects.filter(
+            pk__in=c.get_all_descendant(have_self=True)
+        )
+    else:
+        children = Catalog.objects.filter(company=get_request().user.company)
+    children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
+    return Response(status=status.HTTP_200_OK, data=children.values('id', 'name', 'c_table'))
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def export_catalog(request, *args, **kwargs):
     workbook = Workbook()
     pk = request.GET.get('pk_catalog', None)
@@ -553,7 +571,9 @@ def count_level(header, level_catalog):
         level_catalog: catalog object
     """
     length = len(header)
-    length_level = header.index('cost_table_name')
+    for i, element in enumerate(header):
+        if element == 'name':
+            length_level = i
     parent = None
     levels = []
     for i in range(int(length_level/4)-1):
@@ -622,7 +642,7 @@ def import_catalog(request):
     file = request.FILES['file']
     workbook = load_workbook(file)
     company = request.user.company
-    catalog_sheet = workbook['Catalog']
+    catalog_sheet = workbook[workbook.sheetnames[0]]
     parent = Catalog.objects.get(pk=request.GET['pk_catalog'])
 
     for row in catalog_sheet.iter_rows(min_row=0, max_row=1, values_only=True):
