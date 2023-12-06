@@ -356,20 +356,29 @@ def get_materials(request):
 def export_catalog(request, *args, **kwargs):
     workbook = Workbook()
     pk = request.GET.get('pk_catalog', None)
-    check_catalog = Catalog.objects.get(id=pk)
-    if check_catalog.is_ancestor:
-        child_catalogs = Catalog.objects.filter(parents=pk)
-        for data_catalog in child_catalogs:
-            handle_export(data_catalog.id, workbook)
+
+    if pk is None:
+        data_catalog = Catalog.objects.filter(is_ancestor=True, parents=None, company=request.user.company)
+        for catalog in data_catalog:
+            child_catalogs = Catalog.objects.filter(parents=catalog.id)
+            for data_catalog in child_catalogs:
+                handle_export(data_catalog.id, workbook, catalog.name)
 
     else:
-        handle_export(pk, workbook)
+        check_catalog = Catalog.objects.get(id=pk)
+        if check_catalog.is_ancestor:
+            child_catalogs = Catalog.objects.filter(parents=pk)
+            for data_catalog in child_catalogs:
+                handle_export(data_catalog.id, workbook, '')
+
+        else:
+            handle_export(pk, workbook, '')
 
     workbook.save("output.xlsx")
     return file_response(workbook=workbook, title='catalog')
 
 
-def handle_export(pk, workbook):
+def handle_export(pk, workbook, sheet_name):
     root_catalogs = Catalog.objects.filter(id=pk)
     all_paths = []
     name = root_catalogs.first().name
@@ -424,7 +433,9 @@ def handle_export(pk, workbook):
 
     # handle write headers all catalog and cost table
     # workbook = Workbook()
-    catalog_sheet = workbook.create_sheet(title=name)
+    data_sheet_name = sheet_name + name
+    data_sheet_name = data_sheet_name.replace("/", "-")
+    catalog_sheet = workbook.create_sheet(title=data_sheet_name)
     headers = []
     for i in range(1, len(level) + 1):
         data_level = level[i - 1]
