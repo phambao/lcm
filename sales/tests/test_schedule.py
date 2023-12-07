@@ -123,7 +123,7 @@ class LeadScheduleTests(BaseTest):
                     "first_name": "string"
                 }
             ],
-            "reminder": 0,
+            "reminder": 1,
             "start_day": "2023-02-28T03:59:33.683Z",
             "end_day": "2023-02-28T03:59:33.683Z",
             "due_days": 2,
