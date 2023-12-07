@@ -143,6 +143,8 @@ class Catalog(BaseModel):
         Ancestor level will be the first and descendant will be the last
         """
         levels = self.all_levels.all()
+        if not levels:
+            return []
         ancester = levels.get(parent=None)
         return ancester.get_ordered_descendant()
 

@@ -387,7 +387,7 @@ def export_catalog(request, *args, **kwargs):
         if check_catalog.is_ancestor:
             child_catalogs = Catalog.objects.filter(parents=pk)
             for data_catalog in child_catalogs:
-                handle_export(data_catalog.id, workbook, '')
+                handle_export(data_catalog.id, workbook, check_catalog.name)
 
         else:
             handle_export(pk, workbook, '')
@@ -451,7 +451,7 @@ def handle_export(pk, workbook, sheet_name):
 
     # handle write headers all catalog and cost table
     # workbook = Workbook()
-    data_sheet_name = sheet_name + name
+    data_sheet_name = sheet_name + '-' + name
     data_sheet_name = data_sheet_name.replace("/", "-")
     catalog_sheet = workbook.create_sheet(title=data_sheet_name)
     headers = []
@@ -472,53 +472,56 @@ def handle_export(pk, workbook, sheet_name):
     catalog_sheet.append(headers)
 
     # write all data into excel
-    for path in result_paths:
-        number = len(level) * 5
-        row = [""] * (number + len(all_key))
-        for idx, data in enumerate(path):
-            # write catalog data
-            if isinstance(data, int):
-                data_catalog = Catalog.objects.get(id=data)
-                if idx == 0:
-                    row[idx] = data_catalog.name
-                    row[idx + 1] = data_catalog.name
-                else:
-                    row[idx * 5] = data_catalog.name
-                    row[idx * 5 + 1] = data_catalog.icon
-
-            elif isinstance(data, list):
-                if idx == 0:
-                    row[idx] = data[0]
-                    row[idx + 1] = data[1]
-                    row[idx + 2] = data[2]
-                    row[idx + 3] = data[3]
-                    row[idx + 4] = data[4]
-                else:
-                    row[idx * 5] = data[0]
-                    row[idx * 5 + 1] = data[1]
-                    row[idx * 5 + 2] = data[2]
-                    row[idx * 5 + 3] = data[3]
-                    row[idx * 5 + 4] = data[4]
-            # write cost table
-            elif isinstance(data, dict):
-                temp_len = len(headers) - number
-                temp_length = headers[-temp_len:]
-                for index, header in enumerate(temp_length, number):
-                    if header in data:
-                        row[index] = data[header]
+    if len(level) > 0:
+        for path in result_paths:
+            number = len(level) * 5
+            row = [""] * (number + len(all_key))
+            for idx, data in enumerate(path):
+                # write catalog data
+                if isinstance(data, int):
+                    data_catalog = Catalog.objects.get(id=data)
+                    if idx == 0:
+                        row[idx] = data_catalog.name
+                        row[idx + 1] = data_catalog.icon
                     else:
-                        row[index] = ""
-            # write catalog not data point
-            else:
-                if idx == 0:
-                    row[idx] = data
+                        row[idx * 5] = data_catalog.name
+                        row[idx * 5 + 1] = data_catalog.icon
+
+                elif isinstance(data, list):
+                    if idx == 0:
+                        row[idx] = data[0]
+                        row[idx + 1] = data[1]
+                        row[idx + 2] = data[2]
+                        row[idx + 3] = data[3]
+                        row[idx + 4] = data[4]
+                    else:
+                        row[idx * 5] = data[0]
+                        row[idx * 5 + 1] = data[1]
+                        row[idx * 5 + 2] = data[2]
+                        row[idx * 5 + 3] = data[3]
+                        row[idx * 5 + 4] = data[4]
+                # write cost table
+                elif isinstance(data, dict):
+                    temp_len = len(headers) - number
+                    temp_length = headers[-temp_len:]
+                    for index, header in enumerate(temp_length, number):
+                        if header in data:
+                            row[index] = data[header]
+                        else:
+                            row[index] = ""
+                # write catalog not data point
                 else:
-                    row[idx * 5] = data
-        catalog_sheet.append(row)
+                    if idx == 0:
+                        row[idx] = data
+                    else:
+                        row[idx * 5] = data
+            catalog_sheet.append(row)
 
 
 def generate_paths(categories, current_path, result):
-    if isinstance(categories[0][0], dict):
+    if categories == []:
+        current_category = categories
+    elif isinstance(categories[0][0], dict):
         current_category = categories[0]
 
     elif isinstance(categories[0][0], list):
@@ -561,7 +564,8 @@ def find_all_paths(node, current_path, all_paths):
         for child in node.children.all():
             find_all_paths(child, list(current_path), all_paths)
 
-    current_path.pop()
+    if len(current_path) > 1:
+        current_path.pop()
 
 
 def count_level(header, level_catalog):
