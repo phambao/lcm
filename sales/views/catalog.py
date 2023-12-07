@@ -631,7 +631,14 @@ def import_catalog(request):
     workbook = load_workbook(file)
     company = request.user.company
     catalog_sheet = workbook[workbook.sheetnames[0]]
-    parent = Catalog.objects.get(pk=request.GET['pk_catalog'])
+    pk_catalog = request.GET['pk_catalog']
+    parent = None
+    if pk_catalog:
+        parent = Catalog.objects.get(pk=pk_catalog)
+
+        # Validate file excel
+        if parent.all_levels.all().exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={'message': 'The catalog has already have data'})
 
     for row in catalog_sheet.iter_rows(min_row=0, max_row=1, values_only=True):
         header = row
