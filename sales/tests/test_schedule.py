@@ -106,7 +106,6 @@ class LeadScheduleTests(BaseTest):
             schedule_daily_log_data,
             format='json',
             HTTP_AUTHORIZATION=self.token)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.daily_log = response.data['id']
 
@@ -124,7 +123,7 @@ class LeadScheduleTests(BaseTest):
                     "first_name": "string"
                 }
             ],
-            "reminder": 0,
+            "reminder": 1,
             "start_day": "2023-02-28T03:59:33.683Z",
             "end_day": "2023-02-28T03:59:33.683Z",
             "due_days": 2,
@@ -149,6 +148,7 @@ class LeadScheduleTests(BaseTest):
             "end_hour": "2023-02-28T03:59:33.683Z",
             "is_before": True,
             "is_after": True,
+            "is_hourly": True,
             "type": "finish_to_start",
             "lag_day": 1,
             "link_to_outside_calendar": True,
