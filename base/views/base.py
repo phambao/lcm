@@ -263,21 +263,20 @@ def update_question_answer_company(request, *args, **kwargs):
 @api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated])
 def config_view(request, model):
+    try:
+        config = Config.objects.get(user=request.user, content_type__model__exact=model)
+    except Config.DoesNotExist:
+        content_type = ContentType.objects.get(model=model)
+        settings = {}
+        if model == 'leaddetail':
+            settings = {"search": None,
+                        "column": []}
+        config = Config.objects.create(user=request.user, content_type=content_type, settings=settings)
     if request.method == 'GET':
-        try:
-            config = Config.objects.get(user=request.user, content_type__model__exact=model)
-        except Config.DoesNotExist:
-            content_type = ContentType.objects.get(model=model)
-            settings = {}
-            if model == 'leaddetail':
-                settings = {"search": None,
-                            "column": []}
-            config = Config.objects.create(user=request.user, content_type=content_type, settings=settings)
         serializer = ConfigSerializer(config)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
     if request.method == 'PUT':
-        config = Config.objects.get(user=request.user, content_type__model__exact=model)
         config.settings = request.data['settings']
         config.save()
         config.refresh_from_db()
