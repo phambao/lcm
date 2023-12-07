@@ -149,6 +149,7 @@ class LeadScheduleTests(BaseTest):
             "end_hour": "2023-02-28T03:59:33.683Z",
             "is_before": True,
             "is_after": True,
+            "is_hourly": True,
             "type": "finish_to_start",
             "lag_day": 1,
             "link_to_outside_calendar": True,
