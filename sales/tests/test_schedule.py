@@ -167,8 +167,6 @@ class LeadScheduleTests(BaseTest):
             format='json',
             HTTP_AUTHORIZATION=self.token)
 
-        print('***************')
-        print(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.event_id = response.data['id']
 
