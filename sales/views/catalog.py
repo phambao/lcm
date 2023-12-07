@@ -582,12 +582,12 @@ def count_level(header, level_catalog):
             length_level = i
     parent = None
     levels = []
-    for i in range(int(length_level/4)-1):
+    for i in range(int(length_level/5)):
         parent = CatalogLevel.objects.create(name=header[i*5], parent=parent, catalog=level_catalog)
         levels.append(parent)
     else:
         c_table_header = header[i*5 + 5:]
-    return int(length_level/4), length - length_level, levels, c_table_header
+    return int(length_level/5), length - length_level, levels, c_table_header
 
 
 def create_catalog_by_row(row, length_level, company, root, levels, level_header):
@@ -601,7 +601,7 @@ def create_catalog_by_row(row, length_level, company, root, levels, level_header
     """
     unit = None
     parent = root
-    for i in range(length_level-1):
+    for i in range(length_level):
         name = row[i*5]
         if not name:
             continue
