@@ -94,6 +94,8 @@ url_catalog = [
     path('list/<int:pk>/copy/', catalog.duplicate_catalogs),
     path('list/materials/', catalog.get_materials),
     path('list/cost-table/', catalog.get_all_cost_table),
+    path('cost-table-template/', catalog.CostTableTemplateListView.as_view()),
+    path('cost-table-template/<int:pk>/', catalog.CostTableTemplateDetailView.as_view()),
     path('list/<int:pk>/copy-tree/', catalog.duplicate_catalogs_on_tree),
     path('list/delete/', catalog.delete_catalogs),
     path('list/<int:pk_catalog>/levels/', catalog.CatalogLevelList.as_view()),

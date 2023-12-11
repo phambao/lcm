@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from base.permissions import CatalogPermissions
 from base.utils import file_response
 from ..filters.catalog import CatalogFilter
-from ..models.catalog import Catalog, CatalogLevel, DataPointUnit, DataPoint
+from ..models.catalog import Catalog, CatalogLevel, DataPointUnit, DataPoint, CostTableTemplate
 from ..serializers import catalog
 from ..serializers.catalog import CatalogEstimateSerializer
 from api.middleware import get_request
@@ -92,6 +92,20 @@ class DataPointUnitDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = catalog.DataPointUnitSerializer
     permission_classes = [permissions.IsAuthenticated & CatalogPermissions]
     queryset = DataPointUnit.objects.all()
+
+
+class CostTableTemplateListView(CompanyFilterMixin, generics.ListCreateAPIView):
+    serializer_class = catalog.CostTableTemplateSerializer
+    permission_classes = [permissions.IsAuthenticated & CatalogPermissions]
+    queryset = CostTableTemplate.objects.all()
+    filter_backends = (rf_filters.SearchFilter,)
+    search_fields = ('name',)
+
+
+class CostTableTemplateDetailView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = catalog.CostTableTemplateSerializer
+    permission_classes = [permissions.IsAuthenticated & CatalogPermissions]
+    queryset = CostTableTemplate.objects.all()
 
 
 @api_view(['GET'])

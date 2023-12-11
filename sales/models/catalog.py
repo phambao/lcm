@@ -241,3 +241,8 @@ class Catalog(BaseModel):
                 d[1] = new_name
                 have_changed = True
         return c_table, have_changed
+
+
+class CostTableTemplate(BaseModel):
+    name = models.CharField(max_length=256, blank=True)
+    c_table = models.JSONField(default=dict, blank=True)  # {"header": [col1, col2], "data": [[col2, col2],]}
