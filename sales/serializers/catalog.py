@@ -227,3 +227,10 @@ class CatalogImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Catalog
         fields = ('id', 'name', 'icon')
+
+
+class CostTableTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = catalog.CostTableTemplate
+        fields = '__all__'
+        read_only_fields = ('user_create', 'modified_date', 'created_date', 'user_update', 'company')
