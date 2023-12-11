@@ -271,9 +271,9 @@ url_proposal = [
 ]
 
 url_change_order = [
-    path('', change_order.ChangeOderList.as_view()),
+    path('', change_order.ChangeOderList.as_view(), name='list-change-order'),
     path('compact/', change_order.ChangeOderListCompact.as_view()),
-    path('<int:pk>/', change_order.ChangeOderDetail.as_view()),
+    path('<int:pk>/', change_order.ChangeOderDetail.as_view(), name='detail-change-order'),
     path('<int:pk>/items/', change_order.get_items)
 ]
 
