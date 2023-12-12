@@ -466,10 +466,22 @@ class AssembleSerializer(serializers.ModelSerializer):
 
 
 class DataViewSerializer(serializers.ModelSerializer):
+    unit = UnitLibrarySerializer(required=False, allow_null=True)
     class Meta:
         model = DataView
-        fields = ('id', 'formula', 'name', 'estimate_template', 'type', 'is_client_view')
+        fields = ('id', 'formula', 'name', 'estimate_template', 'type', 'is_client_view', 'unit', 'result')
         read_only_fields = ('estimate_template', )
+
+    def create(self, validated_data):
+        unit = pop(validated_data, 'unit', {})
+        if unit:
+            try:
+                unit = UnitLibrary.objects.get(name=unit.get('name'), company=self.context['request'].user.company)
+            except UnitLibrary.DoesNotExist:
+                unit = None
+            validated_data['unit'] = unit
+
+        return super().create(validated_data)
 
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
@@ -583,7 +595,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
     def create_data_view(self, data_views, instance):
         for data_view in data_views:
             data_view['estimate_template'] = instance.pk
-            serializer = DataViewSerializer(data=data_view)
+            serializer = DataViewSerializer(data=data_view, context=self.context)
             serializer.is_valid(raise_exception=True)
             serializer.save(estimate_template_id=instance.pk)
 
