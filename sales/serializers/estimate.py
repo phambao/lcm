@@ -342,6 +342,7 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
     class Meta:
         model = UnitLibrary
         fields = ('id', 'name', 'description', 'created_date', 'modified_date', 'user_create', 'user_update')
+        read_only_fields = ('created_date', 'modified_date', 'user_create', 'user_update')
 
     def create(self, validated_data):
         try:
