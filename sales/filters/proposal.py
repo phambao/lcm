@@ -18,8 +18,10 @@ class ProposalWritingFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
     created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
     modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
-    total_project_cost = filters.NumberFilter(field_name='total_project_cost', lookup_expr='gt')
-    avg_markup = filters.NumberFilter(field_name='avg_markup', lookup_expr='gt')
+    total_project_cost_min = filters.NumberFilter(field_name='total_project_cost', lookup_expr='gte')
+    total_project_cost_max = filters.NumberFilter(field_name='total_project_cost', lookup_expr='lte')
+    avg_markup_min = filters.NumberFilter(field_name='avg_markup', lookup_expr='gte')
+    avg_markup_max = filters.NumberFilter(field_name='avg_markup', lookup_expr='lte')
     lead = filters.ModelChoiceFilter(queryset=LeadDetail.objects.all())
 
     class Meta:
