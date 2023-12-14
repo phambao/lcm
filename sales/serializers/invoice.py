@@ -313,7 +313,7 @@ class CreditMemoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CreditMemo
-        fields = ('id', 'name', 'description', 'credit_memo_amounts', 'attachments')
+        fields = ('id', 'name', 'description', 'credit_memo_amounts', 'attachments', 'invoice')
 
     def create_attachment(self, instance, attachments):
         for attachment in attachments:

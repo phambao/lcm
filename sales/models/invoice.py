@@ -134,6 +134,8 @@ class CreditMemoAmount(BaseModel):
 class CreditMemo(BaseModel):
     name = models.CharField(max_length=64)
     description = models.TextField(blank=True, default='')
+    invoice = models.ForeignKey('sales.Invoice', blank=True, null=True,
+                                on_delete=models.CASCADE, related_name='credit_memos')
 
 
 class AttachmentInvoice(BaseModel):
