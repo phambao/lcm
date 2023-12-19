@@ -11,6 +11,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from base.permissions import CatalogPermissions
+from base.tasks import process_export_catalog
 from base.utils import file_response
 from ..filters.catalog import CatalogFilter
 from ..models.catalog import Catalog, CatalogLevel, DataPointUnit, DataPoint, CostTableTemplate
@@ -388,28 +389,32 @@ def get_all_cost_table(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def export_catalog(request, *args, **kwargs):
-    workbook = Workbook()
+
     pk = request.GET.get('pk_catalog', None)
-
-    if pk is None:
-        data_catalog = Catalog.objects.filter(is_ancestor=True, parents=None, company=request.user.company)
-        for catalog in data_catalog:
-            child_catalogs = Catalog.objects.filter(parents=catalog.id)
-            for data_catalog in child_catalogs:
-                handle_export(data_catalog.id, workbook, catalog.name)
-
-    else:
-        check_catalog = Catalog.objects.get(id=pk)
-        if check_catalog.is_ancestor:
-            child_catalogs = Catalog.objects.filter(parents=pk)
-            for data_catalog in child_catalogs:
-                handle_export(data_catalog.id, workbook, check_catalog.name)
-
-        else:
-            handle_export(pk, workbook, '')
-
-    workbook.save("output.xlsx")
-    return file_response(workbook=workbook, title='catalog')
+    company = request.user.company.id
+    user = request.user.id
+    rs = process_export_catalog.delay(pk, company, user)
+    task_id = rs.id
+    return Response(status=status.HTTP_200_OK, data=task_id)
+    # if pk is None:
+    #     data_catalog = Catalog.objects.filter(is_ancestor=True, parents=None, company=request.user.company)
+    #     for catalog in data_catalog:
+    #         child_catalogs = Catalog.objects.filter(parents=catalog.id)
+    #         for data_catalog in child_catalogs:
+    #             handle_export(data_catalog.id, workbook, catalog.name)
+    #
+    # else:
+    #     check_catalog = Catalog.objects.get(id=pk)
+    #     if check_catalog.is_ancestor:
+    #         child_catalogs = Catalog.objects.filter(parents=pk)
+    #         for data_catalog in child_catalogs:
+    #             handle_export(data_catalog.id, workbook, check_catalog.name)
+    #
+    #     else:
+    #         handle_export(pk, workbook, '')
+    #
+    # workbook.save("output.xlsx")
+    # return file_response(workbook=workbook, title='catalog')
 
 
 def handle_export(pk, workbook, sheet_name):
