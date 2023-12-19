@@ -400,13 +400,15 @@ def export_catalog(request, *args, **kwargs):
 
     else:
         check_catalog = Catalog.objects.get(id=pk)
+
         if check_catalog.is_ancestor:
             child_catalogs = Catalog.objects.filter(parents=pk)
             for data_catalog in child_catalogs:
                 handle_export(data_catalog.id, workbook, check_catalog.name)
 
         else:
-            handle_export(pk, workbook, '')
+            data_parent_catalog = check_catalog.parents.first()
+            handle_export(pk, workbook, data_parent_catalog.name)
 
     workbook.save("output.xlsx")
     return file_response(workbook=workbook, title='catalog')
@@ -469,6 +471,7 @@ def handle_export(pk, workbook, sheet_name):
     # workbook = Workbook()
     data_sheet_name = sheet_name + '-' + name
     data_sheet_name = data_sheet_name.replace("/", "-")
+    data_sheet_name = data_sheet_name[:31]
     catalog_sheet = workbook.create_sheet(title=data_sheet_name)
     headers = []
     for i in range(1, len(level) + 1):
