@@ -389,32 +389,30 @@ def get_all_cost_table(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def export_catalog(request, *args, **kwargs):
-
+    workbook = Workbook()
     pk = request.GET.get('pk_catalog', None)
-    company = request.user.company.id
-    user = request.user.id
-    rs = process_export_catalog.delay(pk, company, user)
-    task_id = rs.id
-    return Response(status=status.HTTP_200_OK, data=task_id)
-    # if pk is None:
-    #     data_catalog = Catalog.objects.filter(is_ancestor=True, parents=None, company=request.user.company)
-    #     for catalog in data_catalog:
-    #         child_catalogs = Catalog.objects.filter(parents=catalog.id)
-    #         for data_catalog in child_catalogs:
-    #             handle_export(data_catalog.id, workbook, catalog.name)
-    #
-    # else:
-    #     check_catalog = Catalog.objects.get(id=pk)
-    #     if check_catalog.is_ancestor:
-    #         child_catalogs = Catalog.objects.filter(parents=pk)
-    #         for data_catalog in child_catalogs:
-    #             handle_export(data_catalog.id, workbook, check_catalog.name)
-    #
-    #     else:
-    #         handle_export(pk, workbook, '')
-    #
-    # workbook.save("output.xlsx")
-    # return file_response(workbook=workbook, title='catalog')
+
+    if pk is None:
+        data_catalog = Catalog.objects.filter(is_ancestor=True, parents=None, company=request.user.company)
+        for catalog in data_catalog:
+            child_catalogs = Catalog.objects.filter(parents=catalog.id)
+            for data_catalog in child_catalogs:
+                handle_export(data_catalog.id, workbook, catalog.name)
+
+    else:
+        check_catalog = Catalog.objects.get(id=pk)
+
+        if check_catalog.is_ancestor:
+            child_catalogs = Catalog.objects.filter(parents=pk)
+            for data_catalog in child_catalogs:
+                handle_export(data_catalog.id, workbook, check_catalog.name)
+
+        else:
+            data_parent_catalog = check_catalog.parents.first()
+            handle_export(pk, workbook, data_parent_catalog.name)
+
+    workbook.save("output.xlsx")
+    return file_response(workbook=workbook, title='catalog')
 
 
 def handle_export(pk, workbook, sheet_name):
@@ -474,6 +472,7 @@ def handle_export(pk, workbook, sheet_name):
     # workbook = Workbook()
     data_sheet_name = sheet_name + '-' + name
     data_sheet_name = data_sheet_name.replace("/", "-")
+    data_sheet_name = data_sheet_name[:31]
     catalog_sheet = workbook.create_sheet(title=data_sheet_name)
     headers = []
     for i in range(1, len(level) + 1):
@@ -596,17 +595,27 @@ def count_level(header, level_catalog):
         level_catalog: catalog object
     """
     length = len(header)
+    length_level = 0
     for i, element in enumerate(header):
         if element == 'name':
             length_level = i
     parent = None
     levels = []
-    for i in range(int(length_level/5)):
-        parent = CatalogLevel.objects.create(name=header[i*5], parent=parent, catalog=level_catalog)
-        levels.append(parent)
+    level_column_number = int(length_level/5)
+    level_query = level_catalog.all_levels.all()
+
+    if level_query.count() == level_column_number:
+        levels = level_catalog.get_ordered_levels()
+        c_table_header = header[level_column_number:]
+    elif not level_query.count():
+        for i in range(level_column_number):
+            parent = CatalogLevel.objects.create(name=header[i*5], parent=parent, catalog=level_catalog)
+            levels.append(parent)
+        else:
+            c_table_header = header[i*5 + 5:]
     else:
-        c_table_header = header[i*5 + 5:]
-    return int(length_level/5), length - length_level, levels, c_table_header
+        return
+    return level_column_number, length - length_level, levels, c_table_header
 
 
 def create_catalog_by_row(row, length_level, company, root, levels, level_header):
@@ -664,26 +673,38 @@ def import_catalog(request):
     file = request.FILES['file']
     workbook = load_workbook(file)
     company = request.user.company
-    catalog_sheet = workbook[workbook.sheetnames[0]]
-    pk_catalog = request.GET['pk_catalog']
-    parent = None
-    if pk_catalog:
-        parent = Catalog.objects.get(pk=pk_catalog)
+    pk_catalog = request.GET.get('pk_catalog')
+    if pk_catalog and len(workbook.sheetnames) >= 2:
+        return Response(status=status.HTTP_400_BAD_REQUEST,
+                        data=f'Number of catalog is only 1, recieved {len(workbook.sheetnames)}')
 
-        # Validate file excel
-        if parent.all_levels.all().exists():
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={'message': 'The catalog has already have data'})
+    for idx, sheetname in enumerate(workbook.sheetnames):
+        catalog_sheet = workbook[sheetname]
+        parent = None
+        if not pk_catalog:
+            ancestor_name, parent_name = sheetname.split('-', 1)
+            ancestor = Catalog.objects.get_or_create(name=ancestor_name, company=company, is_ancestor=True)[0]
+            try:
+                parent = ancestor.children.get(name=parent_name)
+            except Catalog.DoesNotExist:
+                parent = Catalog.objects.create(name=parent_name, company=company)
+                parent.parents.add(ancestor)
+            except Catalog.MultipleObjectsReturned:
+                parent = ancestor.children.filter(name=parent_name).first()
 
-    for row in catalog_sheet.iter_rows(min_row=0, max_row=1, values_only=True):
-        header = row
-    length_level, length_cost_table, levels, c_table_header = count_level(header, parent)
-    c_table_header = ['name', 'unit', 'cost', *c_table_header[3:]]
+        else:
+            parent = Catalog.objects.get(pk=pk_catalog)
 
-    unit = set()
-    for row in catalog_sheet.iter_rows(min_row=2, values_only=True):
-        unit.add(create_catalog_by_row(row, length_level, company, parent, levels, c_table_header))
+        for row in catalog_sheet.iter_rows(min_row=0, max_row=1, values_only=True):
+            header = row
+        length_level, length_cost_table, levels, c_table_header = count_level(header, parent)
+        c_table_header = ['name', 'unit', 'cost', *c_table_header[3:]]
 
-    unit_library = set(UnitLibrary.objects.filter(company=company).values_list('name', flat=True))
-    UnitLibrary.objects.bulk_create([UnitLibrary(name=i, company=company) for i in unit.difference(unit_library) if i])
+        unit = set()
+        for row in catalog_sheet.iter_rows(min_row=2, values_only=True):
+            unit.add(create_catalog_by_row(row, length_level, company, parent, levels, c_table_header))
+
+        unit_library = set(UnitLibrary.objects.filter(company=company).values_list('name', flat=True))
+        UnitLibrary.objects.bulk_create([UnitLibrary(name=i, company=company) for i in unit.difference(unit_library) if i])
 
     return Response(status=status.HTTP_200_OK)
