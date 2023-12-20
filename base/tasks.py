@@ -1,5 +1,4 @@
 from celery import shared_task
-from celery.result import AsyncResult
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.mail import send_mail
@@ -13,11 +12,14 @@ from base.utils import str_to_class
 from sales.models import Catalog
 from openpyxl.workbook import Workbook
 from io import BytesIO
+from celery import current_task
+from datetime import datetime
+
 
 @shared_task()
 def process_export_catalog(pk, company, user_id):
     workbook = Workbook()
-    task_id = process_export_catalog.request.id
+    task_id = current_task.request.id
     if pk is None:
         data_catalog = Catalog.objects.filter(is_ancestor=True, parents=None, company=company)
         for catalog in data_catalog:
@@ -39,25 +41,21 @@ def process_export_catalog(pk, company, user_id):
     workbook.save(bytes_io)
     bytes_io.seek(0)
 
-    # Tạo một đối tượng ContentFile từ nội dung của BytesIO
     content = ContentFile(bytes_io.read())
     content.seek(0)
 
-    # Tạo một đối tượng FileBuilder365 và lưu file Excel
     attachment = FileBuilder365()
     user = get_user_model().objects.get(pk=user_id)
     request = HttpRequest()
     request.user = user
     set_request(request)
-    attachment.file.save('truongabc.xlsx', content)
+
+    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"catalog_{current_datetime}.xlsx"
+    attachment.file.save(filename, content)
     attachment.size = content.size
-    attachment.name = task_id
-
-
-
-
-    # attachment.user_create = user
-    # attachment.user_update = user
+    attachment.name = filename
+    attachment.task_id = task_id
     attachment.save()
 
 

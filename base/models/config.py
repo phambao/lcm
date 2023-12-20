@@ -51,6 +51,7 @@ class FileBuilder365(BaseModel):
     file = models.FileField(upload_to='%Y/%m/%d/')
     name = models.CharField(blank=True, max_length=128)
     size = models.IntegerField(null=True, blank=True)
+    task_id = models.CharField(max_length=128, blank=True)
 
 
 class Type(models.TextChoices):

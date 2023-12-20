@@ -1,3 +1,4 @@
+from celery.result import AsyncResult
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Value
@@ -9,7 +10,10 @@ from openpyxl.workbook import Workbook
 from rest_framework import generics, permissions, status, filters as rf_filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from storages.backends.s3boto3 import S3Boto3Storage
 
+from base.constants import URL_CLOUD
+from base.models.config import FileBuilder365
 from base.permissions import CatalogPermissions
 from base.tasks import process_export_catalog
 from base.utils import file_response
@@ -384,6 +388,49 @@ def get_all_cost_table(request):
         children = Catalog.objects.filter(company=get_request().user.company)
     children = children.difference(Catalog.objects.filter(c_table=Value('{}')))
     return Response(status=status.HTTP_200_OK, data=children.values('id', 'name', 'c_table'))
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
+def download_file_export_catalog(request, *args, **kwargs):
+    url = request.GET.get('url', None)
+    prefix_to_remove = URL_CLOUD
+    result = url.replace(prefix_to_remove, "")
+    data = FileBuilder365.objects.get(file=result)
+    data.delete()
+    storage = S3Boto3Storage()
+    storage.delete(result)
+    return Response(status=status.HTTP_200_OK, data={"url": url})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
+def get_file_export_catalog(request, *args, **kwargs):
+    task_id = request.GET.get('task_id', None)
+    data_attachment = FileBuilder365.objects.filter(task_id=task_id).first()
+    url = data_attachment.file.url
+    return Response(status=status.HTTP_200_OK, data={"url": url})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
+def get_status_process(request, *args, **kwargs):
+    task_id = request.GET.get('task_id', None)
+    result = AsyncResult(task_id)
+
+    return Response(status=status.HTTP_200_OK, data={"status": result.status})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
+def export_catalog_ver2(request, *args, **kwargs):
+    company_id = request.user.company.id
+    user_id = request.user.id
+    pk = request.GET.get('pk_catalog', None)
+    process_export = process_export_catalog.delay(pk, company_id, user_id)
+    task_id = process_export.id
+
+    return Response(status=status.HTTP_200_OK, data={"task_id": task_id})
 
 
 @api_view(['GET'])
