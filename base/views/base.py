@@ -19,7 +19,7 @@ from storages.backends.s3boto3 import S3Boto3Storage
 from api.middleware import get_request
 from api.serializers.base import ActivityLogSerializer
 from sales.models import LeadDetail, Priority, Type, Contact, PhoneOfContact, Activities, DataPoint, BuilderView, \
-    DataType, DataView, TableInvoice, PaymentHistory, Invoice
+    DataType, DataView, TableInvoice, PaymentHistory, Invoice, Day, HolidayType
 
 from ..constants import URL_CLOUD
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter
@@ -418,11 +418,11 @@ def get_data_config(request, *args, **kwargs):
     data_as_dict = dict()
     arr = [('lead_status', ld.Status.choices), ('lead_proposal_status', ld.ProposalStatus.choices),
            ('lead_contact_gender', Contact.Gender.choices), ('lead_phone_type', PhoneOfContact.PhoneType.choices),
-           ('lead_activities_status', Activities.Status.choices), ('catalog_datapoint_unit', DataPoint.Unit.choices),
+           ('lead_activities_status', Activities.Status.choices),
            ('schedule_priority', Priority.choices), ('schedule_event_type', Type.choices), ('schedule_build_view', BuilderView.choices),
            ('schedule_data_type', DataType.choices), ('estimate_data_view_type', DataView.Type.choices), ('invoice_table_type', TableInvoice.TableTypeInvoice.choices),
            ('invoice_payment_status', PaymentHistory.PaymentStatus.choices), ('invoice_status', Invoice.InvoiceStatus.choices),
-           ('setting_invoice_type', InvoiceApproveType.choices)
+           ('setting_invoice_type', InvoiceApproveType.choices), ('day', Day.choices), ('holiday_type', HolidayType.choices)
            ]
     for data in arr:
         data_as_dict[data[0]] = [{'id': item[0], 'name': item[1]} for item in data[1]]
