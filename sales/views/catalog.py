@@ -392,8 +392,7 @@ def get_all_cost_table(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
-def download_file_export_catalog(request, *args, **kwargs):
-    url = request.GET.get('url', None)
+def download_file_export_catalog(request, url, *args, **kwargs):
     prefix_to_remove = URL_CLOUD
     result = url.replace(prefix_to_remove, "")
     data = FileBuilder365.objects.get(file=result)
@@ -405,8 +404,7 @@ def download_file_export_catalog(request, *args, **kwargs):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
-def get_file_export_catalog(request, *args, **kwargs):
-    task_id = request.GET.get('task_id', None)
+def get_file_export_catalog(request, task_id, *args, **kwargs):
     data_attachment = FileBuilder365.objects.filter(task_id=task_id).first()
     url = data_attachment.file.url
     return Response(status=status.HTTP_200_OK, data={"url": url})
@@ -414,8 +412,7 @@ def get_file_export_catalog(request, *args, **kwargs):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
-def get_status_process(request, *args, **kwargs):
-    task_id = request.GET.get('task_id', None)
+def get_status_process(request, task_id,  *args, **kwargs):
     result = AsyncResult(task_id)
 
     return Response(status=status.HTTP_200_OK, data={"status": result.status})

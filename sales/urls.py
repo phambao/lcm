@@ -82,10 +82,11 @@ url_leads = [
 # Define Path for Catalog -------------------------------------------------------
 url_catalog = [
     path('list/', catalog.CatalogList.as_view(), name='catalogs'),
-    path('list/download-file-export/', catalog.download_file_export_catalog),
-    path('list/file-export/', catalog.get_file_export_catalog),
-    path('list/process-export/', catalog.get_status_process),
-    path('list/export/', catalog.export_catalog_ver2),
+    path('list/download-file-export/<str:url>/', catalog.download_file_export_catalog),
+    path('list/file-export/<str:task_id>/', catalog.get_file_export_catalog),
+    path('list/process-export/<str:task_id>/', catalog.get_status_process),
+    path('list/export-v2/', catalog.export_catalog_ver2),
+    path('list/export/', catalog.export_catalog),
     path('list/import/', catalog.import_catalog),
     path('list/<int:pk>/', catalog.CatalogDetail.as_view()),
     path('list/<int:pk>/data-points/', catalog.get_datapoint_by_catalog),
