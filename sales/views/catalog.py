@@ -661,7 +661,7 @@ def count_level(header, level_catalog):
         else:
             c_table_header = header[i*5 + 5:]
     else:
-        return
+        return None, None, None, None
     return level_column_number, length - length_level, levels, c_table_header
 
 
@@ -720,27 +720,19 @@ def import_catalog(request):
     file = request.FILES['file']
     workbook = load_workbook(file)
     company = request.user.company
-    pk_catalog = request.GET.get('pk_catalog')
-    if pk_catalog and len(workbook.sheetnames) >= 2:
-        return Response(status=status.HTTP_400_BAD_REQUEST,
-                        data=f'Number of catalog is only 1, recieved {len(workbook.sheetnames)}')
 
     for idx, sheetname in enumerate(workbook.sheetnames):
         catalog_sheet = workbook[sheetname]
         parent = None
-        if not pk_catalog:
-            ancestor_name, parent_name = sheetname.split('-', 1)
-            ancestor = Catalog.objects.get_or_create(name=ancestor_name, company=company, is_ancestor=True)[0]
-            try:
-                parent = ancestor.children.get(name=parent_name)
-            except Catalog.DoesNotExist:
-                parent = Catalog.objects.create(name=parent_name, company=company)
-                parent.parents.add(ancestor)
-            except Catalog.MultipleObjectsReturned:
-                parent = ancestor.children.filter(name=parent_name).first()
-
-        else:
-            parent = Catalog.objects.get(pk=pk_catalog)
+        ancestor_name, parent_name = sheetname.split('-', 1)
+        ancestor = Catalog.objects.get_or_create(name=ancestor_name, company=company, is_ancestor=True)[0]
+        try:
+            parent = ancestor.children.get(name=parent_name)
+        except Catalog.DoesNotExist:
+            parent = Catalog.objects.create(name=parent_name, company=company)
+            parent.parents.add(ancestor)
+        except Catalog.MultipleObjectsReturned:
+            parent = ancestor.children.filter(name=parent_name).first()
 
         for row in catalog_sheet.iter_rows(min_row=0, max_row=1, values_only=True):
             header = row
