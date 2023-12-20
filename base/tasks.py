@@ -1,19 +1,19 @@
-from celery import shared_task
+from datetime import datetime
+from io import BytesIO
+
+from celery import shared_task, current_task
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.mail import send_mail
 from django.http import HttpRequest
 from django.core.files.base import ContentFile
+from openpyxl.workbook import Workbook
 
 from api.middleware import set_request
 from api.models import ActivityLog
 from base.models.config import FileBuilder365
 from base.utils import str_to_class
 from sales.models import Catalog
-from openpyxl.workbook import Workbook
-from io import BytesIO
-from celery import current_task
-from datetime import datetime
 
 
 @shared_task()
