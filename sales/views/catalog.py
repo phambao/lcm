@@ -643,6 +643,10 @@ def count_level(header, level_catalog):
     for i, element in enumerate(header):
         if element == 'name':
             length_level = i
+    else:
+        # in case of no cost table
+        if not length_level:
+            length_level = 5
     parent = None
     levels = []
     level_column_number = int(length_level/5)
@@ -705,14 +709,18 @@ def create_catalog_by_row(row, length_level, company, root, levels, level_header
                 # cost table has created
                 if c_table:
                     data = c_table['data']
-                    if row[i*5 + 5:] not in data:
+                    if list(row[i*5 + 5:]) not in data:
                         data.append(row[i*5 + 5:])
                 else:
                     if row[i*5 + 5:]:
                         parent.c_table = {'header': level_header,
                             'data': [row[i*5 + 5:]]}
                 parent.save()
-            unit = row[i*5 + 6]
+            # No cost table
+            try:
+                unit = row[i*5 + 6]
+            except IndexError:
+                return
     return unit
 
 
