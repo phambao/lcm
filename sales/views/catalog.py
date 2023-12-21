@@ -658,7 +658,7 @@ def count_level(header, level_catalog):
         else:
             c_table_header = header[i*5 + 5:]
     else:
-        return None, None, None, None
+        return 0, 0, [], []
     return level_column_number, length - length_level, levels, c_table_header
 
 
@@ -677,11 +677,15 @@ def create_catalog_by_row(row, length_level, company, root, levels, level_header
         name = row[i*5]
         if not name:
             continue
+        icon = row[i*5 + 1]
 
         if parent:
             catalog = parent.children.get_or_create(name=name, company=company, level=levels[i])
             catalog = catalog[0]
             catalog.parents.add(parent)
+            if icon:
+                catalog.icon = icon
+                catalog.save(update_fields=['icon'])
         else:
             catalog = Catalog.objects.create(name=name, company=company)
 
@@ -694,20 +698,21 @@ def create_catalog_by_row(row, length_level, company, root, levels, level_header
         DataPoint.objects.get_or_create(catalog=catalog, **data_point)
         parent = catalog
     else:
-        c_table = parent.c_table
-        # Validate cost table data
-        if all(row[i*5 + 5:]):
-            # cost table has created
-            if c_table:
-                data = c_table['data']
-                if row[i*5 + 5:] not in data:
-                    data.append(row[i*5 + 5:])
-            else:
-                if row[i*5 + 5:]:
-                    parent.c_table = {'header': level_header,
-                        'data': [row[i*5 + 5:]]}
-            parent.save()
-        unit = row[i*5 + 6]
+        if length_level:
+            c_table = parent.c_table
+            # Validate cost table data
+            if all(row[i*5 + 5:]):
+                # cost table has created
+                if c_table:
+                    data = c_table['data']
+                    if row[i*5 + 5:] not in data:
+                        data.append(row[i*5 + 5:])
+                else:
+                    if row[i*5 + 5:]:
+                        parent.c_table = {'header': level_header,
+                            'data': [row[i*5 + 5:]]}
+                parent.save()
+            unit = row[i*5 + 6]
     return unit
 
 
