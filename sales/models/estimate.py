@@ -71,6 +71,7 @@ class POFormula(BaseModel):
     original = models.IntegerField(default=0, blank=True, null=True)
     catalog_materials = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
     order = models.IntegerField(default=0, blank=True)
+    cost_column = models.CharField(blank=True, max_length=128, default='cost')  # Used to get value from cost table
 
     def parse_material(self):
         primary_key = eval(self.material)
