@@ -757,3 +757,13 @@ def import_catalog(request):
         UnitLibrary.objects.bulk_create([UnitLibrary(name=i, company=company) for i in unit.difference(unit_library) if i])
 
     return Response(status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
+def delete(request):
+    data = request.data
+    serializer = catalog.DeleteCatalogSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    return Response(status=status.HTTP_200_OK)

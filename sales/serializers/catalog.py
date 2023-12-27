@@ -234,3 +234,40 @@ class CostTableTemplateSerializer(serializers.ModelSerializer):
         model = catalog.CostTableTemplate
         fields = '__all__'
         read_only_fields = ('user_create', 'modified_date', 'created_date', 'user_update', 'company')
+
+
+class DeleteCatalogSerializer(serializers.Serializer):
+    deleted_items = serializers.ListField()
+    tree = serializers.DictField()
+    is_delete_children = serializers.BooleanField()
+
+    def create(self, validated_data):
+        deleted_items = validated_data.get('deleted_items')
+        is_delete_children = validated_data.get('is_delete_children')
+        deleted_catalogs = catalog.Catalog.objects.filter(pk__in=deleted_items)
+
+        if is_delete_children:
+            for c in deleted_catalogs:
+                c.delete()
+            return object
+
+        tree = validated_data.get('tree')
+        for key in tree.keys():
+            parent = catalog.Catalog.objects.get(pk=key)
+            children = catalog.Catalog.objects.filter(pk__in=tree[key])
+            for child in children:
+                child.parents.clear()
+                child.parents.add(parent)
+        deleted_catalogs.delete()
+
+        return object
+
+    def validate_tree(self, value):
+        for key in value.keys():
+            parent = catalog.Catalog.objects.get(pk=key)
+            level = parent.level
+            child_level = catalog.CatalogLevel.objects.get(parent=level)
+            children = catalog.Catalog.objects.filter(pk__in=value[key], level=child_level)
+            if children.count() != len(value[key]):
+                raise serializers.ValidationError(f'parent {key} have invalid children')
+        return value
