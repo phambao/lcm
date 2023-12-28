@@ -40,7 +40,7 @@ class DataEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = DataEntry
         fields = ('id', 'name', 'unit', 'dropdown', 'is_dropdown', 'is_material_selection', 'material_selections',
-                  'created_date', 'modified_date', 'levels', 'material')
+                  'created_date', 'modified_date', 'levels', 'material', 'default_column')
         extra_kwargs = {'id': {'read_only': False, 'required': False}}
         read_only_fields = ('created_date', 'modified_date')
 

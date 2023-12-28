@@ -330,6 +330,13 @@ def swap_level(request, pk_catalog):
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+def parse_dict(dictionary):
+    data = []
+    for name, value in dictionary.items():
+        data.append({'name': name, 'value': value})
+    return data
+
+
 def parse_c_table(children):
     data = []
     for child in children:
@@ -347,6 +354,10 @@ def parse_c_table(children):
             for i, d in enumerate(c_table['data']):
                 content = {**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child.pk}:{i}'},
                            'levels': levels}
+                clone = content.copy()
+                clone.pop('id')
+                clone.pop('levels')
+                content['columns'] = parse_dict(clone)
                 data.append(content)
         except:
             """Some old data is not valid"""
@@ -643,6 +654,10 @@ def count_level(header, level_catalog):
     for i, element in enumerate(header):
         if element == 'name':
             length_level = i
+    else:
+        # in case of no cost table
+        if not length_level:
+            length_level = 5
     parent = None
     levels = []
     level_column_number = int(length_level/5)
@@ -658,7 +673,7 @@ def count_level(header, level_catalog):
         else:
             c_table_header = header[i*5 + 5:]
     else:
-        return None, None, None, None
+        return 0, 0, [], []
     return level_column_number, length - length_level, levels, c_table_header
 
 
@@ -677,11 +692,15 @@ def create_catalog_by_row(row, length_level, company, root, levels, level_header
         name = row[i*5]
         if not name:
             continue
+        icon = row[i*5 + 1]
 
         if parent:
             catalog = parent.children.get_or_create(name=name, company=company, level=levels[i])
             catalog = catalog[0]
             catalog.parents.add(parent)
+            if icon:
+                catalog.icon = icon
+                catalog.save(update_fields=['icon'])
         else:
             catalog = Catalog.objects.create(name=name, company=company)
 
@@ -694,20 +713,25 @@ def create_catalog_by_row(row, length_level, company, root, levels, level_header
         DataPoint.objects.get_or_create(catalog=catalog, **data_point)
         parent = catalog
     else:
-        c_table = parent.c_table
-        # Validate cost table data
-        if all(row[i*5 + 5:]):
-            # cost table has created
-            if c_table:
-                data = c_table['data']
-                if row[i*5 + 5:] not in data:
-                    data.append(row[i*5 + 5:])
-            else:
-                if row[i*5 + 5:]:
-                    parent.c_table = {'header': level_header,
-                        'data': [row[i*5 + 5:]]}
-            parent.save()
-        unit = row[i*5 + 6]
+        if length_level:
+            c_table = parent.c_table
+            # Validate cost table data
+            if all(row[i*5 + 5:]):
+                # cost table has created
+                if c_table:
+                    data = c_table['data']
+                    if list(row[i*5 + 5:]) not in data:
+                        data.append(row[i*5 + 5:])
+                else:
+                    if row[i*5 + 5:]:
+                        parent.c_table = {'header': level_header,
+                            'data': [row[i*5 + 5:]]}
+                parent.save()
+            # No cost table
+            try:
+                unit = row[i*5 + 6]
+            except IndexError:
+                return
     return unit
 
 
@@ -743,4 +767,14 @@ def import_catalog(request):
         unit_library = set(UnitLibrary.objects.filter(company=company).values_list('name', flat=True))
         UnitLibrary.objects.bulk_create([UnitLibrary(name=i, company=company) for i in unit.difference(unit_library) if i])
 
+    return Response(status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
+def delete(request):
+    data = request.data
+    serializer = catalog.DeleteCatalogSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
     return Response(status=status.HTTP_200_OK)
