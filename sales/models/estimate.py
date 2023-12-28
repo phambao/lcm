@@ -33,6 +33,7 @@ class DataEntry(BaseModel):
                                                  related_name='data_entries', symmetrical=False)
     levels = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
     material = models.JSONField(blank=True, null=True, default=dict)
+    default_column = models.JSONField(blank=True, default=dict)
 
     def __int__(self):
         return self.pk
@@ -71,7 +72,7 @@ class POFormula(BaseModel):
     original = models.IntegerField(default=0, blank=True, null=True)
     catalog_materials = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
     order = models.IntegerField(default=0, blank=True)
-    cost_column = models.CharField(blank=True, max_length=128, default='cost')  # Used to get value from cost table
+    default_column = models.JSONField(blank=True, default=dict)
 
     def parse_material(self):
         primary_key = eval(self.material)
