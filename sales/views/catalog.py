@@ -330,6 +330,13 @@ def swap_level(request, pk_catalog):
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+def parse_dict(dictionary):
+    data = []
+    for name, value in dictionary.items():
+        data.append({'name': name, 'value': value})
+    return data
+
+
 def parse_c_table(children):
     data = []
     for child in children:
@@ -347,6 +354,10 @@ def parse_c_table(children):
             for i, d in enumerate(c_table['data']):
                 content = {**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child.pk}:{i}'},
                            'levels': levels}
+                clone = content.copy()
+                clone.pop('id')
+                clone.pop('levels')
+                content['columns'] = parse_dict(clone)
                 data.append(content)
         except:
             """Some old data is not valid"""
