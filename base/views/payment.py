@@ -166,7 +166,7 @@ def create_subscription(request):
                 items=[{
                     'price': price_id,
                 }],
-                # payment_behavior='default_incomplete',
+                payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
             )
             return Response({'subscription_id': subscription.id,
