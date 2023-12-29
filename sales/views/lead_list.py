@@ -313,13 +313,13 @@ class ProposalWritingByLeadViewSet(generics.ListAPIView):
         return model.objects.none()
 
 
-class NoteTemplateGenericView(generics.ListCreateAPIView):
+class NoteTemplateGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = NoteTemplate.objects.all()
     serializer_class = lead_list.NoteTemplateSerializer
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
-class NoteTemplateDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+class NoteTemplateDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = NoteTemplate.objects.all()
     serializer_class = lead_list.NoteTemplateSerializer
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
