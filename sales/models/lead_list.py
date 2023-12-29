@@ -202,3 +202,12 @@ class Photos(BaseModel):
     photo = models.ImageField(upload_to='photo')
     lead = models.ForeignKey(
         LeadDetail, on_delete=models.CASCADE, related_name='photos', null=True)
+
+
+class NoteTemplate(BaseModel):
+    class Meta:
+        db_table = 'note_template'
+        ordering = ['-modified_date']
+
+    name = models.CharField(max_length=128, blank=True)
+    note = models.TextField(blank=True)

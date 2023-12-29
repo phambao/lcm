@@ -77,6 +77,9 @@ url_leads = [
     path('leads/events/', lead_list.LeadEventList.as_view()),
     path('export/', export_data),
     path('import/', import_data),
+
+    path('note-template/', lead_list.NoteTemplateGenericView.as_view()),
+    path('note-template/<int:pk>/', lead_list.NoteTemplateDetailGenericView.as_view()),
 ]
 
 # Define Path for Catalog -------------------------------------------------------
