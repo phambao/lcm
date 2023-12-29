@@ -657,7 +657,7 @@ def count_level(header, level_catalog):
     else:
         # in case of no cost table
         if not length_level:
-            length_level = 5
+            length_level = i + 1
     parent = None
     levels = []
     level_column_number = int(length_level/5)
@@ -773,6 +773,9 @@ def import_catalog(request):
 @api_view(['PUT'])
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
 def delete(request):
+    """
+    Payload: {"deleted_items": [id], "tree": {"parent_id": [child_id]}, "is_delete_children": boolean}
+    """
     data = request.data
     serializer = catalog.DeleteCatalogSerializer(data=data)
     serializer.is_valid(raise_exception=True)
