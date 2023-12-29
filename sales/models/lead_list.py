@@ -209,5 +209,5 @@ class NoteTemplate(BaseModel):
         db_table = 'note_template'
         ordering = ['-modified_date']
 
+    name = models.CharField(max_length=128, blank=True)
     note = models.TextField(blank=True)
-    lead = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='notes_template', null=True)

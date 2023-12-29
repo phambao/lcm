@@ -78,8 +78,8 @@ url_leads = [
     path('export/', export_data),
     path('import/', import_data),
 
-    path('leads/note-template/', lead_list.NoteTemplateGenericView.as_view()),
-    path('leads/note-template/<int:pk>/', lead_list.NoteTemplateDetailGenericView.as_view()),
+    path('note-template/', lead_list.NoteTemplateGenericView.as_view()),
+    path('note-template/<int:pk>/', lead_list.NoteTemplateDetailGenericView.as_view()),
 ]
 
 # Define Path for Catalog -------------------------------------------------------
