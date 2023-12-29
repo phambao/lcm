@@ -440,3 +440,9 @@ class SourceLeadSerializer(serializers.ModelSerializer):
         model = lead_list.SourceLead
         fields = '__all__'
         extra_kwargs = extra_kwargs_for_base_model()
+
+
+class NoteTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.NoteTemplate
+        fields = '__all__'

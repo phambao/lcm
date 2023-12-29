@@ -19,7 +19,7 @@ from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter
 from sales.serializers.proposal import PriceComparisonCompactSerializer, ProposalWritingByLeadSerializer
 from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, Photos, ContactTypeName, \
-    ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead
+    ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead, NoteTemplate
 from ..serializers import lead_list
 from ..serializers.lead_list import PhotoSerializer, LeadDetailCreateSerializer
 
@@ -311,6 +311,18 @@ class ProposalWritingByLeadViewSet(generics.ListAPIView):
         except KeyError:
             pass
         return model.objects.none()
+
+
+class NoteTemplateGenericView(generics.ListCreateAPIView):
+    queryset = NoteTemplate.objects.all()
+    serializer_class = lead_list.NoteTemplateSerializer
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
+
+
+class NoteTemplateDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = NoteTemplate.objects.all()
+    serializer_class = lead_list.NoteTemplateSerializer
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
 
 @api_view(['DELETE'])
