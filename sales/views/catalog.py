@@ -665,7 +665,7 @@ def count_level(header, level_catalog):
 
     if level_query.count() == level_column_number:
         levels = level_catalog.get_ordered_levels()
-        c_table_header = header[level_column_number:]
+        c_table_header = header[level_column_number*5:]
     elif not level_query.count():
         for i in range(level_column_number):
             parent = CatalogLevel.objects.create(name=header[i*5], parent=parent, catalog=level_catalog)

@@ -3,6 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from api.serializers.auth import CustomPermissionSerializer
 
 from base.models.config import PersonalInformation
 from base.serializers.auth import GroupSerializer, PermissionSerializer
@@ -63,6 +64,20 @@ def get_permission(request):
             perms |= Permission.objects.filter(content_type=content_type)
         return perms
 
+    v1 = request.GET.get('v1', False)
     perms = get_perm_by_models((Catalog, ChangeOrder, EstimateTemplate, Invoice, LeadDetail, ScheduleEvent,
                                 ToDo, DailyLog, ProposalWriting))
+    if v1:
+        data = []
+        data.append({
+            'name': 'Sales',
+            'roles': CustomPermissionSerializer(get_perm_by_models([LeadDetail]), many=True).data
+        })
+        data.append({
+            'name': 'Project Management',
+            'roles': CustomPermissionSerializer(get_perm_by_models(
+                [Catalog, ChangeOrder, EstimateTemplate, Invoice, ScheduleEvent, ToDo, DailyLog, ProposalWriting]), many=True).data
+        })
+        return Response(status=status.HTTP_200_OK, data=data)
+
     return Response(status=status.HTTP_200_OK, data=perms.values())
