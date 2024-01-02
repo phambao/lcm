@@ -4,11 +4,14 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.template.loader import render_to_string
 from django.conf import settings
-
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
 from base.tasks import celery_send_mail
 from base.utils import pop
+from sales.models import (Catalog, ChangeOrder, EstimateTemplate, Invoice, LeadDetail,
+                              ScheduleEvent, ToDo, DailyLog, ProposalWriting)
 
 User = get_user_model()
 
@@ -25,31 +28,49 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class InternalUserSerializer(serializers.ModelSerializer):
+    group = serializers.IntegerField(required=False, allow_null=True)
+
     class Meta:
         model = User
-        fields = ('id', 'username', 'last_name', 'first_name', 'email', 'image', 'groups', 'is_active', 'is_admin_company',
+        fields = ('id', 'username', 'last_name', 'first_name', 'email', 'image', 'group', 'is_active', 'is_admin_company',
                   'phone', 'is_staff', 'date_joined')
         read_only_fields = ['date_joined', 'username']
 
     def create(self, validated_data):
         validated_data['username'] = validated_data['email']
         validated_data['company'] = self.context['request'].user.company
+        group = pop(validated_data, 'group', None)
         instance = super().create(validated_data)
+        if group:
+            instance.groups.add(group)
         return instance
 
     def update(self, instance, validated_data):
+        instance.groups.clear()
+        group = pop(validated_data, 'group', None)
         instance = super().update(instance, validated_data)
+        if group:
+            instance.groups.add(group)
         instance.username = instance.email
         instance.save()
         return instance
 
+    def validate_group(self, value):
+        if value:
+            try:
+                value = Group.objects.get(id=value)
+            except Group.DoesNotExist:
+                raise serializers.ValidationError('The choice is not exist')
+        return value
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['groups'] = instance.groups.all().values()
+        data['group'] = None
         data['auto_access'] = True
         data['role'] = ''
         role = instance.groups.all()
         if role:
+            data['group'] = instance.groups.all().first().pk
             data['role'] = role.first().name
         return data
 
@@ -132,3 +153,41 @@ class ChangePasswordSerializer(serializers.Serializer):
         if attrs['password1'] != attrs['password2']:
             return serializers.ValidationError('password is not match!')
         return attrs
+
+
+class CustomPermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Permission
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['action'] = self.get_action(instance)
+        data['type'] = self.get_name(instance)
+        return data
+
+    def get_action(self, instance):
+        list_action = ['view', 'add', 'delete', 'change']
+        code_name = instance.codename
+        action = code_name.split('_')[0]
+        if action in list_action:
+            return action.title()
+        return None
+
+    def get_name(self, instance):
+        models = [Catalog, ChangeOrder, EstimateTemplate, Invoice, ScheduleEvent, ToDo, DailyLog, ProposalWriting, LeadDetail]
+        names = ['Catalog', 'Change Order', 'Estimate Template', 'Invoice', 'Schedule Event',
+                 'To Do', 'Daily Log', 'Proposal Writing', 'Leads']
+        name = None
+        for i, model in enumerate(models):
+            name = self._get_name(instance, model, names[i])
+            if name:
+                return name
+
+        return None
+
+    def _get_name(self, instance, model, name):
+        content_type = ContentType.objects.get_for_model(model)
+        if instance.content_type == content_type:
+            return name
+        return ''
