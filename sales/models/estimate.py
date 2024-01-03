@@ -4,7 +4,7 @@ from django.contrib.postgres.fields import ArrayField
 from api.middleware import get_request
 
 from api.models import BaseModel
-from base.constants import MAX_DIGIT
+from base.constants import DECIMAL_PLACE, MAX_DIGIT
 from sales.models import Catalog
 
 
@@ -56,12 +56,12 @@ class POFormula(BaseModel):
     is_show = models.BooleanField(default=True, blank=True)  # Only show formula page
     quantity = models.CharField(max_length=64, blank=True)
     markup = models.CharField(max_length=64, blank=True)
-    charge = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=2, blank=True, default=0)
+    charge = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
     material = models.TextField(blank=True)
     unit = models.CharField(max_length=32, blank=True)
     unit_price = models.CharField(max_length=32, blank=True)
-    cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=2, blank=True, default=0)
-    total_cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=2, blank=True, default=0)
+    cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
+    total_cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
     formula_mentions = models.CharField(blank=True, max_length=256)  # for FE
     formula_data_mentions = models.CharField(blank=True, max_length=256)  # for FE
     gross_profit = models.CharField(max_length=32, blank=True)
