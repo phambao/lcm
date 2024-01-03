@@ -11,6 +11,16 @@ from .middleware import get_request
 
 
 class User(AbstractUser):
+    class ServiceProvider(models.TextChoices):
+        USNETWORK = 'us-network', 'U.S. Networks'
+        TMOBILE = 't-mobile', 'T-Mobile'
+        ATANDT = 'at&t', 'AT&T'
+        SPRINT = 'sprint', 'Sprint'
+        USCELLULAR = 'us-cellular', 'U.S. Cellular'
+        MOBIFONE = 'mobifone', 'Mobifone'
+        VIETTEL = 'viettel', 'Viettel'
+        VINAFONE = 'vinafone', 'Vinafone'
+
     code = models.IntegerField(blank=True, null=True)
     token = models.CharField(max_length=128, blank=True)
     image = models.CharField(max_length=128, blank=True, null=True)
@@ -22,6 +32,8 @@ class User(AbstractUser):
     is_admin_company = models.BooleanField(default=False, blank=True)
     create_code = models.IntegerField(blank=True, null=True)
     expire_code_register = models.DateTimeField(auto_now=True)
+    service_provider = models.CharField(blank=True, choices=ServiceProvider.choices,
+                                        default=ServiceProvider.USNETWORK, max_length=16)
 
     def __str__(self):
         return self.email

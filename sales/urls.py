@@ -77,6 +77,9 @@ url_leads = [
     path('leads/events/', lead_list.LeadEventList.as_view()),
     path('export/', export_data),
     path('import/', import_data),
+
+    path('note-template/', lead_list.NoteTemplateGenericView.as_view()),
+    path('note-template/<int:pk>/', lead_list.NoteTemplateDetailGenericView.as_view()),
 ]
 
 # Define Path for Catalog -------------------------------------------------------
@@ -288,6 +291,7 @@ url_invoice = [
     path('', invoice.InvoiceListView.as_view()),
     path('lead/', invoice.LeadInvoiceList.as_view()),
     path('proposal/', invoice.InvoiceProposal.as_view()),
+    path('proposal/<int:pk>/', invoice.InvoiceProposalDetail.as_view()),
     path('<int:pk>/', invoice.InvoiceDetailGenericView.as_view()),
     path('<int:pk>/payment/', invoice.PaymentListView.as_view()),
     path('payment/<int:pk>/', invoice.PaymentDetailView.as_view()),
