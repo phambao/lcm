@@ -133,6 +133,7 @@ class CompanyBuilder(models.Model):
     trades = models.ManyToManyField('Trades', related_name='company_trades')
     company_size = models.CharField(max_length=128, choices=SizeCompanyChoices.choices, default=SizeCompanyChoices.SMALL)
     revenue = models.CharField(max_length=128, choices=EstimatedAnnualRevenueChoices.choices, default=EstimatedAnnualRevenueChoices.ESTIMATED_1)
+    referral_code = models.CharField(blank=True, max_length=6)
 
     def __str__(self):
         return self.company_name

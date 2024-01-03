@@ -1,5 +1,8 @@
+import random
 import re
+import string
 
+import stripe
 from django.db import IntegrityError
 from rest_framework import serializers
 
@@ -71,17 +74,37 @@ class CompanySerializer(serializers.ModelSerializer):
         model = CompanyBuilder
         fields = ('id', 'logo', 'company_name', 'address', 'country', 'city', 'state', 'zip_code', 'tax', 'size',
                   'business_phone', 'fax', 'email', 'cell_phone', 'cell_mail', 'created_date', 'modified_date',
-                  'user_create', 'user_update', 'currency', 'description', 'company_timezone', 'website', 'trades', 'company_size', 'revenue')
+                  'user_create', 'user_update', 'currency', 'description', 'company_timezone', 'website', 'trades', 'company_size', 'revenue', 'referral_code')
 
     def create(self, validated_data):
         request = self.context['request']
         user_create = user_update = request.user
         trades = validated_data.pop('trades', [])
+        company_name = validated_data['company_name']
+        abbreviation = ''.join(word[0].lower() for word in company_name.split())
+        abbreviation = abbreviation[:6]
+        if len(abbreviation) == 6:
+            company_code = abbreviation
+        else:
+            number = 6 - len(abbreviation)
+            random_number = ''.join(random.choices(string.digits, k=number))
+            company_code = f"{abbreviation}{random_number}"
 
-        company_create = CompanyBuilder.objects.create(**validated_data)
+        validated_data['referral_code'] = company_code
+        company_create = super().create(validated_data)
         data_trades = Trades.objects.filter(pk__in=[trade['id'] for trade in trades])
         company_create.trades.add(*data_trades)
+        existing_promotion_code = stripe.PromotionCode.list(code=company_code, limit=1)
 
+        if not existing_promotion_code.data:
+            coupon = stripe.Coupon.create(
+                percent_off=30,
+                duration='once',
+            )
+            promotion_code = stripe.PromotionCode.create(
+                coupon=coupon,
+                code=company_code,
+            )
         return company_create
 
     def update(self, instance, data):
@@ -89,8 +112,7 @@ class CompanySerializer(serializers.ModelSerializer):
         user_create = user_update = request.user
         trades = data.pop('trades', [])
 
-        data_company = CompanyBuilder.objects.filter(pk=instance.pk)
-        data_company.update(**data)
+        data_company = super().update(instance, data)
 
         data_trades = Trades.objects.filter(pk__in=[trade['id'] for trade in trades])
         data_company.trades.clear()

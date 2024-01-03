@@ -134,6 +134,29 @@ def update_customer(request, *args, **kwargs):
 
 
 @api_view(['POST'])
+def create_promotion_code(request):
+    data = request.data
+    name = data.get('name')
+    try:
+        existing_promotion_code = stripe.PromotionCode.list(code='ALICE21', limit=1)
+
+        if existing_promotion_code.data:
+            # Promotion Code đã tồn tại, không tạo mới
+            return Response({'data': {'promotion_code': 'ALICE21'}}, status=201)
+        coupon = stripe.Coupon.create(
+            percent_off=30,
+            duration='once',  # Áp dụng cho một lần thanh toán đầu tiên
+        )
+        promotion_code = stripe.PromotionCode.create(
+            coupon=coupon,
+            code="ALICE21",
+        )
+        return coupon.id
+    except Exception as e:
+        return Response({'error': {'message': str(e)}}, status=400)
+
+
+@api_view(['POST'])
 def check_promotion_code(request):
     data = request.data
     promotion_code = data.get('coupon_code')
