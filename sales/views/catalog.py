@@ -466,7 +466,6 @@ def export_catalog(request, *args, **kwargs):
             data_parent_catalog = check_catalog.parents.first()
             handle_export(pk, workbook, data_parent_catalog.name)
 
-    workbook.save("output.xlsx")
     return file_response(workbook=workbook, title='catalog')
 
 

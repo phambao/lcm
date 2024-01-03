@@ -1,7 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django_filters import rest_framework as filters
 
-from api.models import ActivityLog
+from api.models import ActivityLog, Trades
 from base.models.config import Search, Column, Config, GridSetting
 
 
@@ -55,3 +55,10 @@ class ActivityLogFilter(filters.FilterSet):
     class Meta:
         model = ActivityLog
         fields = ('content_type', 'object_id', 'user_create', 'created_date')
+
+
+class TradesFilter(filters.FilterSet):
+
+    class Meta:
+        model = Trades
+        fields = ('is_show',)

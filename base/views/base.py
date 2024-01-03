@@ -22,15 +22,15 @@ from sales.models import LeadDetail, Priority, Type, Contact, PhoneOfContact, Ac
     DataType, DataView, TableInvoice, PaymentHistory, Invoice, Day, HolidayType
 
 from ..constants import URL_CLOUD
-from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter
+from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter, TradesFilter
 from ..models.config import Column, Search, Config, GridSetting, FileBuilder365, Question, Answer, CompanyAnswerQuestion
 from ..models.payment import PaymentHistoryStripe
 from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerializer, \
     FileBuilder365ResSerializer, DeleteDataSerializer
 from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer, \
     CompanySerializer, DivisionSerializer, QuestionSerializer, AnswerSerializer, CompanyAnswerQuestionSerializer, \
-    CompanyAnswerQuestionResSerializer
-from api.models import ActivityLog, CompanyBuilder, DivisionCompany, Action, InvoiceApproveType, User
+    CompanyAnswerQuestionResSerializer, TradesSerializer
+from api.models import ActivityLog, CompanyBuilder, DivisionCompany, Action, InvoiceApproveType, User, Trades
 from decouple import config
 
 class ContentTypeList(generics.ListAPIView):
@@ -211,6 +211,20 @@ class CompanyAnswerQuestionSerializerGenericView(generics.ListAPIView):
 class CompanyAnswerQuestionSerializerDetailGenericView(generics.RetrieveAPIView):
     queryset = CompanyAnswerQuestion.objects.all()
     serializer_class = CompanyAnswerQuestionResSerializer
+
+
+class CompanyTradesSerializerGenericView(generics.ListCreateAPIView):
+    queryset = Trades.objects.all()
+    serializer_class = TradesSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = TradesFilter
+
+
+class CompanyTradesSerializerDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Trades.objects.all()
+    serializer_class = TradesSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = TradesFilter
 
 
 @api_view(['POST'])

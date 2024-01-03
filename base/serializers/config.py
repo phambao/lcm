@@ -4,7 +4,7 @@ from django.db import IntegrityError
 from rest_framework import serializers
 
 from api.middleware import get_request
-from api.models import DivisionCompany, CompanyBuilder
+from api.models import DivisionCompany, CompanyBuilder, Trades
 from ..models.config import Column, Search, Config, GridSetting, Question, Answer, CompanyAnswerQuestion, \
     PersonalInformation
 from ..utils import pop
@@ -65,11 +65,50 @@ class GridSettingSerializer(serializers.ModelSerializer):
 
 
 class CompanySerializer(serializers.ModelSerializer):
+    trades = base.IDAndNameSerializer(allow_null=True, required=False, many=True)
+
     class Meta:
         model = CompanyBuilder
         fields = ('id', 'logo', 'company_name', 'address', 'country', 'city', 'state', 'zip_code', 'tax', 'size',
                   'business_phone', 'fax', 'email', 'cell_phone', 'cell_mail', 'created_date', 'modified_date',
-                  'user_create', 'user_update', 'currency', 'description', 'company_timezone', 'field')
+                  'user_create', 'user_update', 'currency', 'description', 'company_timezone', 'website', 'trades', 'company_size', 'revenue')
+
+    def create(self, validated_data):
+        request = self.context['request']
+        user_create = user_update = request.user
+        trades = validated_data.pop('trades', [])
+
+        company_create = CompanyBuilder.objects.create(**validated_data)
+        data_trades = Trades.objects.filter(pk__in=[trade['id'] for trade in trades])
+        company_create.trades.add(*data_trades)
+
+        return company_create
+
+    def update(self, instance, data):
+        request = self.context['request']
+        user_create = user_update = request.user
+        trades = data.pop('trades', [])
+
+        data_company = CompanyBuilder.objects.filter(pk=instance.pk)
+        data_company.update(**data)
+
+        data_trades = Trades.objects.filter(pk__in=[trade['id'] for trade in trades])
+        data_company.trades.clear()
+        data_company.trades.add(*data_trades)
+
+        return data_company
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['trades'] = TradesSerializer(instance.trades.all(), many=True).data
+        return data
+
+
+class TradesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trades
+        fields = '__all__'
+
 
 class DivisionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -127,4 +166,4 @@ class CompanyAnswerQuestionResSerializer(serializers.ModelSerializer):
 class PersonalInformationSerializer(serializers.ModelSerializer):
     class Meta:
         model = PersonalInformation
-        fields = ('id', 'fullname', 'phone_number', 'email', 'position', 'address', 'company', 'first_name', 'last_name', 'nick_name')
+        fields = ('id', 'fullname', 'phone_number', 'email', 'address', 'company', 'first_name', 'last_name', 'nick_name')

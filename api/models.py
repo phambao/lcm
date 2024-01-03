@@ -58,10 +58,33 @@ class BaseModel(models.Model):
                                            using=using, update_fields=update_fields)
 
 
-class FieldChoices(models.TextChoices):
-    IT = 'IT', 'Information Technology'
-    HEALTHCARE = 'HEALTHCARE', 'Healthcare'
-    EDUCATION = 'EDUCATION', 'Education'
+# class FieldChoices(models.TextChoices):
+#     LANDSCAPE_CONSTRUCTION = 'LANDSCAPE_CONSTRUCTION', 'Landscape Construction'
+#     LANDSCAPE_MAINTENANCE = 'LANDSCAPE_MAINTENANCE', 'Landscape Maintenance'
+#     HOME_BUILDER = 'HOME_BUILDER', 'Home Builder'
+#     CARPENTRY = 'CARPENTRY', 'Carpentry'
+#     PLUMBING = 'PLUMBING', 'Plumbing'
+#     POOL_BUILDER = 'POOL_BUILDER', 'Pool Builder'
+#     MASONRY = 'MASONRY', 'Masonry'
+#     DEMO_AND_GRADING = 'DEMO_AND_GRADING', 'Demo and Grading'
+#     CARPENTRY = 'CARPENTRY', 'Carpentry'
+#     CARPENTRY = 'CARPENTRY', 'Carpentry'
+class SizeCompanyChoices(models.TextChoices):
+    SMALL = '1-5', '1-5'
+    MEDIUM = '6-10', '6-10'
+    LARGE = '11-25', '11-25'
+    EXTRA_LARGE = '25+', '25+'
+
+
+class EstimatedAnnualRevenueChoices(models.TextChoices):
+    ESTIMATED_1 = '$0 - $499K', '$0 - $499K'
+    ESTIMATED_2 = '$500 - $999K', '$500 - $999K'
+    ESTIMATED_3 = '$1M - $1.99M', '$1M - $1.99M'
+    ESTIMATED_4 = '$2M - $4.99M', '$2M - $4.99M'
+    ESTIMATED_5 = '$5M - $9.99M', '$5M - $9.99M'
+    ESTIMATED_6 = '$10M - $14.9', '$10M - $14.9'
+    ESTIMATED_7 = '$15M - $24.99M', '$15M - $24.99M'
+    ESTIMATED_8 = '$25M - $', '$25M - $'
 
 
 class CompanyBuilder(models.Model):
@@ -72,7 +95,7 @@ class CompanyBuilder(models.Model):
     description = models.CharField(blank=True, max_length=128)
     company_name = models.CharField(blank=True, max_length=128)
     address = models.CharField(blank=True, max_length=128)
-    field = models.CharField(max_length=128, choices=FieldChoices.choices, default=FieldChoices.EDUCATION, blank=True)
+    # field = models.CharField(max_length=128, choices=FieldChoices.choices, default=FieldChoices.EDUCATION, blank=True)
     country = models.CharField(blank=True, max_length=128, null=True)
     city = models.CharField(blank=True, max_length=128, null=True)
     state = models.CharField(blank=True, max_length=128, null=True)
@@ -94,6 +117,10 @@ class CompanyBuilder(models.Model):
     company_timezone = models.CharField(blank=True, max_length=128)
     customer_stripe = models.CharField(blank=True, max_length=128, null=True)
     is_payment = models.BooleanField(default=True)
+    website = models.CharField(blank=True, max_length=128, null=True)
+    trades = models.ManyToManyField('Trades', related_name='company_trades')
+    company_size = models.CharField(max_length=128, choices=SizeCompanyChoices.choices, default=SizeCompanyChoices.SMALL)
+    revenue = models.CharField(max_length=128, choices=EstimatedAnnualRevenueChoices.choices, default=EstimatedAnnualRevenueChoices.ESTIMATED_1)
 
     def __str__(self):
         return self.company_name
@@ -182,3 +209,11 @@ class SubscriptionStripeCompany(models.Model):
     subscription_name = models.CharField(blank=True, max_length=128, null=True)
     expiration_date = models.DateTimeField()
     is_activate = models.BooleanField(default=False)
+
+
+class Trades(models.Model):
+    class Meta:
+        db_table = 'trades'
+
+    name = models.CharField(max_length=64)
+    is_show = models.BooleanField(default=False)
