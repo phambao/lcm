@@ -5,6 +5,7 @@ from django_filters import rest_framework as filters
 from base.permissions import InvoicePermissions
 from base.views.base import CompanyFilterMixin
 from sales.models import Invoice, PaymentHistory, LeadDetail, CreditMemo, InvoiceTemplate
+from sales.models.proposal import ProposalWriting
 from sales.serializers.invoice import InvoiceSerializer, PaymentHistorySerializer, InvoicePaymentSerializer, \
     ProposalForInvoiceSerializer, LeadInvoiceSerializer, CreditMemoSerializer, InvoiceTemplateSerializer
 from sales.views.lead_list import LeadDetailList
@@ -36,6 +37,11 @@ class InvoiceDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestro
 class InvoiceProposal(ProposalWritingCompactList):
     serializer_class = ProposalForInvoiceSerializer
 
+
+class InvoiceProposalDetail(generics.RetrieveAPIView):
+    serializer_class = ProposalForInvoiceSerializer
+    queryset = ProposalWriting.objects.all().order_by('-modified_date')
+    permission_classes = [permissions.IsAuthenticated & InvoicePermissions]
 
 class PaymentListView(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = PaymentHistory.objects.all()

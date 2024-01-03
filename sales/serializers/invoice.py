@@ -282,7 +282,7 @@ class InvoicePaymentSerializer(serializers.ModelSerializer):
 class ProposalForInvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProposalWriting
-        fields = ('id', 'name', 'created_date', 'lead', 'total_project_price', 'total_project_cost')
+        fields = ('id', 'name', 'created_date', 'lead', 'total_project_price', 'total_project_cost', 'additional_information')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

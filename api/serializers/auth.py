@@ -33,7 +33,7 @@ class InternalUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'last_name', 'first_name', 'email', 'image', 'group', 'is_active', 'is_admin_company',
-                  'phone', 'is_staff', 'date_joined')
+                  'phone', 'is_staff', 'date_joined', 'service_provider')
         read_only_fields = ['date_joined', 'username']
 
     def create(self, validated_data):
@@ -164,6 +164,11 @@ class CustomPermissionSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         data['action'] = self.get_action(instance)
         data['type'] = self.get_name(instance)
+        data['relations'] = []
+        if not data['action']:
+            data['type'] = instance.name
+        else:
+            data['relations'] = self.get_relation(instance.codename)
         return data
 
     def get_action(self, instance):
@@ -191,3 +196,9 @@ class CustomPermissionSerializer(serializers.ModelSerializer):
         if instance.content_type == content_type:
             return name
         return ''
+
+    def get_relation(self, code_name):
+        suffix = code_name.split('_')[-1]
+        code_names = ['add_' + suffix, 'change_' + suffix, 'delete_' + suffix, 'view_' + suffix]
+        permissions = Permission.objects.filter(codename__in=code_names)
+        return permissions.values_list('id', flat=True)
