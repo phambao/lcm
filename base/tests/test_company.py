@@ -10,7 +10,7 @@ class CompanyTests(BaseTest):
         """Create a company"""
         self.company_data = {
             "logo": "string",
-            "company_name": "string",
+            "company_name": "day la de chay test a",
             "address": "string",
             # "city": 1,
             # "state": 1,
