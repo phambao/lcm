@@ -70,17 +70,6 @@ class BaseModel(models.Model):
                                            using=using, update_fields=update_fields)
 
 
-# class FieldChoices(models.TextChoices):
-#     LANDSCAPE_CONSTRUCTION = 'LANDSCAPE_CONSTRUCTION', 'Landscape Construction'
-#     LANDSCAPE_MAINTENANCE = 'LANDSCAPE_MAINTENANCE', 'Landscape Maintenance'
-#     HOME_BUILDER = 'HOME_BUILDER', 'Home Builder'
-#     CARPENTRY = 'CARPENTRY', 'Carpentry'
-#     PLUMBING = 'PLUMBING', 'Plumbing'
-#     POOL_BUILDER = 'POOL_BUILDER', 'Pool Builder'
-#     MASONRY = 'MASONRY', 'Masonry'
-#     DEMO_AND_GRADING = 'DEMO_AND_GRADING', 'Demo and Grading'
-#     CARPENTRY = 'CARPENTRY', 'Carpentry'
-#     CARPENTRY = 'CARPENTRY', 'Carpentry'
 class SizeCompanyChoices(models.TextChoices):
     SMALL = '1-5', '1-5'
     MEDIUM = '6-10', '6-10'
