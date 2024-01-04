@@ -1,14 +1,16 @@
 from rest_framework import status
 
 from sales.tests.test_base import BaseTest
+import stripe
 
 
 class CompanyTests(BaseTest):
     def setUp(self):
+        stripe.api_key = 'sk_test_51NN9dpE4OZckNkJ54bksNl7qbfONbBeJdvsY1XGSrXBVllwVhMani8Q3rNTy5WgVO1v455P6XXyLQdDcmiATEQrF00NE3sX2EE'
         """Create a company"""
         self.company_data = {
             "logo": "string",
-            "company_name": "string",
+            "company_name": "day la de chay test a",
             "address": "string",
             # "city": 1,
             # "state": 1,

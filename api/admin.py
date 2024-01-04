@@ -10,7 +10,7 @@ from django.conf import settings
 from django.utils.timesince import timesince
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from api.models import CompanyBuilder, User, SubscriptionStripeCompany
+from api.models import CompanyBuilder, User, SubscriptionStripeCompany, Trades
 from base.models.config import Question, Answer
 from base.models.payment import Price, Product
 
@@ -30,12 +30,12 @@ class AnswerInline(admin.TabularInline):
 
 
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ["company_name", "logo", "description", "address", "field", "country", "city", "state",
+    list_display = ["company_name", "logo", "description", "address", "country", "city", "state",
                     "business_phone", "zip_code", "size", "tax", "email", "cell_mail", "cell_phone", "created_date",
-                    "modified_date", "user_create", "user_update", "currency", "company_timezone", "customer_stripe", "is_payment"]
-    fields = ["company_name", "logo", "description", "address", "field", "country", "city", "state",
+                    "modified_date", "user_create", "user_update", "currency", "company_timezone", "customer_stripe", "is_payment", 'website', 'company_size', 'revenue']
+    fields = ["company_name", "logo", "description", "address", "country", "city", "state",
                     "business_phone", "zip_code", "size", "tax", "email", "cell_mail", "cell_phone",
-                    "user_create", "user_update", "currency", "company_timezone", "customer_stripe", "is_payment"]
+                    "user_create", "user_update", "currency", "company_timezone", "customer_stripe", "is_payment", 'website', 'company_size', 'revenue']
     list_filter = ["company_name"]
     search_fields = ['company_name', 'business_phone']
     inlines = [UserInline]
@@ -300,6 +300,11 @@ class SubcriptionCompanyAdmin(admin.ModelAdmin):
                 messages.error(request, 'cancel subscription error')
 
 
+class TradesAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'is_show')
+    search_fields = ['name', 'name']
+
+
 admin.site.register(SubscriptionStripeCompany, SubcriptionCompanyAdmin)
 admin.site.register(Price, PriceAdmin)
 admin.site.register(Product, StripeProductAdmin)
@@ -307,3 +312,4 @@ admin.site.register(User, UserAdmin)
 admin.site.register(CompanyBuilder, CompanyAdmin)
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Answer, AnswerAdmin)
+admin.site.register(Trades, TradesAdmin)

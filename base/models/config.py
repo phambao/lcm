@@ -103,7 +103,7 @@ class PersonalInformation(models.Model):
     nick_name = models.CharField(max_length=128, blank=True)
     phone_number = models.CharField(blank=True, max_length=20)
     email = models.EmailField(blank=True, max_length=128)
-    position = models.CharField(max_length=128, choices=Position.choices, default=Position.LEAD, blank=True)
+    job_title = models.CharField(max_length=128, blank=True)
     address = models.CharField(max_length=128, blank=True)
     company = models.ForeignKey(CompanyBuilder, on_delete=models.CASCADE,
                                 related_name='%(class)s_company_builder', null=True, blank=True)
