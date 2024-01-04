@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
+from django.core.mail import send_mail
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -233,3 +234,15 @@ def check_link(request):
 
     return Response(status=status.HTTP_200_OK, data={"company": data_company.id,
                                                      "stripe_customer": decoded_payload['customer']})
+
+
+@api_view(['PUT'])
+def reset_credential(request, pk):
+    user = User.objects.get(pk=pk)
+    new_password = get_random_string(length=8)
+    user.set_password(new_password)
+    user.save()
+    content = render_to_string('auth/reset-credential.html', {'username': user.get_username(), 'new_password': new_password})
+    celery_send_mail.delay(f'Reset credential for {user.get_username()}',
+                           content, settings.EMAIL_HOST_USER, [user.email], False)
+    return Response(status=status.HTTP_200_OK)
