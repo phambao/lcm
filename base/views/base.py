@@ -223,8 +223,6 @@ class CompanyTradesSerializerGenericView(generics.ListCreateAPIView):
 class CompanyTradesSerializerDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Trades.objects.all()
     serializer_class = TradesSerializer
-    filter_backends = (filters.DjangoFilterBackend,)
-    filterset_class = TradesFilter
 
 
 @api_view(['POST'])
