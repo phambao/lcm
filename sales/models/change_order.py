@@ -3,6 +3,7 @@ from django.db import models
 from django.utils import timezone
 
 from api.models import BaseModel
+from base.constants import DECIMAL_PLACE, MAX_DIGIT
 from sales.models import Assemble, POFormula
 
 
@@ -31,9 +32,9 @@ class FlatRate(BaseModel):
     catalog_materials = ArrayField(models.JSONField(blank=True, default=dict, null=True), default=list, blank=True,
                                    null=True)
     quantity = models.IntegerField(default=0, blank=True)
-    cost = models.DecimalField(default=0, blank=True, decimal_places=2, max_digits=16)
-    charge = models.DecimalField(default=0, blank=True, decimal_places=2, max_digits=16)
-    markup = models.DecimalField(default=0, blank=True, decimal_places=2, max_digits=16)
+    cost = models.DecimalField(default=0, blank=True, decimal_places=DECIMAL_PLACE, max_digits=MAX_DIGIT)
+    charge = models.DecimalField(default=0, blank=True, decimal_places=DECIMAL_PLACE, max_digits=MAX_DIGIT)
+    markup = models.DecimalField(default=0, blank=True, decimal_places=DECIMAL_PLACE, max_digits=MAX_DIGIT)
     unit = models.CharField(default='', blank=True, max_length=64)
     order = models.IntegerField(default=0, blank=True)
 

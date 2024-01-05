@@ -4,7 +4,7 @@ from django.utils import timezone
 
 from api.models import BaseModel
 from sales.models import EstimateTemplate, Assemble, POFormula, Catalog
-from base.constants import true, null, false
+from base.constants import DECIMAL_PLACE, MAX_DIGIT, true, null, false
 
 
 class ProposalTemplate(BaseModel):
@@ -73,26 +73,26 @@ class PriceComparison(BaseModel):
 
 class ProposalWriting(BaseModel):
     name = models.CharField(max_length=128)
-    budget = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
-    total_project_price = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
-    total_project_cost = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
-    gross_profit = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
-    gross_profit_percent = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
-    avg_markup = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
+    budget = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
+    total_project_price = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
+    total_project_cost = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
+    gross_profit = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
+    gross_profit_percent = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
+    avg_markup = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
     cost_breakdown = models.JSONField(blank=True, null=True, default=dict)
 
-    add_on_total_project_price = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
-    add_on_total_project_cost = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
-    add_on_gross_profit = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
-    add_on_gross_profit_percent = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
-    add_on_avg_markup = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
+    add_on_total_project_price = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
+    add_on_total_project_cost = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
+    add_on_gross_profit = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
+    add_on_gross_profit_percent = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
+    add_on_avg_markup = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
     add_on_cost_breakdown = models.JSONField(blank=True, null=True, default=dict)
 
-    additional_cost_total_project_price = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
-    additional_cost_total_project_cost = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
-    additional_cost_gross_profit = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
-    additional_cost_gross_profit_percent = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
-    additional_cost_avg_markup = models.DecimalField(blank=True, default=0, max_digits=99, decimal_places=2, null=True)
+    additional_cost_total_project_price = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
+    additional_cost_total_project_cost = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
+    additional_cost_gross_profit = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
+    additional_cost_gross_profit_percent = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
+    additional_cost_avg_markup = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
     additional_cost_breakdown = models.JSONField(blank=True, null=True, default=dict)
 
     project_start_date = models.DateTimeField(blank=True, null=True, default=timezone.now)

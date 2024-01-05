@@ -5,6 +5,7 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
 from api.models import BaseModel
+from base.constants import DECIMAL_PLACE, MAX_DIGIT
 
 
 class TableInvoice(BaseModel):
@@ -25,7 +26,7 @@ class PaymentHistory(BaseModel):
     invoice = models.ForeignKey('sales.Invoice', blank=True, null=True,
                                 on_delete=models.CASCADE, related_name='payment_histories')
     date = models.DateTimeField()
-    amount = models.DecimalField(default=0, max_digits=32, decimal_places=2)
+    amount = models.DecimalField(default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE)
     payment_method = models.CharField(max_length=32, choices=PaymentStatus.choices, default=PaymentStatus.CREDIT_CARD)
     received_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, related_name='payments',
                                     null=True, blank=True)
@@ -34,7 +35,7 @@ class PaymentHistory(BaseModel):
 class CustomTable(BaseModel):
     name = models.CharField(max_length=64)
     cost_type = models.CharField(max_length=64)
-    unit_cost = models.DecimalField(max_digits=32, decimal_places=2)
+    unit_cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE)
     quantity = models.IntegerField()
     unit = models.CharField(max_length=64)
     table_invoice = models.ForeignKey('sales.TableInvoice', on_delete=models.CASCADE, blank=True, null=True, related_name='customs')
@@ -47,10 +48,10 @@ class GroupChangeOrder(BaseModel):
     name = models.CharField(max_length=64)
     cost_type = models.CharField(max_length=128, blank=True, default='')
     percentage_payment = models.IntegerField(blank=True, default=100)
-    total_amount = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    total_amount = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
     quantity = models.IntegerField(default=0, blank=True)
     unit = models.CharField(blank=True, default='', max_length=32)
-    invoice_amount = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    invoice_amount = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
 
 
 class ProgressPayment(BaseModel):
@@ -59,10 +60,10 @@ class ProgressPayment(BaseModel):
     name = models.CharField(max_length=64)
     cost_type = models.CharField(max_length=128, blank=True, default='')
     percentage_payment = models.IntegerField(blank=True, default=100)
-    total_amount = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    total_amount = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
     quantity = models.IntegerField(default=0, blank=True)
     unit = models.CharField(blank=True, default='', max_length=32)
-    invoice_amount = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    invoice_amount = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
     items = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
 
@@ -71,8 +72,8 @@ class ChangeOrderItem(BaseModel):
     group_change_order = models.ForeignKey('sales.GroupChangeOrder', on_delete=models.CASCADE, blank=True, null=True,
                                            related_name='items')
     type = models.CharField(max_length=128, blank=True, default='')
-    owner_price = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
-    amount_paid = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)  # new invoice amount
+    owner_price = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
+    amount_paid = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)  # new invoice amount
     unit = models.CharField(blank=True, default='', max_length=32)
     percentage_payment = models.IntegerField(blank=True, default=100)
 
@@ -84,10 +85,10 @@ class GroupProposal(BaseModel):
     name = models.CharField(max_length=64)
     cost_type = models.CharField(max_length=128, blank=True, default='')
     percentage_payment = models.IntegerField(blank=True, default=100)
-    total_amount = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    total_amount = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
     quantity = models.IntegerField(default=0, blank=True)
     unit = models.CharField(blank=True, default='', max_length=32)
-    invoice_amount = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    invoice_amount = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
 
 
 class ProposalItem(BaseModel):
@@ -95,8 +96,8 @@ class ProposalItem(BaseModel):
     group_proposal = models.ForeignKey('sales.GroupProposal', on_delete=models.CASCADE, blank=True, null=True,
                                        related_name='items')
     type = models.CharField(max_length=128, blank=True, default='')
-    owner_price = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
-    amount_paid = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    owner_price = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
+    amount_paid = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
     unit = models.CharField(blank=True, default='', max_length=32)
     percentage_payment = models.IntegerField(blank=True, default=100)
 
@@ -124,9 +125,9 @@ class Invoice(BaseModel):
 class CreditMemoAmount(BaseModel):
     name = models.CharField(max_length=64)
     cost_type = models.CharField(max_length=64)
-    unit_amount = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    unit_amount = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
     quantity = models.IntegerField(blank=True, default=0, null=True)
-    invoice_amount = models.DecimalField(max_digits=32, decimal_places=2, default=0, blank=True)
+    invoice_amount = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
     credit_memo = models.ForeignKey('sales.CreditMemo', blank=True, null=True,
                                     related_name='credit_memo_amounts', on_delete=models.CASCADE)
 
