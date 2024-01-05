@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.apps import apps
 
 from api.models import BaseModel
+from base.constants import DECIMAL_PLACE, MAX_DIGIT
 
 
 class SourceLead(BaseModel):
@@ -53,9 +54,9 @@ class LeadDetail(BaseModel):
     notes = models.TextField(blank=True)
     confidence = models.IntegerField(default=0)
     estimate_revenue_from = models.DecimalField(
-        max_digits=99, decimal_places=2, default=0, blank=True)
+        max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
     estimate_revenue_to = models.DecimalField(
-        max_digits=99, decimal_places=2, default=0, blank=True)
+        max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
     projected_sale_date = models.DateTimeField(verbose_name='Projected Sales Date', null=True)
     project_types = models.ManyToManyField(ProjectType, verbose_name='Project Types', related_name='leads', blank=True)
     salesperson = models.ManyToManyField(get_user_model(), related_name='lead_persons', blank=True)

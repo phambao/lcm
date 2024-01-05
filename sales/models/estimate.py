@@ -265,8 +265,8 @@ class DataView(BaseModel):
                                           null=True, blank=True)
     index = models.IntegerField(blank=True, default=0, null=True)
     type = models.CharField(max_length=8, choices=Type.choices, default=Type.CUSTOM, blank=True)
-    value = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=2, blank=True, default=0)
+    value = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
     is_client_view = models.BooleanField(blank=True, default=False)
     unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.SET_NULL,
                              blank=True, null=True, related_name='data_views')
-    result = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=2, blank=True, default=0)
+    result = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
