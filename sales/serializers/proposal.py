@@ -7,7 +7,7 @@ from base.utils import pop, extra_kwargs_for_base_model
 from api.middleware import get_request
 from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting, \
     ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig, GroupEstimatePrice
-from sales.serializers import estimate
+from sales.serializers import ContentTypeSerializerMixin, estimate
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateSerializer
 
@@ -60,7 +60,7 @@ class ProposalTemplateConfigSerializer(serializers.ModelSerializer):
         fields = ('id', 'config', 'html_code', 'css_code', 'script')
 
 
-class ProposalTemplateSerializer(serializers.ModelSerializer):
+class ProposalTemplateSerializer(ContentTypeSerializerMixin):
     id = serializers.IntegerField(required=False)
     proposal_template_element = ProposalElementSerializer('proposal_template', allow_null=True, required=False,
                                                           many=True)
@@ -157,7 +157,6 @@ class ProposalTemplateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['content_type'] = ContentType.objects.get_for_model(ProposalTemplate).pk
         if self.context['request'].path != reverse('proposal') or (self.context['request'].method != 'GET' and self.context['request'].path == reverse('proposal')):
             temp = instance.proposal_formatting_template_config.first()
             rs = ProposalTemplateConfigSerializer(temp)
@@ -227,7 +226,7 @@ class GroupByEstimateSerializers(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class PriceComparisonCompactSerializer(serializers.ModelSerializer):
+class PriceComparisonCompactSerializer(ContentTypeSerializerMixin):
     class Meta:
         model = PriceComparison
         fields = '__all__'
@@ -235,12 +234,11 @@ class PriceComparisonCompactSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['content_type'] = ContentType.objects.get_for_model(PriceComparison).pk
         data['status'] = ''
         return data
 
 
-class PriceComparisonSerializer(serializers.ModelSerializer):
+class PriceComparisonSerializer(ContentTypeSerializerMixin):
     groups = GroupEstimatePriceSerializer('price_comparison', many=True, allow_null=True,
                                           required=False)
 
@@ -275,7 +273,7 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
         cost_different = pop(validated_data, 'cost_different', [])
         instance.cost_different = self.parse_cost_diff(cost_different, new_ids)
         instance.save(update_fields=['cost_different'])
-        activity_log.delay(ContentType.objects.get_for_model(PriceComparison).pk, instance.pk, 1,
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
                            PriceComparisonSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
@@ -286,14 +284,9 @@ class PriceComparisonSerializer(serializers.ModelSerializer):
         cost_different = pop(validated_data, 'cost_different', [])
         instance.cost_different = self.parse_cost_diff(cost_different, new_ids)
         instance.save(update_fields=['cost_different'])
-        activity_log.delay(ContentType.objects.get_for_model(PriceComparison).pk, instance.pk, 2,
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            PriceComparisonSerializer.__name__, __name__, self.context['request'].user.pk)
         return super().update(instance, validated_data)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['content_type'] = ContentType.objects.get_for_model(PriceComparison).pk
-        return data
 
 
 class ProposalWritingDataSerializer(serializers.ModelSerializer):
@@ -304,7 +297,7 @@ class ProposalWritingDataSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'writing_groups')
 
 
-class ProposalWritingCompactSerializer(serializers.ModelSerializer):
+class ProposalWritingCompactSerializer(ContentTypeSerializerMixin):
     class Meta:
         model = ProposalWriting
         fields = '__all__'
@@ -312,7 +305,6 @@ class ProposalWritingCompactSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['content_type'] = ContentType.objects.get_for_model(ProposalWriting).pk
         data['status'] = 'Draft'
         data['house_address'] = ''
         data['customer_contact'] = []
@@ -344,7 +336,7 @@ class CostBreakDownSerializer(serializers.Serializer):
     total_price = serializers.FloatField(required=False, allow_null=True)
 
 
-class ProposalWritingSerializer(serializers.ModelSerializer):
+class ProposalWritingSerializer(ContentTypeSerializerMixin):
     writing_groups = GroupByEstimateSerializers('writing', many=True, allow_null=True, required=False)
     cost_breakdown = CostBreakDownSerializer(many=True, allow_null=True, required=False)
 
@@ -363,7 +355,7 @@ class ProposalWritingSerializer(serializers.ModelSerializer):
         writing_groups = pop(validated_data, 'writing_groups', [])
         instance = super().create(validated_data)
         self.create_group(writing_groups, instance)
-        activity_log.delay(ContentType.objects.get_for_model(ProposalWriting).pk, instance.pk, 1,
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
                            ProposalWritingSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
@@ -371,13 +363,12 @@ class ProposalWritingSerializer(serializers.ModelSerializer):
         writing_groups = pop(validated_data, 'writing_groups', [])
         instance.writing_groups.all().update(writing=None)
         self.create_group(writing_groups, instance)
-        activity_log.delay(ContentType.objects.get_for_model(ProposalWriting).pk, instance.pk, 2,
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            ProposalWritingSerializer.__name__, __name__, self.context['request'].user.pk)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['content_type'] = ContentType.objects.get_for_model(ProposalWriting).pk
         user = get_request().user
         data['permissions'] = {
             'internal_view': user.check_perm('internal_view'),
@@ -393,7 +384,7 @@ class ProposalFormattingTemplateConfigSerializer(serializers.ModelSerializer):
         fields = ('id', 'config', 'html_code', 'css_code', 'script')
 
 
-class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
+class ProposalFormattingTemplateSerializer(ContentTypeSerializerMixin):
 
     class Meta:
         model = ProposalFormatting
@@ -402,7 +393,6 @@ class ProposalFormattingTemplateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['content_type'] = ContentType.objects.get_for_model(ProposalFormatting).pk
         data['writing_groups'] = []
         data['images'] = []
         if instance.proposal_writing:

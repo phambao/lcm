@@ -1,4 +1,3 @@
-from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
 from django.apps import apps
 from django.db.models import Sum
@@ -9,11 +8,10 @@ from base.serializers.base import IDAndNameSerializer
 from base.constants import true, null, false
 from base.tasks import activity_log
 from base.utils import pop, extra_kwargs_for_base_model
-from sales.apps import PO_FORMULA_CONTENT_TYPE, DESCRIPTION_LIBRARY_CONTENT_TYPE, \
-    UNIT_LIBRARY_CONTENT_TYPE, DATA_ENTRY_CONTENT_TYPE, ESTIMATE_TEMPLATE_CONTENT_TYPE, ASSEMBLE_CONTENT_TYPE
 from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, \
     UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView, MaterialView
+from sales.serializers import ContentTypeSerializerMixin
 from sales.serializers.catalog import CatalogEstimateSerializer, DataPointForLinkDescription
 
 
@@ -33,7 +31,7 @@ class LinkedDescriptionSerializer(serializers.Serializer):
         return data
 
 
-class DataEntrySerializer(serializers.ModelSerializer):
+class DataEntrySerializer(ContentTypeSerializerMixin):
     unit = IDAndNameSerializer(required=False, allow_null=True)
     material_selections = CatalogEstimateSerializer('data_entries', many=True, required=False, allow_null=True)
 
@@ -62,7 +60,7 @@ class DataEntrySerializer(serializers.ModelSerializer):
 
         from sales.views.estimate import DataEntryList
         if isinstance(self.context.get('view'), DataEntryList):
-            activity_log.delay(DATA_ENTRY_CONTENT_TYPE, instance.pk, 1,
+            activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
                                DataEntrySerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
@@ -91,13 +89,12 @@ class DataEntrySerializer(serializers.ModelSerializer):
                 data.append(obj)
             POFormula.objects.bulk_update(data, ['formula', 'formula_mentions'], batch_size=128)
 
-        activity_log.delay(DATA_ENTRY_CONTENT_TYPE, instance.pk, 2,
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            DataEntrySerializer.__name__, __name__, self.context['request'].user.pk)
         return update
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['content_type'] = DATA_ENTRY_CONTENT_TYPE
         data['catalog'] = {}
         data['category'] = {}
         if data['material_selections']:
@@ -182,7 +179,7 @@ class POFormulaCompactSerializer(serializers.ModelSerializer):
                    'formula_scenario', 'formula_for_data_view', 'original', 'catalog_materials', 'company', 'created_from')
 
 
-class POFormulaSerializer(serializers.ModelSerializer):
+class POFormulaSerializer(ContentTypeSerializerMixin):
     self_data_entries = POFormulaToDataEntrySerializer('po_formula', many=True, required=False, read_only=False)
 
     class Meta:
@@ -199,7 +196,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
 
         from sales.views.estimate import POFormulaList
         if isinstance(self.context.get('view'), POFormulaList):
-            activity_log.delay(PO_FORMULA_CONTENT_TYPE, instance.pk, 1,
+            activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
                                POFormulaSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
@@ -207,7 +204,7 @@ class POFormulaSerializer(serializers.ModelSerializer):
         data_entries = pop(validated_data, 'self_data_entries', [])
         instance.self_data_entries.all().delete()
         create_po_formula_to_data_entry(instance, data_entries)
-        activity_log.delay(PO_FORMULA_CONTENT_TYPE, instance.pk, 2,
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            POFormulaSerializer.__name__, __name__, self.context['request'].user.pk)
         new_name = validated_data['name']
         old_name = instance.name
@@ -265,7 +262,6 @@ class POFormulaSerializer(serializers.ModelSerializer):
             data['catalog_ancestor'] = None
             data['catalog_link'] = []
 
-        data['content_type'] = PO_FORMULA_CONTENT_TYPE
         original = data.get('original')
         if not original:
             data['original'] = instance.pk
@@ -297,7 +293,7 @@ class POFormulaGroupCompactSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class POFormulaGroupingSerializer(serializers.ModelSerializer):
+class POFormulaGroupingSerializer(ContentTypeSerializerMixin):
     group_formulas = POFormulaSerializer('group', many=True, allow_null=True, required=False)
 
     class Meta:
@@ -332,13 +328,8 @@ class POFormulaGroupingSerializer(serializers.ModelSerializer):
             POFormula.objects.filter(id__in=po_pk, group=None).update(group=instance)
         return super(POFormulaGroupingSerializer, self).update(instance, validated_data)
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['content_type'] = ContentType.objects.get_for_model(POFormulaGrouping).pk
-        return data
 
-
-class UnitLibrarySerializer(serializers.ModelSerializer):
+class UnitLibrarySerializer(ContentTypeSerializerMixin):
     class Meta:
         model = UnitLibrary
         fields = ('id', 'name', 'description', 'created_date', 'modified_date', 'user_create', 'user_update')
@@ -352,7 +343,7 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
 
         from sales.views.estimate import UnitLibraryList
         if isinstance(self.context.get('view'), UnitLibraryList):
-            activity_log.delay(UNIT_LIBRARY_CONTENT_TYPE, instance.pk, 1,
+            activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
                                UnitLibrarySerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
@@ -362,7 +353,7 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
             obj = super().update(instance, validated_data)
         except IntegrityError:
             raise serializers.ValidationError({'name': 'name is duplicated'})
-        activity_log.delay(UNIT_LIBRARY_CONTENT_TYPE, instance.pk, 2,
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            UnitLibrarySerializer.__name__, __name__, self.context['request'].user.pk)
         catalogs = instance.get_related_cost_table(old_name)
         cs = []
@@ -374,13 +365,8 @@ class UnitLibrarySerializer(serializers.ModelSerializer):
         model.objects.bulk_update(cs, ['c_table'])
         return obj
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['content_type'] = UNIT_LIBRARY_CONTENT_TYPE
-        return data
 
-
-class DescriptionLibrarySerializer(serializers.ModelSerializer):
+class DescriptionLibrarySerializer(ContentTypeSerializerMixin):
     class Meta:
         model = DescriptionLibrary
         fields = ('id', 'name', 'linked_description', 'created_date', 'modified_date')
@@ -391,19 +377,14 @@ class DescriptionLibrarySerializer(serializers.ModelSerializer):
 
         from sales.views.estimate import DescriptionLibraryList
         if isinstance(self.context.get('view'), DescriptionLibraryList):
-            activity_log.delay(DESCRIPTION_LIBRARY_CONTENT_TYPE, instance.pk, 1,
+            activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
                                DescriptionLibrarySerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
-        activity_log.delay(DESCRIPTION_LIBRARY_CONTENT_TYPE, instance.pk, 2,
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            DescriptionLibrarySerializer.__name__, __name__, self.context['request'].user.pk)
         return super().update(instance, validated_data)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['content_type'] = DESCRIPTION_LIBRARY_CONTENT_TYPE
-        return data
 
 
 class AssembleCompactSerializer(serializers.ModelSerializer):
@@ -416,7 +397,7 @@ class AssembleCompactSerializer(serializers.ModelSerializer):
         raise ValidationError('Can not Create')
 
 
-class AssembleSerializer(serializers.ModelSerializer):
+class AssembleSerializer(ContentTypeSerializerMixin):
     assemble_formulas = POFormulaSerializer('assemble', many=True, required=False, allow_null=True)
 
     class Meta:
@@ -445,7 +426,7 @@ class AssembleSerializer(serializers.ModelSerializer):
 
         from sales.views.estimate import AssembleList
         if isinstance(self.context.get('view'), AssembleList):
-            activity_log.delay(ASSEMBLE_CONTENT_TYPE, instance.pk, 1,
+            activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
                                AssembleSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
@@ -453,13 +434,12 @@ class AssembleSerializer(serializers.ModelSerializer):
         po_formulas = pop(validated_data, 'assemble_formulas', [])
         instance.assemble_formulas.all().delete()
         self.create_po_formula(po_formulas, instance)
-        activity_log.delay(ASSEMBLE_CONTENT_TYPE, instance.pk, 2,
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            AssembleSerializer.__name__, __name__, self.context['request'].user.pk)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['content_type'] = ASSEMBLE_CONTENT_TYPE
         original = data.get('original')
         if not original:
             data['original'] = instance.pk
@@ -572,7 +552,7 @@ class EstimateTemplateMiniSerializer(serializers.ModelSerializer):
         return data
 
 
-class EstimateTemplateSerializer(serializers.ModelSerializer):
+class EstimateTemplateSerializer(ContentTypeSerializerMixin):
     assembles = AssembleSerializer(many=True, required=False, allow_null=True,)
     data_views = DataViewSerializer('estimate_template', many=True, required=False, allow_null=True)
     data_entries = POFormulaToDataEntrySerializer('estimate_template', many=True, required=False, allow_null=True)
@@ -629,7 +609,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
 
         from sales.views.estimate import EstimateTemplateList
         if isinstance(self.context.get('view'), EstimateTemplateList):
-            activity_log.delay(ESTIMATE_TEMPLATE_CONTENT_TYPE, instance.pk, 1,
+            activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
                                EstimateTemplateSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
@@ -652,7 +632,7 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
 
         instance.assembles.all().delete()
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
-        activity_log.delay(ESTIMATE_TEMPLATE_CONTENT_TYPE, instance.pk, 2,
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            EstimateTemplateSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
@@ -670,7 +650,6 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['content_type'] = ESTIMATE_TEMPLATE_CONTENT_TYPE
         original = data.get('original')
         if not original:
             data['original'] = instance.pk
