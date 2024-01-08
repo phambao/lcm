@@ -69,6 +69,8 @@ class BaseModel(models.Model):
         return super(BaseModel, self).save(force_insert=force_insert, force_update=force_update,
                                            using=using, update_fields=update_fields)
 
+    def get_content_type(self):
+        return ContentType.objects.get_for_model(self)
 
 class SizeCompanyChoices(models.TextChoices):
     SMALL = '1-5', '1-5'

@@ -8,6 +8,7 @@ from base.utils import pop
 from base.tasks import activity_log
 from base.serializers import base
 from sales.models.invoice import InvoiceTemplate
+from sales.serializers import ContentTypeSerializerMixin
 from ..models import (Invoice, TableInvoice, PaymentHistory, CustomTable, GroupChangeOrder, ChangeOrderItem,
                       ProposalWriting, ProposalItem, GroupProposal, ProgressPayment, LeadDetail, CreditMemoAmount,
                       CreditMemo, AttachmentInvoice)
@@ -20,7 +21,7 @@ class UnitSerializerMixin:
         return data
 
 
-class PaymentHistorySerializer(serializers.ModelSerializer, SerializerMixin):
+class PaymentHistorySerializer(ContentTypeSerializerMixin, SerializerMixin):
     class Meta:
         model = PaymentHistory
         fields = ('id', 'date', 'amount', 'payment_method', 'received_by')
@@ -29,11 +30,6 @@ class PaymentHistorySerializer(serializers.ModelSerializer, SerializerMixin):
         invoice = get_object_or_404(Invoice.objects.all(), pk=self.get_params()['pk'])
         validated_data['invoice'] = invoice
         return super().create(validated_data)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['content_type'] = ContentType.objects.get_for_model(PaymentHistory).pk
-        return data
 
 
 class ProposalItemSerializer(UnitSerializerMixin, serializers.ModelSerializer):
@@ -194,7 +190,7 @@ class AttachmentInvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
         fields = ('file', 'name', 'size')
 
 
-class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
+class InvoiceSerializer(ContentTypeSerializerMixin, SerializerMixin):
     tables = TableInvoiceSerializer('invoice', many=True, required=False, allow_null=True)
     payment_histories = PaymentHistorySerializer('invoice', many=True, required=False, allow_null=True)
     attachments = AttachmentInvoiceSerializer(many=True, required=False, allow_null=True)
@@ -232,7 +228,7 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
         self.create_talbes(instance, tables)
         self.create_payment_history(instance, payment_histories)
         self.create_attachment(instance, attachments)
-        activity_log.delay(ContentType.objects.get_for_model(Invoice).pk, instance.pk, 1,
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
                            InvoiceSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
@@ -248,13 +244,12 @@ class InvoiceSerializer(serializers.ModelSerializer, SerializerMixin):
         self.create_talbes(instance, tables)
         self.create_payment_history(instance, payment_histories)
         self.create_attachment(instance, attachments)
-        activity_log.delay(ContentType.objects.get_for_model(Invoice).pk, instance.pk, 2,
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            InvoiceSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['content_type'] = ContentType.objects.get_for_model(Invoice).pk
         attachments = AttachmentInvoice.objects.filter(content_type=ContentType.objects.get_for_model(instance),
                                                        object_id=instance.id)
         attachment_data = AttachmentInvoiceSerializer(attachments, many=True).data
@@ -307,7 +302,7 @@ class CreditMemoAmountSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'cost_type', 'unit_amount', 'quantity', 'invoice_amount')
 
 
-class CreditMemoSerializer(serializers.ModelSerializer):
+class CreditMemoSerializer(ContentTypeSerializerMixin):
     credit_memo_amounts = CreditMemoAmountSerializer('credit_memo', many=True, allow_null=True, required=False)
     attachments = AttachmentInvoiceSerializer(many=True, required=False, allow_null=True)
 
@@ -347,7 +342,6 @@ class CreditMemoSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['content_type'] = ContentType.objects.get_for_model(CreditMemo).pk
         attachments = AttachmentInvoice.objects.filter(content_type=ContentType.objects.get_for_model(instance),
                                                        object_id=instance.id)
         attachment_data = AttachmentInvoiceSerializer(attachments, many=True).data
@@ -355,7 +349,7 @@ class CreditMemoSerializer(serializers.ModelSerializer):
         return data
 
 
-class InvoiceTemplateSerializer(serializers.ModelSerializer):
+class InvoiceTemplateSerializer(ContentTypeSerializerMixin):
     class Meta:
         model = InvoiceTemplate
         fields = ('id', 'name', 'description', 'created_date', 'user_create')
@@ -363,16 +357,11 @@ class InvoiceTemplateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         instance = super().create(validated_data)
-        activity_log.delay(ContentType.objects.get_for_model(InvoiceTemplate).pk, instance.pk, 1,
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
                            InvoiceTemplateSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
 
     def update(self, instance, validated_data):
-        activity_log.delay(ContentType.objects.get_for_model(InvoiceTemplate).pk, instance.pk, 2,
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            InvoiceTemplateSerializer.__name__, __name__, self.context['request'].user.pk)
         return super().update(instance, validated_data)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['content_type'] = ContentType.objects.get_for_model(InvoiceTemplate).pk
-        return data
