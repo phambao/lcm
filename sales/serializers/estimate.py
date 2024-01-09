@@ -1,6 +1,7 @@
 from django.db import IntegrityError
 from django.apps import apps
 from django.db.models import Sum
+from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -293,7 +294,7 @@ class POFormulaGroupCompactSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class POFormulaGroupingSerializer(ContentTypeSerializerMixin):
+class POFormulaGroupingSerializer(serializers.ModelSerializer):
     group_formulas = POFormulaSerializer('group', many=True, allow_null=True, required=False)
 
     class Meta:
@@ -327,6 +328,11 @@ class POFormulaGroupingSerializer(ContentTypeSerializerMixin):
             po_pk = self.add_relation_po_formula(po_formulas, instance)
             POFormula.objects.filter(id__in=po_pk, group=None).update(group=instance)
         return super(POFormulaGroupingSerializer, self).update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['content_type'] = ContentType.objects.get_for_model(POFormulaGrouping).pk
+        return data
 
 
 class UnitLibrarySerializer(ContentTypeSerializerMixin):
