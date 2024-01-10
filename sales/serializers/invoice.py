@@ -45,7 +45,7 @@ class GroupProposalSerializer(UnitSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = GroupProposal
         fields = ('id', 'name', 'cost_type', 'percentage_payment', 'total_amount', 'quantity', 'proposal',
-                  'unit', 'invoice_amount', 'items')
+                  'unit', 'invoice_amount', 'items', 'is_formula')
 
     def create_proposal_items(self, items, instance):
         for item in items:
