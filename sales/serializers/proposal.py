@@ -1,12 +1,18 @@
+import random
+import uuid
+
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.template.loader import render_to_string
 from rest_framework import serializers
 from django.urls import reverse
 
-from base.tasks import activity_log
+from base.tasks import activity_log, celery_send_mail
 from base.utils import pop, extra_kwargs_for_base_model
 from api.middleware import get_request
 from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting, \
-    ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig, GroupEstimatePrice
+    ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig, GroupEstimatePrice, \
+    ProposalFormattingSign
 from sales.serializers import ContentTypeSerializerMixin, estimate
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateSerializer
@@ -400,4 +406,38 @@ class ProposalFormattingTemplateSerializer(ContentTypeSerializerMixin):
             imgs = instance.proposal_writing.get_imgs()
             images = CatalogImageSerializer(imgs, context=self.context, many=True).data
             data['images'] = images
+        signs = ProposalFormattingTemplateSignSerializer(instance.sign_proposal_formatting.all(), many=True)
+        data['signs'] = signs.data
         return data
+
+
+class ProposalFormattingTemplateSignSerializer(ContentTypeSerializerMixin):
+    url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    class Meta:
+        model = ProposalFormattingSign
+        fields = '__all__'
+
+    # def create(self, validated_data):
+    #     request = self.context['request']
+    #
+    #     validated_data['location_code'] = uuid.uuid4()
+    #     validated_data['location_code'] = ''.join(random.choices('0123456789', k=6))
+    #     proposal_formatting_sign = super().create(validated_data)
+    #     return proposal_formatting_sign
+
+
+class ProposalFormattingTemplateSignsSerializer(serializers.Serializer):
+    signs = ProposalFormattingTemplateSignSerializer(many=True, allow_null=True, required=False)
+
+    # def create(self, validated_data):
+    #     request = self.context['request']
+    #     signs = pop(validated_data, 'signs', [])
+    #     for data_sign in signs:
+    #         url = pop(data_sign, 'url', None)
+    #         proposal_formatting_sign_create = ProposalFormattingSign.objects.create(
+    #             **data_sign
+    #         )
+    #         content = render_to_string('proposal-formatting-sign.html', {'url': url})
+    #         celery_send_mail.delay(f'Sign Electronically',
+    #                                content, settings.EMAIL_HOST_USER, proposal_formatting_sign_create.email, False)
+    #     return proposal_formatting_sign
