@@ -197,9 +197,9 @@ def get_items(request, pk):
     """
     Get items for invoice
     """
-    is_formula = request.GET.get('is_formula')
+    is_formula = request.GET.get('is_formula', 'true')
     proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
-    if not is_formula:
+    if is_formula != 'true':
         estimate_templates = proposal_writing.get_estimates()
         data = EstimateTemplateForInvoiceSerializer(estimate_templates, context={'request': request}, many=True).data
     else:

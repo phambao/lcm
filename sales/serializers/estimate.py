@@ -164,22 +164,6 @@ class POFormulaForInvoiceSerializer(serializers.ModelSerializer):
         return data
 
 
-class EstimateTemplateForInvoiceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EstimateTemplate
-        fields = ('id', 'name', 'contract_description')
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        instance.get_info()
-        data['total_prices'] = instance.get_total_prices()
-        data['unit_cost'] = instance.get_unit_cost()
-        data['total_cost'] = instance.get_total_cost()
-        data['unit_price'] = instance.get_unit_price()
-        data['quantity'] = instance.get_quantity()
-        return data
-
-
 class POFormulaDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = POFormula
@@ -701,4 +685,21 @@ class TaggingSerializer(serializers.Serializer):
             except IndexError:
                 """If data point is in the first category's level"""
             data['ancestors'] = [CatalogEstimateSerializer(c).data for c in ancestors]
+        return data
+
+
+class EstimateTemplateForInvoiceSerializer(serializers.ModelSerializer):
+    data_views = DataViewSerializer('estimate_template', many=True, required=False, allow_null=True)
+    class Meta:
+        model = EstimateTemplate
+        fields = ('id', 'name', 'contract_description', 'data_views')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        instance.get_info()
+        data['total_prices'] = instance.get_total_prices()
+        data['unit_cost'] = instance.get_unit_cost()
+        data['total_cost'] = instance.get_total_cost()
+        data['unit_price'] = instance.get_unit_price()
+        data['quantity'] = instance.get_quantity()
         return data
