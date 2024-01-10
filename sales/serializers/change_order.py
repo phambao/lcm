@@ -4,7 +4,7 @@ from rest_framework import serializers
 from base.utils import pop, extra_kwargs_for_base_model
 from base.tasks import activity_log
 from sales.models import ChangeOrder, GroupEstimate, FlatRate, GroupFlatRate
-from sales.serializers.estimate import EstimateTemplateSerializer, POFormulaDataSerializer, \
+from sales.serializers.estimate import EstimateTemplateForInvoiceSerializer, EstimateTemplateSerializer, POFormulaDataSerializer, \
     POFormulaForInvoiceSerializer
 
 
@@ -161,4 +161,5 @@ class ChangeOrderForInvoice(serializers.ModelSerializer):
         data['flat_rate_groups'] = instance._get_flat_rate().values(
             'id', 'name', 'quantity', 'cost', 'charge', 'markup', 'unit'
         )
+        data['estimate_templates'] = EstimateTemplateForInvoiceSerializer(instance.existing_estimates.all(), many=True).data
         return data

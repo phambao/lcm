@@ -88,7 +88,7 @@ class GroupChangeOrderSerializer(UnitSerializerMixin, serializers.ModelSerialize
     class Meta:
         model = GroupChangeOrder
         fields = ('id', 'name', 'cost_type', 'percentage_payment', 'total_amount', 'quantity', 'change_order',
-                  'unit', 'invoice_amount', 'items')
+                  'unit', 'invoice_amount', 'items', 'is_formula')
 
     def create_change_order_items(self, items, instance):
         for item in items:
