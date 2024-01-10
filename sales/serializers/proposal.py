@@ -417,27 +417,6 @@ class ProposalFormattingTemplateSignSerializer(ContentTypeSerializerMixin):
         model = ProposalFormattingSign
         fields = '__all__'
 
-    # def create(self, validated_data):
-    #     request = self.context['request']
-    #
-    #     validated_data['location_code'] = uuid.uuid4()
-    #     validated_data['location_code'] = ''.join(random.choices('0123456789', k=6))
-    #     proposal_formatting_sign = super().create(validated_data)
-    #     return proposal_formatting_sign
-
 
 class ProposalFormattingTemplateSignsSerializer(serializers.Serializer):
     signs = ProposalFormattingTemplateSignSerializer(many=True, allow_null=True, required=False)
-
-    # def create(self, validated_data):
-    #     request = self.context['request']
-    #     signs = pop(validated_data, 'signs', [])
-    #     for data_sign in signs:
-    #         url = pop(data_sign, 'url', None)
-    #         proposal_formatting_sign_create = ProposalFormattingSign.objects.create(
-    #             **data_sign
-    #         )
-    #         content = render_to_string('proposal-formatting-sign.html', {'url': url})
-    #         celery_send_mail.delay(f'Sign Electronically',
-    #                                content, settings.EMAIL_HOST_USER, proposal_formatting_sign_create.email, False)
-    #     return proposal_formatting_sign

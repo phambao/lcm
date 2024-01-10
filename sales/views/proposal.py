@@ -274,21 +274,6 @@ def duplicate_proposal(request):
 
 
 @api_view(['POST'])
-def proposal_formatting_send_mail(request):
-    """
-    Payloads: {"email": "example@gmail.com", "url":["https:example"], "code":"123456"}
-    """
-    data = request.data
-    email = data.get('email')
-    url = data.get('url')
-    code = data.get('code')
-    content = render_to_string('proposal-formatting-sign.html', {'url': url, 'code': code})
-    celery_send_mail.delay(f'Sign Electronically',
-                           content, settings.EMAIL_HOST_USER, email, False)
-    return Response(status=status.HTTP_201_CREATED, data={'data': 'send mail success'})
-
-
-@api_view(['POST'])
 def proposal_formatting_public(request):
     data = request.data
     serializer = ProposalFormattingTemplateSignsSerializer(data=request.data)
@@ -307,30 +292,8 @@ def proposal_formatting_public(request):
     return Response(status=status.HTTP_201_CREATED, data={'data': 'public success'})
 
 
-# @api_view(['POST'])
-# def proposal_formatting_sign(request):
-#     """
-#     Payloads: {"data": [{"email": "example@gmail.com", "url":"https:example/code=123", "code":"123456"}]}
-#     """
-#     data = request.data
-#     serializer = ProposalFormattingTemplateSignsSerializer(data=request.data)
-#     serializer.is_valid(raise_exception=True)
-#     for data_proposal_sign in data:
-#         url = pop(data_proposal_sign, 'url', None)
-#         proposal_formatting_sign_create = ProposalFormattingSign.objects.create(
-#             **data_proposal_sign
-#         )
-#         content = render_to_string('proposal-formatting-sign-otp.html', {'otp': url})
-#         celery_send_mail.delay(f'Sign Electronically OTP', content, settings.EMAIL_HOST_USER, [proposal_formatting_sign_create.email], False)
-#
-#     return Response(status=status.HTTP_201_CREATED, data={'data': 'public success'})
-
-
 @api_view(['POST'])
 def create_code_proposal_formatting_sign(request):
-    """
-    Payloads: {"id": "1" , "code":"123456"}
-    """
     data = request.data
     pk = data.get('id')
     email = data.get('email')
