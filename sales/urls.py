@@ -277,7 +277,11 @@ url_proposal = [
     path('proposal-writing/<int:pk>/image/', proposal.get_image),
     path('formatting/', proposal.ProposalFormattingTemplateGenericView.as_view(), name='proposal-formatting'),
     path('view-proposal-formatting/<int:formatting_id>/', proposal.view_proposal_formatting),
-    path('proposal-writing/<int:pk>/items/', proposal.get_items)
+    path('proposal-writing/<int:pk>/items/', proposal.get_items),
+    path('template/sign/<int:pk>/', proposal.ProposalFormattingTemplateSignDetailGenericView.as_view()),
+    path('template/public/', proposal.proposal_formatting_public),
+    path('template/sign/otp/', proposal.create_code_proposal_formatting_sign),
+    path('template/sign/check-otp/', proposal.check_code_proposal_formatting_sign),
 ]
 
 url_change_order = [

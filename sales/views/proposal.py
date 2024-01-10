@@ -1,5 +1,10 @@
+import random
+
+from django.conf import settings
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
+from django.template.loader import render_to_string
+from django.utils.crypto import get_random_string
 from django_filters import rest_framework as filters
 from rest_framework import generics, permissions, filters as rf_filters, status
 from rest_framework.decorators import api_view, permission_classes
@@ -7,15 +12,19 @@ from rest_framework.response import Response
 
 from api.middleware import get_request
 from base.permissions import ProposalPermissions
+from base.utils import pop
 from base.views.base import CompanyFilterMixin
+from base.tasks import celery_send_mail
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter, ProposalTemplateFilter
-from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, POFormula
+from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, POFormula, \
+    ProposalFormattingSign
 from sales.models.estimate import EstimateTemplate
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateForFormattingSerializer, EstimateTemplateForInvoiceSerializer, POFormulaDataSerializer, POFormulaForInvoiceSerializer
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
-    ProposalWritingCompactSerializer, ProposalTemplateHtmlCssSerializer, ProposalWritingDataSerializer
+    ProposalWritingCompactSerializer, ProposalTemplateHtmlCssSerializer, ProposalWritingDataSerializer, \
+    ProposalFormattingTemplateSignSerializer, ProposalFormattingTemplateSignsSerializer
 
 
 class ProposalTemplateGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
@@ -99,6 +108,11 @@ class ProposalFormattingTemplateDetailGenericView(generics.RetrieveUpdateDestroy
         if not proposal_formatting:
             proposal_formatting = ProposalFormatting.objects.create(proposal_writing=proposal_writing)
         return ProposalFormatting.objects.all()
+
+
+class ProposalFormattingTemplateSignDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ProposalFormattingSign.objects.all()
+    serializer_class = ProposalFormattingTemplateSignSerializer
 
 
 @api_view(['GET'])
@@ -262,3 +276,53 @@ def duplicate_proposal(request):
             objs.append(dup.save(lead_id=lead).id)
     serializer = ProposalWritingCompactSerializer(ProposalWriting.objects.filter(id__in=objs), many=True)
     return Response(status=status.HTTP_201_CREATED, data=serializer.data)
+
+
+@api_view(['POST'])
+def proposal_formatting_public(request):
+    data = request.data
+    serializer = ProposalFormattingTemplateSignsSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    for data_proposal_sign in data['signs']:
+        url = pop(data_proposal_sign, 'url', None)
+        proposal_formatting = pop(data_proposal_sign, 'proposal_formatting', None)
+        data_proposal_formatting = ProposalFormatting.objects.get(id=proposal_formatting)
+        proposal_formatting_sign_create = ProposalFormattingSign.objects.create(
+            proposal_formatting=data_proposal_formatting,
+            **data_proposal_sign
+        )
+        content = render_to_string('proposal-formatting-sign.html', {'url': url})
+        celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [proposal_formatting_sign_create.email], False, html_message=content)
+
+    return Response(status=status.HTTP_201_CREATED, data={'data': 'public success'})
+
+
+@api_view(['POST'])
+def create_code_proposal_formatting_sign(request):
+    data = request.data
+    pk = data.get('id')
+    email = data.get('email')
+    code = get_random_string(length=6, allowed_chars='1234567890')
+    proposal_sign = ProposalFormattingSign.objects.get(id=pk)
+    proposal_sign.code = code
+    proposal_sign.save()
+    content = render_to_string('proposal-formatting-sign-otp.html', {'otp': code})
+    celery_send_mail.delay(f'Sign Electronically OTP', content, settings.EMAIL_HOST_USER,
+                           [email], False)
+
+    return Response(status=status.HTTP_200_OK, data={'data': ' create code success'})
+
+
+@api_view(['POST'])
+def check_code_proposal_formatting_sign(request):
+    """
+    Payloads: {"id": "1" , "code":"123456"}
+    """
+    data = request.data
+    pk = data.get('id')
+    code = data.get('code')
+    p = ProposalFormattingSign.objects.get(pk=pk)
+    if p.code == code:
+        return Response(status=status.HTTP_200_OK, data={'data': 'code success'})
+    else:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={'data': 'code error'})

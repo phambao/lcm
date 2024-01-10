@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
@@ -207,3 +208,16 @@ class GroupEstimatePrice(BaseModel):
                                                 related_name='group_price')
     price_comparison = models.ForeignKey('sales.PriceComparison', on_delete=models.CASCADE, blank=True, null=True,
                                          related_name='groups')
+
+
+class ProposalFormattingSign(BaseModel):
+    class Meta:
+        db_table = 'proposal_formatting_sign'
+
+    proposal_formatting = models.ForeignKey(ProposalFormatting, on_delete=models.CASCADE,
+                                            related_name='sign_proposal_formatting', null=True)
+    sign = models.CharField(max_length=128, blank=True)
+    is_show = models.BooleanField(default=False, blank=True)
+    code = models.CharField(max_length=6, blank=True)
+    email = models.CharField(max_length=128, blank=True)
+    code_location = models.CharField(max_length=128, blank=True)

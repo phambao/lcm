@@ -1,12 +1,18 @@
+import random
+import uuid
+
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.template.loader import render_to_string
 from rest_framework import serializers
 from django.urls import reverse
 
-from base.tasks import activity_log
+from base.tasks import activity_log, celery_send_mail
 from base.utils import pop, extra_kwargs_for_base_model
 from api.middleware import get_request
 from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting, \
-    ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig, GroupEstimatePrice
+    ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig, GroupEstimatePrice, \
+    ProposalFormattingSign
 from sales.serializers import ContentTypeSerializerMixin, estimate
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateSerializer
@@ -400,4 +406,17 @@ class ProposalFormattingTemplateSerializer(ContentTypeSerializerMixin):
             imgs = instance.proposal_writing.get_imgs()
             images = CatalogImageSerializer(imgs, context=self.context, many=True).data
             data['images'] = images
+        signs = ProposalFormattingTemplateSignSerializer(instance.sign_proposal_formatting.all(), many=True)
+        data['signs'] = signs.data
         return data
+
+
+class ProposalFormattingTemplateSignSerializer(ContentTypeSerializerMixin):
+    url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    class Meta:
+        model = ProposalFormattingSign
+        fields = '__all__'
+
+
+class ProposalFormattingTemplateSignsSerializer(serializers.Serializer):
+    signs = ProposalFormattingTemplateSignSerializer(many=True, allow_null=True, required=False)
