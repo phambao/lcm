@@ -89,6 +89,7 @@ class GroupProposal(BaseModel):
     quantity = models.IntegerField(default=0, blank=True)
     unit = models.CharField(blank=True, default='', max_length=32)
     invoice_amount = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
+    is_formula = models.BooleanField(default=True, blank=True)
 
 
 class ProposalItem(BaseModel):

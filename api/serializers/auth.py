@@ -34,7 +34,7 @@ class InternalUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'last_name', 'first_name', 'email', 'image', 'group', 'is_active', 'is_admin_company',
-                  'phone', 'is_staff', 'date_joined', 'service_provider')
+                  'phone', 'is_staff', 'date_joined', 'service_provider', 'is_schedule_notify', 'schedule_conflict_items')
         read_only_fields = ['date_joined', 'username']
 
     def create(self, validated_data):
@@ -62,6 +62,12 @@ class InternalUserSerializer(serializers.ModelSerializer):
                 value = Group.objects.get(id=value)
             except Group.DoesNotExist:
                 raise serializers.ValidationError('The choice is not exist')
+        return value
+
+    def validate_schedule_conflict_items(self, value):
+        if value:
+            if value < 7:
+                raise serializers.ValidationError('this field must be greater than 7')
         return value
 
     def to_representation(self, instance):

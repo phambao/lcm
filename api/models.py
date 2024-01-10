@@ -34,6 +34,8 @@ class User(AbstractUser):
     expire_code_register = models.DateTimeField(auto_now=True)
     service_provider = models.CharField(blank=True, choices=ServiceProvider.choices,
                                         default=ServiceProvider.USNETWORK, max_length=16)
+    is_schedule_notify = models.BooleanField(default=False, blank=False)
+    schedule_conflict_items = models.IntegerField(default=7, blank=True)
 
     def __str__(self):
         return self.email

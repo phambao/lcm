@@ -1,6 +1,7 @@
 from django.db import models
 from django.apps import apps
 from django.contrib.postgres.fields import ArrayField
+from django.db.models import Sum
 from api.middleware import get_request
 
 from api.models import BaseModel
@@ -54,12 +55,12 @@ class POFormula(BaseModel):
     assemble = models.ForeignKey('sales.Assemble', blank=True, related_name='assemble_formulas', null=True, on_delete=models.SET_NULL)
     created_from = models.IntegerField(default=None, blank=True, null=True)
     is_show = models.BooleanField(default=True, blank=True)  # Only show formula page
-    quantity = models.CharField(max_length=64, blank=True)
-    markup = models.CharField(max_length=64, blank=True)
+    quantity = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
+    markup = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
     charge = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
     material = models.TextField(blank=True)
     unit = models.CharField(max_length=32, blank=True)
-    unit_price = models.CharField(max_length=32, blank=True)
+    unit_price = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
     cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
     total_cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
     formula_mentions = models.CharField(blank=True, max_length=256)  # for FE
@@ -250,6 +251,26 @@ class EstimateTemplate(BaseModel):
 
     def export_to_json(self):
         return [self.name]
+
+    def get_info(self):
+        self.info = self.get_formula().aggregate(total_charge=Sum('charge'), unit_cost=Sum('cost'),
+                                                 unit_price=Sum('unit_price'), quantity=Sum('quantity'),
+                                                 total_cost=Sum('total_cost'))
+
+    def get_total_prices(self):
+        return self.info.get('total_charge')
+
+    def get_unit_cost(self):
+        return self.info.get('unit_cost')
+
+    def get_total_cost(self):
+        return self.info.get('total_cost')
+
+    def get_unit_price(self):
+        return self.info.get('unit_price')
+
+    def get_quantity(self):
+        return self.info.get('quantity')
 
 
 class DataView(BaseModel):
