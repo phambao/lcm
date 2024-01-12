@@ -2,6 +2,7 @@ import random
 import re
 import string
 
+import pytz
 import stripe
 from django.db import IntegrityError
 from rest_framework import serializers
@@ -119,6 +120,12 @@ class CompanySerializer(serializers.ModelSerializer):
         data_company.trades.add(*data_trades)
 
         return data_company
+
+    def validate_company_timezone(self, value):
+        if value in pytz.all_timezones:
+            return value
+        else:
+            raise serializers.ValidationError('timezones error')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

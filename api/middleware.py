@@ -1,6 +1,6 @@
+import pytz
 from threading import current_thread
 
-import pytz
 from django.utils import timezone
 from django.utils.translation import activate
 
@@ -61,8 +61,5 @@ class SettingTimeZoneMiddleware:
         user = request.user
         if request.user.is_authenticated is True:
             if user.company.company_timezone:
-                try:
-                    timezone.activate(pytz.timezone(user.company.company_timezone))
-                except Exception:
-                    timezone.deactivate()
+                timezone.activate(pytz.timezone(user.company.company_timezone))
         return self.get_response(request)
