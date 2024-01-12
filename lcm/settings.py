@@ -64,7 +64,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'api.middleware.CacheRequestMiddleware',
-    'api.middleware.SettingTranslateMiddleware'
+    'api.middleware.SettingTranslateMiddleware',
+    'api.middleware.SettingTimeZoneMiddleware'
 ]
 
 AUTHENTICATION_BACKENDS = [
