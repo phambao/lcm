@@ -31,10 +31,18 @@ from api.middleware import get_request
 from base.views.base import CompanyFilterMixin
 from base.constants import null, true, false
 
+DATA_ENTRY_PREFETCH_RELATED = ['data_entry__unit', 'data_entry__material_selections', 'data_entry']
+FORMULA_PREFETCH_RELATED = ['self_data_entries__' + i for i in DATA_ENTRY_PREFETCH_RELATED]
+GROUP_PREFETCH_RELATED = ['group_formulas__' + i for i in FORMULA_PREFETCH_RELATED]
+ASSEMBLE_PREFETCH_RELATED = ['assemble_formulas__' + i for i in FORMULA_PREFETCH_RELATED]
+ESTIMATE_PREFETCH_RELATED = ['assembles__' + i for i in ASSEMBLE_PREFETCH_RELATED]
+ESTIMATE_DATA_ENTRY_PREFETCH_RELATED = ['data_entries__' + i for i in DATA_ENTRY_PREFETCH_RELATED]
+MATERIAL_PREFETCH_RELATED = ['material_views__' + i for i in DATA_ENTRY_PREFETCH_RELATED]
+
 
 class POFormulaList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = POFormula.objects.filter(is_show=True, group=None).\
-        prefetch_related('self_data_entries').select_related('assemble', 'group').order_by('-modified_date')
+        prefetch_related(*FORMULA_PREFETCH_RELATED).select_related('assemble', 'group').order_by('-modified_date')
     serializer_class = POFormulaSerializer
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -44,7 +52,7 @@ class POFormulaList(CompanyFilterMixin, generics.ListCreateAPIView):
 
 class POFormulaReMarkOnGroupList(POFormulaList):
     queryset = POFormula.objects.filter(is_show=True).\
-        prefetch_related('self_data_entries').select_related('assemble', 'group').order_by('-modified_date')
+        prefetch_related(*FORMULA_PREFETCH_RELATED).select_related('assemble', 'group').order_by('-modified_date')
     search_fields = ('name', 'formula', 'quantity', 'markup', 'charge', 'material', 'cost',
                      'unit', 'gross_profit', 'description_of_formula')
 
@@ -54,13 +62,13 @@ class POFormulaCompactList(POFormulaList):
 
 
 class POFormulaDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = POFormula.objects.all().prefetch_related('self_data_entries')
+    queryset = POFormula.objects.all().prefetch_related(*FORMULA_PREFETCH_RELATED)
     serializer_class = POFormulaSerializer
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
 
 
 class POFormulaGroupingList(CompanyFilterMixin, generics.ListCreateAPIView):
-    queryset = POFormulaGrouping.objects.all().order_by('-modified_date').distinct()
+    queryset = POFormulaGrouping.objects.all().select_related().order_by('-modified_date').distinct()
     serializer_class = POFormulaGroupingSerializer
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend,)
@@ -78,13 +86,13 @@ class POFormulaGroupingCreate(CompanyFilterMixin, generics.CreateAPIView):
 
 
 class POFormulaGroupingDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = POFormulaGrouping.objects.all()
+    queryset = POFormulaGrouping.objects.all().prefetch_related(*GROUP_PREFETCH_RELATED)
     serializer_class = POFormulaGroupingSerializer
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
 
 
 class DataEntryList(CompanyFilterMixin, generics.ListCreateAPIView):
-    queryset = DataEntry.objects.all().order_by('-modified_date')
+    queryset = DataEntry.objects.all().prefetch_related('material_selections', 'unit').select_related('unit').order_by('-modified_date')
     serializer_class = DataEntrySerializer
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -93,7 +101,7 @@ class DataEntryList(CompanyFilterMixin, generics.ListCreateAPIView):
 
 
 class DataEntryDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = DataEntry.objects.all()
+    queryset = DataEntry.objects.all().prefetch_related('material_selections', 'unit').select_related('unit')
     serializer_class = DataEntrySerializer
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
 
@@ -135,7 +143,9 @@ class DescriptionLibraryDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AssembleList(CompanyFilterMixin, generics.ListCreateAPIView):
-    queryset = Assemble.objects.filter(estimate_templates=None, is_show=True).order_by('-modified_date').prefetch_related('assemble_formulas')
+    queryset = Assemble.objects.filter(
+        estimate_templates=None, is_show=True
+    ).order_by('-modified_date').prefetch_related(*ASSEMBLE_PREFETCH_RELATED)
     serializer_class = AssembleSerializer
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -148,13 +158,17 @@ class AssembleCompactList(AssembleList):
 
 
 class AssembleDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Assemble.objects.all()
+    queryset = Assemble.objects.all().prefetch_related(*ASSEMBLE_PREFETCH_RELATED)
     serializer_class = AssembleSerializer
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
 
 
 class EstimateTemplateList(CompanyFilterMixin, generics.ListCreateAPIView):
-    queryset = EstimateTemplate.objects.filter(is_show=True).order_by('-modified_date').prefetch_related('data_views', 'assembles', 'data_entries')
+    queryset = EstimateTemplate.objects.filter(
+        is_show=True).order_by('-modified_date').prefetch_related('data_views', 'data_views__unit',
+                                                                  *ESTIMATE_PREFETCH_RELATED,
+                                                                  *MATERIAL_PREFETCH_RELATED,
+                                                                  *ESTIMATE_DATA_ENTRY_PREFETCH_RELATED)
     serializer_class = EstimateTemplateSerializer
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend,)
@@ -166,7 +180,10 @@ class EstimateTemplateCompactList(EstimateTemplateList):
 
 
 class EstimateTemplateDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = EstimateTemplate.objects.all()
+    queryset = EstimateTemplate.objects.all().prefetch_related('data_views', 'data_views__unit',
+                                                                *ESTIMATE_PREFETCH_RELATED,
+                                                                *MATERIAL_PREFETCH_RELATED,
+                                                                *ESTIMATE_DATA_ENTRY_PREFETCH_RELATED)
     serializer_class = EstimateTemplateSerializer
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
 
