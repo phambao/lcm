@@ -71,7 +71,7 @@ class ProgressPayment(BaseModel):
 class ChangeOrderItem(BaseModel):
     formula = models.IntegerField(blank=True, default=None, null=True)
     group_change_order = models.ForeignKey('sales.GroupChangeOrder', on_delete=models.CASCADE, blank=True, null=True,
-                                           related_name='items')
+                                           related_name='groups')
     type = models.CharField(max_length=128, blank=True, default='')
     owner_price = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
     amount_paid = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)  # new invoice amount
