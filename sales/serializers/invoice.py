@@ -83,12 +83,12 @@ class ChangeOrderItemSerializer(UnitSerializerMixin, serializers.ModelSerializer
 
 
 class GroupChangeOrderSerializer(UnitSerializerMixin, serializers.ModelSerializer):
-    items = ChangeOrderItemSerializer('group_change_order', many=True, allow_null=True, required=False)
+    groups = ChangeOrderItemSerializer('group_change_order', many=True, allow_null=True, required=False)
 
     class Meta:
         model = GroupChangeOrder
         fields = ('id', 'name', 'cost_type', 'percentage_payment', 'total_amount', 'quantity', 'change_order',
-                  'unit', 'invoice_amount', 'items', 'is_formula')
+                  'unit', 'invoice_amount', 'groups', 'is_formula')
 
     def create_change_order_items(self, items, instance):
         for item in items:
@@ -97,13 +97,13 @@ class GroupChangeOrderSerializer(UnitSerializerMixin, serializers.ModelSerialize
             serializer.save(group_change_order=instance)
 
     def create(self, validated_data):
-        items = pop(validated_data, 'items', [])
+        items = pop(validated_data, 'groups', [])
         instance = super().create(validated_data)
         self.create_change_order_items(items, instance)
         return instance
 
     def update(self, instance, validated_data):
-        items = pop(validated_data, 'items', [])
+        items = pop(validated_data, 'groups', [])
         instance = super().update(instance, validated_data)
         instance.items.all().delete()
         self.create_change_order_items(items, instance)
