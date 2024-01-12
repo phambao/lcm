@@ -123,10 +123,6 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
         fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value',
                   'copies_from', 'group', 'material_data_entry_link', 'levels', 'is_client_view')
 
-    def to_representation(self, instance):
-        data = super(POFormulaToDataEntrySerializer, self).to_representation(instance)
-        return data
-
 
 def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
     data = []
