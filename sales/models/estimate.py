@@ -55,14 +55,14 @@ class POFormula(BaseModel):
     assemble = models.ForeignKey('sales.Assemble', blank=True, related_name='assemble_formulas', null=True, on_delete=models.SET_NULL)
     created_from = models.IntegerField(default=None, blank=True, null=True)
     is_show = models.BooleanField(default=True, blank=True)  # Only show formula page
-    quantity = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
-    markup = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
-    charge = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
+    quantity = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
+    markup = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
+    charge = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
     material = models.TextField(blank=True)
     unit = models.CharField(max_length=32, blank=True)
-    unit_price = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
-    cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
-    total_cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
+    unit_price = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
+    cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
+    total_cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
     formula_mentions = models.CharField(blank=True, max_length=256)  # for FE
     formula_data_mentions = models.CharField(blank=True, max_length=256)  # for FE
     gross_profit = models.CharField(max_length=32, blank=True)
@@ -286,8 +286,8 @@ class DataView(BaseModel):
                                           null=True, blank=True)
     index = models.IntegerField(blank=True, default=0, null=True)
     type = models.CharField(max_length=8, choices=Type.choices, default=Type.CUSTOM, blank=True)
-    value = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
+    value = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
     is_client_view = models.BooleanField(blank=True, default=False)
     unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.SET_NULL,
                              blank=True, null=True, related_name='data_views')
-    result = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0)
+    result = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
