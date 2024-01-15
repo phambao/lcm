@@ -62,4 +62,6 @@ class SettingTimeZoneMiddleware:
         if request.user.is_authenticated is True:
             if user.company.company_timezone:
                 timezone.activate(pytz.timezone(user.company.company_timezone))
+            else:
+                timezone.deactivate()
         return self.get_response(request)
