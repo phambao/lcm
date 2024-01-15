@@ -1,5 +1,7 @@
+import pytz
 from threading import current_thread
 
+from django.utils import timezone
 from django.utils.translation import activate
 
 _requests = {}
@@ -48,4 +50,21 @@ class SettingTranslateMiddleware:
         if request.user.is_authenticated is True:
             if user.lang:
                 activate(user.lang)
+        return self.get_response(request)
+
+
+class SettingTimeZoneMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = request.user
+        tz = None
+        if request.user.is_authenticated is True:
+            if user.company.company_timezone:
+                tz = user.company.company_timezone
+        if tz:
+            timezone.activate(tz)
+        else:
+            timezone.deactivate()
         return self.get_response(request)
