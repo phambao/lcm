@@ -59,9 +59,12 @@ class SettingTimeZoneMiddleware:
 
     def __call__(self, request):
         user = request.user
+        tz = None
         if request.user.is_authenticated is True:
             if user.company.company_timezone:
-                timezone.activate(pytz.timezone(user.company.company_timezone))
-            else:
-                timezone.deactivate()
+                tz = user.company.company_timezone
+        if tz:
+            timezone.activate(tz)
+        else:
+            timezone.deactivate()
         return self.get_response(request)
