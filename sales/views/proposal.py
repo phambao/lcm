@@ -300,7 +300,7 @@ def proposal_formatting_public(request, pk):
             )
             content = render_to_string('proposal-formatting-sign.html', {'url': url})
             celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [proposal_formatting_sign_create.email], False, html_message=content)
-
+            check_email.append(data_proposal_sign['email'])
     return Response(status=status.HTTP_201_CREATED, data={'data': 'public success'})
 
 
