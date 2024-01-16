@@ -196,6 +196,7 @@ class MaterialView(BaseModel):
                                    null=True)
     levels = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
     is_client_view = models.BooleanField(blank=True, default=False)
+    default_column = models.JSONField(blank=True, default=dict)
 
 
 class POFormulaGrouping(BaseModel):
