@@ -283,21 +283,24 @@ def duplicate_proposal(request):
 
 
 @api_view(['POST'])
-def proposal_formatting_public(request):
+def proposal_formatting_public(request, pk):
+    proposal_writing = get_object_or_404(ProposalWriting.objects.filter(company=get_request().user.company),
+                                         pk=pk)
     data = request.data
     serializer = ProposalFormattingTemplateSignsSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+    check_email = []
+    data_proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
     for data_proposal_sign in data['signs']:
-        url = pop(data_proposal_sign, 'url', None)
-        proposal_formatting = pop(data_proposal_sign, 'proposal_formatting', None)
-        data_proposal_formatting = ProposalFormatting.objects.get(id=proposal_formatting)
-        proposal_formatting_sign_create = ProposalFormattingSign.objects.create(
-            proposal_formatting=data_proposal_formatting,
-            **data_proposal_sign
-        )
-        content = render_to_string('proposal-formatting-sign.html', {'url': url})
-        celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [proposal_formatting_sign_create.email], False, html_message=content)
-
+        if data_proposal_sign['email'] not in check_email:
+            url = pop(data_proposal_sign, 'url', None)
+            proposal_formatting_sign_create = ProposalFormattingSign.objects.create(
+                proposal_formatting=data_proposal_formatting,
+                **data_proposal_sign
+            )
+            content = render_to_string('proposal-formatting-sign.html', {'url': url})
+            celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [proposal_formatting_sign_create.email], False, html_message=content)
+            check_email.append(data_proposal_sign['email'])
     return Response(status=status.HTTP_201_CREATED, data={'data': 'public success'})
 
 
