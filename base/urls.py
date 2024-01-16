@@ -10,7 +10,7 @@ from base.views.base import update_language_user, QuestionGenericView, QuestionD
     AnswerDetailGenericView, CompanyAnswerQuestionSerializerGenericView, \
     CompanyAnswerQuestionSerializerDetailGenericView, create_question_answer_company, update_question_answer_company, \
     get_data_config, manage_sub, manage_sub_detail, get_data_storage, CompanyTradesSerializerGenericView, \
-    CompanyTradesSerializerDetailGenericView
+    CompanyTradesSerializerDetailGenericView, get_timezone
 # Define path for Base App ------------------------------------------------------
 from base.views.country_state_city import address_search, detail_location
 from base.views.payment import ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
@@ -76,6 +76,7 @@ url_base = [
     path('company/setting/payment/history/', get_payment_history),
     path('company/trades/', CompanyTradesSerializerGenericView.as_view()),
     path('company/trades/<int:pk>/', CompanyTradesSerializerDetailGenericView.as_view()),
+    path('company/timezone/', get_timezone),
 ]
 # Create schema view for Swagger ------------------------------------------------
 schema_view_base = get_schema_view(
