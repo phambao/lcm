@@ -38,6 +38,8 @@ ASSEMBLE_PREFETCH_RELATED = ['assemble_formulas__' + i for i in FORMULA_PREFETCH
 ESTIMATE_PREFETCH_RELATED = ['assembles__' + i for i in ASSEMBLE_PREFETCH_RELATED]
 ESTIMATE_DATA_ENTRY_PREFETCH_RELATED = ['data_entries__' + i for i in DATA_ENTRY_PREFETCH_RELATED]
 MATERIAL_PREFETCH_RELATED = ['material_views__' + i for i in DATA_ENTRY_PREFETCH_RELATED]
+ALL_ESTIMATE_PREFETCH_RELATED = [*ESTIMATE_PREFETCH_RELATED, *MATERIAL_PREFETCH_RELATED,
+                                 *ESTIMATE_DATA_ENTRY_PREFETCH_RELATED, 'data_views', 'data_views__unit']
 
 
 class POFormulaList(CompanyFilterMixin, generics.ListCreateAPIView):
@@ -165,10 +167,7 @@ class AssembleDetail(generics.RetrieveUpdateDestroyAPIView):
 
 class EstimateTemplateList(CompanyFilterMixin, generics.ListCreateAPIView):
     queryset = EstimateTemplate.objects.filter(
-        is_show=True).order_by('-modified_date').prefetch_related('data_views', 'data_views__unit',
-                                                                  *ESTIMATE_PREFETCH_RELATED,
-                                                                  *MATERIAL_PREFETCH_RELATED,
-                                                                  *ESTIMATE_DATA_ENTRY_PREFETCH_RELATED)
+        is_show=True).order_by('-modified_date').prefetch_related(*ALL_ESTIMATE_PREFETCH_RELATED)
     serializer_class = EstimateTemplateSerializer
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend,)
@@ -180,10 +179,7 @@ class EstimateTemplateCompactList(EstimateTemplateList):
 
 
 class EstimateTemplateDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = EstimateTemplate.objects.all().prefetch_related('data_views', 'data_views__unit',
-                                                                *ESTIMATE_PREFETCH_RELATED,
-                                                                *MATERIAL_PREFETCH_RELATED,
-                                                                *ESTIMATE_DATA_ENTRY_PREFETCH_RELATED)
+    queryset = EstimateTemplate.objects.all().prefetch_related(*ALL_ESTIMATE_PREFETCH_RELATED)
     serializer_class = EstimateTemplateSerializer
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
 

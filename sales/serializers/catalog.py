@@ -168,7 +168,7 @@ class CatalogSerializer(serializers.ModelSerializer):
             data['parent'] = None
         del data['parents']
         data['data_points'] = DataPointSerializer(instance.data_points.all(), many=True).data
-        data['children'] = catalog.Catalog.objects.filter(parents__id=instance.pk).values_list('pk', flat=True)
+        data['children'] = [i.id for i in instance.children.all()]
         return data
 
 

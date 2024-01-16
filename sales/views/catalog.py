@@ -28,7 +28,7 @@ UnitLibrary = apps.get_model(app_label='sales', model_name='UnitLibrary')
 
 
 class CatalogList(CompanyFilterMixin, generics.ListCreateAPIView):
-    queryset = Catalog.objects.all().prefetch_related('data_points', 'parents')
+    queryset = Catalog.objects.all().prefetch_related('data_points', 'parents', 'children')
     serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated & CatalogPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -37,7 +37,7 @@ class CatalogList(CompanyFilterMixin, generics.ListCreateAPIView):
 
 
 class CatalogDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Catalog.objects.all().prefetch_related('data_points', 'parents')
+    queryset = Catalog.objects.all().prefetch_related('data_points', 'parents', 'children')
     serializer_class = catalog.CatalogSerializer
     permission_classes = [permissions.IsAuthenticated & CatalogPermissions]
 
@@ -161,7 +161,7 @@ def get_catalog_tree(request, pk):
 def get_catalog_list(request, pk):
     catalog_obj = get_object_or_404(Catalog, pk=pk)
     catalog_ids = catalog_obj.get_all_descendant()
-    catalogs = Catalog.objects.filter(pk__in=catalog_ids).prefetch_related('data_points', 'parents', 'data_points__unit', 'childrens')
+    catalogs = Catalog.objects.filter(pk__in=catalog_ids).prefetch_related('data_points', 'parents', 'data_points__unit', 'children')
     serializer = catalog.CatalogSerializer(catalogs, many=True, context={'request': request})
     return Response(status=status.HTTP_200_OK, data=serializer.data)
 
@@ -182,7 +182,7 @@ def get_catalog_ancestors(request):
     ids = request.GET.getlist('id', [])
     data = {}
     if ids:
-        catalogs = Catalog.objects.filter(id__in=ids, company=get_request().user.company)
+        catalogs = Catalog.objects.filter(id__in=ids, company=get_request().user.company).prefetch_related('parents')
         for c in catalogs:
             navigation = c.get_ancestors()
             navigation = navigation[1:]

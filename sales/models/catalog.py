@@ -79,7 +79,6 @@ class Catalog(BaseModel):
     level = models.ForeignKey(CatalogLevel, on_delete=models.CASCADE, null=True,
                               blank=True, default=None, related_name='catalogs')
     level_index = models.IntegerField(default=0, blank=True, null=True)
-    childrens = models.ManyToManyField('self', blank=True, symmetrical=False)
 
     def __str__(self):
         return self.name
@@ -89,7 +88,7 @@ class Catalog(BaseModel):
         descendants = []
         if have_self:
             descendants = [self.pk]
-        catalogs = Catalog.objects.filter(parents__id=self.pk)
+        catalogs = self.children.all()
         for c in catalogs:
             descendants.append(c.pk)
             descendants.extend(c.get_all_descendant(have_self=have_self))
