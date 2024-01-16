@@ -1,5 +1,6 @@
 import uuid
 
+import pytz
 import stripe
 from django.utils import timezone
 from django.utils.translation import gettext  as _
@@ -580,3 +581,8 @@ def get_data_storage(request, *args, **kwargs):
     except Exception as e:
         return Response(status=status.HTTP_404_NOT_FOUND, data={"status_code": status.HTTP_404_NOT_FOUND, "detail": "data storage error"})
     return Response(status=status.HTTP_200_OK, data=data_rs)
+
+
+@api_view(['GET'])
+def get_timezone(request, *args, **kwargs):
+    return Response(status=status.HTTP_200_OK, data=pytz.all_timezones)
