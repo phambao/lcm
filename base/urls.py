@@ -76,7 +76,7 @@ url_base = [
     path('company/setting/payment/history/', get_payment_history),
     path('company/trades/', CompanyTradesSerializerGenericView.as_view()),
     path('company/trades/<int:pk>/', CompanyTradesSerializerDetailGenericView.as_view()),
-    path('company/timezone', get_timezone),
+    path('company/timezone/', get_timezone),
 ]
 # Create schema view for Swagger ------------------------------------------------
 schema_view_base = get_schema_view(
