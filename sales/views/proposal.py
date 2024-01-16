@@ -1,5 +1,3 @@
-import random
-
 from django.conf import settings
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
@@ -25,6 +23,12 @@ from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparis
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
     ProposalWritingCompactSerializer, ProposalTemplateHtmlCssSerializer, ProposalWritingDataSerializer, \
     ProposalFormattingTemplateSignSerializer, ProposalFormattingTemplateSignsSerializer
+from sales.views.estimate import ALL_ESTIMATE_PREFETCH_RELATED
+
+
+PROPOSAL_GROUP_PREFETCH_RELATED = ['estimate_templates__' + i for i in ALL_ESTIMATE_PREFETCH_RELATED]
+PROPOSAL_PREFETCH_RELATED = ['writing_groups__' + i for i in PROPOSAL_GROUP_PREFETCH_RELATED]
+PRICE_COMPARISION_PREFETCH_RELATED = ['groups__' + i for i in PROPOSAL_GROUP_PREFETCH_RELATED]
 
 
 class ProposalTemplateGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
@@ -43,7 +47,7 @@ class ProposalTemplateDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class PriceComparisonList(CompanyFilterMixin, generics.ListCreateAPIView):
-    queryset = PriceComparison.objects.all().order_by('-modified_date').prefetch_related('groups')
+    queryset = PriceComparison.objects.all().order_by('-modified_date').prefetch_related(*PRICE_COMPARISION_PREFETCH_RELATED)
     serializer_class = PriceComparisonSerializer
     permission_classes = [permissions.IsAuthenticated & ProposalPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -52,7 +56,7 @@ class PriceComparisonList(CompanyFilterMixin, generics.ListCreateAPIView):
 
 
 class PriceComparisonCompactList(CompanyFilterMixin, generics.ListAPIView):
-    queryset = PriceComparison.objects.all().order_by('-modified_date').prefetch_related('groups')
+    queryset = PriceComparison.objects.all().order_by('-modified_date').prefetch_related(*PRICE_COMPARISION_PREFETCH_RELATED)
     serializer_class = PriceComparisonCompactSerializer
     permission_classes = [permissions.IsAuthenticated & ProposalPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -61,13 +65,13 @@ class PriceComparisonCompactList(CompanyFilterMixin, generics.ListAPIView):
 
 
 class PriceComparisonDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = PriceComparison.objects.all()
+    queryset = PriceComparison.objects.all().prefetch_related(*PRICE_COMPARISION_PREFETCH_RELATED)
     serializer_class = PriceComparisonSerializer
     permission_classes = [permissions.IsAuthenticated & ProposalPermissions]
 
 
 class ProposalWritingList(CompanyFilterMixin, generics.ListCreateAPIView):
-    queryset = ProposalWriting.objects.all().order_by('-modified_date').prefetch_related('writing_groups')
+    queryset = ProposalWriting.objects.all().order_by('-modified_date').prefetch_related(*PROPOSAL_PREFETCH_RELATED)
     serializer_class = ProposalWritingSerializer
     permission_classes = [permissions.IsAuthenticated & ProposalPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -76,7 +80,7 @@ class ProposalWritingList(CompanyFilterMixin, generics.ListCreateAPIView):
 
 
 class ProposalWritingCompactList(CompanyFilterMixin, generics.ListAPIView):
-    queryset = ProposalWriting.objects.all().order_by('-modified_date').prefetch_related('writing_groups')
+    queryset = ProposalWriting.objects.all().order_by('-modified_date').prefetch_related(*PROPOSAL_PREFETCH_RELATED)
     serializer_class = ProposalWritingCompactSerializer
     permission_classes = [permissions.IsAuthenticated & ProposalPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -85,7 +89,7 @@ class ProposalWritingCompactList(CompanyFilterMixin, generics.ListAPIView):
 
 
 class ProposalWritingDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ProposalWriting.objects.all()
+    queryset = ProposalWriting.objects.all().prefetch_related(*PROPOSAL_PREFETCH_RELATED)
     serializer_class = ProposalWritingSerializer
     permission_classes = [permissions.IsAuthenticated & ProposalPermissions]
 
