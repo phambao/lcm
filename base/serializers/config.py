@@ -122,10 +122,10 @@ class CompanySerializer(serializers.ModelSerializer):
         return data_company
 
     def validate_company_timezone(self, value):
-        if value in pytz.all_timezones:
-            return value
-        else:
-            raise serializers.ValidationError('timezones error')
+        if value:
+            if value not in pytz.all_timezones:
+                raise serializers.ValidationError('timezones error')
+        return value
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
