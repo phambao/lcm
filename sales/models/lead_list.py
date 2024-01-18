@@ -46,7 +46,7 @@ class LeadDetail(BaseModel):
     country = models.CharField('Country', max_length=128, blank=True, default='', null=True)
     city = models.CharField('City', max_length=128, blank=True, default='', null=True)
     state = models.CharField('State', max_length=128, blank=True, default='', null=True)
-    zip_code = models.CharField(verbose_name='Zip Code', max_length=6, blank=True)
+    zip_code = models.CharField(verbose_name='Zip Code', max_length=16, blank=True)
     status = models.CharField(
         max_length=16, choices=Status.choices, default=Status.OPEN)
     proposal_status = models.CharField(verbose_name='Proposal Status', max_length=16,
