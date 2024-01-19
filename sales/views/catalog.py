@@ -593,12 +593,15 @@ def handle_export(pk, workbook, sheet_name):
 
 
 def generate_paths(categories, current_path, result):
-    if categories == []:
+    if categories == [[]]:
+        current_category = []
+    elif categories == []:
         current_category = categories
     elif isinstance(categories[0][0], dict):
         current_category = categories[0]
 
     elif isinstance(categories[0][0], list):
+
         current_category = categories[0]
 
     elif isinstance(categories[0][0], int):
