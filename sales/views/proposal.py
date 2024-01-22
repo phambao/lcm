@@ -269,6 +269,7 @@ def duplicate_proposal(request):
     """
     Payloads: {"proposal_id": [lead_id,..]}
     """
+    name = request.data.pop('name')
     proposal_ids = request.data.keys()
     objs = []
     for proposal_id in proposal_ids:
@@ -277,7 +278,7 @@ def duplicate_proposal(request):
             serializer = ProposalWritingSerializer(p).data
             dup = ProposalWritingSerializer(data=serializer, context={'request': request})
             dup.is_valid(raise_exception=True)
-            objs.append(dup.save(lead_id=lead).id)
+            objs.append(dup.save(lead_id=lead, name=name).id)
     serializer = ProposalWritingCompactSerializer(ProposalWriting.objects.filter(id__in=objs), many=True)
     return Response(status=status.HTTP_201_CREATED, data=serializer.data)
 
