@@ -118,7 +118,7 @@ class CompanyBuilder(models.Model):
                                     null=True, blank=True)
     user_update = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='%(class)s_user_update',
                                     null=True, blank=True)
-    currency = models.CharField(blank=True, max_length=128)
+    currency = models.CharField(blank=True, max_length=128, default='$')
     company_timezone = models.CharField(blank=True, max_length=128)
     customer_stripe = models.CharField(blank=True, max_length=128, null=True)
     is_payment = models.BooleanField(default=True)
