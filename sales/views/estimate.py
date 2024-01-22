@@ -315,9 +315,9 @@ def get_tag_formula(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def get_tag_data_point(request):
-    data_points = DataPoint.objects.filter(company=get_request().user.company)
-    serializer = TaggingSerializer(data_points, many=True)
-    return Response(data=serializer.data, status=status.HTTP_200_OK)
+    # data_points = DataPoint.objects.filter(company=get_request().user.company)
+    # serializer = TaggingSerializer(data_points, many=True)
+    return Response(data=[], status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
