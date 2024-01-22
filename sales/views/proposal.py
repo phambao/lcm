@@ -269,7 +269,10 @@ def duplicate_proposal(request):
     """
     Payloads: {"proposal_id": [lead_id,..]}
     """
-    name = request.data.pop('name')
+    try:
+        name = request.data.pop('name')
+    except KeyError:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={"name": ["This field is required"]})
     proposal_ids = request.data.keys()
     objs = []
     for proposal_id in proposal_ids:
