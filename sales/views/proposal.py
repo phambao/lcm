@@ -272,6 +272,8 @@ def duplicate_proposal(request):
     try:
         name = request.data.pop('name')
     except KeyError:
+        name = ''
+    if not name:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"name": ["This field is required"]})
     proposal_ids = request.data.keys()
     objs = []
