@@ -21,7 +21,6 @@ from api.middleware import get_request
 from api.serializers.base import ActivityLogSerializer
 from sales.models import LeadDetail, Priority, Type, Contact, PhoneOfContact, Activities, DataPoint, BuilderView, \
     DataType, DataView, TableInvoice, PaymentHistory, Invoice, Day, HolidayType
-
 from ..constants import URL_CLOUD
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter, TradesFilter
 from ..models.config import Column, Search, Config, GridSetting, FileBuilder365, Question, Answer, CompanyAnswerQuestion
@@ -31,7 +30,7 @@ from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerialize
 from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer, \
     CompanySerializer, DivisionSerializer, QuestionSerializer, AnswerSerializer, CompanyAnswerQuestionSerializer, \
     CompanyAnswerQuestionResSerializer, TradesSerializer
-from api.models import ActivityLog, CompanyBuilder, DivisionCompany, Action, InvoiceApproveType, User, Trades
+from api.models import ActivityLog, CompanyBuilder, DivisionCompany, Action, EstimatedAnnualRevenueChoices, InvoiceApproveType, SizeCompanyChoices, User, Trades
 from decouple import config
 
 class ContentTypeList(generics.ListAPIView):
@@ -435,8 +434,9 @@ def get_data_config(request, *args, **kwargs):
            ('schedule_priority', Priority.choices), ('schedule_event_type', Type.choices), ('schedule_build_view', BuilderView.choices),
            ('schedule_data_type', DataType.choices), ('estimate_data_view_type', DataView.Type.choices), ('invoice_table_type', TableInvoice.TableTypeInvoice.choices),
            ('invoice_payment_status', PaymentHistory.PaymentStatus.choices), ('invoice_status', Invoice.InvoiceStatus.choices),
-           ('setting_invoice_type', InvoiceApproveType.choices), ('day', Day.choices), ('holiday_type', HolidayType.choices)
-           ]
+           ('setting_invoice_type', InvoiceApproveType.choices), ('day', Day.choices), ('holiday_type', HolidayType.choices),
+           ('user.service_provider', User.ServiceProvider.choices), ('company.revenue', EstimatedAnnualRevenueChoices.choices),
+           ('company_size', SizeCompanyChoices.choices), ('activity.action', Action.choices), ('question.type', Type.choices)]
     for data in arr:
         data_as_dict[data[0]] = [{'id': item[0], 'name': item[1]} for item in data[1]]
     return Response(status=status.HTTP_200_OK, data=data_as_dict)
