@@ -35,4 +35,3 @@ class PaymentHistoryStripe(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     payment_day = models.IntegerField(blank=True, null=True)
     # is_activate = models.BooleanField(default=False, blank=True)
-

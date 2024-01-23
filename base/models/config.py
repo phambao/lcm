@@ -60,13 +60,6 @@ class Type(models.TextChoices):
     MULTIPLE_CHOICE = 'multiple', 'MULTIPLE_CHOICE'
 
 
-class Position(models.TextChoices):
-    LEAD = 'lead', 'LEAD'
-    SALES = 'sales', 'SALES'
-    MARKETING = 'marketing', 'MARKETING'
-    SUPPORT = 'support', 'SUPPORT'
-
-
 class Question(models.Model):
     class Meta:
         db_table = 'question'

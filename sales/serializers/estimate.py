@@ -413,7 +413,7 @@ class AssembleSerializer(ContentTypeSerializerMixin):
             created_from = po_formula.get('created_from')
             if not created_from:
                 po_formula['created_from'] = po_formula['id']
-            if self.context.get('request').method == 'POST':
+            if not po_formula['formula_for_data_view']:
                 po_formula['formula_for_data_view'] = po_formula.get('id')
             del po_formula['id']
             po = POFormulaSerializer(data=po_formula, context=self.context)
