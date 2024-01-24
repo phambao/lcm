@@ -76,7 +76,7 @@ class CompanySerializer(serializers.ModelSerializer):
         fields = ('id', 'logo', 'company_name', 'address', 'country', 'city', 'state', 'zip_code', 'tax', 'size',
                   'business_phone', 'fax', 'email', 'cell_phone', 'cell_mail', 'created_date', 'modified_date',
                   'user_create', 'user_update', 'currency', 'description', 'company_timezone', 'website', 'trades',
-                  'company_size', 'revenue', 'referral_code')
+                  'company_size', 'revenue', 'referral_code', 'customer_stripe')
         read_only_fields = ['currency']
 
     def create(self, validated_data):
