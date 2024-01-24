@@ -503,7 +503,7 @@ def manage_sub(request):
         data_rs['billing_address']['address'] = request.user.company.address
         data_rs['billing_address']['email'] = request.user.company.email
         data_rs['billing_address']['size'] = request.user.company.size
-        data_rs['billing_address']['field'] = request.user.company.field
+        # data_rs['billing_address']['field'] = request.user.company.field
         data_rs['billing_address']['company_name'] = request.user.company.company_name
         next_payment['amount'] = upcoming_invoice.amount_remaining/100
         next_payment['currency'] = upcoming_invoice.currency
