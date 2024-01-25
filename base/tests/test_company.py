@@ -33,23 +33,6 @@ class CompanyTests(BaseTest):
         self.company_id = self.company.data['id']
         self.person_information = None
 
-    def test_delete_company(self):
-        """Test delete company"""
-        res_delete = self.client.delete(
-            f'/api/base/company/{self.company_id}/',
-            format='json',
-            HTTP_AUTHORIZATION=self.token)
-        self.assertEqual(res_delete.status_code, status.HTTP_204_NO_CONTENT)
-
-        # Check if company is deleted
-        res_data = self.client.get(
-            f'/api/base/company/{self.company_id}/',
-            format='json',
-            HTTP_AUTHORIZATION=self.token)
-        self.assertEqual(res_data.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_create_person_information(self):
-        """Test create person information"""
         data_person_information = {
             "fullname": "string",
             "phone_number": "string",
@@ -65,11 +48,23 @@ class CompanyTests(BaseTest):
             data_person_information,
             format='json',
             HTTP_AUTHORIZATION=self.token)
-        print('*JJJJJJJJJJJJJJJJJJJJJJJJ')
-        print(res_create)
-        print(res_create.data)
         self.person_information = res_create.data['id']
         self.assertEqual(res_create.status_code, status.HTTP_201_CREATED)
+
+    def test_delete_company(self):
+        """Test delete company"""
+        res_delete = self.client.delete(
+            f'/api/base/company/{self.company_id}/',
+            format='json',
+            HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(res_delete.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Check if company is deleted
+        res_data = self.client.get(
+            f'/api/base/company/{self.company_id}/',
+            format='json',
+            HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(res_data.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete_person_information(self):
         """Test delete person information"""
@@ -78,9 +73,6 @@ class CompanyTests(BaseTest):
             format='json',
             HTTP_AUTHORIZATION=self.token)
 
-        print('**************')
-        print(self.person_information)
-        print(res_delete)
         self.assertEqual(res_delete.status_code, status.HTTP_204_NO_CONTENT)
 
         # Check if person information is deleted
