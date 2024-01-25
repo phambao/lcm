@@ -2,7 +2,6 @@ import os
 import uuid
 
 from django.core.files.base import ContentFile
-from knox.auth import TokenAuthentication
 from rest_framework import views, status
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -14,7 +13,6 @@ from sales.serializers.lead_list import PhotoSerializer
 
 class FileUploadView(views.APIView):
     parser_classes = [MultiPartParser]
-    authentication_classes = [TokenAuthentication]
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):

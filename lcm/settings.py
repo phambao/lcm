@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'rest_framework',
     "corsheaders",
     'rest_framework_simplejwt',
-    'knox', # Need to remove
     'drf_yasg',
     'django_filters',
     'base.apps.BaseConfig',
