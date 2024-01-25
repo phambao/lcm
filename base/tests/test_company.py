@@ -31,6 +31,7 @@ class CompanyTests(BaseTest):
             HTTP_AUTHORIZATION=self.token)
         self.assertEqual(self.company.status_code, status.HTTP_201_CREATED)
         self.company_id = self.company.data['id']
+        self.person_information = None
 
     def test_delete_company(self):
         """Test delete company"""
@@ -75,7 +76,7 @@ class CompanyTests(BaseTest):
             HTTP_AUTHORIZATION=self.token)
         self.assertEqual(res_delete.status_code, status.HTTP_204_NO_CONTENT)
 
-        # Check if company is deleted
+        # Check if person information is deleted
         res_data = self.client.get(
             f'/api/base/personal-information/{self.person_information}/',
             format='json',
