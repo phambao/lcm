@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 from django.apps import apps
 from django.contrib.postgres.fields import ArrayField
@@ -63,7 +64,7 @@ class POFormula(BaseModel):
     unit_price = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
     cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
     total_cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
-    formula_mentions = models.CharField(blank=True, max_length=256)  # for FE
+    formula_mentions = models.TextField(blank=True)  # for FE
     formula_data_mentions = models.CharField(blank=True, max_length=256)  # for FE
     gross_profit = models.CharField(max_length=32, blank=True)
     description_of_formula = models.TextField(blank=True)
@@ -166,6 +167,21 @@ class POFormula(BaseModel):
             self.formula_mentions, self.gross_profit, self.description_of_formula, self.formula_scenario,
             str(self.material_data_entry), str(self.catalog_materials)
         ]
+
+    def get_unit_cost(self):
+        try:
+            return Decimal(self.default_column.get('value', 0))
+        except TypeError:
+            return 0
+
+    def get_total_cost(self):
+        return self.quantity * self.get_unit_cost()
+
+    def get_unit_price(self):
+        return self.get_unit_cost()
+
+    def get_charge(self):
+        return ((100 + self.markup)/100) * self.get_unit_price()
 
 
 class POFormulaToDataEntry(BaseModel):
