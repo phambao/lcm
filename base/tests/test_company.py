@@ -65,6 +65,9 @@ class CompanyTests(BaseTest):
             data_person_information,
             format='json',
             HTTP_AUTHORIZATION=self.token)
+        print('*JJJJJJJJJJJJJJJJJJJJJJJJ')
+        print(res_create)
+        print(res_create.data)
         self.person_information = res_create.data['id']
         self.assertEqual(res_create.status_code, status.HTTP_201_CREATED)
 
