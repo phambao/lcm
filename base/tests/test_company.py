@@ -74,6 +74,10 @@ class CompanyTests(BaseTest):
             f'/api/base/personal-information/{self.person_information}/',
             format='json',
             HTTP_AUTHORIZATION=self.token)
+
+        print('**************')
+        print(self.person_information)
+        print(res_delete)
         self.assertEqual(res_delete.status_code, status.HTTP_204_NO_CONTENT)
 
         # Check if person information is deleted
