@@ -60,7 +60,7 @@ class CompanyTests(BaseTest):
             "last_name": "string",
             "nick_name": "string"
         }
-        res_create = self.client.put(
+        res_create = self.client.post(
             f'/api/base/personal-information/',
             data_person_information,
             format='json',
