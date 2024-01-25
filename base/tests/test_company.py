@@ -64,7 +64,7 @@ class CompanyTests(BaseTest):
             data_person_information,
             format='json',
             HTTP_AUTHORIZATION=self.token)
-        self.person_information = res_create['id']
+        self.person_information = res_create.data['id']
         self.assertEqual(res_create.status_code, status.HTTP_201_CREATED)
 
     def test_delete_person_information(self):
