@@ -205,6 +205,7 @@ class GroupCompany(models.Model):
                                 related_name='groups', blank=True)
     group = models.OneToOneField(Group, null=True, on_delete=models.CASCADE,
                                  related_name='group', blank=True)
+    description = models.TextField(blank=True)
 
 
 class SubscriptionStripeCompany(models.Model):
