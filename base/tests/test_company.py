@@ -66,6 +66,25 @@ class CompanyTests(BaseTest):
             HTTP_AUTHORIZATION=self.token)
         self.assertEqual(res_data.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_update_person_information(self):
+        """Test update person information"""
+        data_update = {
+            "fullname": "string",
+            "phone_number": "string",
+            "email": "user@example.com",
+            "address": "string",
+            "company": self.company_id,
+            "first_name": "string",
+            "last_name": "string",
+            "nick_name": "string"
+        }
+        res_delete = self.client.put(
+            f'/api/base/personal-information/{self.person_information}/',
+            data_update,
+            format='json',
+            HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(res_delete.status_code, status.HTTP_200_OK)
+
     def test_delete_person_information(self):
         """Test delete person information"""
         res_delete = self.client.delete(
