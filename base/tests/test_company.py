@@ -51,6 +51,33 @@ class CompanyTests(BaseTest):
         self.person_information = res_create.data['id']
         self.assertEqual(res_create.status_code, status.HTTP_201_CREATED)
 
+    def test_update_company(self):
+        """Test delete company"""
+        data_company = {
+            "logo": "string 1",
+            "company_name": "company update",
+            "address": "string",
+            # "city": 1,
+            # "state": 1,
+            "zip_code": "string",
+            "tax": "string",
+            "size": 2,
+            "business_phone": "string",
+            "cell_phone": "string",
+            "fax": "string",
+            "email": "user@example.com",
+            "cell_mail": "string",
+            "user_create": self.user_id,
+            "user_update": self.user_id
+        }
+        res_delete = self.client.put(
+            f'/api/base/company/{self.company_id}/',
+            data_company,
+            format='json',
+            HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(res_delete.status_code, status.HTTP_200_OK)
+
+
     def test_delete_company(self):
         """Test delete company"""
         res_delete = self.client.delete(
