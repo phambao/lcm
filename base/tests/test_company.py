@@ -32,6 +32,7 @@ class CompanyTests(BaseTest):
         self.assertEqual(self.company.status_code, status.HTTP_201_CREATED)
         self.company_id = self.company.data['id']
         self.person_information = None
+        self.trades_id = None
 
         data_person_information = {
             "fullname": "string",
@@ -50,6 +51,30 @@ class CompanyTests(BaseTest):
             HTTP_AUTHORIZATION=self.token)
         self.person_information = res_create.data['id']
         self.assertEqual(res_create.status_code, status.HTTP_201_CREATED)
+
+        data_trades = {
+            "name": "abc",
+            "is_show": True
+        }
+        res_create_trades = self.client.post(
+            f'/api/base/company/trades/',
+            data_trades,
+            format='json',
+            HTTP_AUTHORIZATION=self.token)
+        self.trades_id = res_create_trades.data['id']
+        self.assertEqual(res_create_trades.status_code, status.HTTP_201_CREATED)
+
+        data_division = {
+            "name": "abc",
+            "company": self.company_id
+        }
+        res_create_division = self.client.post(
+            f'/api/base/company/division/',
+            data_division,
+            format='json',
+            HTTP_AUTHORIZATION=self.token)
+        self.division_id = res_create_division.data['id']
+        self.assertEqual(res_create_division.status_code, status.HTTP_201_CREATED)
 
     def test_update_company(self):
         """Test delete company"""
@@ -124,6 +149,62 @@ class CompanyTests(BaseTest):
         # Check if person information is deleted
         res_data = self.client.get(
             f'/api/base/personal-information/{self.person_information}/',
+            format='json',
+            HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(res_data.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_trades(self):
+        """Test update trades"""
+        data_update = {
+            "name": "day la thay doi",
+            "is_show": True
+        }
+        res_delete = self.client.put(
+            f'/api/base/company/trades/{self.trades_id}/',
+            data_update,
+            format='json',
+            HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(res_delete.status_code, status.HTTP_200_OK)
+
+    def test_delete_trades(self):
+        """Test delete trades"""
+        res_delete = self.client.delete(
+            f'/api/base/company/trades/{self.trades_id}/',
+            format='json',
+            HTTP_AUTHORIZATION=self.token)
+
+        self.assertEqual(res_delete.status_code, status.HTTP_204_NO_CONTENT)
+
+        res_data = self.client.get(
+            f'/api/base/company/trades/{self.trades_id}/',
+            format='json',
+            HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(res_data.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_division(self):
+        """Test update division"""
+        data_update = {
+            "name": "day la thay doi",
+            "company": self.company_id
+        }
+        res_update = self.client.put(
+            f'/api/base/company/division/{self.division_id}/',
+            data_update,
+            format='json',
+            HTTP_AUTHORIZATION=self.token)
+        self.assertEqual(res_update.status_code, status.HTTP_200_OK)
+
+    def test_delete_division(self):
+        """Test delete division"""
+        res_delete = self.client.delete(
+            f'/api/base/company/division/{self.division_id}/',
+            format='json',
+            HTTP_AUTHORIZATION=self.token)
+
+        self.assertEqual(res_delete.status_code, status.HTTP_204_NO_CONTENT)
+
+        res_data = self.client.get(
+            f'/api/base/company/division/{self.division_id}/',
             format='json',
             HTTP_AUTHORIZATION=self.token)
         self.assertEqual(res_data.status_code, status.HTTP_404_NOT_FOUND)
