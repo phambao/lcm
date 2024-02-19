@@ -36,6 +36,7 @@ class DataEntry(BaseModel):
     levels = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
     material = models.JSONField(blank=True, null=True, default=dict)
     default_column = models.JSONField(blank=True, default=dict)
+    is_show = models.BooleanField(default=True, blank=True)
 
     def __int__(self):
         return self.pk
