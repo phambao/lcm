@@ -8,6 +8,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
+from api.models import CompanyBuilder
 from base.tasks import celery_send_mail
 from base.utils import pop
 from sales.models import (Catalog, ChangeOrder, EstimateTemplate, Invoice, LeadDetail,
@@ -122,6 +123,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.create_code = code
         user.expire_code_register = timezone.now()
         user.stripe_customer = stripe_customer
+        user.company = validated_data['company']
         user.save()
         content = render_to_string('auth/create-user-otp.html', {'username': user.get_username(),
                                                                  'otp': user.create_code})
