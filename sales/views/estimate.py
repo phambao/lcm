@@ -712,13 +712,18 @@ def import_estimate(request):
 @api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def check_update_data_entry(request, pk):
+    """
+    Payload: {"data_entry": Data Entry object, "formulas": [id]}
+
+    Updating Data Entry for formulas
+    """
 
     if request.method == 'PUT':
         obj = get_object_or_404(DataEntry.objects.all(), pk=pk)
         obj.is_show = False
         obj.save()
         data_entry = request.data.get('data_entry', {})
-        data_entry.pop('id')
+        data_entry.pop('id', None)
         formula_ids = request.data.get('formulas', [])
         serializer = DataEntrySerializer(data=data_entry)
         serializer.is_valid(raise_exception=True)
@@ -727,7 +732,7 @@ def check_update_data_entry(request, pk):
         formulas = POFormula.objects.filter(pk__in=formula_ids)
         formula_with_data_entry = POFormulaToDataEntry.objects.filter(po_formula__in=formulas)
         formula_with_data_entry.update(data_entry=obj)
-        return Response(status=status.HTTP_200_OK)
+
     data = {}
     data_entry = get_object_or_404(DataEntry.objects.all(), pk=pk)
     data['has_relation'] = data_entry.poformulatodataentry_set.all().exists()
