@@ -253,6 +253,7 @@ class POFormulaSerializer(ContentTypeSerializerMixin):
             except (Catalog.DoesNotExist, IndexError, NameError, SyntaxError, AttributeError):
                 data['catalog_ancestor'] = None
                 data['catalog_link'] = []
+                data['material_value'] = {}
         else:
             data['catalog_materials'] = [i for i in data['catalog_materials'] if i]
             data['material_value'] = {}

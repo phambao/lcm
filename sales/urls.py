@@ -230,6 +230,7 @@ url_estimate = [
     path('data-entry/export/', estimate.export_data_entry),
     path('data-entry/import/', estimate.import_data_entry),
     path('data-entry/<int:pk>/', estimate.DataEntryDetail.as_view(), name='sales.estimate.data-entry.detail'),
+    path('data-entry/<int:pk>/check-update/', estimate.check_update_data_entry),
     path('data-entry/<int:pk>/material/', estimate.get_material_by_data_entry),
     path('data-entry/<int:pk>/option/', estimate.get_option_data_entry),
     path('unit-library/', estimate.UnitLibraryList.as_view()),
