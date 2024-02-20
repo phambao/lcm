@@ -94,7 +94,7 @@ class POFormulaGroupingDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class DataEntryList(CompanyFilterMixin, generics.ListCreateAPIView):
-    queryset = DataEntry.objects.all().prefetch_related('material_selections', 'unit').select_related('unit').order_by('-modified_date')
+    queryset = DataEntry.objects.filter(is_show=True).prefetch_related('material_selections', 'unit').select_related('unit').order_by('-modified_date')
     serializer_class = DataEntrySerializer
     permission_classes = [permissions.IsAuthenticated & EstimatePermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -707,3 +707,36 @@ def import_estimate(request):
     rs = EstimateTemplateSerializer(
         temp_rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def check_update_data_entry(request, pk):
+    """
+    Payload: {"data_entry": Data Entry object, "formulas": [id]}
+
+    Updating Data Entry for formulas
+    """
+
+    if request.method == 'PUT':
+        obj = get_object_or_404(DataEntry.objects.all(), pk=pk)
+        obj.is_show = False
+        obj.save()
+        data_entry = request.data.get('data_entry', {})
+        data_entry.pop('id', None)
+        formula_ids = request.data.get('formulas', [])
+        serializer = DataEntrySerializer(data=data_entry)
+        serializer.is_valid(raise_exception=True)
+        obj = serializer.save()
+
+        formulas = POFormula.objects.filter(pk__in=formula_ids)
+        formula_with_data_entry = POFormulaToDataEntry.objects.filter(po_formula__in=formulas)
+        formula_with_data_entry.update(data_entry=obj)
+
+    data = {}
+    data_entry = get_object_or_404(DataEntry.objects.all(), pk=pk)
+    data['has_relation'] = data_entry.poformulatodataentry_set.all().exists()
+    self_data_entries = data_entry.poformulatodataentry_set.all()
+    formulas = POFormula.objects.filter(self_data_entries__in=self_data_entries, is_show=True).distinct()
+    data['formula_relation'] = formulas.values('id', 'name')
+    return Response(status=status.HTTP_200_OK, data=data)
