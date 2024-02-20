@@ -123,7 +123,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.create_code = code
         user.expire_code_register = timezone.now()
         user.stripe_customer = stripe_customer
-        user.company = validated_data['company']
+        data_company = validated_data.get('company')
+        user.company = data_company
         user.save()
         content = render_to_string('auth/create-user-otp.html', {'username': user.get_username(),
                                                                  'otp': user.create_code})
