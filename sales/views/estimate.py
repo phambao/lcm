@@ -719,9 +719,9 @@ def check_update_data_entry(request, pk):
     """
 
     if request.method == 'PUT':
-        obj = get_object_or_404(DataEntry.objects.all(), pk=pk)
-        obj.is_show = False
-        obj.save()
+        old_obj = get_object_or_404(DataEntry.objects.all(), pk=pk)
+        old_obj.is_show = False
+        old_obj.save()
         data_entry = request.data.get('data_entry', {})
         data_entry.pop('id', None)
         formula_ids = request.data.get('formulas', [])
@@ -732,6 +732,13 @@ def check_update_data_entry(request, pk):
         formulas = POFormula.objects.filter(pk__in=formula_ids)
         formula_with_data_entry = POFormulaToDataEntry.objects.filter(po_formula__in=formulas)
         formula_with_data_entry.update(data_entry=obj)
+
+        if old_obj.name != obj.name:
+            for obj in formulas:
+                obj.formula = obj.formula.replace(old_obj.name, obj.name)
+                obj.formula_mentions = obj.formula_mentions.replace(old_obj.name, obj.name)
+                data.append(obj)
+            POFormula.objects.bulk_update(data, ['formula', 'formula_mentions'], batch_size=128)
 
     data = {}
     data_entry = get_object_or_404(DataEntry.objects.all(), pk=pk)
