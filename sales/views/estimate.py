@@ -717,29 +717,27 @@ def check_update_data_entry(request, pk):
 
     Updating Data Entry for formulas
     """
-    new_data_entry = None
     if request.method == 'PUT':
-        old_obj = get_object_or_404(DataEntry.objects.all(), pk=pk)
-        old_obj.is_show = False
-        old_obj.save()
-        data_entry = request.data.get('data_entry', {})
-        data_entry.pop('id', None)
         formula_ids = request.data.get('formulas', [])
-        serializer = DataEntrySerializer(data=data_entry)
+        data_entry = request.data.get('data_entry', {})
+        # Create new object
+        old_obj = get_object_or_404(DataEntry.objects.all(), pk=pk)
+        old_serializer = DataEntrySerializer(old_obj).data
+        old_serializer.pop('id', None)
+        new_serializer = DataEntrySerializer(data=old_serializer)
+        new_serializer.is_valid(raise_exception=True)
+        new_obj = new_serializer.save(is_show=False)
+
+        # change formula relation between old and new
+        formulas = POFormula.objects.filter(pk__in=formula_ids)
+        formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=old_obj).exclude(po_formula__in=formulas)
+        formula_with_data_entry.update(data_entry=new_obj)
+
+        # Update data entry
+        data_entry.pop('id', None)
+        serializer = DataEntrySerializer(instance=old_obj, data=data_entry, context={'request': request})
         serializer.is_valid(raise_exception=True)
         obj = serializer.save()
-        new_data_entry = obj
-        formulas = POFormula.objects.filter(pk__in=formula_ids)
-        formula_with_data_entry = POFormulaToDataEntry.objects.filter(po_formula__in=formulas)
-        formula_with_data_entry.update(data_entry=obj)
-
-        list_formula = []
-        if old_obj.name != obj.name:
-            for obj in formulas:
-                obj.formula = obj.formula.replace(old_obj.name, obj.name)
-                obj.formula_mentions = obj.formula_mentions.replace(old_obj.name, obj.name)
-                list_formula.append(obj)
-            POFormula.objects.bulk_update(list_formula, ['formula', 'formula_mentions'], batch_size=128)
 
     data = {}
     data_entry = get_object_or_404(DataEntry.objects.all(), pk=pk)
@@ -747,5 +745,5 @@ def check_update_data_entry(request, pk):
     self_data_entries = data_entry.poformulatodataentry_set.all()
     formulas = POFormula.objects.filter(self_data_entries__in=self_data_entries, is_show=True).distinct()
     data['formula_relation'] = formulas.values('id', 'name')
-    data['data_entry'] = DataEntrySerializer(new_data_entry or data_entry).data
+    data['data_entry'] = DataEntrySerializer(data_entry).data
     return Response(status=status.HTTP_200_OK, data=data)
