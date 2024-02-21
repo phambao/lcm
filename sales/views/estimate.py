@@ -717,7 +717,7 @@ def check_update_data_entry(request, pk):
 
     Updating Data Entry for formulas
     """
-
+    new_data_entry = None
     if request.method == 'PUT':
         old_obj = get_object_or_404(DataEntry.objects.all(), pk=pk)
         old_obj.is_show = False
@@ -728,7 +728,7 @@ def check_update_data_entry(request, pk):
         serializer = DataEntrySerializer(data=data_entry)
         serializer.is_valid(raise_exception=True)
         obj = serializer.save()
-
+        new_data_entry = obj
         formulas = POFormula.objects.filter(pk__in=formula_ids)
         formula_with_data_entry = POFormulaToDataEntry.objects.filter(po_formula__in=formulas)
         formula_with_data_entry.update(data_entry=obj)
@@ -747,4 +747,5 @@ def check_update_data_entry(request, pk):
     self_data_entries = data_entry.poformulatodataentry_set.all()
     formulas = POFormula.objects.filter(self_data_entries__in=self_data_entries, is_show=True).distinct()
     data['formula_relation'] = formulas.values('id', 'name')
+    data['data_entry'] = DataEntrySerializer(new_data_entry or data_entry).data
     return Response(status=status.HTTP_200_OK, data=data)
