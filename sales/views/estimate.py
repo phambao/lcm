@@ -733,12 +733,13 @@ def check_update_data_entry(request, pk):
         formula_with_data_entry = POFormulaToDataEntry.objects.filter(po_formula__in=formulas)
         formula_with_data_entry.update(data_entry=obj)
 
+        list_formula = []
         if old_obj.name != obj.name:
             for obj in formulas:
                 obj.formula = obj.formula.replace(old_obj.name, obj.name)
                 obj.formula_mentions = obj.formula_mentions.replace(old_obj.name, obj.name)
-                data.append(obj)
-            POFormula.objects.bulk_update(data, ['formula', 'formula_mentions'], batch_size=128)
+                list_formula.append(obj)
+            POFormula.objects.bulk_update(list_formula, ['formula', 'formula_mentions'], batch_size=128)
 
     data = {}
     data_entry = get_object_or_404(DataEntry.objects.all(), pk=pk)
