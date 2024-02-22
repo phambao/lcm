@@ -330,8 +330,6 @@ def webhook_received(request):
         payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id,
                                                        expand=['invoice', 'source', 'payment_method'])
         if data_object['billing_reason'] == 'subscription_create':
-            print('*******')
-            print(data_object)
             expiration_date = datetime.fromtimestamp(subscription.current_period_end)
             customer_stripe_id = data_object.customer
             customer = stripe.Customer.retrieve(customer_stripe_id)
