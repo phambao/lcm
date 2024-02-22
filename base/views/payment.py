@@ -186,10 +186,9 @@ def create_subscription(request):
                 items=[{
                     'price': price_id,
                 }],
-                # payment_behavior='default_incomplete',
+                payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
                 coupon=coupon_id,
-                trial_end=1699848320
             )
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
@@ -298,6 +297,7 @@ def webhook_received(request):
         data_subscription = SubscriptionStripeCompany.objects.filter(subscription_id=subscription_id)
         data_subscription.delete()
         customer_stripe_id = data_object['customer']
+
         user = User.objects.get(stripe_customer=customer_stripe_id)
         company = user.company
         company.is_payment = False
@@ -330,6 +330,8 @@ def webhook_received(request):
         payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id,
                                                        expand=['invoice', 'source', 'payment_method'])
         if data_object['billing_reason'] == 'subscription_create':
+            print('*******')
+            print(data_object)
             expiration_date = datetime.fromtimestamp(subscription.current_period_end)
             customer_stripe_id = data_object.customer
             customer = stripe.Customer.retrieve(customer_stripe_id)
