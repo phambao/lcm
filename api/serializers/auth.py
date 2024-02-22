@@ -8,7 +8,6 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
-from api.models import CompanyBuilder
 from base.tasks import celery_send_mail
 from base.utils import pop
 from sales.models import (Catalog, ChangeOrder, EstimateTemplate, Invoice, LeadDetail,
