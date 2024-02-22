@@ -29,6 +29,14 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
 
+class ProfileUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username', 'last_name', 'first_name',
+                  'image', 'phone', 'lang', 'location', 'country', 'birthday')
+        read_only_fields = ['email', 'username']
+
+
 class InternalUserSerializer(serializers.ModelSerializer):
     group = serializers.IntegerField(required=False, allow_null=True)
 

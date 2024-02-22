@@ -9,7 +9,7 @@ from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.mail import send_mail
 from rest_framework import generics, permissions, status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 import jwt
@@ -19,7 +19,7 @@ from base.models.payment import PaymentHistoryStripe
 from base.tasks import celery_send_mail
 from base.views.base import CompanyFilterMixin
 from ..models import CompanyBuilder
-from ..serializers.auth import UserSerializer, RegisterSerializer, LoginSerializer, User, \
+from ..serializers.auth import ProfileUserSerializer, UserSerializer, RegisterSerializer, LoginSerializer, User, \
     ForgotPasswordSerializer, CheckCodeSerializer, ChangePasswordSerializer, InternalUserSerializer
 
 
@@ -246,3 +246,16 @@ def reset_credential(request, pk):
     celery_send_mail.delay(f'Reset credential for {user.get_username()}',
                            content, settings.EMAIL_HOST_USER, [user.email], False)
     return Response(status=status.HTTP_200_OK)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def profile(request):
+    user = request.user
+    if request.method == 'PUT':
+        serializer = ProfileUserSerializer(instance=user, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+    serializer = ProfileUserSerializer(user)
+    return Response(status=status.HTTP_200_OK, data=serializer.data)

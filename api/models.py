@@ -6,6 +6,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from .middleware import get_request
 
@@ -36,6 +37,9 @@ class User(AbstractUser):
                                         default=ServiceProvider.USNETWORK, max_length=16)
     is_schedule_notify = models.BooleanField(default=False, blank=True)
     schedule_conflict_items = models.IntegerField(default=7, blank=True)
+    location = models.CharField(max_length=256, blank=True, default='')
+    country = models.CharField(max_length=64, blank=True, default='')
+    birthday = models.DateTimeField(blank=True, default=timezone.now)
 
     def __str__(self):
         return self.email
