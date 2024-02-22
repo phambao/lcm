@@ -39,7 +39,7 @@ url_base = [
     path('delete/<int:content_type>/', base.delete_models),
     path('group/', auth.GroupList.as_view()),
     path('group/<int:pk>/', auth.GroupDetail.as_view()),
-    path('permission/', auth.PermissionList.as_view()),
+    path('permission/', auth.get_permission),
     path('permission/<int:pk>/', auth.PermissionDetail.as_view()),
     path('roles/', auth.get_permission),
     path('lang/<str:lang>/', update_language_user),
