@@ -83,10 +83,11 @@ class InternalUserSerializer(serializers.ModelSerializer):
         data['group'] = None
         data['auto_access'] = True
         data['role'] = ''
-        role = instance.groups.all()
+        data['permissions'] = instance.get_app_permissions()
+        role = instance.groups.all().first()
         if role:
-            data['group'] = instance.groups.all().first().pk
-            data['role'] = role.first().name
+            data['group'] = role.pk
+            data['role'] = role.name
         return data
 
 

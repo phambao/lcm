@@ -9,6 +9,7 @@ from base.models.config import PersonalInformation
 from base.serializers.auth import GroupSerializer, PermissionSerializer
 from base.serializers.config import PersonalInformationSerializer
 from base.views.base import CompanyFilterMixin
+from base.utils import get_perm_by_models
 
 
 class GroupFilterCompanyMixin:
@@ -35,7 +36,7 @@ class PermissionList(generics.ListCreateAPIView):
     pagination_class = None
 
 
-class PermissionDetail(generics.RetrieveUpdateDestroyAPIView):
+class PermissionDetail(generics.RetrieveAPIView):
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -56,13 +57,6 @@ class PersonalInformationDetailView(generics.RetrieveUpdateDestroyAPIView):
 def get_permission(request):
     from sales.models import (Catalog, ChangeOrder, EstimateTemplate, Invoice, LeadDetail,
                               ScheduleEvent, ToDo, DailyLog, ProposalWriting)
-
-    def get_perm_by_models(models):
-        perms = Permission.objects.none()
-        for model in models:
-            content_type = ContentType.objects.get_for_model(model)
-            perms |= Permission.objects.filter(content_type=content_type)
-        return perms
 
     v1 = request.GET.get('v1', False)
     perms = get_perm_by_models((Catalog, ChangeOrder, EstimateTemplate, Invoice, LeadDetail, ScheduleEvent,

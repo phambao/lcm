@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 
 from .middleware import get_request
+from base.utils import get_perm_by_models
 
 
 class User(AbstractUser):
@@ -48,6 +49,23 @@ class User(AbstractUser):
         if self.is_admin_company:
             return True
         return self.has_perm(str, obj)
+
+    def get_app_permissions(self):
+        """
+            Return list of codename of permissions
+        """
+        if self.is_admin_company or self.is_superuser:
+            return self.get_sys_perms().values_list('codename', flat=True)
+        group = self.groups.first()
+        if group:
+            return group.permissions.all().values_list('codename', flat=True)
+        return []
+
+    def get_sys_perms(self):
+        from sales.models import (Catalog, ChangeOrder, EstimateTemplate, Invoice, LeadDetail,
+                            ScheduleEvent, ToDo, DailyLog, ProposalWriting)
+        return get_perm_by_models((Catalog, ChangeOrder, EstimateTemplate, Invoice, LeadDetail,
+                            ScheduleEvent, ToDo, DailyLog, ProposalWriting))
 
 
 class BaseModel(models.Model):
