@@ -15,6 +15,7 @@ class ProposalTemplate(BaseModel):
     name = models.CharField(max_length=64)
     # proposal_formatting = models.ForeignKey('ProposalFormatting', on_delete=models.CASCADE,
     #                                         related_name='proposal_formatting_template', null=True)
+    is_default = models.BooleanField(default=False, blank=True)
     screen_shot = models.CharField(max_length=1000, blank=True)
 
 
