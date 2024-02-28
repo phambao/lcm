@@ -31,7 +31,21 @@ class ProposalWritingFilter(filters.FilterSet):
 
 class ProposalTemplateFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
+    is_default = filters.BooleanFilter('is_default')
+    default = filters.BooleanFilter(method='get_default')
 
     class Meta:
         model = ProposalTemplate
-        fields = ('name',)
+        fields = ('name', 'default')
+
+    def get_default(self, queryset, name, value):
+        if value:
+            if queryset.filter(is_default=True).exists():
+                return queryset.filter(is_default=True)
+            else:
+                element = queryset.first()
+                if element:
+                    element.is_default = True
+                    element.save(update_fields=['is_default'])
+                    return queryset.filter(is_default=True)
+        return queryset

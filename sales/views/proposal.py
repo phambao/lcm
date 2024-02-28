@@ -35,7 +35,8 @@ class ProposalTemplateGenericView(CompanyFilterMixin, generics.ListCreateAPIView
     queryset = ProposalTemplate.objects.all().prefetch_related('proposal_template_element__proposal_widget_element')
     serializer_class = ProposalTemplateSerializer
     permission_classes = [permissions.IsAuthenticated & ProposalPermissions]
-    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter, rf_filters.OrderingFilter)
+    ordering_fields = ['is_default',]
     filterset_class = ProposalTemplateFilter
     search_fields = ('name',)
 

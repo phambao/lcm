@@ -76,6 +76,7 @@ class ProposalTemplateSerializer(ContentTypeSerializerMixin):
         model = ProposalTemplate
         fields = ('id', 'name', 'proposal_template_element', 'config_proposal_template',
                   'screen_shot', 'created_date', 'user_create', 'is_default')
+        read_only_fields = ('is_default',)
 
     def create(self, validated_data):
         elements = pop(validated_data, 'proposal_template_element', [])
@@ -164,10 +165,9 @@ class ProposalTemplateSerializer(ContentTypeSerializerMixin):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if self.context['request'].path != reverse('proposal') or (self.context['request'].method != 'GET' and self.context['request'].path == reverse('proposal')):
-            temp = instance.proposal_formatting_template_config.first()
-            rs = ProposalTemplateConfigSerializer(temp)
-            data['config_proposal_template'] = rs.data
+        temp = instance.proposal_formatting_template_config.first()
+        rs = ProposalTemplateConfigSerializer(temp)
+        data['config_proposal_template'] = rs.data
         return data
 
 
