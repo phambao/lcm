@@ -3,6 +3,9 @@ import io
 import sys
 
 from django.http import FileResponse
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
+from django.apps import apps
 
 
 def pop(data, key, default_type):
@@ -36,3 +39,11 @@ def file_response(workbook, title):
     workbook.save(output)
     output.seek(0)
     return FileResponse(output, as_attachment=True, filename=filename)
+
+
+def get_perm_by_models(models):
+    perms = Permission.objects.none()
+    for model in models:
+        content_type = ContentType.objects.get_for_model(model)
+        perms |= Permission.objects.filter(content_type=content_type)
+    return perms

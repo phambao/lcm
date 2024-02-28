@@ -498,15 +498,9 @@ class EstimateTemplateForFormattingSerializer(serializers.ModelSerializer):
         data['quantity'] = ''
         data['unit'] = ''
         if instance.unit:
-            try:
-                data['unit'] = UnitLibrary.objects.get(pk=instance.unit).name
-            except (UnitLibrary.DoesNotExist, ValueError):
-                pass
+            data['unit'] = instance.unit.name
         if instance.quantity:
-            try:
-                data['quantity'] = DataEntry.objects.get(pk=instance.quantity).name
-            except (DataEntry.DoesNotExist):
-                pass
+            data['quantity'] = instance.quantity.name
         data['total_charge'] = instance.get_formula().aggregate(
             total_charge=Sum('charge')
         ).get('total_charge')
@@ -559,6 +553,8 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
     data_views = DataViewSerializer('estimate_template', many=True, required=False, allow_null=True)
     data_entries = POFormulaToDataEntrySerializer('estimate_template', many=True, required=False, allow_null=True)
     material_views = MaterialViewSerializers('estimate_template', many=True, required=False, allow_null=True)
+    quantity = IDAndNameSerializer(required=False, allow_null=True)
+    unit = IDAndNameSerializer(required=False, allow_null=True)
 
     class Meta:
         model = EstimateTemplate
@@ -600,6 +596,8 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
         data_views = pop(validated_data, 'data_views', [])
         data_entries = pop(validated_data, 'data_entries', [])
         material_views = pop(validated_data, 'material_views', [])
+        validated_data['quantity_id'] = pop(validated_data, 'quantity', {}).get('id')
+        validated_data['unit_id'] = pop(validated_data, 'unit', {}).get('id')
         pk = pop(validated_data, 'id', None)
 
         pk_assembles = self.create_assembles(assembles)
@@ -620,6 +618,8 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
         data_views = pop(validated_data, 'data_views', [])
         data_entries = pop(validated_data, 'data_entries', [])
         material_views = pop(validated_data, 'material_views', [])
+        validated_data['quantity_id'] = pop(validated_data, 'quantity', {}).get('id')
+        validated_data['unit_id'] = pop(validated_data, 'unit', {}).get('id')
         pk = pop(validated_data, 'id', None)
 
         instance.data_entries.all().delete()
@@ -640,15 +640,15 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
 
     def validate_quantity(self, value):
         if value:
-            if not DataEntry.objects.filter(pk=value).exists():
-                return None
-        return value
+            if DataEntry.objects.filter(pk=value.get('id')).exists():
+                return value
+        return {}
 
     def validate_unit(self, value):
         if value:
-            if not UnitLibrary.objects.filter(pk=value).exists():
-                return None
-        return value
+            if UnitLibrary.objects.filter(pk=value.get('id')).exists():
+                return value
+        return {}
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
