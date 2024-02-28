@@ -17,7 +17,7 @@ import jwt
 
 from api.models import CompanyBuilder, User, SubscriptionStripeCompany
 from base.tasks import celery_send_mail
-from base.models.payment import Product, PaymentHistoryStripe, Price
+from base.models.payment import Product, PaymentHistoryStripe, Price, ReferralCode, DealerInformation, DealerCompany
 from base.serializers.payment import ProductSerializer, CheckoutSessionSerializer, PaymentHistoryStripeSerializer
 
 stripe.api_key = config('STRIPE_SECRET_KEY', '')
@@ -168,6 +168,9 @@ def create_subscription(request):
                 }],
                 payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
+                metadata={
+                    'promotion_code': 'Truong99',
+                }
             )
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
@@ -189,6 +192,9 @@ def create_subscription(request):
                 payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
                 coupon=coupon_id,
+                metadata={
+                    'promotion_code': 'Truong99',
+                }
             )
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
@@ -334,12 +340,171 @@ def webhook_received(request):
             customer_stripe_id = data_object.customer
             customer = stripe.Customer.retrieve(customer_stripe_id)
             subscription_name = subscription.plan.product.name
+
+            if data_object.discount:
+                coupon_code = data_object.discount.coupon.id
+                is_use_one = False
+                data_referral_code = ReferralCode.objects.get(coupon_stripe_id=coupon_code)
+                company = data_referral_code.company
+                dealer = None
+                if data_referral_code.dealer:
+                    dealer = DealerInformation.objects.get(user=data_referral_code.dealer.user)
+                if company:
+                    data_subscription_stripe_company = SubscriptionStripeCompany.objects.get(company=company)
+                    data_sub = stripe.Subscription.retrieve(data_subscription_stripe_company.subscription_id, expand=['plan.product'])
+                    total_amount = data_sub.plan.amount/100
+                    company_referral_code = company.referral_code_company
+                    commission_amount = ((data_object.subtotal - subscription.plan.amount) * 50) / 1000
+                    discount_amount = 0
+
+                    # check coupon code is once or repeating
+                    if company_referral_code:
+                        coupon_company = stripe.Coupon.retrieve(company_referral_code.coupon_stripe_id)
+                        if coupon_company.duration == 'once':
+                            is_use_one = True
+                        else:
+                            is_use_one = False
+
+                    if company_referral_code and company_referral_code.percent_discount_sign_up:
+                        discount_amount = total_amount * company_referral_code.percent_discount_sign_up/100
+
+                    elif company_referral_code and company_referral_code.number_discount_sign_up:
+                        discount_amount = company_referral_code.number_discount_sign_up
+
+                    company.credit = int(company.credit + commission_amount)
+                    company.save()
+
+                    # if company not coupon code when payment first
+                    if not company_referral_code or is_use_one:
+                        temp_amount = total_amount - discount_amount
+                        create_referral_code = None
+                        if company.credit >= temp_amount:
+                            company.credit = company.credit - total_amount
+                            company.save()
+                            coupon = stripe.Coupon.create(
+                                percent_off=None,
+                                amount_off=int(total_amount * 100),
+                                currency=data_sub.currency,
+                                duration='once',
+                                max_redemptions=1
+                            )
+                            subscription = stripe.Subscription.modify(
+                                data_subscription_stripe_company.subscription_id,
+                                coupon=coupon,
+                            )
+                            create_referral_code = ReferralCode.objects.create(
+                                number_discount_sign_up=total_amount,
+                                currency=data_sub.currency,
+                                coupon_stripe_id=coupon.id,
+                                dealer=data_referral_code.dealer,
+                            )
+                        else:
+                            total_discount_coupon = company.credit + discount_amount
+                            company.credit = 0
+                            company.save()
+                            coupon = stripe.Coupon.create(
+                                percent_off=None,
+                                amount_off=int(total_discount_coupon * 100),
+                                currency=data_sub.currency,
+                                duration='once',
+                                max_redemptions=1
+                            )
+                            subscription = stripe.Subscription.modify(
+                                data_subscription_stripe_company.subscription_id,
+                                coupon=coupon,
+                            )
+                            create_referral_code = ReferralCode.objects.create(
+                                number_discount_sign_up=total_discount_coupon,
+                                currency=data_sub.currency,
+                                coupon_stripe_id=coupon.id,
+                                dealer=data_referral_code.dealer,
+                            )
+                        company.referral_code_company = create_referral_code
+                        company.save()
+
+                    elif company_referral_code and discount_amount < total_amount and not is_use_one:
+                        temp_amount = total_amount - discount_amount
+                        create_referral_code = None
+                        if company.credit >= temp_amount:
+                            company.credit = company.credit - temp_amount
+                            company.save()
+                            coupon = stripe.Coupon.create(
+                                percent_off=None,
+                                amount_off=int(total_amount * 100),
+                                currency=data_sub.currency,
+                                duration='repeating',
+                                duration_in_months=data_subscription_stripe_company.duration_in_months,
+                            )
+                            subscription = stripe.Subscription.modify(
+                                data_subscription_stripe_company.subscription_id,
+                                coupon=coupon,
+                            )
+                            create_referral_code = ReferralCode.objects.create(
+                                number_discount_sign_up=total_amount,
+                                currency=data_sub.currency,
+                                coupon_stripe_id=coupon.id,
+                                dealer=data_referral_code.dealer,
+                            )
+                        else:
+                            total_discount_coupon = discount_amount + company.credit
+                            company.credit = 0
+                            company.save()
+                            coupon = stripe.Coupon.create(
+                                percent_off=None,
+                                amount_off=int(total_discount_coupon * 100),
+                                currency=data_sub.currency,
+                                duration='repeating',
+                                duration_in_months=data_subscription_stripe_company.duration_in_months,
+                            )
+                            subscription = stripe.Subscription.modify(
+                                data_subscription_stripe_company.subscription_id,
+                                coupon=coupon,
+                            )
+                            create_referral_code = ReferralCode.objects.create(
+                                number_discount_sign_up=total_discount_coupon,
+                                currency=data_sub.currency,
+                                coupon_stripe_id=coupon.id,
+                                dealer=data_referral_code.dealer,
+                            )
+                        company.referral_code_company = create_referral_code
+                        company.save()
+                else:
+                    commission_amount = ((data_object.subtotal - subscription.plan.amount) * 30) / 1000
+                    dealer.total_bonus_commissions = dealer.total_bonus_commissions + commission_amount
+                    dealer.save()
+                    data_company = CompanyBuilder.objects.get(pk=customer.metadata['company'])
+                    DealerCompany.objects.create(
+                        dealer=dealer,
+                        referral_code=data_referral_code,
+                        company=data_company
+                    )
+
+                coupon = stripe.Coupon.create(
+                    percent_off=60,
+                    duration='repeating',
+                    duration_in_months=11,
+                )
+                subscription = stripe.Subscription.modify(
+                    subscription_id,
+                    coupon=coupon,
+                )
+                create_referral_code = ReferralCode.objects.create(
+                    percent_discount_sign_up=60,
+                    coupon_stripe_id=coupon.id,
+                    dealer=data_referral_code.dealer,
+
+                )
+                data_company = CompanyBuilder.objects.get(pk=customer.metadata['company'])
+                data_company.referral_code_company = create_referral_code
+                data_company.save()
+
             SubscriptionStripeCompany.objects.create(
                 subscription_id=subscription_id,
                 customer_stripe=customer_stripe_id,
                 company_id=int(customer.metadata['company']),
                 subscription_name=subscription_name,
                 expiration_date=expiration_date,
+                duration_in_months=data_object.discount.coupon.duration_in_months - 1,
                 is_activate=True
             )
 
@@ -356,6 +521,123 @@ def webhook_received(request):
             )
 
         if data_object['billing_reason'] == 'subscription_cycle':
+            if data_object.discount:
+                is_use_one = False
+                coupon_code = data_object.discount.coupon.id
+                coupon_company = stripe.Coupon.retrieve(coupon_code)
+                if coupon_company.duration == 'once':
+                    is_use_one = True
+                else:
+                    is_use_one = False
+
+                data_referral_code = ReferralCode.objects.get(coupon_stripe_id=coupon_code)
+                # dealer = DealerInformation.objects.get(user=data_referral_code.dealer.user)
+                company = CompanyBuilder.objects.get(pk=customer.metadata['company'])
+                if company:
+                    data_subscription_stripe_company = SubscriptionStripeCompany.objects.get(company=company)
+                    total_amount = subscription.plan.amount / 100
+                    company_referral_code = company.referral_code_company
+                    discount_amount = 0
+                    if is_use_one:
+                        create_referral_code = None
+                        if company.credit >= total_amount:
+                            coupon = stripe.Coupon.create(
+                                percent_off=None,
+                                amount_off=int((company.credit - total_amount) * 100),
+                                currency=subscription.currency,
+                                duration='once',
+                                max_redemptions=1
+                            )
+                            company.credit = company.credit - total_amount
+                            company.save()
+                            subscription = stripe.Subscription.modify(
+                                data_subscription_stripe_company.subscription_id,
+                                coupon=coupon,
+                            )
+                            create_referral_code = ReferralCode.objects.create(
+                                number_discount_sign_up=total_amount,
+                                currency=subscription.currency,
+                                coupon_stripe_id=coupon.id,
+                                dealer=data_referral_code.dealer,
+
+                            )
+
+                        else:
+                            coupon = stripe.Coupon.create(
+                                percent_off=None,
+                                amount_off=int(company.credit * 100),
+                                currency=subscription.currency,
+                                duration='once',
+                                max_redemptions=1
+                            )
+                            company.credit = 0
+                            company.save()
+                            subscription = stripe.Subscription.modify(
+                                data_subscription_stripe_company.subscription_id,
+                                coupon=coupon,
+                            )
+                            create_referral_code = ReferralCode.objects.create(
+                                number_discount_sign_up=total_amount,
+                                currency=subscription.currency,
+                                coupon_stripe_id=coupon.id,
+                                dealer=data_referral_code.dealer,
+
+                            )
+                        company.referral_code_company = create_referral_code
+                        company.save()
+                    else:
+                        discount_amount = total_amount * 30/100
+                        if discount_amount < total_amount:
+                            temp_amount = total_amount - discount_amount
+                            create_referral_code = None
+                            if company.credit >= temp_amount:
+                                company.credit = company.credit - temp_amount
+                                company.save()
+                                coupon = stripe.Coupon.create(
+                                    percent_off=None,
+                                    amount_off=int(total_amount * 100),
+                                    currency=subscription.currency,
+                                    duration='repeating',
+                                    duration_in_months=data_subscription_stripe_company.duration_in_months - 1,
+                                )
+                                subscription = stripe.Subscription.modify(
+                                    data_subscription_stripe_company.subscription_id,
+                                    coupon=coupon,
+                                )
+                                create_referral_code = ReferralCode.objects.create(
+                                    number_discount_sign_up=total_amount,
+                                    currency=subscription.currency,
+                                    coupon_stripe_id=coupon.id,
+                                    dealer=data_referral_code.dealer,
+
+                                )
+
+                            else:
+                                total_discount_coupon = discount_amount + company.credit
+                                company.credit = 0
+                                company.save()
+                                coupon = stripe.Coupon.create(
+                                    percent_off=None,
+                                    amount_off=int(total_discount_coupon * 100),
+                                    currency=subscription.currency,
+                                    duration='repeating',
+                                    duration_in_months=data_subscription_stripe_company.duration_in_months - 1,
+                                )
+                                subscription = stripe.Subscription.modify(
+                                    subscription.id,
+                                    coupon=coupon,
+                                )
+                                create_referral_code = ReferralCode.objects.create(
+                                    number_discount_sign_up=total_discount_coupon,
+                                    currency=subscription.currency,
+                                    coupon_stripe_id=coupon.id,
+                                    dealer=data_referral_code.dealer,
+
+                                )
+
+                            company.referral_code_company = create_referral_code
+                            company.save()
+
             customer_stripe_id = data_object.customer
             PaymentHistoryStripe.objects.create(
                 subscription_id=subscription_id,
