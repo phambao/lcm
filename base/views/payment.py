@@ -189,9 +189,6 @@ def create_subscription(request):
                 payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
                 coupon=coupon_id,
-                metadata={
-                    'promotion_code': 'Truong99',
-                }
             )
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
