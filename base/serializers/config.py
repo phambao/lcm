@@ -11,6 +11,7 @@ from api.middleware import get_request
 from api.models import DivisionCompany, CompanyBuilder, Trades
 from ..models.config import Column, Search, Config, GridSetting, Question, Answer, CompanyAnswerQuestion, \
     PersonalInformation
+from ..models.payment import ReferralCode
 from ..utils import pop
 
 from base.serializers import base
@@ -101,12 +102,20 @@ class CompanySerializer(serializers.ModelSerializer):
 
         if not existing_promotion_code.data:
             coupon = stripe.Coupon.create(
+                name=f'referral code {company_name}',
                 percent_off=30,
-                duration='once',
+                duration='forever',
             )
             promotion_code = stripe.PromotionCode.create(
                 coupon=coupon,
                 code=company_code,
+            )
+            ReferralCode.objects.create(
+                title=f'code_referral_{company_name}',
+                code=company_code,
+                percent_discount_product=30,
+                coupon_stripe_id=coupon.id,
+                company=company_create
             )
         return company_create
 

@@ -12,7 +12,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from api.models import CompanyBuilder, User, SubscriptionStripeCompany, Trades
 from base.models.config import Question, Answer
-from base.models.payment import Price, Product
+from base.models.payment import Price, Product, ReferralCode, DealerInformation, DealerCompany
 
 
 class UserInline(admin.TabularInline):
@@ -30,12 +30,12 @@ class AnswerInline(admin.TabularInline):
 
 
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ["company_name", "logo", "description", "address", "country", "city", "state",
+    list_display = ["id","company_name", "logo", "description", "address", "country", "city", "state",
                     "business_phone", "zip_code", "size", "tax", "email", "cell_mail", "cell_phone", "created_date",
                     "modified_date", "user_create", "user_update", "currency", "customer_stripe", "is_payment", 'website', 'company_size', 'revenue']
     fields = ["company_name", "logo", "description", "address", "country", "city", "state",
                     "business_phone", "zip_code", "size", "tax", "email", "cell_mail", "cell_phone",
-                    "user_create", "user_update", "currency", "customer_stripe", "is_payment", 'website', 'company_size', 'revenue']
+                    "user_create", "user_update", "currency", "customer_stripe", "is_payment", 'website', 'company_size', 'revenue', 'referral_code_current', 'credit', 'referral_code']
     list_filter = ["company_name"]
     search_fields = ['company_name', 'business_phone']
     inlines = [UserInline]
@@ -305,6 +305,77 @@ class TradesAdmin(admin.ModelAdmin):
     search_fields = ['name', 'name']
 
 
+class ReferralCodeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'code', 'description', 'number_discount_sign_up', 'percent_discount_sign_up', 'number_discount_product',
+                    'percent_discount_product', 'monthly_discounts', 'number_of_uses', 'start_date', 'end_date', 'coupon_stripe_id')
+    search_fields = ['code']
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.exclude(code__exact='')
+
+    # def has_change_permission(self, request, obj=None):
+    #     return obj is None
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return [field.name for field in ReferralCode._meta.fields if field.name != 'products']
+        else:
+            return []
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def save_model(self, request, obj, form, change):
+        coupon = None
+        products = form.cleaned_data['products']
+        product_apply = []
+        for product in products:
+            product_apply.append(product.stripe_product_id)
+
+        if obj.number_discount_product:
+            coupon = stripe.Coupon.create(
+                percent_off=None,
+                amount_off=int(obj.number_discount_product) * 100,
+                currency='usd',
+                duration='repeating',
+                duration_in_months=obj.monthly_discounts,
+                max_redemptions=obj.number_of_uses,
+                name=obj.title,
+                applies_to={
+                    'products': product_apply
+                }
+            )
+        if obj.percent_discount_product:
+            coupon = stripe.Coupon.create(
+                percent_off=obj.percent_discount_product,
+                duration='repeating',
+                duration_in_months=obj.monthly_discounts,
+                max_redemptions=obj.number_of_uses,
+                name=obj.title,
+                applies_to={
+                    'products': product_apply
+                }
+            )
+        promotion_code = stripe.PromotionCode.create(
+            coupon=coupon,
+            code=obj.code,
+        )
+        obj.coupon_stripe_id = coupon.id
+        obj.save()
+
+
+class DealerInformationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'total_bonus_commissions')
+    # search_fields = ['name', 'name']
+
+
+class DealerCompanyAdmin(admin.ModelAdmin):
+    list_display = ('id', 'dealer', 'company', 'referral_code')
+
+
+admin.site.register(DealerCompany, DealerCompanyAdmin)
+admin.site.register(DealerInformation, DealerInformationAdmin)
+admin.site.register(ReferralCode, ReferralCodeAdmin)
 admin.site.register(SubscriptionStripeCompany, SubcriptionCompanyAdmin)
 admin.site.register(Price, PriceAdmin)
 admin.site.register(Product, StripeProductAdmin)
@@ -313,3 +384,4 @@ admin.site.register(CompanyBuilder, CompanyAdmin)
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Answer, AnswerAdmin)
 admin.site.register(Trades, TradesAdmin)
+
