@@ -25,6 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super(UserSerializer, self).to_representation(instance)
         data['name'] = data['first_name'] + ' ' + data['last_name']
+        data['permissions'] = instance.get_app_permissions()
         return data
 
 
