@@ -403,7 +403,8 @@ def get_all_cost_table(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated & CatalogPermissions])
-def download_file_export_catalog(request, url, *args, **kwargs):
+def download_file_export_catalog(request, *args, **kwargs):
+    url = request.GET.get('url', None)
     prefix_to_remove = URL_CLOUD
     result = url.replace(prefix_to_remove, "")
     data = FileBuilder365.objects.get(file=result)
