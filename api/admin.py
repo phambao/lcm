@@ -35,7 +35,7 @@ class CompanyAdmin(admin.ModelAdmin):
                     "modified_date", "user_create", "user_update", "currency", "customer_stripe", "is_payment", 'website', 'company_size', 'revenue']
     fields = ["company_name", "logo", "description", "address", "country", "city", "state",
                     "business_phone", "zip_code", "size", "tax", "email", "cell_mail", "cell_phone",
-                    "user_create", "user_update", "currency", "customer_stripe", "is_payment", 'website', 'company_size', 'revenue', 'referral_code_company', 'credit', 'referral_code']
+                    "user_create", "user_update", "currency", "customer_stripe", "is_payment", 'website', 'company_size', 'revenue', 'referral_code_current', 'credit', 'referral_code']
     list_filter = ["company_name"]
     search_fields = ['company_name', 'business_phone']
     inlines = [UserInline]

@@ -168,9 +168,6 @@ def create_subscription(request):
                 }],
                 payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
-                metadata={
-                    'promotion_code': 'Truong99',
-                }
             )
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
@@ -353,7 +350,7 @@ def webhook_received(request):
                     data_subscription_stripe_company = SubscriptionStripeCompany.objects.get(company=company)
                     data_sub = stripe.Subscription.retrieve(data_subscription_stripe_company.subscription_id, expand=['plan.product'])
                     total_amount = data_sub.plan.amount/100
-                    company_referral_code = company.referral_code_company
+                    company_referral_code = company.referral_code_current
                     commission_amount = ((data_object.subtotal - subscription.plan.amount) * 50) / 1000
                     discount_amount = 0
 
@@ -362,8 +359,6 @@ def webhook_received(request):
                         coupon_company = stripe.Coupon.retrieve(company_referral_code.coupon_stripe_id)
                         if coupon_company.duration == 'once':
                             is_use_one = True
-                        else:
-                            is_use_one = False
 
                     if company_referral_code and company_referral_code.percent_discount_sign_up:
                         discount_amount = total_amount * company_referral_code.percent_discount_sign_up/100
@@ -419,7 +414,7 @@ def webhook_received(request):
                                 coupon_stripe_id=coupon.id,
                                 dealer=data_referral_code.dealer,
                             )
-                        company.referral_code_company = create_referral_code
+                        company.referral_code_current = create_referral_code
                         company.save()
 
                     elif company_referral_code and discount_amount < total_amount and not is_use_one:
@@ -466,7 +461,7 @@ def webhook_received(request):
                                 coupon_stripe_id=coupon.id,
                                 dealer=data_referral_code.dealer,
                             )
-                        company.referral_code_company = create_referral_code
+                        company.referral_code_current = create_referral_code
                         company.save()
                 else:
                     commission_amount = ((data_object.subtotal - subscription.plan.amount) * 30) / 1000
@@ -495,7 +490,7 @@ def webhook_received(request):
 
                 )
                 data_company = CompanyBuilder.objects.get(pk=customer.metadata['company'])
-                data_company.referral_code_company = create_referral_code
+                data_company.referral_code_current = create_referral_code
                 data_company.save()
 
             SubscriptionStripeCompany.objects.create(
@@ -527,8 +522,6 @@ def webhook_received(request):
                 coupon_company = stripe.Coupon.retrieve(coupon_code)
                 if coupon_company.duration == 'once':
                     is_use_one = True
-                else:
-                    is_use_one = False
 
                 data_referral_code = ReferralCode.objects.get(coupon_stripe_id=coupon_code)
                 # dealer = DealerInformation.objects.get(user=data_referral_code.dealer.user)
@@ -536,7 +529,7 @@ def webhook_received(request):
                 if company:
                     data_subscription_stripe_company = SubscriptionStripeCompany.objects.get(company=company)
                     total_amount = subscription.plan.amount / 100
-                    company_referral_code = company.referral_code_company
+                    company_referral_code = company.referral_code_current
                     discount_amount = 0
                     if is_use_one:
                         create_referral_code = None
@@ -583,7 +576,7 @@ def webhook_received(request):
                                 dealer=data_referral_code.dealer,
 
                             )
-                        company.referral_code_company = create_referral_code
+                        company.referral_code_current = create_referral_code
                         company.save()
                     else:
                         discount_amount = total_amount * 30/100
@@ -635,7 +628,7 @@ def webhook_received(request):
 
                                 )
 
-                            company.referral_code_company = create_referral_code
+                            company.referral_code_current = create_referral_code
                             company.save()
 
             customer_stripe_id = data_object.customer
