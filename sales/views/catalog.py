@@ -209,9 +209,10 @@ def add_multiple_level(request):
         parent = None
         data = []
         for name in request.data.get('levels', []):
-            catalog_level = CatalogLevel.objects.create(name=name, parent=parent, catalog=c)
-            parent = catalog_level
-            data.append(catalog_level)
+            if name:  # in case of empty string
+                catalog_level = CatalogLevel.objects.create(name=name, parent=parent, catalog=c)
+                parent = catalog_level
+                data.append(catalog_level)
         serializer = catalog.CatalogLevelModelSerializer(data, many=True, context={'request': request})
         return Response(status=status.HTTP_201_CREATED, data={"levels": serializer.data,
                                                               "catalog": catalog_serializer.data})
