@@ -26,7 +26,6 @@ def process_export_catalog(pk, company, user_id):
         for catalog in data_catalog:
             child_catalogs = Catalog.objects.filter(parents=catalog.id)
             for data_catalog in child_catalogs:
-
                 handle_export(data_catalog.id, workbook, catalog.name)
 
     else:
@@ -37,8 +36,11 @@ def process_export_catalog(pk, company, user_id):
                 handle_export(data_catalog.id, workbook, check_catalog.name)
 
         else:
-            handle_export(pk, workbook, '')
+            data_parent_catalog = check_catalog.parents.first()
+            handle_export(pk, workbook, data_parent_catalog.name)
 
+    default_sheet = workbook.active
+    workbook.remove(default_sheet)
     bytes_io = BytesIO()
     workbook.save(bytes_io)
     bytes_io.seek(0)

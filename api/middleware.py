@@ -61,8 +61,10 @@ class SettingTimeZoneMiddleware:
         user = request.user
         tz = None
         if request.user.is_authenticated is True:
-            if user.company.company_timezone:
+            if user.company and user.company.company_timezone:
                 tz = user.company.company_timezone
+            else:
+                timezone.deactivate()
         if tz:
             timezone.activate(tz)
         else:
