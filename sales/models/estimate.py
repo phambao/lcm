@@ -48,6 +48,17 @@ class DataEntry(BaseModel):
                 material_selections]
 
 
+class RoundUpChoice(models.TextChoices):
+    WHOLE_NUMBER = 'whole_number', 'Whole Number'
+    INCREMENT = 'increment', 'Increment'
+
+
+class RoundUpActionChoice(models.TextChoices):
+    WHOLE_NUMBER = 'whole_number', 'Whole Number'
+    INCREMENT = 'increment', 'Increment'
+    NONE = 'none', 'None'
+
+
 class POFormula(BaseModel):
 
     name = models.CharField(max_length=128)
@@ -76,6 +87,7 @@ class POFormula(BaseModel):
     catalog_materials = ArrayField(models.JSONField(default=dict, null=True), default=list, blank=True, null=True)
     order = models.IntegerField(default=0, blank=True, null=True)
     default_column = models.JSONField(blank=True, default=dict, null=True)
+    round_up = models.JSONField(blank=True, default=dict, null=True)
 
     def parse_material(self):
         primary_key = eval(self.material)
