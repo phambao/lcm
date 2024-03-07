@@ -76,6 +76,7 @@ class POFormula(BaseModel):
     unit_price = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
     cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
     total_cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
+    margin = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=None, null=True)
     formula_mentions = models.TextField(blank=True)  # for FE
     formula_data_mentions = models.CharField(blank=True, max_length=256)  # for FE
     gross_profit = models.CharField(max_length=32, blank=True)
