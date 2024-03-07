@@ -21,6 +21,7 @@ from api.middleware import get_request
 from api.serializers.base import ActivityLogSerializer
 from sales.models import LeadDetail, Priority, Type, Contact, PhoneOfContact, Activities, DataPoint, BuilderView, \
     DataType, DataView, TableInvoice, PaymentHistory, Invoice, Day, HolidayType
+from sales.models.estimate import RoundUpActionChoice, RoundUpChoice
 from ..constants import URL_CLOUD
 from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter, TradesFilter
 from ..models.config import Column, Search, Config, GridSetting, FileBuilder365, Question, Answer, CompanyAnswerQuestion
@@ -436,7 +437,8 @@ def get_data_config(request, *args, **kwargs):
            ('invoice_payment_status', PaymentHistory.PaymentStatus.choices), ('invoice_status', Invoice.InvoiceStatus.choices),
            ('setting_invoice_type', InvoiceApproveType.choices), ('day', Day.choices), ('holiday_type', HolidayType.choices),
            ('user.service_provider', User.ServiceProvider.choices), ('company.revenue', EstimatedAnnualRevenueChoices.choices),
-           ('company_size', SizeCompanyChoices.choices), ('activity.action', Action.choices), ('question.type', Type.choices)]
+           ('company_size', SizeCompanyChoices.choices), ('activity.action', Action.choices), ('question.type', Type.choices),
+           ('estimate.formula.round_up', RoundUpChoice.choices), ('estimate.formula.round_up_action', RoundUpActionChoice.choices)]
     for data in arr:
         data_as_dict[data[0]] = [{'id': item[0], 'name': item[1]} for item in data[1]]
     return Response(status=status.HTTP_200_OK, data=data_as_dict)

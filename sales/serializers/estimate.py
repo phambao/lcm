@@ -10,7 +10,7 @@ from base.constants import true, null, false
 from base.tasks import activity_log
 from base.utils import pop, extra_kwargs_for_base_model
 from sales.models import DataPoint, Catalog
-from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, \
+from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, RoundUpActionChoice, RoundUpChoice, \
     UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView, MaterialView
 from sales.serializers import ContentTypeSerializerMixin
 from sales.serializers.catalog import CatalogEstimateSerializer, DataPointForLinkDescription
@@ -176,8 +176,17 @@ class POFormulaCompactSerializer(serializers.ModelSerializer):
                    'formula_scenario', 'formula_for_data_view', 'original', 'catalog_materials', 'company', 'created_from')
 
 
+class RoundUPSeriailzer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=RoundUpChoice.choices, required=False, allow_null=True)
+    whole_number = serializers.IntegerField(required=False, allow_null=True)
+    increments = serializers.ListField(required=False, allow_null=True)
+    last_action = serializers.ChoiceField(choices=RoundUpActionChoice, required=False, allow_null=True)
+    action_value = serializers.IntegerField(required=False, allow_null=True)
+
+
 class POFormulaSerializer(ContentTypeSerializerMixin):
     self_data_entries = POFormulaToDataEntrySerializer('po_formula', many=True, required=False, read_only=False)
+    round_up = RoundUPSeriailzer(allow_null=True, required=False)
 
     class Meta:
         model = POFormula
@@ -259,6 +268,9 @@ class POFormulaSerializer(ContentTypeSerializerMixin):
             data['material_value'] = {}
             data['catalog_ancestor'] = None
             data['catalog_link'] = []
+
+        if not instance.round_up:
+            data['round_up'] = None
 
         original = data.get('original')
         if not original:
