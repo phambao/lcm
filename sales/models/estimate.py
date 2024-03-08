@@ -267,7 +267,7 @@ class EstimateTemplate(BaseModel):
     note = models.TextField(blank=True, default='')
     changed_items = ArrayField(models.JSONField(blank=True, default=dict, null=True),
                                default=list, blank=True, null=True)  # change order
-    # quantity = models.JSONField(blank=True, default=None, null=True)
+    quantity = models.JSONField(blank=True, default=None, null=True)
     unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.CASCADE, null=True, blank=True)
     temp_quantity = models.JSONField(blank=True, default=None, null=True)
 
