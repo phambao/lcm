@@ -269,7 +269,6 @@ class EstimateTemplate(BaseModel):
                                default=list, blank=True, null=True)  # change order
     quantity = models.JSONField(blank=True, default=None, null=True)
     unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.CASCADE, null=True, blank=True)
-    temp_quantity = models.JSONField(blank=True, default=None, null=True)
 
     def __str__(self):
         return self.name
