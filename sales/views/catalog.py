@@ -729,7 +729,7 @@ def create_catalog_by_row(row, length_level, company, root, levels, level_header
                 else:
                     if row[i*5 + 5:]:
                         parent.c_table = {'header': level_header,
-                            'data': [row[i*5 + 5:]]}
+                            'data': [str(e) for e in row[i*5 + 5:]] }
                 parent.save()
             # No cost table
             try:
