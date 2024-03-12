@@ -161,8 +161,8 @@ def check_promotion_code_v2(request):
         promotion_codes = stripe.PromotionCode.list()
         coupon_id = None
         for code in promotion_codes:
-            if code.code == promotion_code and code.active is True:
-                if code.coupon.valid is True:
+            if code.code == promotion_code and code.active:
+                if code.coupon.valid:
                     amount_off = code.coupon.amount_off
                     percent_off = code.coupon.percent_off
                     coupon_id = code
@@ -176,7 +176,7 @@ def check_promotion_code_v2(request):
 
                         if product['type'] == 'one_time':
                             total_discount += (product['amount'] * 30) / 100
-        if coupon_id is None:
+        if not coupon_id:
             return Response({'error': {'message': 'Invalid promotion code'}}, status=400)
         return Response({'promotion': coupon_id, 'total_discount': total_discount})
     except Exception as e:
@@ -251,7 +251,7 @@ def create_subscription_v2(request):
             total_discount_amount += (price['amount'] * 30) / 100
 
     try:
-        if promotion_code == str():
+        if not promotion_code:
             subscription = stripe.Subscription.create(
                 customer=customer_id,
                 items=prices_create,
