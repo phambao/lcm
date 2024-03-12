@@ -48,6 +48,17 @@ class DataEntry(BaseModel):
                 material_selections]
 
 
+class RoundUpChoice(models.TextChoices):
+    WHOLE_NUMBER = 'whole_number', 'Whole Number'
+    INCREMENT = 'increment', 'Increment'
+
+
+class RoundUpActionChoice(models.TextChoices):
+    WHOLE_NUMBER = 'whole_number', 'Whole Number'
+    INCREMENT = 'increment', 'Increment'
+    NONE = 'none', 'None'
+
+
 class POFormula(BaseModel):
 
     name = models.CharField(max_length=128)
@@ -65,6 +76,7 @@ class POFormula(BaseModel):
     unit_price = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
     cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
     total_cost = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
+    margin = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=None, null=True)
     formula_mentions = models.TextField(blank=True)  # for FE
     formula_data_mentions = models.CharField(blank=True, max_length=256)  # for FE
     gross_profit = models.CharField(max_length=32, blank=True)
@@ -76,6 +88,7 @@ class POFormula(BaseModel):
     catalog_materials = ArrayField(models.JSONField(default=dict, null=True), default=list, blank=True, null=True)
     order = models.IntegerField(default=0, blank=True, null=True)
     default_column = models.JSONField(blank=True, default=dict, null=True)
+    round_up = models.JSONField(blank=True, default=dict, null=True)
 
     def parse_material(self):
         primary_key = eval(self.material)
@@ -254,7 +267,7 @@ class EstimateTemplate(BaseModel):
     note = models.TextField(blank=True, default='')
     changed_items = ArrayField(models.JSONField(blank=True, default=dict, null=True),
                                default=list, blank=True, null=True)  # change order
-    quantity = models.ForeignKey('sales.DataEntry', on_delete=models.CASCADE, null=True, blank=True)
+    quantity = models.JSONField(blank=True, default=None, null=True)
     unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):

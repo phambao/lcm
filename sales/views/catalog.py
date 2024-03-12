@@ -209,9 +209,10 @@ def add_multiple_level(request):
         parent = None
         data = []
         for name in request.data.get('levels', []):
-            catalog_level = CatalogLevel.objects.create(name=name, parent=parent, catalog=c)
-            parent = catalog_level
-            data.append(catalog_level)
+            if name:  # in case of empty string
+                catalog_level = CatalogLevel.objects.create(name=name, parent=parent, catalog=c)
+                parent = catalog_level
+                data.append(catalog_level)
         serializer = catalog.CatalogLevelModelSerializer(data, many=True, context={'request': request})
         return Response(status=status.HTTP_201_CREATED, data={"levels": serializer.data,
                                                               "catalog": catalog_serializer.data})
@@ -724,11 +725,11 @@ def create_catalog_by_row(row, length_level, company, root, levels, level_header
                 if c_table:
                     data = c_table['data']
                     if list(row[i*5 + 5:]) not in data:
-                        data.append(row[i*5 + 5:])
+                        data.append([str(e) for e in row[i*5 + 5:]])
                 else:
                     if row[i*5 + 5:]:
                         parent.c_table = {'header': level_header,
-                            'data': [row[i*5 + 5:]]}
+                            'data': [[str(e) for e in row[i*5 + 5:]]] }
                 parent.save()
             # No cost table
             try:

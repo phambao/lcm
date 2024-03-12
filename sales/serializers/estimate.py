@@ -10,7 +10,7 @@ from base.constants import true, null, false
 from base.tasks import activity_log
 from base.utils import pop, extra_kwargs_for_base_model
 from sales.models import DataPoint, Catalog
-from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, \
+from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, RoundUpActionChoice, RoundUpChoice, \
     UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView, MaterialView
 from sales.serializers import ContentTypeSerializerMixin
 from sales.serializers.catalog import CatalogEstimateSerializer, DataPointForLinkDescription
@@ -176,8 +176,17 @@ class POFormulaCompactSerializer(serializers.ModelSerializer):
                    'formula_scenario', 'formula_for_data_view', 'original', 'catalog_materials', 'company', 'created_from')
 
 
+class RoundUPSeriailzer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=RoundUpChoice.choices, required=False, allow_null=True)
+    whole_number = serializers.IntegerField(required=False, allow_null=True)
+    increments = serializers.ListField(required=False, allow_null=True)
+    last_action = serializers.ChoiceField(choices=RoundUpActionChoice, required=False, allow_null=True)
+    action_value = serializers.IntegerField(required=False, allow_null=True)
+
+
 class POFormulaSerializer(ContentTypeSerializerMixin):
     self_data_entries = POFormulaToDataEntrySerializer('po_formula', many=True, required=False, read_only=False)
+    round_up = RoundUPSeriailzer(allow_null=True, required=False)
 
     class Meta:
         model = POFormula
@@ -259,6 +268,9 @@ class POFormulaSerializer(ContentTypeSerializerMixin):
             data['material_value'] = {}
             data['catalog_ancestor'] = None
             data['catalog_link'] = []
+
+        if not instance.round_up:
+            data['round_up'] = None
 
         original = data.get('original')
         if not original:
@@ -500,7 +512,7 @@ class EstimateTemplateForFormattingSerializer(serializers.ModelSerializer):
         if instance.unit:
             data['unit'] = instance.unit.name
         if instance.quantity:
-            data['quantity'] = instance.quantity.name
+            data['quantity'] = instance.quantity.get('name')
         data['total_charge'] = instance.get_formula().aggregate(
             total_charge=Sum('charge')
         ).get('total_charge')
@@ -548,12 +560,19 @@ class EstimateTemplateMiniSerializer(serializers.ModelSerializer):
         return data
 
 
+class QuantityEstimateSerializer(IDAndNameSerializer):
+    type = serializers.ChoiceField(
+        choices=(('data_entry', 'Data Entry'), ('data_view', 'Data View'), ('po', 'Formula')),
+        required=False, allow_null=True
+    )
+
+
 class EstimateTemplateSerializer(ContentTypeSerializerMixin):
     assembles = AssembleSerializer(many=True, required=False, allow_null=True,)
     data_views = DataViewSerializer('estimate_template', many=True, required=False, allow_null=True)
     data_entries = POFormulaToDataEntrySerializer('estimate_template', many=True, required=False, allow_null=True)
     material_views = MaterialViewSerializers('estimate_template', many=True, required=False, allow_null=True)
-    quantity = IDAndNameSerializer(required=False, allow_null=True)
+    quantity = QuantityEstimateSerializer(required=False, allow_null=True)
     unit = IDAndNameSerializer(required=False, allow_null=True)
 
     class Meta:
@@ -596,7 +615,6 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
         data_views = pop(validated_data, 'data_views', [])
         data_entries = pop(validated_data, 'data_entries', [])
         material_views = pop(validated_data, 'material_views', [])
-        validated_data['quantity_id'] = pop(validated_data, 'quantity', {}).get('id')
         validated_data['unit_id'] = pop(validated_data, 'unit', {}).get('id')
         pk = pop(validated_data, 'id', None)
 
@@ -618,7 +636,6 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
         data_views = pop(validated_data, 'data_views', [])
         data_entries = pop(validated_data, 'data_entries', [])
         material_views = pop(validated_data, 'material_views', [])
-        validated_data['quantity_id'] = pop(validated_data, 'quantity', {}).get('id')
         validated_data['unit_id'] = pop(validated_data, 'unit', {}).get('id')
         pk = pop(validated_data, 'id', None)
 
@@ -637,12 +654,6 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
         activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            EstimateTemplateSerializer.__name__, __name__, self.context['request'].user.pk)
         return instance
-
-    def validate_quantity(self, value):
-        if value:
-            if DataEntry.objects.filter(pk=value.get('id')).exists():
-                return value
-        return {}
 
     def validate_unit(self, value):
         if value:
