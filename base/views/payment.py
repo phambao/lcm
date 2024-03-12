@@ -152,6 +152,38 @@ def check_promotion_code(request):
 
 
 @api_view(['POST'])
+def check_promotion_code_v2(request):
+    data = request.data
+    promotion_code = data.get('coupon_code')
+    products = data.get('products')
+    total_discount = 0
+    try:
+        promotion_codes = stripe.PromotionCode.list()
+        coupon_id = None
+        for code in promotion_codes:
+            if code.code == promotion_code and code.active is True:
+                if code.coupon.valid is True:
+                    amount_off = code.coupon.amount_off
+                    percent_off = code.coupon.percent_off
+                    coupon_id = code
+                    for product in products:
+                        if product['type'] == 'recurring':
+                            if percent_off:
+                                total_discount += (product['amount'] * int(percent_off)) / 100
+
+                            if amount_off:
+                                total_discount += product['amount'] - int(amount_off)
+
+                        if product['type'] == 'one_time':
+                            total_discount += (product['amount'] * 30) / 100
+        if coupon_id is None:
+            return Response({'error': {'message': 'Invalid promotion code'}}, status=400)
+        return Response({'promotion': coupon_id, 'total_discount': total_discount})
+    except Exception as e:
+        return Response({'error': {'message': str(e)}}, status=400)
+
+
+@api_view(['POST'])
 @csrf_exempt
 def create_subscription(request):
     data = request.data
@@ -189,6 +221,62 @@ def create_subscription(request):
                 payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
                 coupon=coupon_id,
+            )
+            return Response({'subscription_id': subscription.id,
+                             'client_secret': subscription.latest_invoice.payment_intent.client_secret})
+    except Exception as e:
+        return Response({'error': {'message': str(e)}}, status=400)
+
+
+@api_view(['POST'])
+@csrf_exempt
+def create_subscription_v2(request):
+    data = request.data
+    # customer_id = request.COOKIES.get('customer')
+    prices_create = []
+    prices = data['prices']
+    # price_id = data['price_id']
+    customer_id = data['customer_id']
+    promotion_code = data.get('coupon_code')
+    total_amount_price = 0
+    total_discount_amount = 0
+    for price in prices:
+        price_create = {'price': price['id']}
+        prices_create.append(price_create)
+        total_amount_price += price['amount']
+        if price['type'] == 'recurring':
+            total_discount_amount += (price['amount'] * 60) / 100
+
+        if price['type'] == 'one_time':
+            total_discount_amount += (price['amount'] * 30) / 100
+
+    try:
+        if promotion_code == str():
+            subscription = stripe.Subscription.create(
+                customer=customer_id,
+                items=prices_create,
+                payment_behavior='default_incomplete',
+                expand=['latest_invoice.payment_intent'],
+            )
+            return Response({'subscription_id': subscription.id,
+                             'client_secret': subscription.latest_invoice.payment_intent.client_secret})
+        else:
+            coupon = stripe.Coupon.create(
+                amount_off=int(total_discount_amount * 100),
+                currency="usd",
+                duration="forever",
+                name="Discount",
+            )
+
+            subscription = stripe.Subscription.create(
+                customer=customer_id,
+                items=[{
+                    'price': 'price_1OAToLE4OZckNkJ51pBatCtG',
+                }],
+                add_invoice_items=[{"price": "price_1OmWmfE4OZckNkJ500RC6wye"}],
+                payment_behavior='default_incomplete',
+                expand=['latest_invoice.payment_intent'],
+                coupon=coupon,
             )
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})

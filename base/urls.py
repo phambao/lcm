@@ -16,7 +16,8 @@ from base.views.country_state_city import address_search, detail_location
 from base.views.payment import ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
     stripe_cancel_subscription, get_config, create_customer, create_subscription, cancel_subscription, \
     list_subscriptions, preview_invoice, update_subscription, webhook_received, PaymentHistoryStripePreview, \
-    preview_subscription, check_promotion_code, update_customer, get_payment_history
+    preview_subscription, check_promotion_code, update_customer, get_payment_history, create_subscription_v2, \
+    check_promotion_code_v2
 
 url_base = [
     path('location-google/', address_search),
