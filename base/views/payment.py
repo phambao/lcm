@@ -240,15 +240,19 @@ def create_subscription_v2(request):
     promotion_code = data.get('coupon_code')
     total_amount_price = 0
     total_discount_amount = 0
+    price_one_time = None
+    price_recurring = None
     for price in prices:
         price_create = {'price': price['id']}
         prices_create.append(price_create)
         total_amount_price += price['amount']
         if price['type'] == 'recurring':
             total_discount_amount += (price['amount'] * 60) / 100
+            price_recurring = price['id']
 
         if price['type'] == 'one_time':
             total_discount_amount += (price['amount'] * 30) / 100
+            price_one_time = price['id']
 
     try:
         if not promotion_code:
@@ -271,9 +275,9 @@ def create_subscription_v2(request):
             subscription = stripe.Subscription.create(
                 customer=customer_id,
                 items=[{
-                    'price': 'price_1OAToLE4OZckNkJ51pBatCtG',
+                    'price': price_recurring,
                 }],
-                add_invoice_items=[{"price": "price_1OmWmfE4OZckNkJ500RC6wye"}],
+                add_invoice_items=[{"price": price_one_time}],
                 payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
                 coupon=coupon,
