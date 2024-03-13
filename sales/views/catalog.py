@@ -699,7 +699,7 @@ def create_catalog_by_row(row, length_level, company, root, levels, level_header
         icon = row[i*5 + 1]
 
         if parent:
-            catalog = parent.children.get_or_create(name=name, company=company, level=levels[i])
+            catalog = parent.children.get_or_create(name=name, company=company, level=levels[i], level_index=i)
             catalog = catalog[0]
             catalog.parents.add(parent)
             if icon:
