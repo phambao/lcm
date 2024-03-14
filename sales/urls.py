@@ -91,6 +91,7 @@ url_catalog = [
     path('list/export-v2/', catalog.export_catalog_ver2),
     path('list/export/', catalog.export_catalog),
     path('list/import/', catalog.import_catalog),
+    path('list/import-v2/', catalog.import_catalog_v2),
     path('list/delete-node/', catalog.delete),
     path('list/<int:pk>/', catalog.CatalogDetail.as_view()),
     path('list/<int:pk>/data-points/', catalog.get_datapoint_by_catalog),
