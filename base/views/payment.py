@@ -556,7 +556,7 @@ def webhook_received(request):
                         company.referral_code_current = create_referral_code
                         company.save()
                 else:
-                    commission_amount = ((data_object.subtotal - subscription.plan.amount) * 30) / 1000
+                    commission_amount = ((data_object.subtotal - subscription.plan.amount) * 30) / 10000
                     dealer.total_bonus_commissions = dealer.total_bonus_commissions + commission_amount
                     dealer.save()
                     data_company = CompanyBuilder.objects.get(pk=customer.metadata['company'])
