@@ -717,32 +717,36 @@ def check_update_data_entry(request, pk):
 
     Updating Data Entry for formulas
     """
+    data_entry = get_object_or_404(DataEntry.objects.all(), pk=pk)
+    self_data_entries = data_entry.poformulatodataentry_set.all()
+
     if request.method == 'PUT':
         formula_ids = request.data.get('formulas', [])
-        data_entry = request.data.get('data_entry', {})
-        # Create new object
+        data_entry_params = request.data.get('data_entry', {})
+        all_relation_number = POFormula.objects.filter(self_data_entries__in=self_data_entries, is_show=True).distinct().count()
+        updating_formula_number = len(formula_ids)
         old_obj = get_object_or_404(DataEntry.objects.all(), pk=pk)
-        old_serializer = DataEntrySerializer(old_obj).data
-        old_serializer.pop('id', None)
-        new_serializer = DataEntrySerializer(data=old_serializer)
-        new_serializer.is_valid(raise_exception=True)
-        new_obj = new_serializer.save(is_show=False)
+        if updating_formula_number != all_relation_number:
+            # Create new object
+            old_serializer = DataEntrySerializer(old_obj).data
+            old_serializer.pop('id', None)
+            new_serializer = DataEntrySerializer(data=old_serializer)
+            new_serializer.is_valid(raise_exception=True)
+            new_obj = new_serializer.save(is_show=True)
 
-        # change formula relation between old and new
-        formulas = POFormula.objects.filter(pk__in=formula_ids)
-        formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=old_obj).exclude(po_formula__in=formulas)
-        formula_with_data_entry.update(data_entry=new_obj)
+            # change formula relation between old and new
+            formulas = POFormula.objects.filter(pk__in=formula_ids)
+            formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=old_obj).exclude(po_formula__in=formulas)
+            formula_with_data_entry.update(data_entry=new_obj)
 
         # Update data entry
-        data_entry.pop('id', None)
-        serializer = DataEntrySerializer(instance=old_obj, data=data_entry, context={'request': request})
+        data_entry_params.pop('id', None)
+        serializer = DataEntrySerializer(instance=old_obj, data=data_entry_params, context={'request': request})
         serializer.is_valid(raise_exception=True)
         obj = serializer.save()
 
     data = {}
-    data_entry = get_object_or_404(DataEntry.objects.all(), pk=pk)
     data['has_relation'] = data_entry.poformulatodataentry_set.all().exists()
-    self_data_entries = data_entry.poformulatodataentry_set.all()
     formulas = POFormula.objects.filter(self_data_entries__in=self_data_entries, is_show=True).distinct()
     data['formula_relation'] = formulas.values('id', 'name')
     data['data_entry'] = DataEntrySerializer(data_entry).data
