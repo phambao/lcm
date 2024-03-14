@@ -386,7 +386,10 @@ def webhook_received(request):
     data_object = data['object']
     if event_type == 'customer.subscription.deleted':
         subscription_id = data_object['id']
-        data_subscription = SubscriptionStripeCompany.objects.filter(subscription_id=subscription_id)
+        data_subscription = SubscriptionStripeCompany.objects.get(subscription_id=subscription_id)
+        dealer_company = DealerCompany.objects.get(company=data_subscription.company)
+        dealer_company.is_activate = False
+        dealer_company.save()
         data_subscription.delete()
         customer_stripe_id = data_object['customer']
 
@@ -560,7 +563,8 @@ def webhook_received(request):
                     DealerCompany.objects.create(
                         dealer=dealer,
                         referral_code=data_referral_code,
-                        company=data_company
+                        company=data_company,
+                        is_activate=True
                     )
 
                 coupon = stripe.Coupon.create(

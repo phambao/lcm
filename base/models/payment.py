@@ -76,3 +76,5 @@ class DealerCompany(models.Model):
     dealer = models.ForeignKey(DealerInformation, on_delete=models.SET_NULL, related_name='dealer_company',null=True, blank=True)
     company = models.ForeignKey(CompanyBuilder, on_delete=models.CASCADE, related_name='%(class)s_company_builder', null=True, blank=True)
     referral_code = models.ForeignKey(ReferralCode, on_delete=models.CASCADE, related_name='%(class)s_referral_code', null=True, blank=True)
+    is_activate = models.BooleanField(default=True, blank=True)
+
