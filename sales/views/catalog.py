@@ -410,9 +410,6 @@ def download_file_export_catalog(request, *args, **kwargs):
     prefix_to_remove = URL_CLOUD
     result = url.replace(prefix_to_remove, "")
     data = FileBuilder365.objects.get(file=result)
-    data.delete()
-    storage = S3Boto3Storage()
-    storage.delete(result)
     return Response(status=status.HTTP_200_OK, data={"url": url})
 
 

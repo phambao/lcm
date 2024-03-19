@@ -1,3 +1,4 @@
+import zipfile
 from datetime import datetime
 from io import BytesIO
 
@@ -66,26 +67,29 @@ def process_export_catalog(pk, company, user_id):
 
 @shared_task()
 def export_proposal(list_proposal, user_id):
-    wb = Workbook()
+    zip_bytes = BytesIO()
+    rs = []
     task_id = current_task.request.id
-    formula_sheet = wb.create_sheet('Formula')
-    data_entry_sheet = wb.create_sheet('Data Entry')
-    data_view_sheet = wb.create_sheet('Data View')
-    ProposalWriting = apps.get_model('sales', 'ProposalWriting')
-    if len(list_proposal) == 1:
-        proposal = ProposalWriting.objects.get(pk=list_proposal[0])
+    for proposal in list_proposal:
+        wb = Workbook()
+        formula_sheet = wb.create_sheet('Formula')
+        data_entry_sheet = wb.create_sheet('Data Entry')
+        data_view_sheet = wb.create_sheet('Data View')
+        ProposalWriting = apps.get_model('sales', 'ProposalWriting')
+        proposal = ProposalWriting.objects.get(pk=proposal)
         estimates = proposal.get_estimates()
         formula_sheet.append(['Estimate', 'Formula', 'Material', 'Quantity', 'Unit', 'Unit Cost',
-                        'Total Cost', 'Markup', 'Margin', 'Charge'])
+                              'Total Cost', 'Markup', 'Margin', 'Charge'])
         data_view_sheet.append(['Estimate', 'Name', 'Unit', 'Price'])
         data_entry_sheet.append(['Estimate', 'Name', 'Unit', 'Value'])
         for estimate in estimates:
             # formula sheet
             formulas = estimate.get_formula()
             for formula in formulas:
-                formula_sheet.append([estimate.name, formula.name, eval(formula.material).get('name'), formula.quantity,
-                                      formula.unit, formula.unit_price, formula.total_cost, formula.markup, formula.margin,
-                                      formula.charge])
+                formula_sheet.append(
+                    [estimate.name, formula.name, eval(formula.material).get('name'), formula.quantity,
+                     formula.unit, formula.unit_price, formula.total_cost, formula.markup, formula.margin,
+                     formula.charge])
 
             # Data view
             for data_view in estimate.data_views.all():
@@ -96,28 +100,55 @@ def export_proposal(list_proposal, user_id):
                 data_entry_sheet.append([estimate.name, data_entry.data_entry.name,
                                          data_entry.get_unit(), data_entry.get_value()])
 
-    default_sheet = wb.active
-    wb.remove(default_sheet)
-    bytes_io = BytesIO()
-    wb.save(bytes_io)
-    bytes_io.seek(0)
+        default_sheet = wb.active
+        wb.remove(default_sheet)
+        bytes_io = BytesIO()
+        wb.save(bytes_io)
+        bytes_io.seek(0)
+        temp = {'proposal_name': proposal.name, 'work_book': bytes_io}
+        rs.append(temp)
 
-    content = ContentFile(bytes_io.read())
-    content.seek(0)
+    if len(rs) > 1:
+        with zipfile.ZipFile(zip_bytes, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for data in rs:
+                name = data['proposal_name']
+                zipf.writestr(f'{name}.xlsx', data['work_book'].getvalue())
 
-    attachment = FileBuilder365()
-    user = get_user_model().objects.get(pk=user_id)
-    request = HttpRequest()
-    request.user = user
-    set_request(request)
+        zip_bytes.seek(0)
+        content = ContentFile(zip_bytes.read())
+        content.seek(0)
+        attachment = FileBuilder365()
+        user = get_user_model().objects.get(pk=user_id)
+        request = HttpRequest()
+        request.user = user
+        set_request(request)
 
-    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"proposal_{current_datetime}.xlsx"
-    attachment.file.save(filename, content)
-    attachment.size = content.size
-    attachment.name = filename
-    attachment.task_id = task_id
-    attachment.save()
+        current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"proposal_{current_datetime}.zip"
+        attachment.file.save(filename, content)
+        attachment.size = content.size
+        attachment.name = filename
+        attachment.task_id = task_id
+        attachment.save()
+
+    else:
+        bytes_io = rs[0]['work_book']
+        content = ContentFile(bytes_io.read())
+        content.seek(0)
+
+        attachment = FileBuilder365()
+        user = get_user_model().objects.get(pk=user_id)
+        request = HttpRequest()
+        request.user = user
+        set_request(request)
+
+        file_name = rs[0]['proposal_name']
+        filename = f"{file_name}.xlsx"
+        attachment.file.save(filename, content)
+        attachment.size = content.size
+        attachment.name = filename
+        attachment.task_id = task_id
+        attachment.save()
 
 
 @shared_task()
