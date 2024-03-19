@@ -4,15 +4,17 @@ from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from django_filters import rest_framework as filters
+from openpyxl.reader.excel import load_workbook
+from openpyxl.workbook import Workbook
 from rest_framework import generics, permissions, filters as rf_filters, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from api.middleware import get_request
 from base.permissions import ProposalPermissions
-from base.utils import pop
+from base.utils import file_response, pop
 from base.views.base import CompanyFilterMixin
-from base.tasks import celery_send_mail
+from base.tasks import celery_send_mail, export_proposal
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter, ProposalTemplateFilter
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, POFormula, \
     ProposalFormattingSign
@@ -340,3 +342,13 @@ def check_code_proposal_formatting_sign(request):
         return Response(status=status.HTTP_200_OK, data={'data': 'code success'})
     else:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={'data': 'code error'})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & ProposalPermissions])
+def export_proposal_view(request):
+    user_id = request.user.id
+    process_export = export_proposal.delay(list_proposal=request.GET.getlist('pk'), user_id=user_id)
+    task_id = process_export.id
+
+    return Response(status=status.HTTP_200_OK, data={"task_id": task_id})
