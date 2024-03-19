@@ -3,6 +3,7 @@ from datetime import timedelta
 import json
 
 from django.utils.timezone import now
+from django.apps import apps
 from django.db.models import Value, Q, Subquery
 from django_filters.filters import _truncate
 from openpyxl import Workbook, load_workbook
@@ -750,4 +751,21 @@ def check_update_data_entry(request, pk):
     formulas = POFormula.objects.filter(self_data_entries__in=self_data_entries, is_show=True).distinct()
     data['formula_relation'] = formulas.values('id', 'name')
     data['data_entry'] = DataEntrySerializer(data_entry).data
+    return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def check_update_estimate(request, pk):
+    ProposalWriting = apps.get_model('sales', 'ProposalWriting')
+    PriceComparison = apps.get_model('sales', 'PriceComparison')
+    estimate = get_object_or_404(EstimateTemplate.objects.all(), pk=pk)
+    proposal_writings = ProposalWriting.objects.filter(writing_groups__estimate_templates__original=pk)
+    price_comparisons = PriceComparison.objects.filter(groups__estimate_templates__original=pk)
+
+    data = {}
+    data['has_relation'] = proposal_writings.exists() or price_comparisons.exists()
+    data['proposal_writings'] = proposal_writings.values('id', 'name')
+    data['price_comparisons'] = price_comparisons.values('id', 'name')
+
     return Response(status=status.HTTP_200_OK, data=data)
