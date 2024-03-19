@@ -47,22 +47,9 @@ def process_export_catalog(pk, company, user_id):
     bytes_io = BytesIO()
     workbook.save(bytes_io)
     bytes_io.seek(0)
-    content = ContentFile(bytes_io.read())
-    content.seek(0)
-
-    attachment = FileBuilder365()
-    user = get_user_model().objects.get(pk=user_id)
-    request = HttpRequest()
-    request.user = user
-    set_request(request)
-
     current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"catalog_{current_datetime}.xlsx"
-    attachment.file.save(filename, content)
-    attachment.size = content.size
-    attachment.name = filename
-    attachment.task_id = task_id
-    attachment.save()
+    handle_save_file(bytes_io, filename, user_id, task_id)
 
 
 @shared_task()
