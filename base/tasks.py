@@ -20,7 +20,7 @@ from sales.models import Catalog, UnitLibrary, CatalogLevel, DataPoint
 @shared_task()
 def process_export_catalog(pk, company, user_id):
     from sales.views.catalog import handle_export
-    workbook = Workbook()
+    workbook = Workbook(write_only=True)
     task_id = current_task.request.id
     if pk is None:
         data_catalog = Catalog.objects.filter(is_ancestor=True, parents=None, company=company)
@@ -104,7 +104,7 @@ def import_catalog_task(file_pk, company_pk, user_pk):
     request = HttpRequest()
     request.user = get_user_model().objects.get(pk=user_pk)
     set_request(request)
-    workbook = load_workbook(file.file)
+    workbook = load_workbook(file.file, read_only=True)
     for idx, sheetname in enumerate(workbook.sheetnames):
         catalog_sheet = workbook[sheetname]
         parent = None
