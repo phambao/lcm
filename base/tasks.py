@@ -29,6 +29,7 @@ def process_export_catalog(pk, company, user_id):
             for data_catalog in child_catalogs:
                 handle_export(data_catalog.id, workbook, catalog.name)
 
+
     else:
         check_catalog = Catalog.objects.get(id=pk)
         if check_catalog.is_ancestor:
@@ -40,12 +41,9 @@ def process_export_catalog(pk, company, user_id):
             data_parent_catalog = check_catalog.parents.first()
             handle_export(pk, workbook, data_parent_catalog.name)
 
-    default_sheet = workbook.active
-    workbook.remove(default_sheet)
     bytes_io = BytesIO()
     workbook.save(bytes_io)
     bytes_io.seek(0)
-
     content = ContentFile(bytes_io.read())
     content.seek(0)
 
