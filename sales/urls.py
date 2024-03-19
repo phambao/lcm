@@ -269,6 +269,7 @@ url_proposal = [
     path('price-comparison-compact/', proposal.PriceComparisonCompactList.as_view()),
     path('price-comparison/<int:pk>/', proposal.PriceComparisonDetail.as_view()),
     path('proposal-writing/', proposal.ProposalWritingList.as_view(), name='list-proposal'),
+    path('proposal-writing/export/', proposal.export_proposal_view),
     path('proposal-writing/duplicate/', proposal.duplicate_proposal),
     path('proposal-writing-compact/', proposal.ProposalWritingCompactList.as_view()),
     path('proposal-writing/<int:pk>/', proposal.ProposalWritingDetail.as_view(), name='detail-proposal'),

@@ -214,6 +214,14 @@ class POFormulaToDataEntry(BaseModel):
     levels = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)  # Next level of data entry
     is_client_view = models.BooleanField(blank=True, default=False)
 
+    def get_value(self):
+        return self.value or self.dropdown_value.get('value')
+
+    def get_unit(self):
+        if self.data_entry.unit:
+            return self.data_entry.unit.name
+        return None
+
 
 class MaterialView(BaseModel):
     data_entry = models.ForeignKey(DataEntry, on_delete=models.CASCADE, blank=True, null=True)
