@@ -73,8 +73,9 @@ def export_proposal(list_proposal, user_id):
             # formula sheet
             formulas = estimate.get_formula()
             for formula in formulas:
+                material = formula.material or "{}"
                 formula_sheet.append(
-                    [estimate.name, formula.name, eval(formula.material).get('name'), formula.quantity,
+                    [estimate.name, formula.name, eval(material).get('name'), formula.quantity,
                      formula.unit, formula.unit_price, formula.total_cost, formula.markup, formula.margin,
                      formula.charge])
 
