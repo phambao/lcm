@@ -115,40 +115,31 @@ def export_proposal(list_proposal, user_id):
                 zipf.writestr(f'{name}.xlsx', data['work_book'].getvalue())
 
         zip_bytes.seek(0)
-        content = ContentFile(zip_bytes.read())
-        content.seek(0)
-        attachment = FileBuilder365()
-        user = get_user_model().objects.get(pk=user_id)
-        request = HttpRequest()
-        request.user = user
-        set_request(request)
-
         current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"proposal_{current_datetime}.zip"
-        attachment.file.save(filename, content)
-        attachment.size = content.size
-        attachment.name = filename
-        attachment.task_id = task_id
-        attachment.save()
+        handle_save_file(zip_bytes, filename, user_id, task_id)
 
     else:
-        bytes_io = rs[0]['work_book']
-        content = ContentFile(bytes_io.read())
-        content.seek(0)
+        proposal_name = rs[0]['proposal_name']
+        file_name = f"{proposal_name}.xlsx"
+        handle_save_file(rs[0]['work_book'], file_name, user_id, task_id)
 
-        attachment = FileBuilder365()
-        user = get_user_model().objects.get(pk=user_id)
-        request = HttpRequest()
-        request.user = user
-        set_request(request)
 
-        file_name = rs[0]['proposal_name']
-        filename = f"{file_name}.xlsx"
-        attachment.file.save(filename, content)
-        attachment.size = content.size
-        attachment.name = filename
-        attachment.task_id = task_id
-        attachment.save()
+def handle_save_file(bytes_io, file_name, user_id, task_id):
+    content = ContentFile(bytes_io.read())
+    content.seek(0)
+
+    attachment = FileBuilder365()
+    user = get_user_model().objects.get(pk=user_id)
+    request = HttpRequest()
+    request.user = user
+    set_request(request)
+
+    attachment.file.save(file_name, content)
+    attachment.size = content.size
+    attachment.name = file_name
+    attachment.task_id = task_id
+    attachment.save()
 
 
 @shared_task()
