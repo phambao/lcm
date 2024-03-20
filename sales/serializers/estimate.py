@@ -178,7 +178,7 @@ class POFormulaCompactSerializer(serializers.ModelSerializer):
 
 class RoundUPSeriailzer(serializers.Serializer):
     type = serializers.ChoiceField(choices=RoundUpChoice.choices, required=False, allow_null=True)
-    whole_number = serializers.IntegerField(required=False, allow_null=True)
+    whole_number = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     increments = serializers.ListField(required=False, allow_null=True)
     last_action = serializers.ChoiceField(choices=RoundUpActionChoice, required=False, allow_null=True)
     action_value = serializers.IntegerField(required=False, allow_null=True)
