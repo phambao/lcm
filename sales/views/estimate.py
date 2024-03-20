@@ -391,7 +391,7 @@ def get_option_data_entry(request, pk):
     return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
-@api_view(['GET', 'PUT'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def action_related_formulas(request, pk):
     formula = get_object_or_404(POFormula.objects.all(), pk=pk)
@@ -416,6 +416,12 @@ def action_related_formulas(request, pk):
             serializer.is_valid()
             obj = serializer.save()
         return Response(status=status.HTTP_200_OK)
+
+    if request.method == 'DELETE':
+        assembles_ids = request.data.pop('assembles', [])
+        assembles = Assemble.objects.filter(id__in=assembles_ids)
+        POFormula.objects.filter(original=pk, assemble__in=assembles, is_show=False).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET'])
