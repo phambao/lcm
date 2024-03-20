@@ -421,6 +421,7 @@ def action_related_formulas(request, pk):
         assembles_ids = request.data.pop('assembles', [])
         assembles = Assemble.objects.filter(id__in=assembles_ids)
         POFormula.objects.filter(original=pk, assemble__in=assembles, is_show=False).delete()
+        POFormula.objects.filter(id=pk).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
