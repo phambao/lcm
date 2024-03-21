@@ -773,19 +773,19 @@ def check_update_estimate(request, pk):
         for e in writing_estimates:
             serializer = EstimateTemplateSerializer(data=estimate_params, instance=e, context={'request': request})
             serializer.is_valid()
-            serializer.save(group_by_proposal=e.group_by_proposal, is_show=False)
+            serializer.save(group_by_proposal=e.group_by_proposal, is_show=False, original=pk)
 
         # Price comparison
         comparison_estimate = EstimateTemplate.objects.filter(original=pk, group_price__price_comparison__id__in=price_comparison_params)
         for e in comparison_estimate:
             serializer = EstimateTemplateSerializer(data=estimate_params, instance=e, context={'request': request})
             serializer.is_valid()
-            serializer.save(is_show=False)
+            serializer.save(is_show=False, original=pk)
 
         # Estimate template
         serializer = EstimateTemplateSerializer(data=estimate_params, instance=estimate, context={'request': request})
         serializer.is_valid()
-        serializer.save(is_show=True)
+        serializer.save(is_show=True, original=pk)
     data = {}
     data['has_relation'] = proposal_writings.exists() or price_comparisons.exists()
     data['proposal_writings'] = proposal_writings.values('id', 'name')
