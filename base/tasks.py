@@ -272,16 +272,17 @@ def create_catalog_by_row(row, length_level, company, root, levels, level_header
         if length_level:
             c_table = parent.c_table
             # Validate cost table data
-            if all(row[i*5 + 5:]):
+            data_create = ['' if value is None else value for value in row[i*5 + 5:]]
+            if any(row[i*5 + 5:]):
                 # cost table has created
                 if c_table:
                     data = c_table['data']
-                    if list(row[i*5 + 5:]) not in data:
-                        data.append([str(e) for e in row[i*5 + 5:]])
+                    if data_create not in data:
+                        data.append([str(e) for e in data_create])
                 else:
                     if row[i*5 + 5:]:
                         parent.c_table = {'header': level_header,
-                            'data': [[str(e) for e in row[i*5 + 5:]]] }
+                            'data': [[str(e) for e in data_create]] }
                 parent.save()
             # No cost table
             try:
