@@ -760,9 +760,32 @@ def check_update_estimate(request, pk):
     ProposalWriting = apps.get_model('sales', 'ProposalWriting')
     PriceComparison = apps.get_model('sales', 'PriceComparison')
     estimate = get_object_or_404(EstimateTemplate.objects.all(), pk=pk)
-    proposal_writings = ProposalWriting.objects.filter(writing_groups__estimate_templates__original=pk)
-    price_comparisons = PriceComparison.objects.filter(groups__estimate_templates__original=pk)
+    proposal_writings = ProposalWriting.objects.filter(writing_groups__estimate_templates__original=pk).distinct()
+    price_comparisons = PriceComparison.objects.filter(groups__estimate_templates__original=pk).distinct()
 
+    if request.method == 'PUT':
+        estimate_params = request.data.get('estimate', {})
+        proposal_writing_params = request.data.get('proposal_writings', [])
+        price_comparison_params = request.data.get('price_comparisons', [])
+        # Get related estimate on proposal writings
+        writing_estimates = EstimateTemplate.objects.filter(original=pk, group_by_proposal__writing__id__in=proposal_writing_params)
+
+        for e in writing_estimates:
+            serializer = EstimateTemplateSerializer(data=estimate_params, instance=e, context={'request': request})
+            serializer.is_valid()
+            serializer.save(group_by_proposal=e.group_by_proposal, is_show=False)
+
+        # Price comparison
+        comparison_estimate = EstimateTemplate.objects.filter(original=pk, group_price__price_comparison__id__in=price_comparison_params)
+        for e in comparison_estimate:
+            serializer = EstimateTemplateSerializer(data=estimate_params, instance=e, context={'request': request})
+            serializer.is_valid()
+            serializer.save(is_show=False)
+
+        # Estimate template
+        serializer = EstimateTemplateSerializer(data=estimate_params, instance=estimate, context={'request': request})
+        serializer.is_valid()
+        serializer.save(is_show=True)
     data = {}
     data['has_relation'] = proposal_writings.exists() or price_comparisons.exists()
     data['proposal_writings'] = proposal_writings.values('id', 'name')
