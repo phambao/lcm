@@ -793,6 +793,7 @@ def check_update_estimate(request, pk):
         serializer = EstimateTemplateSerializer(data=estimate_params, instance=estimate, context={'request': request})
         serializer.is_valid()
         serializer.save(is_show=True, original=pk)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
     data = {}
     data['has_relation'] = proposal_writings.exists() or price_comparisons.exists()
     data['proposal_writings'] = proposal_writings.values('id', 'name')
