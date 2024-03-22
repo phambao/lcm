@@ -13,7 +13,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 import jwt
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from base.models.payment import PaymentHistoryStripe
 from base.tasks import celery_send_mail
@@ -259,3 +261,28 @@ def profile(request):
         return Response(status=status.HTTP_200_OK, data=serializer.data)
     serializer = ProfileUserSerializer(user)
     return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    """
+    Takes a refresh type JSON web token and returns an access type JSON web
+    token if the refresh token is valid.
+    """
+
+    def post(self, request, *args, **kwargs):
+        refresh = request.data.get('refresh')
+        token = RefreshToken(refresh)
+        user_id = token['user_id']
+        serializer = self.get_serializer(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+
+        user = User.objects.get(id=user_id)
+        serializer.validated_data['permissions'] = user.get_app_permissions()
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+
+custom_token_refresh = CustomTokenRefreshView.as_view()

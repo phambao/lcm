@@ -5,9 +5,10 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from api.views.auth import SignUpAPI, MainUser, UserList, forgot_password, check_private_code, profile, reset_credential, \
+from api.views.auth import SignUpAPI, MainUser, UserList, forgot_password, check_private_code, profile, \
+    reset_credential, \
     reset_password, SignUpUserCompanyAPI, InternalUserListView, InternalUserDetailView, check_link, \
-    check_private_code_create, resend_mail
+    check_private_code_create, resend_mail, CustomTokenRefreshView
 from api.views.company_setting import setting_change_order, setting_invoice
 
 urlpatterns = [
@@ -15,7 +16,7 @@ urlpatterns = [
     path('check-link', check_link),
     path('register', SignUpAPI.as_view()),
     path('login', TokenObtainPairView.as_view()),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     # path('logoutall/', knox_views.LogoutAllView.as_view(), name='knox_logoutall'),
     path('user/<int:pk>/', MainUser.as_view()),
     path('internal-user/', InternalUserListView.as_view()),
