@@ -283,7 +283,7 @@ url_proposal = [
     path('view-proposal-formatting/<int:formatting_id>/', proposal.view_proposal_formatting),
     path('proposal-writing/<int:pk>/items/', proposal.get_items),
     path('template/sign/<int:pk>/', proposal.ProposalFormattingTemplateSignDetailGenericView.as_view()),
-    path('proposal-writing/<int:pk>/formatting/signs/', proposal.proposal_formatting_public),
+    path('proposal-writing/<int:pk>/formatting/publish/', proposal.proposal_formatting_public),
     path('template/sign/otp/', proposal.create_code_proposal_formatting_sign),
     path('template/sign/check-otp/', proposal.check_code_proposal_formatting_sign),
 ]
