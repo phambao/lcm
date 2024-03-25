@@ -219,6 +219,7 @@ url_estimate = [
     path('po-formula-compact/', estimate.POFormulaCompactList.as_view()),
     path('po-formula/<int:pk>/', estimate.POFormulaDetail.as_view()),
     path('po-formula/<int:pk>/check-action/', estimate.action_related_formulas),
+    path('po-formula/check-action/', estimate.check_multiple_formula_action),
     path('material/<int:pk>/', estimate.get_material_from_formula),
     path('formula-grouping/', estimate.POFormulaGroupingList.as_view()),
     path('formula-grouping-compact/', estimate.POFormulaGroupCompactList.as_view()),
