@@ -393,6 +393,19 @@ def get_option_data_entry(request, pk):
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def check_multiple_formula_action(request):
+    if request.method == 'GET':
+        data = {'assembles': []}
+        pk_formulas = request.GET.getlist('pk', [])
+        formulas = POFormula.objects.filter(pk__in=pk_formulas)
+        for po in formulas:
+            data['assembles'].append({'formula': {'id': po.id, 'name': po.name},
+                                       **po.get_related_formula()},)
+        return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def action_related_formulas(request, pk):
     formula = get_object_or_404(POFormula.objects.all(), pk=pk)
     if request.method == 'GET':
