@@ -17,14 +17,14 @@ from base.views.base import CompanyFilterMixin
 from base.tasks import celery_send_mail, export_proposal
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter, ProposalTemplateFilter
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, POFormula, \
-    ProposalFormattingSign
+    ProposalFormattingSign, ProposalSetting
 from sales.models.estimate import EstimateTemplate
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateForFormattingSerializer, EstimateTemplateForInvoiceSerializer, POFormulaDataSerializer, POFormulaForInvoiceSerializer
 from sales.serializers.proposal import ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
     ProposalWritingCompactSerializer, ProposalTemplateHtmlCssSerializer, ProposalWritingDataSerializer, \
-    ProposalFormattingTemplateSignSerializer, ProposalFormattingTemplateSignsSerializer
+    ProposalFormattingTemplateSignSerializer, ProposalFormattingTemplateSignsSerializer, ProposalSettingSerializer
 from sales.views.estimate import ALL_ESTIMATE_PREFETCH_RELATED
 
 
@@ -352,3 +352,33 @@ def export_proposal_view(request):
     task_id = process_export.id
 
     return Response(status=status.HTTP_200_OK, data={"task_id": task_id})
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def proposal_setting_field(request):
+
+    try:
+        proposal_setting = ProposalSetting.objects.get(company=request.user.company)
+
+    except ProposalSetting.DoesNotExist:
+        proposal_setting = ProposalSetting.objects.create(
+            company=request.user.company,
+            intro='',
+            default_note='',
+            pdf_file=''
+        )
+
+    if request.method == 'GET':
+        serializer = ProposalSettingSerializer(proposal_setting)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    if request.method == 'PUT':
+        proposal_setting.intro = request.data['intro']
+        proposal_setting.default_note = request.data['default_note']
+        proposal_setting.pdf_file = request.data['pdf_file']
+        proposal_setting.save()
+        proposal_setting.refresh_from_db()
+        serializer = ProposalSettingSerializer(proposal_setting)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+    return Response(status=status.HTTP_204_NO_CONTENT)
