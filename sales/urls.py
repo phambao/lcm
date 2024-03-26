@@ -287,7 +287,6 @@ url_proposal = [
     path('proposal-writing/<int:pk>/formatting/publish/', proposal.proposal_formatting_public),
     path('template/sign/otp/', proposal.create_code_proposal_formatting_sign),
     path('template/sign/check-otp/', proposal.check_code_proposal_formatting_sign),
-    path('formatting/setting/', proposal.proposal_setting_field),
 ]
 
 url_change_order = [

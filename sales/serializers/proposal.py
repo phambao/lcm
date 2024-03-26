@@ -426,4 +426,4 @@ class ProposalFormattingTemplateSignsSerializer(serializers.Serializer):
 class ProposalSettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProposalSetting
-        fields = '__all__'
+        fields = ('intro', 'default_note', 'pdf_file')

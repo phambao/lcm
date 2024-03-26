@@ -10,6 +10,7 @@ from api.views.auth import SignUpAPI, MainUser, UserList, forgot_password, check
     reset_password, SignUpUserCompanyAPI, InternalUserListView, InternalUserDetailView, check_link, \
     check_private_code_create, resend_mail, CustomTokenRefreshView
 from api.views.company_setting import setting_change_order, setting_invoice
+from sales.views.proposal import proposal_setting_field
 
 urlpatterns = [
     # For authenticate
@@ -27,6 +28,7 @@ urlpatterns = [
     path('company/user/register', SignUpUserCompanyAPI.as_view()),
     path('company/setting/change-order/', setting_change_order),
     path('company/setting/invoice/', setting_invoice),
+    path('company/setting/formatting/', proposal_setting_field),
 
     # For password reset
     path('auth/', include([

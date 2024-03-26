@@ -355,12 +355,11 @@ def export_proposal_view(request):
 
 
 @api_view(['GET', 'PUT'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated & ProposalPermissions])
 def proposal_setting_field(request):
 
     try:
         proposal_setting = ProposalSetting.objects.get(company=request.user.company)
-
     except ProposalSetting.DoesNotExist:
         proposal_setting = ProposalSetting.objects.create(
             company=request.user.company,
@@ -368,17 +367,13 @@ def proposal_setting_field(request):
             default_note='',
             pdf_file=''
         )
-
     if request.method == 'GET':
         serializer = ProposalSettingSerializer(proposal_setting)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
     if request.method == 'PUT':
-        proposal_setting.intro = request.data['intro']
-        proposal_setting.default_note = request.data['default_note']
-        proposal_setting.pdf_file = request.data['pdf_file']
-        proposal_setting.save()
-        proposal_setting.refresh_from_db()
-        serializer = ProposalSettingSerializer(proposal_setting)
+        serializer = ProposalSettingSerializer(proposal_setting, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(status=status.HTTP_200_OK, data=serializer.data)
     return Response(status=status.HTTP_204_NO_CONTENT)
