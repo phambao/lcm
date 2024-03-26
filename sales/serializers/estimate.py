@@ -46,10 +46,9 @@ class DataEntrySerializer(ContentTypeSerializerMixin):
 
     def validate_name(self, value):
         request = self.context['request'] or get_request()
+        queryset = DataEntry.objects.filter(company=request.user.company)
         if self.instance:
-            queryset = DataEntry.objects.exclude(id=self.instance.id, company=request.user.company)
-        else:
-            queryset = DataEntry.objects.filter(company=request.user.company)
+            queryset = queryset.exclude(id=self.instance.id)
 
         if queryset.filter(name=value).exists():
             raise serializers.ValidationError("The name is already taken, please choose another name.")
