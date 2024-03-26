@@ -402,6 +402,15 @@ def check_multiple_formula_action(request):
             data['assembles'].append({'formula': {'id': po.id, 'name': po.name},
                                        **po.get_related_formula()},)
         return Response(status=status.HTTP_200_OK, data=data)
+    if request.method == 'DELETE':
+        assembles_params = request.data.pop('assembles', [])
+        for assemble in assembles_params:
+            assembles_ids = assemble['assembles']
+            pk = assemble['formula']['id']
+            assembles = Assemble.objects.filter(id__in=assembles_ids)
+            POFormula.objects.filter(original=pk, assemble__in=assembles, is_show=False).delete()
+            POFormula.objects.filter(id=pk).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
