@@ -48,7 +48,7 @@ class DataEntrySerializer(ContentTypeSerializerMixin):
         from sales.views.estimate import DataEntryList, DataEntryDetail
         request = get_request()
         queryset = DataEntry.objects.filter(company=request.user.company)
-        view = self.context['view']
+        view = self.context.get('view', None)
         if isinstance(view, DataEntryList) or isinstance(view, DataEntryDetail):
             if self.instance:
                 queryset = queryset.exclude(id=self.instance.id)
