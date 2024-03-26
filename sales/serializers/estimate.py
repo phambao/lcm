@@ -45,13 +45,16 @@ class DataEntrySerializer(ContentTypeSerializerMixin):
         read_only_fields = ('created_date', 'modified_date')
 
     def validate_name(self, value):
+        from sales.views.estimate import DataEntryList, DataEntryDetail
         request = get_request()
         queryset = DataEntry.objects.filter(company=request.user.company)
-        if self.instance:
-            queryset = queryset.exclude(id=self.instance.id)
+        view = self.context['view']
+        if isinstance(view, DataEntryList) or isinstance(view, DataEntryDetail):
+            if self.instance:
+                queryset = queryset.exclude(id=self.instance.id)
 
-        if queryset.filter(name=value).exists():
-            raise serializers.ValidationError("The name is already taken, please choose another name.")
+            if queryset.filter(name=value).exists():
+                raise serializers.ValidationError("The name is already taken, please choose another name.")
         return value
 
     def set_material(self, material_selections):
