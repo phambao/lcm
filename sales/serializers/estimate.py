@@ -5,6 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from api.middleware import get_request
 from base.serializers.base import IDAndNameSerializer
 from base.constants import true, null, false
 from base.tasks import activity_log
@@ -44,10 +45,11 @@ class DataEntrySerializer(ContentTypeSerializerMixin):
         read_only_fields = ('created_date', 'modified_date')
 
     def validate_name(self, value):
+        request = self.context['request'] or get_request()
         if self.instance:
-            queryset = DataEntry.objects.exclude(id=self.instance.id)
+            queryset = DataEntry.objects.exclude(id=self.instance.id, company=request.user.company)
         else:
-            queryset = DataEntry.objects.all()
+            queryset = DataEntry.objects.filter(company=request.user.company)
 
         if queryset.filter(name=value).exists():
             raise serializers.ValidationError("The name is already taken, please choose another name.")
