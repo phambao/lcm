@@ -28,7 +28,7 @@ urlpatterns = [
     path('company/user/register', SignUpUserCompanyAPI.as_view()),
     path('company/setting/change-order/', setting_change_order),
     path('company/setting/invoice/', setting_invoice),
-    path('company/setting/formatting/', proposal_setting_field),
+    path('company/setting/proposal/', proposal_setting_field),
 
     # For password reset
     path('auth/', include([
