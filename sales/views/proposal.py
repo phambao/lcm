@@ -11,6 +11,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from api.middleware import get_request
+from base.constants import DEFAULT_NOTE, INTRO
 from base.permissions import ProposalPermissions
 from base.utils import file_response, pop
 from base.views.base import CompanyFilterMixin
@@ -363,8 +364,8 @@ def proposal_setting_field(request):
     except ProposalSetting.DoesNotExist:
         proposal_setting = ProposalSetting.objects.create(
             company=request.user.company,
-            intro='',
-            default_note='',
+            intro=INTRO,
+            default_note=DEFAULT_NOTE,
             pdf_file=''
         )
     if request.method == 'GET':
