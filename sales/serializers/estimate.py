@@ -43,6 +43,16 @@ class DataEntrySerializer(ContentTypeSerializerMixin):
         extra_kwargs = {'id': {'read_only': False, 'required': False}}
         read_only_fields = ('created_date', 'modified_date')
 
+    def validate_name(self, value):
+        if self.instance:
+            queryset = DataEntry.objects.exclude(id=self.instance.id)
+        else:
+            queryset = DataEntry.objects.all()
+
+        if queryset.filter(name=value).exists():
+            raise serializers.ValidationError("The name is already taken, please choose another name.")
+        return value
+
     def set_material(self, material_selections):
         catalog_pks = []
         for material_selection in material_selections:
