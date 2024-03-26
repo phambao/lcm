@@ -5,6 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from api.middleware import get_request
 from base.serializers.base import IDAndNameSerializer
 from base.constants import true, null, false
 from base.tasks import activity_log
@@ -42,6 +43,16 @@ class DataEntrySerializer(ContentTypeSerializerMixin):
                   'created_date', 'modified_date', 'levels', 'material', 'default_column')
         extra_kwargs = {'id': {'read_only': False, 'required': False}}
         read_only_fields = ('created_date', 'modified_date')
+
+    def validate_name(self, value):
+        request = get_request()
+        queryset = DataEntry.objects.filter(company=request.user.company)
+        if self.instance:
+            queryset = queryset.exclude(id=self.instance.id)
+
+        if queryset.filter(name=value).exists():
+            raise serializers.ValidationError("The name is already taken, please choose another name.")
+        return value
 
     def set_material(self, material_selections):
         catalog_pks = []
