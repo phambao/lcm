@@ -12,7 +12,7 @@ from base.utils import pop, extra_kwargs_for_base_model
 from api.middleware import get_request
 from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting, \
     ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig, GroupEstimatePrice, \
-    ProposalFormattingSign
+    ProposalFormattingSign, ProposalSetting
 from sales.serializers import ContentTypeSerializerMixin, estimate
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateSerializer
@@ -421,3 +421,9 @@ class ProposalFormattingTemplateSignSerializer(ContentTypeSerializerMixin):
 
 class ProposalFormattingTemplateSignsSerializer(serializers.Serializer):
     signs = ProposalFormattingTemplateSignSerializer(many=True, allow_null=True, required=False)
+
+
+class ProposalSettingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProposalSetting
+        fields = ('intro', 'default_note', 'pdf_file')

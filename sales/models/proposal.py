@@ -222,3 +222,9 @@ class ProposalFormattingSign(BaseModel):
     code = models.CharField(max_length=6, blank=True)
     email = models.CharField(max_length=128, blank=True)
     code_location = models.CharField(max_length=128, blank=True)
+
+
+class ProposalSetting(BaseModel):
+    intro = models.TextField(blank=True)
+    default_note = models.TextField(blank=True)
+    pdf_file = models.CharField(max_length=128, blank=True)
