@@ -225,6 +225,6 @@ class ProposalFormattingSign(BaseModel):
 
 
 class ProposalSetting(BaseModel):
-    intro = models.CharField(max_length=128, blank=True, default='')
-    default_note = models.CharField(max_length=128, blank=True, default='')
+    intro = models.TextField(blank=True)
+    default_note = models.TextField(blank=True)
     pdf_file = models.CharField(max_length=128, blank=True)
