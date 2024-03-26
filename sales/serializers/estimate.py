@@ -45,7 +45,7 @@ class DataEntrySerializer(ContentTypeSerializerMixin):
         read_only_fields = ('created_date', 'modified_date')
 
     def validate_name(self, value):
-        request = self.context['request'] or get_request()
+        request = get_request()
         queryset = DataEntry.objects.filter(company=request.user.company)
         if self.instance:
             queryset = queryset.exclude(id=self.instance.id)
