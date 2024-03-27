@@ -254,7 +254,7 @@ def proposal_formatting_v2_view(request, pk):
                                          pk=pk)
     # all_writing_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
     #                      'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario']
-    all_estimate_fields = ['id', 'name', 'quantity', 'unit', 'total_charge']
+    all_format_fields = ['id', 'name', 'description', 'unit', 'quantity', 'total_price', 'unit_price']
     if request.method == 'GET':
         try:
             proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
@@ -262,7 +262,7 @@ def proposal_formatting_v2_view(request, pk):
             proposal_formatting = ProposalFormatting.objects.create(proposal_writing=proposal_writing)
         serializer = ProposalFormattingTemplateMinorSerializer(proposal_formatting, context={'request': request})
         return Response(status=status.HTTP_200_OK, data={**serializer.data,
-                                                         **{'all_estimate_fields': all_estimate_fields}})
+                                                         **{'all_format_fields': all_format_fields}})
 
     if request.method == 'PUT':
         proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
@@ -270,7 +270,7 @@ def proposal_formatting_v2_view(request, pk):
                                                           partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_estimate_fields': all_estimate_fields}})
+        return Response(status=status.HTTP_200_OK, data={**serializer.data, **{'all_format_fields': all_format_fields}})
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
