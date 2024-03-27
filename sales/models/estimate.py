@@ -269,7 +269,8 @@ class EstimateTemplate(BaseModel):
                                           related_name='estimate_templates', null=True, blank=True)
     is_show = models.BooleanField(default=True, blank=True)
     original = models.IntegerField(default=0, blank=True, null=True)
-    order = models.IntegerField(default=0, blank=True)
+    order = models.IntegerField(default=0, blank=True)  # used for proposal writing
+    format_order = models.IntegerField(default=0, blank=True)  # used for proposal formatting
     is_checked = models.BooleanField(default=False, blank=True)
     description = models.TextField(blank=True, default='')
     changed_description = models.TextField(blank=True, default='')  # change order
