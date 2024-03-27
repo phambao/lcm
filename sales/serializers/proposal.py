@@ -1,13 +1,8 @@
-import random
-import uuid
-
-from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
-from django.template.loader import render_to_string
 from rest_framework import serializers
+from django.apps import apps
 from django.urls import reverse
 
-from base.tasks import activity_log, celery_send_mail
+from base.tasks import activity_log
 from base.utils import pop, extra_kwargs_for_base_model
 from api.middleware import get_request
 from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting, \
@@ -409,6 +404,32 @@ class ProposalFormattingTemplateSerializer(ContentTypeSerializerMixin):
             data['images'] = images
         signs = ProposalFormattingTemplateSignSerializer(instance.sign_proposal_formatting.all(), many=True)
         data['signs'] = signs.data
+        return data
+
+
+class FormatEstimateSerializer(ContentTypeSerializerMixin):
+    class Meta:
+        model = apps.get_model('sales', 'EstimateTemplate')
+        fields = ('id', 'name', 'description')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['unit'] = instance.unit.name if instance.unit else ''
+        data['quantity'] = instance.get_value_quantity()
+        instance.get_info()
+        data['total_price'] = instance.get_total_prices()
+        data['unit_price'] = data['total_price'] / data['quantity']
+        return data
+
+
+class ProposalFormattingTemplateMinorSerializer(ContentTypeSerializerMixin):
+    class Meta:
+        model = ProposalFormatting
+        fields = ('id', 'show_estimate_fields')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['estimates'] = FormatEstimateSerializer(instance.proposal_writing.get_estimates(), many=True).data
         return data
 
 

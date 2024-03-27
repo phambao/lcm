@@ -131,6 +131,9 @@ class ProposalWriting(BaseModel):
             estimates |= group.estimate_templates.all()
         return estimates
 
+    def get_checked_estimate(self):
+        return self.get_estimates().filter(is_checked=True)
+
     def get_data_formula(self):
         """Get data from po formula"""
         poformulas = self._get_poformula()

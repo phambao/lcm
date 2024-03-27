@@ -292,6 +292,9 @@ class EstimateTemplate(BaseModel):
     def export_to_json(self):
         return [self.name]
 
+    def get_value_quantity(self):
+        return 1
+
     def get_info(self):
         self.info = self.get_formula().aggregate(total_charge=Sum('charge'), unit_cost=Sum('cost'),
                                                  unit_price=Sum('unit_price'), quantity=Sum('quantity'),
