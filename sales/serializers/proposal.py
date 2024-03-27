@@ -407,10 +407,10 @@ class ProposalFormattingTemplateSerializer(ContentTypeSerializerMixin):
         return data
 
 
-class FormatEstimateSerializer(ContentTypeSerializerMixin):
+class FormatEstimateSerializer(serializers.ModelSerializer):
     class Meta:
         model = apps.get_model('sales', 'EstimateTemplate')
-        fields = ('id', 'name', 'description')
+        fields = ('id', 'name', 'contract_description')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -419,13 +419,15 @@ class FormatEstimateSerializer(ContentTypeSerializerMixin):
         instance.get_info()
         data['total_price'] = instance.get_total_prices()
         data['unit_price'] = data['total_price'] / data['quantity']
+        data['description'] = data['contract_description']
+        del data['contract_description']
         return data
 
 
-class ProposalFormattingTemplateMinorSerializer(ContentTypeSerializerMixin):
+class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProposalFormatting
-        fields = ('id', 'show_estimate_fields')
+        fields = ('id', 'show_format_fields')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
