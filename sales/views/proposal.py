@@ -274,9 +274,8 @@ def proposal_formatting_v2_view(request, pk):
             except ValueError:
                 pass
         EstimateTemplate.objects.bulk_update(query_set, ['format_order'])
-        if request.data.get('show_format_fields'):
-            proposal_formatting.show_format_fields = request.data.get('show_format_fields')
-            proposal_formatting.save(update_fields=['show_format_fields'])
+        proposal_formatting.show_format_fields = request.data.get('show_format_fields', [])
+        proposal_formatting.save(update_fields=['show_format_fields'])
 
         serializer = ProposalFormattingTemplateMinorSerializer(proposal_formatting, context={'request': request})
         return Response(status=status.HTTP_200_OK, data={**serializer.data,
