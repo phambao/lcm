@@ -577,7 +577,7 @@ class EstimateTemplateMiniSerializer(serializers.ModelSerializer):
 class QuantityEstimateSerializer(IDAndNameSerializer):
     type = serializers.ChoiceField(
         choices=(('data_entry', 'Data Entry'), ('data_view', 'Data View'), ('po', 'Formula')),
-        required=False, allow_null=False
+        required=False, allow_null=True
     )
 
 
