@@ -431,7 +431,7 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['estimates'] = FormatEstimateSerializer(instance.proposal_writing.get_estimates(), many=True).data
+        data['estimates'] = FormatEstimateSerializer(instance.proposal_writing.get_estimates().order_by('format_order'), many=True).data
         return data
 
 
