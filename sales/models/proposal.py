@@ -232,3 +232,5 @@ class ProposalSetting(BaseModel):
     intro = models.TextField(blank=True)
     default_note = models.TextField(blank=True)
     pdf_file = models.CharField(max_length=128, blank=True)
+    closing_note = models.TextField(blank=True)
+    contract_note = models.TextField(blank=True)
