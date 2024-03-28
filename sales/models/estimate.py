@@ -90,6 +90,7 @@ class POFormula(BaseModel):
     default_column = models.JSONField(blank=True, default=dict, null=True)
     round_up = models.JSONField(blank=True, default=dict, null=True)
     order_quantity = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=None, null=True)
+    selected_description = models.IntegerField(blank=True, default=None, null=True) 
 
     def parse_material(self):
         primary_key = eval(self.material)
