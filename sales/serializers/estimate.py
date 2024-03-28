@@ -1,3 +1,5 @@
+import re
+
 from django.db import IntegrityError
 from django.apps import apps
 from django.db.models import Sum
@@ -55,6 +57,10 @@ class DataEntrySerializer(ContentTypeSerializerMixin):
 
             if queryset.filter(name=value).exists():
                 raise serializers.ValidationError("The name is already taken, please choose another name.")
+
+            if re.search(r'\[\]|\(\)', value):
+                raise serializers.ValidationError(
+                    "The name cannot contain characters like '[]' or '()'. Please choose another name.")
         return value
 
     def set_material(self, material_selections):
