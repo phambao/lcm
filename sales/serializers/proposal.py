@@ -211,10 +211,14 @@ class GroupByEstimateSerializers(serializers.ModelSerializer):
         extra_kwargs = {**extra_kwargs_for_base_model(), **{'writing': {'read_only': True}}}
 
     def create_estimate_template(self, estimate_templates, instance):
-        for estimate_template in estimate_templates:
+        open_index = int(instance.open_index or 0)
+        for idx, estimate_template in enumerate(estimate_templates):
+            is_selected = False
+            if idx == open_index:
+                is_selected = True
             serializer = estimate.EstimateTemplateSerializer(data=estimate_template, context=self.context)
             serializer.is_valid(raise_exception=True)
-            obj = serializer.save(group_by_proposal_id=instance.pk, is_show=False)
+            obj = serializer.save(group_by_proposal_id=instance.pk, is_show=False, order=idx, is_selected=is_selected)
 
     def create(self, validated_data):
         estimate_templates = pop(validated_data, 'estimate_templates', [])
@@ -431,7 +435,8 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['estimates'] = FormatEstimateSerializer(instance.proposal_writing.get_estimates().order_by('format_order'), many=True).data
+        estimates = instance.proposal_writing.get_estimates().filter(is_selected=True).order_by('format_order')
+        data['estimates'] = FormatEstimateSerializer(estimates, many=True).data
         return data
 
 

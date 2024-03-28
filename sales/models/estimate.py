@@ -90,7 +90,7 @@ class POFormula(BaseModel):
     default_column = models.JSONField(blank=True, default=dict, null=True)
     round_up = models.JSONField(blank=True, default=dict, null=True)
     order_quantity = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=None, null=True)
-    selected_description = models.IntegerField(blank=True, default=None, null=True) 
+    selected_description = models.IntegerField(blank=True, default=None, null=True)
 
     def parse_material(self):
         primary_key = eval(self.material)
@@ -272,6 +272,7 @@ class EstimateTemplate(BaseModel):
     original = models.IntegerField(default=0, blank=True, null=True)
     order = models.IntegerField(default=0, blank=True)  # used for proposal writing
     format_order = models.IntegerField(default=0, blank=True)  # used for proposal formatting
+    is_selected = models.BooleanField(default=False, blank=True)  # used for proposal writing
     is_checked = models.BooleanField(default=False, blank=True)
     description = models.TextField(blank=True, default='')
     changed_description = models.TextField(blank=True, default='')  # change order
