@@ -151,6 +151,7 @@ class CompanyBuilder(models.Model):
     referral_code = models.CharField(blank=True, max_length=6)
     referral_code_current = models.ForeignKey('base.ReferralCode', on_delete=models.CASCADE, related_name='%(class)s_referral',null=True, blank=True)
     credit = models.IntegerField(null=True, blank=True)
+    roc = models.CharField(blank=True, max_length=128)
 
     def __str__(self):
         return self.company_name
