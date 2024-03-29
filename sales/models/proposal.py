@@ -132,7 +132,17 @@ class ProposalWriting(BaseModel):
         return estimates
 
     def get_checked_estimate(self):
-        return self.get_estimates().filter(is_checked=True)
+        return self.get_estimates().filter(is_selected=True)
+
+    def get_checked_formula(self):
+        estimates = self.get_checked_estimate()
+        assembles = Assemble.objects.none()
+        for estimate in estimates:
+            assembles |= estimate.assembles.all()
+        poformulas = POFormula.objects.none()
+        for assemble in assembles:
+            poformulas |= assemble.assemble_formulas.all()
+        return poformulas
 
     def get_data_formula(self):
         """Get data from po formula"""
@@ -177,6 +187,13 @@ class ProposalFormatting(BaseModel):
     has_signed = models.BooleanField(default=False, blank=True)
     element = models.TextField(blank=True, null=True, default='')
     html_view = models.TextField(blank=True, null=True, default='')
+    contacts = ArrayField(models.IntegerField(blank=True, null=True, default=dict), default=list, blank=True, null=True)
+    print_date = models.DateTimeField(default=None, blank=True, null=True)
+    intro = models.TextField(blank=True)
+    default_note = models.TextField(blank=True)
+    pdf_file = models.CharField(max_length=128, blank=True)
+    closing_note = models.TextField(blank=True)
+    contract_note = models.TextField(blank=True)
 
 
 class ProposalFormattingConfig(BaseModel):

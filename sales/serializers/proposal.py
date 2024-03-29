@@ -11,6 +11,7 @@ from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, Pric
 from sales.serializers import ContentTypeSerializerMixin, estimate
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateSerializer
+from sales.serializers.lead_list import ContactsSerializer
 
 
 class ProposalWidgetSerializer(serializers.ModelSerializer):
@@ -428,15 +429,33 @@ class FormatEstimateSerializer(serializers.ModelSerializer):
         return data
 
 
-class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
+class FormatFormulaSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ProposalFormatting
-        fields = ('id', 'show_format_fields')
+        model = apps.get_model('sales', 'POFormula')
+        fields = ('id', 'name', 'quantity', 'unit', 'unit_price')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        estimates = instance.proposal_writing.get_estimates().filter(is_selected=True).order_by('format_order')
+        data['total_price'] = instance.total_cost
+        return data
+
+
+class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProposalFormatting
+        fields = ('id', 'show_format_fields', 'contacts', 'intro', 'default_note', 'pdf_file', 'closing_note', 'contract_note')
+
+    def to_representation(self, instance):
+        Contact = apps.get_model('sales', 'Contact')
+        data = super().to_representation(instance)
+        estimates = instance.proposal_writing.get_checked_estimate().order_by('format_order')
+        formulas = instance.proposal_writing.get_checked_formula()
         data['estimates'] = FormatEstimateSerializer(estimates, many=True).data
+        data['contacts'] = ContactsSerializer(Contact.objects.filter(id__in=instance.contacts),
+                                              many=True, context=self.context).data
+        data['primary_contact'] = instance.contacts[0] if instance.contacts else None
+        # data['formulas'] = FormatFormulaSerializer(formulas, many=True).data
         return data
 
 

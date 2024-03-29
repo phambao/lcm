@@ -266,7 +266,7 @@ def proposal_formatting_v2_view(request, pk):
 
     if request.method == 'PUT':
         proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
-        estimate_params = request.data.get('estimates')
+        estimate_params = request.data.get('estimates', [])
         query_set = EstimateTemplate.objects.filter(id__in=estimate_params)
         for obj in query_set:
             try:
@@ -274,10 +274,10 @@ def proposal_formatting_v2_view(request, pk):
             except ValueError:
                 pass
         EstimateTemplate.objects.bulk_update(query_set, ['format_order'])
-        proposal_formatting.show_format_fields = request.data.get('show_format_fields', [])
-        proposal_formatting.save(update_fields=['show_format_fields'])
 
-        serializer = ProposalFormattingTemplateMinorSerializer(proposal_formatting, context={'request': request})
+        serializer = ProposalFormattingTemplateMinorSerializer(proposal_formatting, data=request.data, context={'request': request})
+        serializer.is_valid()
+        serializer.save()
         return Response(status=status.HTTP_200_OK, data={**serializer.data,
                                                          **{'all_format_fields': all_format_fields}})
     return Response(status=status.HTTP_204_NO_CONTENT)
