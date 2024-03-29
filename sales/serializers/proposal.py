@@ -456,7 +456,7 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
         data['contacts'] = ContactsSerializer(Contact.objects.filter(id__in=instance.contacts),
                                               many=True, context=self.context).data
         data['primary_contact'] = instance.contacts[0] if instance.contacts else None
-        data['lead'] = instance.proposal_writing.lead.get_info_for_proposal_formatting if instance.proposal_writing.lead else None
+        data['lead'] = instance.proposal_writing.lead.get_info_for_proposal_formatting() if instance.proposal_writing.lead else None
         data['proposal_progress'] = instance.proposal_writing.additional_information
         # data['formulas'] = FormatFormulaSerializer(formulas, many=True).data
         return data
