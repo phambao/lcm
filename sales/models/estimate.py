@@ -296,7 +296,36 @@ class EstimateTemplate(BaseModel):
         return [self.name]
 
     def get_value_quantity(self):
-        return 1
+        name = self.quantity.get('name')
+        type = self.quantity.get('type')
+        data_entries = self.data_entries.all()
+        data_views = self.data_views.all()
+        formulas = self.get_formula()
+        value = 1
+        if not self.quantity.get('type'):
+            filtered = data_views.filter(name__exact=name)
+            if filtered:
+                value = filtered.first().result
+            filtered = data_entries.filter(data_entry__name__exact=name)
+            if filtered:
+                value = filtered.first().get_value()
+            filtered = formulas.filter(name__exact=name)
+            if filtered:
+                value = filtered.first().quantity
+        else:
+            if type == 'data_entry':
+                filtered = data_entries.filter(data_entry__name__exact=name)
+                if filtered:
+                    value = filtered.first().get_value()
+            if type == 'data_view':
+                filtered = data_views.filter(name__exact=name)
+                if filtered:
+                    value = filtered.first().result
+            if type == 'po':
+                filtered = formulas.filter(name__exact=name)
+                if filtered:
+                    value = filtered.first().quantity
+        return Decimal(value or 1)
 
     def get_info(self):
         self.info = self.get_formula().aggregate(total_charge=Sum('charge'), unit_cost=Sum('cost'),
