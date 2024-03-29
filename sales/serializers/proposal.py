@@ -444,7 +444,8 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProposalFormatting
-        fields = ('id', 'show_format_fields', 'contacts', 'intro', 'default_note', 'pdf_file', 'closing_note', 'contract_note')
+        fields = ('id', 'show_format_fields', 'contacts', 'intro', 'default_note',
+                  'pdf_file', 'closing_note', 'contract_note', 'print_date')
 
     def to_representation(self, instance):
         Contact = apps.get_model('sales', 'Contact')
@@ -455,6 +456,8 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
         data['contacts'] = ContactsSerializer(Contact.objects.filter(id__in=instance.contacts),
                                               many=True, context=self.context).data
         data['primary_contact'] = instance.contacts[0] if instance.contacts else None
+        data['lead'] = instance.proposal_writing.lead.get_info_for_proposal_formatting if instance.proposal_writing.lead else None
+        data['proposal_progress'] = instance.proposal_writing.additional_information
         # data['formulas'] = FormatFormulaSerializer(formulas, many=True).data
         return data
 
