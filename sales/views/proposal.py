@@ -5,6 +5,7 @@ from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from django_filters import rest_framework as filters
 from django.apps import apps
+from django.utils import timezone
 from openpyxl.reader.excel import load_workbook
 from openpyxl.workbook import Workbook
 from rest_framework import generics, permissions, filters as rf_filters, status
@@ -363,6 +364,9 @@ def proposal_formatting_public(request, pk):
     #         content = render_to_string('proposal-formatting-sign.html', {'url': url})
     #         celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [proposal_formatting_sign_create.email], False, html_message=content)
     #         check_email.append(data_proposal_sign['email'])
+    proposal_template = proposal_writing.proposal_formatting
+    proposal_template.print_date = timezone.now()
+    proposal_template.save(update_fields=['print_date'])
     contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts)
     for contact in contacts:
         content = render_to_string('proposal-formatting-sign.html', {'url': '', 'contact': contact})
