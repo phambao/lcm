@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from django_filters import rest_framework as filters
+from django.apps import apps
 from openpyxl.reader.excel import load_workbook
 from openpyxl.workbook import Workbook
 from rest_framework import generics, permissions, filters as rf_filters, status
@@ -328,26 +329,61 @@ def duplicate_proposal(request):
     return Response(status=status.HTTP_201_CREATED, data=serializer.data)
 
 
-@api_view(['POST'])
+Contact = apps.get_model('sales', 'Contact')
+
+
+@api_view(['POST', 'GET'])
 def proposal_formatting_public(request, pk):
     proposal_writing = get_object_or_404(ProposalWriting.objects.filter(company=get_request().user.company),
                                          pk=pk)
-    data = request.data
-    serializer = ProposalFormattingTemplateSignsSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    check_email = []
-    data_proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
-    for data_proposal_sign in data['signs']:
-        if data_proposal_sign['email'] not in check_email:
-            url = pop(data_proposal_sign, 'url', None)
-            proposal_formatting_sign_create = ProposalFormattingSign.objects.create(
-                proposal_formatting=data_proposal_formatting,
-                **data_proposal_sign
-            )
-            content = render_to_string('proposal-formatting-sign.html', {'url': url})
-            celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [proposal_formatting_sign_create.email], False, html_message=content)
-            check_email.append(data_proposal_sign['email'])
+    # data = request.data
+    # serializer = ProposalFormattingTemplateSignsSerializer(data=request.data)
+    # serializer.is_valid(raise_exception=True)
+    # check_email = []
+    # data_proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
+    # for data_proposal_sign in data['signs']:
+    #     if data_proposal_sign['email'] not in check_email:
+    #         url = pop(data_proposal_sign, 'url', None)
+    #         proposal_formatting_sign_create = ProposalFormattingSign.objects.create(
+    #             proposal_formatting=data_proposal_formatting,
+    #             **data_proposal_sign
+    #         )
+    #         content = render_to_string('proposal-formatting-sign.html', {'url': url})
+    #         celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [proposal_formatting_sign_create.email], False, html_message=content)
+    #         check_email.append(data_proposal_sign['email'])
+    contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts)
+    for contact in contacts:
+        content = render_to_string('proposal-formatting-sign.html', {'url': '', 'contact': contact})
+        celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [contact.email], False, html_message=content)
     return Response(status=status.HTTP_201_CREATED, data={'data': 'public success'})
+
+
+@api_view(['POST', 'GET'])
+def proposal_sign(request, pk):
+    proposal_writing = get_object_or_404(
+        ProposalWriting.objects.filter(company=get_request().user.company),
+        pk=pk
+    )
+    proposal_template = proposal_writing.proposal_formatting
+    if request.method == 'GET':
+        code = get_random_string(length=6, allowed_chars='1234567890')
+        proposal_template.otp = code
+        proposal_template.has_send_mail = True
+        proposal_template.save()
+        contact = Contact.objects.get(pk=proposal_template.primary_contact)
+        content = render_to_string('proposal-formatting-sign-otp.html', {'otp': code, 'contact': contact})
+        celery_send_mail.delay(f'Sign Electronically OTP', content, settings.EMAIL_HOST_USER,
+                           [contact.email], False)
+        return Response(status=status.HTTP_200_OK, data={'data': ' create code success'})
+
+    if request.method == 'POST':
+        otp = request.data['otp']
+        if otp == proposal_template.otp:
+            proposal_template.has_signed = True
+            proposal_template.save()
+            return Response(status=status.HTTP_200_OK, data={'data': 'Success'})
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={'data': 'Fail'})
 
 
 @api_view(['POST'])

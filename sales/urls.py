@@ -276,8 +276,9 @@ url_proposal = [
     path('proposal-writing-compact/', proposal.ProposalWritingCompactList.as_view()),
     path('proposal-writing/<int:pk>/', proposal.ProposalWritingDetail.as_view(), name='detail-proposal'),
     path('proposal-writing/<int:pk>/change-order/', change_order.ChangeOrderFromProposalWritingList.as_view()),
-    path('proposal-writing/<int:pk>/formatting/', proposal.proposal_formatting_view),
+    # path('proposal-writing/<int:pk>/formatting/', proposal.proposal_formatting_view),
     path('proposal-writing/<int:pk>/formatting-v2/', proposal.proposal_formatting_v2_view),
+    path('proposal-writing/<int:pk>/sign/', proposal.proposal_sign),
     path('proposal-writing/<int:pk>/reset-formatting/', proposal.reset_formatting),
     path('proposal-writing/<int:pk>/table-formatting/', proposal.get_table_formatting),
     path('proposal-writing/<int:pk>/image/', proposal.get_image),
@@ -286,8 +287,8 @@ url_proposal = [
     path('proposal-writing/<int:pk>/items/', proposal.get_items),
     path('template/sign/<int:pk>/', proposal.ProposalFormattingTemplateSignDetailGenericView.as_view()),
     path('proposal-writing/<int:pk>/formatting/publish/', proposal.proposal_formatting_public),
-    path('template/sign/otp/', proposal.create_code_proposal_formatting_sign),
-    path('template/sign/check-otp/', proposal.check_code_proposal_formatting_sign),
+    # path('template/sign/otp/', proposal.create_code_proposal_formatting_sign),
+    # path('template/sign/check-otp/', proposal.check_code_proposal_formatting_sign),
 ]
 
 url_change_order = [

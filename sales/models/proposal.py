@@ -187,13 +187,15 @@ class ProposalFormatting(BaseModel):
     has_signed = models.BooleanField(default=False, blank=True)
     element = models.TextField(blank=True, null=True, default='')
     html_view = models.TextField(blank=True, null=True, default='')
-    contacts = ArrayField(models.IntegerField(blank=True, null=True, default=dict), default=list, blank=True, null=True)
+    contacts = ArrayField(models.IntegerField(blank=True, null=True, default=None), default=list, blank=True, null=True)
     print_date = models.DateTimeField(default=None, blank=True, null=True)
     intro = models.TextField(blank=True)
     default_note = models.TextField(blank=True)
     pdf_file = models.CharField(max_length=128, blank=True)
     closing_note = models.TextField(blank=True)
     contract_note = models.TextField(blank=True)
+    primary_contact = models.IntegerField(blank=True, null=True, default=None)
+    otp = models.CharField(max_length=8, blank=True, default='', null=True)
 
 
 class ProposalFormattingConfig(BaseModel):
