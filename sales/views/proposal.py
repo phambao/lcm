@@ -348,6 +348,7 @@ Contact = apps.get_model('sales', 'Contact')
 @api_view(['POST'])
 def proposal_formatting_public(request, pk):
     proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
+    proposal_template = proposal_writing.proposal_formatting
     # data = request.data
     # serializer = ProposalFormattingTemplateSignsSerializer(data=request.data)
     # serializer.is_valid(raise_exception=True)
@@ -365,7 +366,8 @@ def proposal_formatting_public(request, pk):
     #         check_email.append(data_proposal_sign['email'])
     serializer = ProposalFormattingTemplateMinorSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    serializer.save()
+    proposal_template.print_date = serializer.validated_data['print_date']
+    proposal_template.save()
     contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts).distinct()
     for contact in contacts:
         url = f'{settings.BASE_URL}{request.data["path"]}'
