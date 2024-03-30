@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from api.middleware import get_request
 from base.constants import DEFAULT_NOTE, INTRO
 from base.permissions import ProposalPermissions
+from base.serializers.config import CompanySerializer
 from base.utils import file_response, pop
 from base.views.base import CompanyFilterMixin
 from base.tasks import celery_send_mail, export_proposal
@@ -250,7 +251,6 @@ def proposal_formatting_view(request, pk):
 
 
 @api_view(['GET', 'PUT'])
-@permission_classes([permissions.IsAuthenticated & ProposalPermissions])
 def proposal_formatting_v2_view(request, pk):
     proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
     # all_writing_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
@@ -265,7 +265,7 @@ def proposal_formatting_v2_view(request, pk):
             default_note=DEFAULT_NOTE,
             pdf_file=''
         )
-
+    company_data = CompanySerializer(request.user.company).data
     all_format_fields = ['id', 'name', 'description', 'unit', 'quantity', 'total_price', 'unit_price']
     if request.method == 'GET':
         try:
@@ -274,7 +274,7 @@ def proposal_formatting_v2_view(request, pk):
             proposal_formatting = ProposalFormatting.objects.create(proposal_writing=proposal_writing)
         serializer = ProposalFormattingTemplateMinorSerializer(proposal_formatting, context={'request': request})
         return Response(status=status.HTTP_200_OK, data={**serializer.data,
-                                                         **{'all_format_fields': all_format_fields,
+                                                         **{'all_format_fields': all_format_fields, 'company': company_data,
                                                             'proposal_setting': ProposalSettingSerializer(proposal_setting).data}})
 
     if request.method == 'PUT':
@@ -292,7 +292,7 @@ def proposal_formatting_v2_view(request, pk):
         serializer.is_valid()
         serializer.save()
         return Response(status=status.HTTP_200_OK, data={**serializer.data,
-                                                         **{'all_format_fields': all_format_fields,
+                                                         **{'all_format_fields': all_format_fields, 'company': company_data,
                                                             'proposal_setting': ProposalSettingSerializer(proposal_setting).data}})
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -366,7 +366,7 @@ def proposal_formatting_public(request, pk):
     serializer = ProposalFormattingTemplateMinorSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
-    contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts)
+    contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts).distinct()
     for contact in contacts:
         url = f'{settings.BASE_URL}{request.data["path"]}'
         if contact.pk == proposal_writing.proposal_formatting.primary_contact:
