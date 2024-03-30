@@ -1,8 +1,12 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions
 from rest_framework import status, filters as rf_filters
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from django_filters import rest_framework as filters
 
 from base.permissions import InvoicePermissions
+from base.serializers.config import CompanySerializer
 from base.views.base import CompanyFilterMixin
 from sales.models import Invoice, PaymentHistory, LeadDetail, CreditMemo, InvoiceTemplate
 from sales.models.proposal import ProposalWriting
@@ -83,3 +87,17 @@ class InvoiceTemplateDetail(CompanyFilterMixin, generics.RetrieveUpdateDestroyAP
     serializer_class = InvoiceTemplateSerializer
     permission_classes = [permissions.IsAuthenticated & InvoicePermissions]
     queryset = InvoiceTemplate.objects.all()
+
+
+@api_view(['GET'])
+def invoice_template_data(request, pk):
+    invoice_obj = get_object_or_404(Invoice.objects.all(), pk=pk)
+    company = invoice_obj.company
+    company_data = CompanySerializer(company).data
+    data = {
+        'items': [{'name': 'name', 'description': 'description',
+                   'quantity': 'quantity', 'total_price': '100', 'unit_price': '123'} for i in range(5)],
+        'company': company_data,
+        'invoice': InvoiceSerializer(invoice_obj).data
+    }
+    return Response(status=status.HTTP_201_CREATED, data=data)
