@@ -255,17 +255,17 @@ def proposal_formatting_v2_view(request, pk):
     proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
     # all_writing_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
     #                      'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario']
-    
+    company = proposal_writing.company
     try:
-        proposal_setting = ProposalSetting.objects.get(company=request.user.company)
+        proposal_setting = ProposalSetting.objects.get(company=company)
     except ProposalSetting.DoesNotExist:
         proposal_setting = ProposalSetting.objects.create(
-            company=request.user.company,
+            company=company,
             intro=INTRO,
             default_note=DEFAULT_NOTE,
             pdf_file=''
         )
-    company_data = CompanySerializer(request.user.company).data
+    company_data = CompanySerializer(company).data
     all_format_fields = ['id', 'name', 'description', 'unit', 'quantity', 'total_price', 'unit_price']
     if request.method == 'GET':
         try:
