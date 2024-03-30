@@ -368,7 +368,7 @@ def proposal_formatting_public(request, pk):
     serializer.save()
     contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts)
     for contact in contacts:
-        url = f'{settings.BASE_URL}/sales/proposal/proposals/{pk}/sign/'
+        url = f'{settings.BASE_URL}{request.data["path"]}'
         if contact.pk == proposal_writing.proposal_formatting.primary_contact:
             url = url + f'?email={request.data["email"]}'
         content = render_to_string('proposal-formatting-sign.html', {'url': url, 'contact': contact})
