@@ -345,10 +345,9 @@ def duplicate_proposal(request):
 Contact = apps.get_model('sales', 'Contact')
 
 
-@api_view(['POST', 'GET'])
+@api_view(['POST'])
 def proposal_formatting_public(request, pk):
-    proposal_writing = get_object_or_404(ProposalWriting.objects.filter(company=get_request().user.company),
-                                         pk=pk)
+    proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
     # data = request.data
     # serializer = ProposalFormattingTemplateSignsSerializer(data=request.data)
     # serializer.is_valid(raise_exception=True)
@@ -364,12 +363,15 @@ def proposal_formatting_public(request, pk):
     #         content = render_to_string('proposal-formatting-sign.html', {'url': url})
     #         celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [proposal_formatting_sign_create.email], False, html_message=content)
     #         check_email.append(data_proposal_sign['email'])
-    proposal_template = proposal_writing.proposal_formatting
-    proposal_template.print_date = timezone.now()
-    proposal_template.save(update_fields=['print_date'])
+    serializer = ProposalFormattingTemplateMinorSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
     contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts)
     for contact in contacts:
-        content = render_to_string('proposal-formatting-sign.html', {'url': '', 'contact': contact})
+        url = f'{settings.BASE_URL}/sales/proposal/proposals/{pk}/sign/'
+        if contact.pk == proposal_writing.proposal_formatting.primary_contact:
+            url = url + f'?email={request.data["email"]}'
+        content = render_to_string('proposal-formatting-sign.html', {'url': url, 'contact': contact})
         celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [contact.email], False, html_message=content)
     return Response(status=status.HTTP_201_CREATED, data={'data': 'public success'})
 
