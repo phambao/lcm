@@ -255,6 +255,17 @@ def proposal_formatting_v2_view(request, pk):
                                          pk=pk)
     # all_writing_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
     #                      'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario']
+    
+    try:
+        proposal_setting = ProposalSetting.objects.get(company=request.user.company)
+    except ProposalSetting.DoesNotExist:
+        proposal_setting = ProposalSetting.objects.create(
+            company=request.user.company,
+            intro=INTRO,
+            default_note=DEFAULT_NOTE,
+            pdf_file=''
+        )
+
     all_format_fields = ['id', 'name', 'description', 'unit', 'quantity', 'total_price', 'unit_price']
     if request.method == 'GET':
         try:
@@ -263,7 +274,8 @@ def proposal_formatting_v2_view(request, pk):
             proposal_formatting = ProposalFormatting.objects.create(proposal_writing=proposal_writing)
         serializer = ProposalFormattingTemplateMinorSerializer(proposal_formatting, context={'request': request})
         return Response(status=status.HTTP_200_OK, data={**serializer.data,
-                                                         **{'all_format_fields': all_format_fields}})
+                                                         **{'all_format_fields': all_format_fields,
+                                                            'proposal_setting': ProposalSettingSerializer(proposal_setting).data}})
 
     if request.method == 'PUT':
         proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
@@ -280,7 +292,8 @@ def proposal_formatting_v2_view(request, pk):
         serializer.is_valid()
         serializer.save()
         return Response(status=status.HTTP_200_OK, data={**serializer.data,
-                                                         **{'all_format_fields': all_format_fields}})
+                                                         **{'all_format_fields': all_format_fields,
+                                                            'proposal_setting': ProposalSettingSerializer(proposal_setting).data}})
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
