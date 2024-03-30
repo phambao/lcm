@@ -251,8 +251,7 @@ def proposal_formatting_view(request, pk):
 @api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated & ProposalPermissions])
 def proposal_formatting_v2_view(request, pk):
-    proposal_writing = get_object_or_404(ProposalWriting.objects.filter(company=get_request().user.company),
-                                         pk=pk)
+    proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
     # all_writing_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
     #                      'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario']
     
