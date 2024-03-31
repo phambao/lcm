@@ -312,7 +312,7 @@ class ProposalWritingCompactSerializer(ContentTypeSerializerMixin):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['status'] = 'Draft'
+        data['status'] = instance.get_status()
         data['house_address'] = ''
         data['customer_contact'] = []
         if instance.lead:
