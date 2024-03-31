@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django_filters import rest_framework as filters
 
+from api.models import InvoiceSetting
 from base.permissions import InvoicePermissions
 from base.serializers.config import CompanySerializer
 from base.views.base import CompanyFilterMixin
@@ -98,7 +99,25 @@ class InvoiceTemplateDetail(CompanyFilterMixin, generics.RetrieveUpdateDestroyAP
 @api_view(['GET', 'PUT'])
 def invoice_template_data(request, pk):
     invoice_obj = get_object_or_404(Invoice.objects.all(), pk=pk)
-    template_obj = TemplateInvoice.objects.get_or_create(invoice=invoice_obj)[0]
+    company = invoice_obj.company
+
+    template_obj, is_created = TemplateInvoice.objects.get_or_create(invoice=invoice_obj)
+    if is_created:
+        try:
+            invoice_setting = InvoiceSetting.objects.get(company=company)
+        except InvoiceSetting.DoesNotExist:
+            invoice_setting = InvoiceSetting.objects.create(
+                company=request.user.company,
+                prefix='LCM',
+                is_notify_internal_deadline=False,
+                is_notify_owners_deadline=False,
+                is_notify_owners_after_deadline=False,
+                is_default_show=False,
+                day_before=1,
+                default_owners_invoice="default_owners_invoice"
+            )
+        template_obj.description = invoice_setting.default_owners_invoice
+        template_obj.save()
     serializer = InvoiceTemplateMinorSerializer(template_obj)
     if request.method == 'PUT':
         serializer = InvoiceTemplateMinorSerializer(instance=template_obj, data=request.data)
