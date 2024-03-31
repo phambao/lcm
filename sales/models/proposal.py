@@ -113,10 +113,13 @@ class ProposalWriting(BaseModel):
 
     def get_status(self):
         status = 'Draft'
-        if self.proposal_formatting.has_send_mail:
-            status = 'Sent'
-        if self.proposal_formatting.has_signed:
-            status = 'Complete'
+        try:
+            if self.proposal_formatting.has_send_mail:
+                status = 'Sent'
+            if self.proposal_formatting.has_signed:
+                status = 'Completed'
+        except:  # RelatedObjectDoesNotExist
+            pass
         return status
 
     def _get_poformula(self):

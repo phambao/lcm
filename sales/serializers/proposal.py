@@ -377,6 +377,7 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         user = get_request().user
+        data['status'] = instance.get_status()
         data['permissions'] = {
             'internal_view': user.check_perm('internal_view'),
             'client_view': user.check_perm('client_view')
