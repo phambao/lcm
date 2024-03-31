@@ -94,12 +94,12 @@ class InvoiceTemplateDetail(CompanyFilterMixin, generics.RetrieveUpdateDestroyAP
     queryset = InvoiceTemplate.objects.all()
 
 
-@api_view(['GET', 'POST'])
+@api_view(['GET', 'PUT'])
 def invoice_template_data(request, pk):
     invoice_obj = get_object_or_404(Invoice.objects.all(), pk=pk)
     template_obj = TemplateInvoice.objects.get_or_create(invoice=invoice_obj)[0]
     serializer = InvoiceTemplateMinorSerializer(template_obj)
-    if request.method == 'POST':
+    if request.method == 'PUT':
         serializer = InvoiceTemplateMinorSerializer(instance=template_obj, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
