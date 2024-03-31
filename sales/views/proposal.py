@@ -367,6 +367,7 @@ def proposal_formatting_public(request, pk):
     serializer = ProposalFormattingTemplateMinorSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     proposal_template.print_date = serializer.validated_data['print_date']
+    proposal_template.has_send_mail = True
     proposal_template.save()
     contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts).distinct()
     for contact in contacts:
