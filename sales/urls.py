@@ -301,6 +301,7 @@ url_change_order = [
 url_invoice = [
     path('', invoice.InvoiceListView.as_view()),
     path('<int:pk>/template-data/', invoice.invoice_template_data),
+    path('<int:pk>/publish/', invoice.publish_template),
     path('lead/', invoice.LeadInvoiceList.as_view()),
     path('proposal/', invoice.InvoiceProposal.as_view()),
     path('proposal/<int:pk>/', invoice.InvoiceProposalDetail.as_view()),

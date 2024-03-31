@@ -124,6 +124,12 @@ class Invoice(BaseModel):
     proposal = models.ForeignKey('sales.ProposalWriting', on_delete=models.CASCADE, related_name='invoices', blank=True, null=True)
 
 
+class TemplateInvoice(BaseModel):
+    invoice = models.OneToOneField(Invoice, on_delete=models.CASCADE, related_name='template', blank=True, null=True)
+    description = models.TextField(blank=True)
+    printed = models.DateTimeField(blank=True, null=True)
+
+
 class CreditMemoAmount(BaseModel):
     name = models.CharField(max_length=64)
     cost_type = models.CharField(max_length=64)
