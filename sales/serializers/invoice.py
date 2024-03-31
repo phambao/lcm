@@ -43,7 +43,7 @@ class InvoiceTemplateMinorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TemplateInvoice
-        fields = ('id', 'description', 'printed')
+        fields = ('id', 'description', 'printed', 'primary_contact', 'contacts')
 
 
 class GroupProposalSerializer(UnitSerializerMixin, serializers.ModelSerializer):

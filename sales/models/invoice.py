@@ -128,6 +128,8 @@ class TemplateInvoice(BaseModel):
     invoice = models.OneToOneField(Invoice, on_delete=models.CASCADE, related_name='template', blank=True, null=True)
     description = models.TextField(blank=True)
     printed = models.DateTimeField(blank=True, null=True)
+    primary_contact = models.IntegerField(blank=True, null=True, default=None)
+    contacts = ArrayField(models.IntegerField(blank=True, null=True, default=None), default=list, blank=True, null=True)
 
 
 class CreditMemoAmount(BaseModel):

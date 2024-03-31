@@ -118,13 +118,18 @@ Contact = apps.get_model('sales', 'Contact')
 
 
 @api_view(['POST'])
-def publish_template(request):
-    primary_contact = request.data['primary_contact']
-    contacts = Contact.objects.get(pk__in=request.data['contacts'])
+def publish_template(request, pk):
+    invoice_obj = get_object_or_404(Invoice.objects.all(), pk=pk)
+    template_obj = invoice_obj.template
+    serializer = InvoiceTemplateMinorSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    template_obj.printed = serializer.validated_data['printed']
+    template_obj.save()
+    contacts = Contact.objects.filter(id__in=template_obj.contacts).distinct()
     for contact in contacts:
         url = f'{settings.BASE_URL}{request.data["path"]}'
-        # if contact.pk == proposal_writing.proposal_formatting.primary_contact:
-        #     url = url + f'?email={request.data["email"]}'
+        if contact.pk == template_obj.primary_contact:
+            url = url + f'?email={request.data["email"]}'
         content = render_to_string('proposal-formatting-sign.html', {'url': url, 'contact': contact})
         celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [contact.email], False, html_message=content)
     return Response(status=status.HTTP_201_CREATED, data={'data': 'public success'})
