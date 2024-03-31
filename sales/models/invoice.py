@@ -130,6 +130,10 @@ class TemplateInvoice(BaseModel):
     printed = models.DateTimeField(blank=True, null=True)
     primary_contact = models.IntegerField(blank=True, null=True, default=None)
     contacts = ArrayField(models.IntegerField(blank=True, null=True, default=None), default=list, blank=True, null=True)
+    signature = models.CharField(max_length=256, blank=True, default='')
+    otp = models.CharField(max_length=8, blank=True, default='', null=True)
+    has_send_mail = models.BooleanField(default=False, blank=True)
+    has_signed = models.BooleanField(default=False, blank=True)
 
 
 class CreditMemoAmount(BaseModel):

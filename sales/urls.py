@@ -302,6 +302,7 @@ url_invoice = [
     path('', invoice.InvoiceListView.as_view()),
     path('<int:pk>/template-data/', invoice.invoice_template_data),
     path('<int:pk>/publish/', invoice.publish_template),
+    path('<int:pk>/sign/', invoice.invoice_sign),
     path('lead/', invoice.LeadInvoiceList.as_view()),
     path('proposal/', invoice.InvoiceProposal.as_view()),
     path('proposal/<int:pk>/', invoice.InvoiceProposalDetail.as_view()),

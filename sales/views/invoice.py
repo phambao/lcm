@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.apps import apps
+from django.utils.crypto import get_random_string
 from rest_framework import generics, permissions
 from rest_framework import status, filters as rf_filters
 from rest_framework.response import Response
@@ -133,3 +134,33 @@ def publish_template(request, pk):
         content = render_to_string('proposal-formatting-sign.html', {'url': url, 'contact': contact})
         celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [contact.email], False, html_message=content)
     return Response(status=status.HTTP_201_CREATED, data={'data': 'public success'})
+
+
+@api_view(['POST', 'GET'])
+def invoice_sign(request, pk):
+    invoice = get_object_or_404(
+        Invoice.objects.all(),
+        pk=pk
+    )
+    invoice_template = invoice.template
+    if request.method == 'GET':
+        code = get_random_string(length=6, allowed_chars='1234567890')
+        invoice_template.otp = code
+        invoice_template.has_send_mail = True
+        invoice_template.save()
+        contact = Contact.objects.get(pk=invoice_template.primary_contact)
+        content = render_to_string('proposal-formatting-sign-otp.html', {'otp': code, 'contact': contact})
+        celery_send_mail.delay(f'Sign Electronically OTP', content, settings.EMAIL_HOST_USER,
+                           [contact.email], False)
+        return Response(status=status.HTTP_200_OK, data={'data': ' create code success'})
+
+    if request.method == 'POST':
+        otp = request.data['otp']
+        signature = request.data['signature']
+        if otp == invoice_template.otp:
+            invoice_template.has_signed = True
+            invoice_template.signature = signature
+            invoice_template.save(update_fields=['has_signed', 'signature'])
+            return Response(status=status.HTTP_200_OK, data={'data': 'Success'})
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={'data': 'Fail'})
