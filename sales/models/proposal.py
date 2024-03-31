@@ -111,6 +111,14 @@ class ProposalWriting(BaseModel):
     def __str__(self):
         return self.name
 
+    def get_status(self):
+        status = 'Draft'
+        if self.proposal_formatting.has_send_mail:
+            status = 'Sent'
+        if self.proposal_formatting.has_signed:
+            status = 'Complete'
+        return status
+
     def _get_poformula(self):
         groups = self.writing_groups.all()
         estimates = EstimateTemplate.objects.none()
