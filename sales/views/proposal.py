@@ -381,7 +381,7 @@ def proposal_formatting_public(request, pk):
 @api_view(['POST', 'GET'])
 def proposal_sign(request, pk):
     proposal_writing = get_object_or_404(
-        ProposalWriting.objects.filter(company=get_request().user.company),
+        ProposalWriting.objects.all(),
         pk=pk
     )
     proposal_template = proposal_writing.proposal_formatting
@@ -398,9 +398,11 @@ def proposal_sign(request, pk):
 
     if request.method == 'POST':
         otp = request.data['otp']
+        signature = request.data['signature']
         if otp == proposal_template.otp:
             proposal_template.has_signed = True
-            proposal_template.save()
+            proposal_template.signature = signature
+            proposal_template.save(update_fields=['has_signed', 'signature'])
             return Response(status=status.HTTP_200_OK, data={'data': 'Success'})
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={'data': 'Fail'})

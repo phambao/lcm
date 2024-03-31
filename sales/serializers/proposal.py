@@ -444,7 +444,7 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProposalFormatting
-        fields = ('id', 'show_format_fields', 'contacts', 'intro', 'default_note',
+        fields = ('id', 'show_format_fields', 'contacts', 'intro', 'default_note', 'signature',
                   'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact')
 
     def to_representation(self, instance):

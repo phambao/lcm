@@ -196,6 +196,7 @@ class ProposalFormatting(BaseModel):
     contract_note = models.TextField(blank=True)
     primary_contact = models.IntegerField(blank=True, null=True, default=None)
     otp = models.CharField(max_length=8, blank=True, default='', null=True)
+    signature = models.CharField(max_length=256, blank=True, default='')
 
 
 class ProposalFormattingConfig(BaseModel):
