@@ -1,3 +1,4 @@
+import datetime
 import uuid
 
 from django.contrib.auth import get_user_model
@@ -446,3 +447,23 @@ class NoteTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.NoteTemplate
         fields = '__all__'
+
+
+class CommunicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.Communication
+        fields = ('lead', 'number', 'last_date', 'type')
+
+    def create(self, validated_data):
+        type = validated_data.get('type')
+        number = 0
+        last_filtered_object = lead_list.Communication.objects.filter(type=type).last()
+        if last_filtered_object:
+            number = last_filtered_object.number + 1
+
+        if not last_filtered_object:
+            number = 1
+
+        validated_data['number'] = number
+        communication_create = super().create(validated_data)
+        return communication_create
