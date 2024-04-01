@@ -446,7 +446,8 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProposalFormatting
         fields = ('id', 'show_format_fields', 'contacts', 'intro', 'default_note', 'signature',
-                  'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact')
+                  'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact', 'sign_date')
+        read_only_fields = ['sign_date']
 
     def to_representation(self, instance):
         Contact = apps.get_model('sales', 'Contact')

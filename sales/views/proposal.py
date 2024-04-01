@@ -403,7 +403,8 @@ def proposal_sign(request, pk):
         if otp == proposal_template.otp:
             proposal_template.has_signed = True
             proposal_template.signature = signature
-            proposal_template.save(update_fields=['has_signed', 'signature'])
+            proposal_template.sign_date = timezone.now()
+            proposal_template.save(update_fields=['has_signed', 'signature', 'sign_date'])
             return Response(status=status.HTTP_200_OK, data={'data': 'Success'})
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={'data': 'Fail'})
