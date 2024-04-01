@@ -145,6 +145,17 @@ class Invoice(BaseModel):
             })
         return data
 
+    def get_progress(self):
+        data = []
+        progress = ProgressPayment.objects.filter(progress_payment__invoice=self)
+        for item in progress:
+            quantity = item.quantity if item.quantity else 1
+            unit_price = item.invoice_amount / quantity
+            data.append({
+                'name': item.name, 'description': '', 'quantity': quantity, 'unit_price': unit_price, 'total_price': item.invoice_amount
+            })
+        return data
+
     def get_custom(self):
         data = []
         customs = CustomTable.objects.filter(table_invoice__invoice=self)
@@ -161,6 +172,7 @@ class Invoice(BaseModel):
         data.extend(self.get_change_order())
         data.extend(self.get_proposal())
         data.extend(self.get_custom())
+        data.extend(self.get_progress())
         return data
 
 
