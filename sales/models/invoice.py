@@ -147,7 +147,7 @@ class Invoice(BaseModel):
 
     def get_progress(self):
         data = []
-        progress = ProgressPayment.objects.filter(progress_payment__invoice=self)
+        progress = ProgressPayment.objects.filter(table_invoice__invoice=self)
         for item in progress:
             quantity = item.quantity if item.quantity else 1
             unit_price = item.invoice_amount / quantity
