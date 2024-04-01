@@ -134,7 +134,7 @@ def invoice_template_data(request, pk):
         'lead': None,
     }
     if data['invoice']['lead_id']:
-        data['lead'] = LeadDetailCreateSerializer(LeadDetail.objects.get(pk=data['invoice']['lead_id']))
+        data['lead'] = LeadDetailCreateSerializer(LeadDetail.objects.get(pk=data['invoice']['lead_id'])).data
     return Response(status=status.HTTP_201_CREATED, data={**data, **serializer.data})
 
 
