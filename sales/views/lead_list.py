@@ -17,9 +17,9 @@ from base.utils import file_response
 from base.views.base import CompanyFilterMixin
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter
 from sales.serializers.proposal import PriceComparisonCompactSerializer, ProposalWritingByLeadSerializer
-from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter
+from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter, CommunicationFilter
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, Photos, ContactTypeName, \
-    ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead, NoteTemplate
+    ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead, NoteTemplate, Communication
 from ..serializers import lead_list
 from ..serializers.lead_list import PhotoSerializer, LeadDetailCreateSerializer
 
@@ -323,6 +323,14 @@ class NoteTemplateDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateD
     queryset = NoteTemplate.objects.all()
     serializer_class = lead_list.NoteTemplateSerializer
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
+
+
+class CommunicationGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
+    queryset = Communication.objects.all()
+    serializer_class = lead_list.CommunicationSerializer
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = CommunicationFilter
 
 
 @api_view(['DELETE'])
