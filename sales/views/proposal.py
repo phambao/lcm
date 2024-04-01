@@ -4,6 +4,8 @@ from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from django_filters import rest_framework as filters
+from django.apps import apps
+from django.utils import timezone
 from openpyxl.reader.excel import load_workbook
 from openpyxl.workbook import Workbook
 from rest_framework import generics, permissions, filters as rf_filters, status
@@ -13,6 +15,7 @@ from rest_framework.response import Response
 from api.middleware import get_request
 from base.constants import DEFAULT_NOTE, INTRO
 from base.permissions import ProposalPermissions
+from base.serializers.config import CompanySerializer
 from base.utils import file_response, pop
 from base.views.base import CompanyFilterMixin
 from base.tasks import celery_send_mail, export_proposal
@@ -248,12 +251,21 @@ def proposal_formatting_view(request, pk):
 
 
 @api_view(['GET', 'PUT'])
-@permission_classes([permissions.IsAuthenticated & ProposalPermissions])
 def proposal_formatting_v2_view(request, pk):
-    proposal_writing = get_object_or_404(ProposalWriting.objects.filter(company=get_request().user.company),
-                                         pk=pk)
+    proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
     # all_writing_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
     #                      'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario']
+    company = proposal_writing.company
+    try:
+        proposal_setting = ProposalSetting.objects.get(company=company)
+    except ProposalSetting.DoesNotExist:
+        proposal_setting = ProposalSetting.objects.create(
+            company=company,
+            intro=INTRO,
+            default_note=DEFAULT_NOTE,
+            pdf_file=''
+        )
+    company_data = CompanySerializer(company).data
     all_format_fields = ['id', 'name', 'description', 'unit', 'quantity', 'total_price', 'unit_price']
     if request.method == 'GET':
         try:
@@ -262,11 +274,12 @@ def proposal_formatting_v2_view(request, pk):
             proposal_formatting = ProposalFormatting.objects.create(proposal_writing=proposal_writing)
         serializer = ProposalFormattingTemplateMinorSerializer(proposal_formatting, context={'request': request})
         return Response(status=status.HTTP_200_OK, data={**serializer.data,
-                                                         **{'all_format_fields': all_format_fields}})
+                                                         **{'all_format_fields': all_format_fields, 'company': company_data,
+                                                            'proposal_setting': ProposalSettingSerializer(proposal_setting).data}})
 
     if request.method == 'PUT':
         proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
-        estimate_params = request.data.get('estimates')
+        estimate_params = request.data.get('estimates', [])
         query_set = EstimateTemplate.objects.filter(id__in=estimate_params)
         for obj in query_set:
             try:
@@ -274,12 +287,13 @@ def proposal_formatting_v2_view(request, pk):
             except ValueError:
                 pass
         EstimateTemplate.objects.bulk_update(query_set, ['format_order'])
-        proposal_formatting.show_format_fields = request.data.get('show_format_fields', [])
-        proposal_formatting.save(update_fields=['show_format_fields'])
 
-        serializer = ProposalFormattingTemplateMinorSerializer(proposal_formatting, context={'request': request})
+        serializer = ProposalFormattingTemplateMinorSerializer(proposal_formatting, data=request.data, context={'request': request})
+        serializer.is_valid()
+        serializer.save()
         return Response(status=status.HTTP_200_OK, data={**serializer.data,
-                                                         **{'all_format_fields': all_format_fields}})
+                                                         **{'all_format_fields': all_format_fields, 'company': company_data,
+                                                            'proposal_setting': ProposalSettingSerializer(proposal_setting).data}})
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -328,26 +342,72 @@ def duplicate_proposal(request):
     return Response(status=status.HTTP_201_CREATED, data=serializer.data)
 
 
+Contact = apps.get_model('sales', 'Contact')
+
+
 @api_view(['POST'])
 def proposal_formatting_public(request, pk):
-    proposal_writing = get_object_or_404(ProposalWriting.objects.filter(company=get_request().user.company),
-                                         pk=pk)
-    data = request.data
-    serializer = ProposalFormattingTemplateSignsSerializer(data=request.data)
+    proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
+    proposal_template = proposal_writing.proposal_formatting
+    # data = request.data
+    # serializer = ProposalFormattingTemplateSignsSerializer(data=request.data)
+    # serializer.is_valid(raise_exception=True)
+    # check_email = []
+    # data_proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
+    # for data_proposal_sign in data['signs']:
+    #     if data_proposal_sign['email'] not in check_email:
+    #         url = pop(data_proposal_sign, 'url', None)
+    #         proposal_formatting_sign_create = ProposalFormattingSign.objects.create(
+    #             proposal_formatting=data_proposal_formatting,
+    #             **data_proposal_sign
+    #         )
+    #         content = render_to_string('proposal-formatting-sign.html', {'url': url})
+    #         celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [proposal_formatting_sign_create.email], False, html_message=content)
+    #         check_email.append(data_proposal_sign['email'])
+    serializer = ProposalFormattingTemplateMinorSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    check_email = []
-    data_proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
-    for data_proposal_sign in data['signs']:
-        if data_proposal_sign['email'] not in check_email:
-            url = pop(data_proposal_sign, 'url', None)
-            proposal_formatting_sign_create = ProposalFormattingSign.objects.create(
-                proposal_formatting=data_proposal_formatting,
-                **data_proposal_sign
-            )
-            content = render_to_string('proposal-formatting-sign.html', {'url': url})
-            celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [proposal_formatting_sign_create.email], False, html_message=content)
-            check_email.append(data_proposal_sign['email'])
+    proposal_template.print_date = serializer.validated_data['print_date']
+    proposal_template.has_send_mail = True
+    proposal_template.save()
+    contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts).distinct()
+    for contact in contacts:
+        url = f'{settings.BASE_URL}{request.data["path"]}'
+        if contact.pk == proposal_writing.proposal_formatting.primary_contact:
+            url = url + f'?email={request.data["email"]}'
+        content = render_to_string('proposal-formatting-sign.html', {'url': url, 'contact': contact})
+        celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [contact.email], False, html_message=content)
     return Response(status=status.HTTP_201_CREATED, data={'data': 'public success'})
+
+
+@api_view(['POST', 'GET'])
+def proposal_sign(request, pk):
+    proposal_writing = get_object_or_404(
+        ProposalWriting.objects.all(),
+        pk=pk
+    )
+    proposal_template = proposal_writing.proposal_formatting
+    if request.method == 'GET':
+        code = get_random_string(length=6, allowed_chars='1234567890')
+        proposal_template.otp = code
+        proposal_template.has_send_mail = True
+        proposal_template.save()
+        contact = Contact.objects.get(pk=proposal_template.primary_contact)
+        content = render_to_string('proposal-formatting-sign-otp.html', {'otp': code, 'contact': contact})
+        celery_send_mail.delay(f'Sign Electronically OTP', content, settings.EMAIL_HOST_USER,
+                           [contact.email], False)
+        return Response(status=status.HTTP_200_OK, data={'data': ' create code success'})
+
+    if request.method == 'POST':
+        otp = request.data['otp']
+        signature = request.data['signature']
+        if otp == proposal_template.otp:
+            proposal_template.has_signed = True
+            proposal_template.signature = signature
+            proposal_template.sign_date = timezone.now()
+            proposal_template.save(update_fields=['has_signed', 'signature', 'sign_date'])
+            return Response(status=status.HTTP_200_OK, data={'data': 'Success'})
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={'data': 'Fail'})
 
 
 @api_view(['POST'])

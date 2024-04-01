@@ -11,6 +11,7 @@ from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, Pric
 from sales.serializers import ContentTypeSerializerMixin, estimate
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateSerializer
+from sales.serializers.lead_list import ContactsSerializer
 
 
 class ProposalWidgetSerializer(serializers.ModelSerializer):
@@ -311,7 +312,7 @@ class ProposalWritingCompactSerializer(ContentTypeSerializerMixin):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['status'] = 'Draft'
+        data['status'] = instance.get_status()
         data['house_address'] = ''
         data['customer_contact'] = []
         if instance.lead:
@@ -376,6 +377,7 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         user = get_request().user
+        data['status'] = instance.get_status()
         data['permissions'] = {
             'internal_view': user.check_perm('internal_view'),
             'client_view': user.check_perm('client_view')
@@ -428,15 +430,39 @@ class FormatEstimateSerializer(serializers.ModelSerializer):
         return data
 
 
-class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
+class FormatFormulaSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ProposalFormatting
-        fields = ('id', 'show_format_fields')
+        model = apps.get_model('sales', 'POFormula')
+        fields = ('id', 'name', 'quantity', 'unit', 'unit_price')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        estimates = instance.proposal_writing.get_estimates().filter(is_selected=True).order_by('format_order')
+        data['total_price'] = instance.total_cost
+        return data
+
+
+class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProposalFormatting
+        fields = ('id', 'show_format_fields', 'contacts', 'intro', 'default_note', 'signature',
+                  'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact', 'sign_date')
+        read_only_fields = ['sign_date']
+
+    def to_representation(self, instance):
+        Contact = apps.get_model('sales', 'Contact')
+        data = super().to_representation(instance)
+        estimates = instance.proposal_writing.get_checked_estimate().order_by('format_order')
+        formulas = instance.proposal_writing.get_checked_formula()
         data['estimates'] = FormatEstimateSerializer(estimates, many=True).data
+        data['total_price'] = sum([value['total_price'] for value in data['estimates']])
+        data['contacts'] = ContactsSerializer(Contact.objects.filter(id__in=instance.contacts),
+                                              many=True, context=self.context).data
+        if not data['primary_contact']:
+            data['primary_contact'] = instance.contacts[0] if instance.contacts else None
+        data['lead'] = instance.proposal_writing.lead.get_info_for_proposal_formatting() if instance.proposal_writing.lead else None
+        data['proposal_progress'] = instance.proposal_writing.additional_information
+        # data['formulas'] = FormatFormulaSerializer(formulas, many=True).data
         return data
 
 

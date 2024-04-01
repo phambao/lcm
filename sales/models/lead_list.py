@@ -64,6 +64,7 @@ class LeadDetail(BaseModel):
     tags = models.ManyToManyField(TagLead, related_name='lead_tags', blank=True)
     number_of_click = models.IntegerField(default=0, null=True, blank=True)  # For filter
     recent_click = models.DateTimeField(null=True, blank=True)  # For filter
+    primary_contact_id = models.IntegerField(null=True, blank=True, default=None)
 
     def __str__(self):
         return self.lead_title
@@ -74,6 +75,16 @@ class LeadDetail(BaseModel):
         for proposal in proposals:
             change_orders |= proposal.change_orders.all()
         return change_orders
+
+    def get_info_for_proposal_formatting(self):
+        return {
+            'name': self.lead_title,
+            'street_address': self.street_address,
+            'country': self.country,
+            'city': self.city,
+            'state': self.state,
+            'zip_code': self.zip_code
+        }
 
 
 class Contact(BaseModel):

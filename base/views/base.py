@@ -330,12 +330,17 @@ def active_column(request, pk):
 class FileMessageTodoGenericView(GenericViewSet):
     queryset = FileBuilder365.objects.all()
     serializer_class = FileBuilder365ReqSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
 
     def create_file(self, request, **kwargs):
+        
         serializer = FileBuilder365ReqSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = request.user
+        user = None
+        company = None
+        if not request.user.is_anonymous:
+            user = request.user
+            company = request.user.company
         files = request.FILES.getlist('file')
         attachment_create = list()
         for file in files:
@@ -347,7 +352,7 @@ class FileMessageTodoGenericView(GenericViewSet):
                 user_update=user,
                 name=file.name,
                 size=file.size,
-                company=request.user.company
+                company=company
             )
             attachment_create.append(attachment)
 
