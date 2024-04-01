@@ -133,6 +133,8 @@ def invoice_template_data(request, pk):
         'invoice': InvoiceSerializer(invoice_obj).data,
         'lead': None,
     }
+    data['amount_paid'] = 200
+    data['balance_due'] = 1000
     if data['invoice']['lead_id']:
         data['lead'] = LeadDetailCreateSerializer(LeadDetail.objects.get(pk=data['invoice']['lead_id']),
                                                   context={'request': request}).data
