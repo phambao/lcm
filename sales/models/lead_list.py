@@ -236,5 +236,5 @@ class Communication(BaseModel):
         LeadDetail, on_delete=models.CASCADE, related_name='communication_lead', null=True)
 
     number = models.IntegerField(null=True, blank=True)
-    last_date = models.DateTimeField(default=None, blank=True, null=True)
+    last_date = models.DateTimeField(auto_now=True, blank=True, null=True)
     type = models.CharField(max_length=128, choices=Status.choices, default=Status.TEXT)

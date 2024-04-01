@@ -452,19 +452,18 @@ class NoteTemplateSerializer(serializers.ModelSerializer):
 class CommunicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.Communication
-        fields = '__all__'
+        fields = ('lead', 'number', 'last_date', 'type')
 
     def create(self, validated_data):
-        type = pop(validated_data, 'type', None)
-        lead = pop(validated_data, 'lead', None)
+        type = validated_data.get('type')
         number = 0
         last_filtered_object = lead_list.Communication.objects.filter(type=type).last()
         if last_filtered_object:
-            number = last_filtered_object.number
-        communication_create = lead_list.Communication.objects.create(
-            lead=lead,
-            number=number + 1,
-            type=type,
-            last_date=datetime.datetime.now()
-        )
+            number = last_filtered_object.number + 1
+
+        if not last_filtered_object:
+            number = 1
+
+        validated_data['number'] = number
+        communication_create = super().create(validated_data)
         return communication_create
