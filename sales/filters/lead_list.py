@@ -6,7 +6,7 @@ from django_filters import rest_framework as filters
 from django_filters.filters import _truncate
 
 from ..models import lead_list
-from ..models.lead_list import Contact, Activities, LeadDetail, TagActivity, PhaseActivity
+from ..models.lead_list import Contact, Activities, LeadDetail, TagActivity, PhaseActivity, Communication, Status
 
 CHOICES = [
     ("today", "Today"),
@@ -127,3 +127,12 @@ class ActivitiesFilter(filters.FilterSet):
     class Meta:
         model = Activities
         fields = ('title', 'status', 'tags', 'phase', 'assigned_to', 'start_date', 'end_date')
+
+
+class CommunicationFilter(filters.FilterSet):
+    lead = filters.ModelChoiceFilter(queryset=LeadDetail.objects.all())
+    type = filters.MultipleChoiceFilter(choices=Status.choices)
+
+    class Meta:
+        model = Communication
+        fields = ('lead', 'number', 'last_date', 'type')

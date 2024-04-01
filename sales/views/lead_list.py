@@ -17,9 +17,9 @@ from base.utils import file_response
 from base.views.base import CompanyFilterMixin
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter
 from sales.serializers.proposal import PriceComparisonCompactSerializer, ProposalWritingByLeadSerializer
-from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter
+from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter, CommunicationFilter
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, Photos, ContactTypeName, \
-    ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead, NoteTemplate
+    ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead, NoteTemplate, Communication, Status
 from ..serializers import lead_list
 from ..serializers.lead_list import PhotoSerializer, LeadDetailCreateSerializer
 
@@ -323,6 +323,14 @@ class NoteTemplateDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateD
     queryset = NoteTemplate.objects.all()
     serializer_class = lead_list.NoteTemplateSerializer
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
+
+
+class CommunicationGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
+    queryset = Communication.objects.all()
+    serializer_class = lead_list.CommunicationSerializer
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = CommunicationFilter
 
 
 @api_view(['DELETE'])
@@ -718,3 +726,35 @@ def import_data(request):
     rs = LeadDetailCreateSerializer(
         temp_rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & LeadPermissions])
+def get_communication(request, pk_lead):
+    data_lead = LeadDetail.objects.get(pk=pk_lead)
+    communication_text = Communication.objects.filter(type=Status.TEXT, lead=pk_lead, company=request.user.company).last()
+    communication_email = Communication.objects.filter(type=Status.EMAIL, lead=pk_lead, company=request.user.company).last()
+    communication_call = Communication.objects.filter(type=Status.CALL, lead=pk_lead, company=request.user.company).last()
+    rs = []
+    if not communication_text:
+        data = {'number': 0, 'last_date': None, 'lead': data_lead, 'type': Status.TEXT}
+        rs.append(data)
+    else:
+        rs.append(communication_text)
+
+    if not communication_email:
+        data = {'number': 0, 'last_date': None, 'lead': data_lead, 'type': Status.EMAIL}
+        rs.append(data)
+    else:
+        rs.append(communication_email)
+
+    if not communication_call:
+        data = {'number': 0, 'last_date': None, 'lead': data_lead, 'type': Status.CALL}
+        rs.append(data)
+
+    else:
+        rs.append(communication_call)
+
+    data = lead_list.CommunicationSerializer(
+        rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=data)

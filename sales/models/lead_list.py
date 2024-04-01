@@ -223,3 +223,18 @@ class NoteTemplate(BaseModel):
 
     name = models.CharField(max_length=128, blank=True)
     note = models.TextField(blank=True)
+
+
+class Status(models.TextChoices):
+    TEXT = 'text', 'TEXT'
+    EMAIL = 'email', 'EMAIL'
+    CALL = 'call', 'CALL'
+
+
+class Communication(BaseModel):
+    lead = models.ForeignKey(
+        LeadDetail, on_delete=models.CASCADE, related_name='communication_lead', null=True)
+
+    number = models.IntegerField(null=True, blank=True)
+    last_date = models.DateTimeField(auto_now=True, blank=True, null=True)
+    type = models.CharField(max_length=128, choices=Status.choices, default=Status.TEXT)

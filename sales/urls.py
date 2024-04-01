@@ -80,6 +80,8 @@ url_leads = [
 
     path('note-template/', lead_list.NoteTemplateGenericView.as_view()),
     path('note-template/<int:pk>/', lead_list.NoteTemplateDetailGenericView.as_view()),
+    path('communication/', lead_list.CommunicationGenericView.as_view()),
+    path('leads/<int:pk_lead>/default-communication/', lead_list.get_communication),
 ]
 
 # Define Path for Catalog -------------------------------------------------------
