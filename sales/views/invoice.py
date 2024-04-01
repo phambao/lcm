@@ -134,8 +134,11 @@ def invoice_template_data(request, pk):
         'invoice': InvoiceSerializer(invoice_obj).data,
         'lead': None,
     }
-    data['amount_paid'] = 200
-    data['balance_due'] = 1000
+    from django.db.models import Sum
+    amount_paid = invoice_obj.payment_histories.aggregate(Sum('amount', default=0))['amount__sum']
+    total_amount = sum(d['total_price'] for d in data['items'])
+    data['amount_paid'] = amount_paid
+    data['balance_due'] = total_amount - amount_paid
     if data['invoice']['lead_id']:
         data['lead'] = LeadDetailCreateSerializer(LeadDetail.objects.get(pk=data['invoice']['lead_id']),
                                                   context={'request': request}).data
