@@ -127,8 +127,9 @@ def invoice_template_data(request, pk):
     company = invoice_obj.company
     company_data = CompanySerializer(company).data
     data = {
-        'items': [{'name': 'name', 'description': 'description',
-                   'quantity': 'quantity', 'total_price': '100', 'unit_price': '123'} for i in range(5)],
+        # 'items': [{'name': 'name', 'description': 'description',
+        #            'quantity': 'quantity', 'total_price': '100', 'unit_price': '123'} for i in range(5)],
+        'items': invoice_obj.get_items(),
         'company': company_data,
         'invoice': InvoiceSerializer(invoice_obj).data,
         'lead': None,
