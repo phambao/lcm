@@ -367,8 +367,6 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
         return instance
 
     def update(self, instance, validated_data):
-        if instance.get_status() != 'Draft':
-            raise serializers.ValidationError('The proposal has been sent')
         writing_groups = pop(validated_data, 'writing_groups', [])
         instance.writing_groups.all().update(writing=None)
         self.create_group(writing_groups, instance)
