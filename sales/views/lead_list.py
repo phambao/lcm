@@ -737,19 +737,19 @@ def get_communication(request, pk_lead):
     communication_call = Communication.objects.filter(type=Status.CALL, lead=pk_lead, company=request.user.company).last()
     rs = []
     if not communication_text:
-        data = {'number': 0, 'last_date': None, 'lead': data_lead}
+        data = {'number': 0, 'last_date': None, 'lead': data_lead, 'type': Status.TEXT}
         rs.append(data)
     else:
         rs.append(communication_text)
 
     if not communication_email:
-        data = {'number': 0, 'last_date': None, 'lead': data_lead}
+        data = {'number': 0, 'last_date': None, 'lead': data_lead, 'type': Status.EMAIL}
         rs.append(data)
     else:
         rs.append(communication_email)
 
     if not communication_call:
-        data = {'number': 0, 'last_date': None, 'lead': data_lead}
+        data = {'number': 0, 'last_date': None, 'lead': data_lead, 'type': Status.CALL}
         rs.append(data)
 
     else:
