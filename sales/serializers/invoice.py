@@ -7,11 +7,11 @@ from api.serializers.base import SerializerMixin
 from base.utils import pop
 from base.tasks import activity_log
 from base.serializers import base
-from sales.models.invoice import InvoiceTemplate
+from sales.models.invoice import InvoiceTemplate, TemplateInvoice
 from sales.serializers import ContentTypeSerializerMixin
 from ..models import (Invoice, TableInvoice, PaymentHistory, CustomTable, GroupChangeOrder, ChangeOrderItem,
                       ProposalWriting, ProposalItem, GroupProposal, ProgressPayment, LeadDetail, CreditMemoAmount,
-                      CreditMemo, AttachmentInvoice)
+                      CreditMemo, AttachmentInvoice, InvoiceTemplate)
 
 
 class UnitSerializerMixin:
@@ -37,6 +37,13 @@ class ProposalItemSerializer(UnitSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = ProposalItem
         fields = ('id', 'type', 'owner_price', 'amount_paid', 'unit', 'formula', 'percentage_payment')
+
+
+class InvoiceTemplateMinorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TemplateInvoice
+        fields = ('id', 'description', 'printed', 'primary_contact', 'contacts')
 
 
 class GroupProposalSerializer(UnitSerializerMixin, serializers.ModelSerializer):

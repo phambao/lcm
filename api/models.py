@@ -7,6 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.contrib.auth.models import AnonymousUser
 
 from .middleware import get_request
 from base.utils import get_perm_by_models
@@ -84,12 +85,13 @@ class BaseModel(models.Model):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         request = get_request()
-        if self.pk:
-            self.user_update = request.user
-        else:
-            self.user_create = request.user
-        if not self.company:
-            self.company = request.user.company
+        if not request.user.is_anonymous:
+            if self.pk:
+                self.user_update = request.user
+            else:
+                self.user_create = request.user
+            if not self.company:
+                self.company = request.user.company
         return super(BaseModel, self).save(force_insert=force_insert, force_update=force_update,
                                            using=using, update_fields=update_fields)
 
