@@ -19,6 +19,7 @@ from sales.models.invoice import TemplateInvoice
 from sales.models.proposal import ProposalWriting
 from sales.serializers.invoice import InvoiceSerializer, InvoiceTemplateMinorSerializer, PaymentHistorySerializer, InvoicePaymentSerializer, \
     ProposalForInvoiceSerializer, LeadInvoiceSerializer, CreditMemoSerializer, InvoiceTemplateSerializer
+from sales.serializers.lead_list import LeadDetailCreateSerializer
 from sales.views.lead_list import LeadDetailList
 from sales.views.proposal import ProposalWritingCompactList
 from sales.filters.invoice import InvoiceFilter
@@ -129,8 +130,11 @@ def invoice_template_data(request, pk):
         'items': [{'name': 'name', 'description': 'description',
                    'quantity': 'quantity', 'total_price': '100', 'unit_price': '123'} for i in range(5)],
         'company': company_data,
-        'invoice': InvoiceSerializer(invoice_obj).data
+        'invoice': InvoiceSerializer(invoice_obj).data,
+        'lead': None,
     }
+    if data['invoice']['lead_id']:
+        data['lead'] = LeadDetailCreateSerializer(LeadDetail.objects.get(pk=data['invoice']['lead_id']))
     return Response(status=status.HTTP_201_CREATED, data={**data, **serializer.data})
 
 
