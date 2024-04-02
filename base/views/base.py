@@ -416,7 +416,7 @@ def delete_models(request, content_type):
     if can_delete:
         log_delete_action(deleted_data, ContentType.objects.get_for_model(model))
         deleted_data.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT, data=deleted_data)
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['PUT'])

@@ -21,7 +21,7 @@ from sales.serializers.invoice import InvoiceSerializer, InvoiceTemplateMinorSer
     ProposalForInvoiceSerializer, LeadInvoiceSerializer, CreditMemoSerializer, InvoiceTemplateSerializer
 from sales.serializers.lead_list import LeadDetailCreateSerializer
 from sales.views.lead_list import LeadDetailList
-from sales.views.proposal import ProposalWritingCompactList
+from sales.views.proposal import PROPOSAL_PREFETCH_RELATED, ProposalWritingCompactList
 from sales.filters.invoice import InvoiceFilter
 
 
@@ -48,6 +48,9 @@ class InvoiceDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestro
 
 class InvoiceProposal(ProposalWritingCompactList):
     serializer_class = ProposalForInvoiceSerializer
+    queryset = ProposalWriting.objects.filter(
+        proposal_formatting__has_signed=True
+    ).order_by('-modified_date').prefetch_related(*PROPOSAL_PREFETCH_RELATED)
 
 
 class InvoiceProposalDetail(generics.RetrieveAPIView):
@@ -152,7 +155,7 @@ Contact = apps.get_model('sales', 'Contact')
 @api_view(['POST'])
 def publish_template(request, pk):
     invoice_obj = get_object_or_404(Invoice.objects.all(), pk=pk)
-    invoice_obj.status = 'unpaid'
+    invoice_obj.status = 'sent'
     invoice_obj.save()
     template_obj = invoice_obj.template
     serializer = InvoiceTemplateMinorSerializer(data=request.data)
@@ -193,7 +196,7 @@ def invoice_sign(request, pk):
         if otp == invoice_template.otp:
             invoice_template.has_signed = True
             invoice_template.signature = signature
-            invoice.status = 'paid'
+            invoice.status = 'unpaid'
             invoice.save()
             invoice_template.save(update_fields=['has_signed', 'signature'])
             return Response(status=status.HTTP_200_OK, data={'data': 'Success'})
