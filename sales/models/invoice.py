@@ -110,6 +110,7 @@ class Invoice(BaseModel):
 
     class InvoiceStatus(models.TextChoices):
         DRAFT = 'draft', 'Draft'
+        SENT = 'sent', 'Sent'
         UNPAID = 'unpaid', 'Unpaid'
         PAID = 'paid', 'Paid'
 
