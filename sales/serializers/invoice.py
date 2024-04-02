@@ -245,7 +245,7 @@ class InvoiceSerializer(ContentTypeSerializerMixin, SerializerMixin):
         attachments = pop(validated_data, 'attachments', [])
         instance = super().update(instance, validated_data)
         instance.tables.all().delete()
-        instance.payment_histories.all().delete()
+        # instance.payment_histories.all().delete()
         AttachmentInvoice.objects.filter(content_type=ContentType.objects.get_for_model(instance),
                                          object_id=instance.id).delete()
         self.create_talbes(instance, tables)

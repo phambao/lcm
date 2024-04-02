@@ -217,7 +217,7 @@ class POFormulaToDataEntry(BaseModel):
     is_client_view = models.BooleanField(blank=True, default=False)
 
     def get_value(self):
-        value = self.value or self.dropdown_value.get('value')
+        value = self.value or self.dropdown_value.get('value') or '1'
         return value.replace(',', '')
 
     def get_unit(self):
