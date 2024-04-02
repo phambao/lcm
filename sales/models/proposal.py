@@ -266,3 +266,5 @@ class ProposalSetting(BaseModel):
     pdf_file = models.CharField(max_length=128, blank=True)
     closing_note = models.TextField(blank=True)
     contract_note = models.TextField(blank=True)
+    company = models.OneToOneField('api.CompanyBuilder', on_delete=models.CASCADE,
+                                   related_name='%(class)s_company_builder', null=True, blank=True)
