@@ -376,6 +376,8 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
             proposal_formatting = instance.proposal_formatting
             proposal_formatting.has_send_mail = False
             proposal_formatting.has_signed = False
+            proposal_formatting.print_date = None
+            proposal_formatting.signature = ''
             proposal_formatting.save()
         return super().update(instance, validated_data)
 
