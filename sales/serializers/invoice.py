@@ -233,7 +233,7 @@ class InvoiceSerializer(ContentTypeSerializerMixin, SerializerMixin):
         attachments = pop(validated_data, 'attachments', [])
         instance = super().create(validated_data)
         self.create_talbes(instance, tables)
-        self.create_payment_history(instance, payment_histories)
+        # self.create_payment_history(instance, payment_histories)
         self.create_attachment(instance, attachments)
         activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
                            InvoiceSerializer.__name__, __name__, self.context['request'].user.pk)
@@ -249,7 +249,7 @@ class InvoiceSerializer(ContentTypeSerializerMixin, SerializerMixin):
         AttachmentInvoice.objects.filter(content_type=ContentType.objects.get_for_model(instance),
                                          object_id=instance.id).delete()
         self.create_talbes(instance, tables)
-        self.create_payment_history(instance, payment_histories)
+        # self.create_payment_history(instance, payment_histories)
         self.create_attachment(instance, attachments)
         activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            InvoiceSerializer.__name__, __name__, self.context['request'].user.pk)
