@@ -21,7 +21,7 @@ from sales.serializers.invoice import InvoiceSerializer, InvoiceTemplateMinorSer
     ProposalForInvoiceSerializer, LeadInvoiceSerializer, CreditMemoSerializer, InvoiceTemplateSerializer
 from sales.serializers.lead_list import LeadDetailCreateSerializer
 from sales.views.lead_list import LeadDetailList
-from sales.views.proposal import ProposalWritingCompactList
+from sales.views.proposal import PROPOSAL_PREFETCH_RELATED, ProposalWritingCompactList
 from sales.filters.invoice import InvoiceFilter
 
 
@@ -48,6 +48,9 @@ class InvoiceDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestro
 
 class InvoiceProposal(ProposalWritingCompactList):
     serializer_class = ProposalForInvoiceSerializer
+    queryset = ProposalWriting.objects.filter(
+        proposal_formatting__has_signed=True
+    ).order_by('-modified_date').prefetch_related(*PROPOSAL_PREFETCH_RELATED)
 
 
 class InvoiceProposalDetail(generics.RetrieveAPIView):

@@ -225,6 +225,8 @@ class InvoiceSetting(models.Model):
     default_owners_invoice = models.TextField(blank=True)
     create_invoice_after_approving = models.CharField(blank=True, choices=InvoiceApproveType.choices,
                                                       default=InvoiceApproveType.OWN, max_length=8)
+    company = models.OneToOneField('api.CompanyBuilder', on_delete=models.CASCADE,
+                                related_name='%(class)s_company_builder', null=True, blank=True)
 
 
 class GroupCompany(models.Model):
