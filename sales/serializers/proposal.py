@@ -444,6 +444,8 @@ class FormatFormulaSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        catalog_name = instance.get_link_catalog_by_material()
+        data['catalog_name'] = catalog_name[-1].get('name') if catalog_name else ''
         data['total_price'] = instance.total_cost
         return data
 
