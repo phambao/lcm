@@ -51,6 +51,8 @@ class DataEntry(BaseModel):
 class RoundUpChoice(models.TextChoices):
     WHOLE_NUMBER = 'whole_number', 'Whole Number'
     INCREMENT = 'increment', 'Increment'
+    NONE = 'none', 'None'
+    CUSTOM = 'custom', 'Custom'
 
 
 class RoundUpActionChoice(models.TextChoices):
