@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.conf import settings
-from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 import stripe
 from django.views.decorators.csrf import csrf_exempt
@@ -564,7 +565,8 @@ def webhook_received(request):
                         dealer=dealer,
                         referral_code=data_referral_code,
                         company=data_company,
-                        is_activate=True
+                        is_activate=True,
+                        bonus_commissions=commission_amount
                     )
 
                 coupon = stripe.Coupon.create(
@@ -831,3 +833,34 @@ def get_payment_history(request):
     serializer = PaymentHistoryStripeSerializer(data_rs, many=True)
     return paginator.get_paginated_response(serializer.data)
 
+
+@api_view(['GET'])
+def get_data_dealer(request, period):
+    if request.method == 'GET' and request.user.is_authenticated:
+        dealer_info = DealerInformation.objects.get(user=request.user)
+        total_amount = 0
+        total_user = 0
+        end_date = datetime.now()
+        start_date = None
+        if period == 'week':
+            start_date = end_date - timedelta(days=7)
+
+        elif period == 'month':
+            start_date = end_date - timedelta(days=30)
+
+        elif period == 'year':
+            start_date = end_date - timedelta(days=365)
+
+        if start_date:
+            data_dealer = DealerCompany.objects.filter(created_at__gte=start_date, created_at__lt=end_date, dealer=dealer_info)
+            total_user = len(data_dealer)
+            for data in data_dealer:
+                total_amount += data.bonus_commissions
+        else:
+            data_dealer = DealerCompany.objects.filter(dealer=dealer_info)
+            total_user = len(data_dealer)
+            total_amount = dealer_info.total_bonus_commissions
+
+        return Response(status=status.HTTP_200_OK, data={'data': total_amount, 'total_user': total_user})
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
