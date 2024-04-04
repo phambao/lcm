@@ -467,7 +467,7 @@ EstimateTemplate = apps.get_model('sales', 'EstimateTemplate')
 class GroupTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupTemplate
-        fields = ('id', 'name', 'order', 'is_single', 'items', 'is_formula')
+        fields = ('id', 'name', 'order', 'is_single', 'items', 'is_formula', 'type')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

@@ -281,6 +281,7 @@ class GroupTemplate(BaseModel):
     is_single = models.BooleanField(blank=True, null=True)
     items = ArrayField(models.IntegerField(), default=list, blank=True, null=True)
     is_formula = models.BooleanField(blank=True, default=False)
+    type = models.CharField(blank=True, max_length=128)
 
 
 class EstimateTemplate(BaseModel):
