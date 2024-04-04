@@ -233,7 +233,7 @@ class InvoiceSerializer(ContentTypeSerializerMixin, SerializerMixin):
         attachments = pop(validated_data, 'attachments', [])
         instance = super().create(validated_data)
         self.create_talbes(instance, tables)
-        self.create_payment_history(instance, payment_histories)
+        # self.create_payment_history(instance, payment_histories)
         self.create_attachment(instance, attachments)
         activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
                            InvoiceSerializer.__name__, __name__, self.context['request'].user.pk)
@@ -245,11 +245,11 @@ class InvoiceSerializer(ContentTypeSerializerMixin, SerializerMixin):
         attachments = pop(validated_data, 'attachments', [])
         instance = super().update(instance, validated_data)
         instance.tables.all().delete()
-        instance.payment_histories.all().delete()
+        # instance.payment_histories.all().delete()
         AttachmentInvoice.objects.filter(content_type=ContentType.objects.get_for_model(instance),
                                          object_id=instance.id).delete()
         self.create_talbes(instance, tables)
-        self.create_payment_history(instance, payment_histories)
+        # self.create_payment_history(instance, payment_histories)
         self.create_attachment(instance, attachments)
         activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            InvoiceSerializer.__name__, __name__, self.context['request'].user.pk)
@@ -262,9 +262,11 @@ class InvoiceSerializer(ContentTypeSerializerMixin, SerializerMixin):
         attachment_data = AttachmentInvoiceSerializer(attachments, many=True).data
         data['attachments'] = attachment_data
         data['lead_name'] = ''
+        data['lead_id'] = None
         if instance.proposal:
             if instance.proposal.lead:
                 data['lead_name'] = instance.proposal.lead.lead_title
+                data['lead_id'] = instance.proposal.lead.id
         # if instance.link_to_event:
         #     data['link_to_event'] = EventForInvoiceSerializer(instance.link_to_event).data
         return data

@@ -110,6 +110,7 @@ class Invoice(BaseModel):
 
     class InvoiceStatus(models.TextChoices):
         DRAFT = 'draft', 'Draft'
+        SENT = 'sent', 'Sent'
         UNPAID = 'unpaid', 'Unpaid'
         PAID = 'paid', 'Paid'
 
@@ -122,6 +123,58 @@ class Invoice(BaseModel):
     comment = models.TextField(blank=True)
     note = models.TextField(blank=True)
     proposal = models.ForeignKey('sales.ProposalWriting', on_delete=models.CASCADE, related_name='invoices', blank=True, null=True)
+
+    def get_proposal(self):
+        data = []
+        proposal_items = GroupProposal.objects.filter(table_invoice__invoice=self)
+        for item in proposal_items:
+            quantity = item.quantity if item.quantity else 1
+            unit_price = item.invoice_amount / quantity
+            data.append({
+                'name': item.name, 'description': '', 'quantity': quantity, 'unit_price': unit_price, 'total_price': item.invoice_amount
+            })
+        return data
+
+    def get_change_order(self):
+        change_order_items = GroupChangeOrder.objects.filter(table_invoice__invoice=self)
+        data = []
+        for item in change_order_items:
+            quantity = item.quantity if item.quantity else 1
+            unit_price = item.invoice_amount / quantity
+            data.append({
+                'name': item.name, 'description': '', 'quantity': quantity, 'unit_price': unit_price, 'total_price': item.invoice_amount
+            })
+        return data
+
+    def get_progress(self):
+        data = []
+        progress = ProgressPayment.objects.filter(table_invoice__invoice=self)
+        for item in progress:
+            quantity = item.quantity if item.quantity else 1
+            unit_price = item.invoice_amount / quantity
+            data.append({
+                'name': item.name, 'description': '', 'quantity': quantity, 'unit_price': unit_price, 'total_price': item.invoice_amount
+            })
+        return data
+
+    def get_custom(self):
+        data = []
+        customs = CustomTable.objects.filter(table_invoice__invoice=self)
+        for item in customs:
+            quantity = item.quantity if item.quantity else 1
+            total_price = item.unit_cost * quantity
+            data.append({
+                'name': item.name, 'description': '', 'quantity': quantity, 'unit_price': item.unit_cost, 'total_price': total_price
+            })
+        return data
+
+    def get_items(self):
+        data = []
+        data.extend(self.get_change_order())
+        data.extend(self.get_proposal())
+        data.extend(self.get_custom())
+        data.extend(self.get_progress())
+        return data
 
 
 class TemplateInvoice(BaseModel):

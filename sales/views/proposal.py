@@ -275,6 +275,7 @@ def proposal_formatting_v2_view(request, pk):
         serializer = ProposalFormattingTemplateMinorSerializer(proposal_formatting, context={'request': request})
         return Response(status=status.HTTP_200_OK, data={**serializer.data,
                                                          **{'all_format_fields': all_format_fields, 'company': company_data,
+                                                            'status': proposal_writing.get_status(),
                                                             'proposal_setting': ProposalSettingSerializer(proposal_setting).data}})
 
     if request.method == 'PUT':
@@ -293,6 +294,7 @@ def proposal_formatting_v2_view(request, pk):
         serializer.save()
         return Response(status=status.HTTP_200_OK, data={**serializer.data,
                                                          **{'all_format_fields': all_format_fields, 'company': company_data,
+                                                            'status': proposal_writing.get_status(),
                                                             'proposal_setting': ProposalSettingSerializer(proposal_setting).data}})
     return Response(status=status.HTTP_204_NO_CONTENT)
 

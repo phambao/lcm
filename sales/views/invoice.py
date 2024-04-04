@@ -19,8 +19,9 @@ from sales.models.invoice import TemplateInvoice
 from sales.models.proposal import ProposalWriting
 from sales.serializers.invoice import InvoiceSerializer, InvoiceTemplateMinorSerializer, PaymentHistorySerializer, InvoicePaymentSerializer, \
     ProposalForInvoiceSerializer, LeadInvoiceSerializer, CreditMemoSerializer, InvoiceTemplateSerializer
+from sales.serializers.lead_list import LeadDetailCreateSerializer
 from sales.views.lead_list import LeadDetailList
-from sales.views.proposal import ProposalWritingCompactList
+from sales.views.proposal import PROPOSAL_PREFETCH_RELATED, ProposalWritingCompactList
 from sales.filters.invoice import InvoiceFilter
 
 
@@ -47,6 +48,9 @@ class InvoiceDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestro
 
 class InvoiceProposal(ProposalWritingCompactList):
     serializer_class = ProposalForInvoiceSerializer
+    queryset = ProposalWriting.objects.filter(
+        proposal_formatting__has_signed=True
+    ).order_by('-modified_date').prefetch_related(*PROPOSAL_PREFETCH_RELATED)
 
 
 class InvoiceProposalDetail(generics.RetrieveAPIView):
@@ -126,11 +130,22 @@ def invoice_template_data(request, pk):
     company = invoice_obj.company
     company_data = CompanySerializer(company).data
     data = {
-        'items': [{'name': 'name', 'description': 'description',
-                   'quantity': 'quantity', 'total_price': '100', 'unit_price': '123'} for i in range(5)],
+        # 'items': [{'name': 'name', 'description': 'description',
+        #            'quantity': 'quantity', 'total_price': '100', 'unit_price': '123'} for i in range(5)],
+        'items': invoice_obj.get_items(),
         'company': company_data,
-        'invoice': InvoiceSerializer(invoice_obj).data
+        'invoice': InvoiceSerializer(invoice_obj).data,
+        'lead': None,
     }
+    from django.db.models import Sum
+    amount_paid = invoice_obj.payment_histories.aggregate(Sum('amount', default=0))['amount__sum']
+    amount_paid = amount_paid or 0
+    total_amount = sum(d['total_price'] for d in data['items'])
+    data['amount_paid'] = amount_paid
+    data['balance_due'] = total_amount - amount_paid
+    if data['invoice']['lead_id']:
+        data['lead'] = LeadDetailCreateSerializer(LeadDetail.objects.get(pk=data['invoice']['lead_id']),
+                                                  context={'request': request}).data
     return Response(status=status.HTTP_201_CREATED, data={**data, **serializer.data})
 
 
@@ -140,6 +155,8 @@ Contact = apps.get_model('sales', 'Contact')
 @api_view(['POST'])
 def publish_template(request, pk):
     invoice_obj = get_object_or_404(Invoice.objects.all(), pk=pk)
+    invoice_obj.status = 'sent'
+    invoice_obj.save()
     template_obj = invoice_obj.template
     serializer = InvoiceTemplateMinorSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -179,6 +196,8 @@ def invoice_sign(request, pk):
         if otp == invoice_template.otp:
             invoice_template.has_signed = True
             invoice_template.signature = signature
+            invoice.status = 'unpaid'
+            invoice.save()
             invoice_template.save(update_fields=['has_signed', 'signature'])
             return Response(status=status.HTTP_200_OK, data={'data': 'Success'})
         else:
