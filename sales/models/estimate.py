@@ -115,7 +115,7 @@ class POFormula(BaseModel):
             return material['levels'][0]
         material = self.catalog_materials
         if len(material):
-            return material[0]
+            return material[0] or {'name' : ''}
         return {'name' : ''}
 
     def _parse_value(self, name, value):

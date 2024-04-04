@@ -384,7 +384,6 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         user = get_request().user
-        data['status'] = instance.get_status()
         data['permissions'] = {
             'internal_view': user.check_perm('internal_view'),
             'client_view': user.check_perm('client_view')
@@ -433,7 +432,7 @@ class FormatEstimateSerializer(serializers.ModelSerializer):
         data['total_price'] = instance.get_total_prices()
         data['unit_price'] = data['total_price'] / data['quantity']
         data['description'] = data['contract_description']
-        data['formulas'] = FormatFormulaSerializer(instance.get_formula(), many=True).data
+        data['formulas'] = FormatFormulaSerializer(instance.get_formula().order_by('order'), many=True).data
         del data['contract_description']
         return data
 
@@ -441,7 +440,7 @@ class FormatEstimateSerializer(serializers.ModelSerializer):
 class FormatFormulaSerializer(serializers.ModelSerializer):
     class Meta:
         model = apps.get_model('sales', 'POFormula')
-        fields = ('id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'unit',
+        fields = ('id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'unit', 'order',
                   'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario')
 
     def to_representation(self, instance):

@@ -269,7 +269,7 @@ def proposal_formatting_v2_view(request, pk):
     all_format_fields = ['id', 'name', 'description', 'unit', 'quantity', 'total_price', 'unit_price']
     data = {'all_format_fields': all_format_fields, 'company': company_data,
             'all_formula_fields': all_formula_fields,
-            'status': proposal_writing.get_status(),
+            'status': proposal_writing.status,
             'proposal_setting': ProposalSettingSerializer(proposal_setting).data}
     if request.method == 'GET':
         try:
@@ -282,6 +282,7 @@ def proposal_formatting_v2_view(request, pk):
     if request.method == 'PUT':
         proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
         estimate_params = request.data.get('estimates', [])
+        formula_params = request.data.get('formulas', [])
         query_set = EstimateTemplate.objects.filter(id__in=estimate_params)
         for obj in query_set:
             try:
@@ -289,6 +290,14 @@ def proposal_formatting_v2_view(request, pk):
             except ValueError:
                 pass
         EstimateTemplate.objects.bulk_update(query_set, ['format_order'])
+
+        query_set = POFormula.objects.filter(id__in=formula_params)
+        for obj in query_set:
+            try:
+                obj.order = formula_params.index(obj.pk)
+            except ValueError:
+                pass
+        POFormula.objects.bulk_update(query_set, ['order'])
 
         serializer = ProposalFormattingTemplateMinorSerializer(proposal_formatting, data=request.data, context={'request': request})
         serializer.is_valid()
@@ -369,6 +378,8 @@ def proposal_formatting_public(request, pk):
     proposal_template.print_date = serializer.validated_data['print_date']
     proposal_template.has_send_mail = True
     proposal_template.save()
+    proposal_writing.status = 'sent'
+    proposal_writing.save(update_fields=['status'])
     contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts).distinct()
     for contact in contacts:
         url = f'{settings.BASE_URL}{request.data["path"]}'
@@ -405,6 +416,8 @@ def proposal_sign(request, pk):
             proposal_template.signature = signature
             proposal_template.sign_date = timezone.now()
             proposal_template.save(update_fields=['has_signed', 'signature', 'sign_date'])
+            proposal_writing.status = 'approved'
+            proposal_writing.save(update_fields=['status'])
             return Response(status=status.HTTP_200_OK, data={'data': 'Success'})
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={'data': 'Fail'})
