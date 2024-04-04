@@ -29,7 +29,6 @@ class ProductPreview(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Product.objects.all()
 
-
 class ProductPreviewDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticated]
