@@ -23,12 +23,13 @@ from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter,
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, POFormula, \
     ProposalFormattingSign, ProposalSetting
 from sales.models.estimate import EstimateTemplate
+from sales.models.proposal import ProposalStatus
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateForFormattingSerializer, EstimateTemplateForInvoiceSerializer, POFormulaDataSerializer, POFormulaForInvoiceSerializer
 from sales.serializers.proposal import ProposalFormattingTemplateMinorSerializer, ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
     ProposalWritingCompactSerializer, ProposalTemplateHtmlCssSerializer, ProposalWritingDataSerializer, \
-    ProposalFormattingTemplateSignSerializer, ProposalFormattingTemplateSignsSerializer, ProposalSettingSerializer
+    ProposalFormattingTemplateSignSerializer, ProposalFormattingTemplateSignsSerializer, ProposalSettingSerializer, WritingStatusSerializer
 from sales.views.estimate import ALL_ESTIMATE_PREFETCH_RELATED
 
 
@@ -487,3 +488,15 @@ def proposal_setting_field(request):
         serializer.save()
         return Response(status=status.HTTP_200_OK, data=serializer.data)
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([permissions.IsAuthenticated & ProposalPermissions])
+def status_writing(request, pk):
+    proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
+    if request.method == 'PUT':
+        serializer = WritingStatusSerializer(instance=proposal_writing, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+    status = proposal_writing.status
+    return Response(status=200, data={'status': status})

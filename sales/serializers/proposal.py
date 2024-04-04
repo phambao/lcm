@@ -308,6 +308,7 @@ class ProposalWritingCompactSerializer(ContentTypeSerializerMixin):
     class Meta:
         model = ProposalWriting
         fields = '__all__'
+        read_only_fields = ['status']
         extra_kwargs = extra_kwargs_for_base_model()
 
     def to_representation(self, instance):
@@ -342,6 +343,12 @@ class CostBreakDownSerializer(serializers.Serializer):
     total_price = serializers.FloatField(required=False, allow_null=True)
 
 
+class WritingStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProposalWriting
+        fields = ('status',)
+
+
 class ProposalWritingSerializer(ContentTypeSerializerMixin):
     writing_groups = GroupByEstimateSerializers('writing', many=True, allow_null=True, required=False)
     cost_breakdown = CostBreakDownSerializer(many=True, allow_null=True, required=False)
@@ -349,6 +356,7 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
     class Meta:
         model = ProposalWriting
         fields = '__all__'
+        read_only_fields = ['status']
         extra_kwargs = extra_kwargs_for_base_model()
 
     def create_group(self, writing_groups, instance):
