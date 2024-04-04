@@ -26,7 +26,7 @@ from sales.filters.invoice import InvoiceFilter
 
 
 class InvoiceListView(CompanyFilterMixin, generics.ListCreateAPIView):
-    queryset = Invoice.objects.all()
+    queryset = Invoice.objects.all().order_by('-modified_date')
     serializer_class = InvoiceSerializer
     permission_classes = [permissions.IsAuthenticated & InvoicePermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)

@@ -277,6 +277,7 @@ url_proposal = [
     path('proposal-writing/duplicate/', proposal.duplicate_proposal),
     path('proposal-writing-compact/', proposal.ProposalWritingCompactList.as_view()),
     path('proposal-writing/<int:pk>/', proposal.ProposalWritingDetail.as_view(), name='detail-proposal'),
+    path('proposal-writing/<int:pk>/status/', proposal.status_writing),
     path('proposal-writing/<int:pk>/change-order/', change_order.ChangeOrderFromProposalWritingList.as_view()),
     # path('proposal-writing/<int:pk>/formatting/', proposal.proposal_formatting_view),
     path('proposal-writing/<int:pk>/formatting-v2/', proposal.proposal_formatting_v2_view),

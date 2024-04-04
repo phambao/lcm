@@ -122,7 +122,7 @@ class CompanyBuilder(models.Model):
 
     logo = models.CharField(blank=True, max_length=128)
     description = models.CharField(blank=True, max_length=128)
-    company_name = models.CharField(blank=True, max_length=128)
+    company_name = models.CharField(blank=True, max_length=256)
     address = models.CharField(blank=True, max_length=128)
     # field = models.CharField(max_length=128, choices=FieldChoices.choices, default=FieldChoices.EDUCATION, blank=True)
     country = models.CharField(blank=True, max_length=128, null=True)

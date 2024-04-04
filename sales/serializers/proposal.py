@@ -308,11 +308,11 @@ class ProposalWritingCompactSerializer(ContentTypeSerializerMixin):
     class Meta:
         model = ProposalWriting
         fields = '__all__'
+        read_only_fields = ['status']
         extra_kwargs = extra_kwargs_for_base_model()
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['status'] = instance.get_status()
         data['house_address'] = ''
         data['customer_contact'] = []
         if instance.lead:
@@ -343,6 +343,12 @@ class CostBreakDownSerializer(serializers.Serializer):
     total_price = serializers.FloatField(required=False, allow_null=True)
 
 
+class WritingStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProposalWriting
+        fields = ('status',)
+
+
 class ProposalWritingSerializer(ContentTypeSerializerMixin):
     writing_groups = GroupByEstimateSerializers('writing', many=True, allow_null=True, required=False)
     cost_breakdown = CostBreakDownSerializer(many=True, allow_null=True, required=False)
@@ -350,6 +356,7 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
     class Meta:
         model = ProposalWriting
         fields = '__all__'
+        read_only_fields = ['status']
         extra_kwargs = extra_kwargs_for_base_model()
 
     def create_group(self, writing_groups, instance):
@@ -378,13 +385,13 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
             proposal_formatting.has_signed = False
             proposal_formatting.print_date = None
             proposal_formatting.signature = ''
+            proposal_formatting.sign_date = None
             proposal_formatting.save()
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         user = get_request().user
-        data['status'] = instance.get_status()
         data['permissions'] = {
             'internal_view': user.check_perm('internal_view'),
             'client_view': user.check_perm('client_view')
@@ -433,6 +440,7 @@ class FormatEstimateSerializer(serializers.ModelSerializer):
         data['total_price'] = instance.get_total_prices()
         data['unit_price'] = data['total_price'] / data['quantity']
         data['description'] = data['contract_description']
+        data['formulas'] = FormatFormulaSerializer(instance.get_formula().order_by('order'), many=True).data
         del data['contract_description']
         return data
 
@@ -440,27 +448,64 @@ class FormatEstimateSerializer(serializers.ModelSerializer):
 class FormatFormulaSerializer(serializers.ModelSerializer):
     class Meta:
         model = apps.get_model('sales', 'POFormula')
-        fields = ('id', 'name', 'quantity', 'unit', 'unit_price')
+        fields = ('id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'unit', 'order',
+                  'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        data['catalog_name'] = instance.get_catalog()['name']
         data['total_price'] = instance.total_cost
         return data
 
 
+Contact = apps.get_model('sales', 'Contact')
+GroupTemplate = apps.get_model('sales', 'GroupTemplate')
+POFormula = apps.get_model('sales', 'POFormula')
+EstimateTemplate = apps.get_model('sales', 'EstimateTemplate')
+
+
+class GroupTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupTemplate
+        fields = ('id', 'name', 'order', 'is_single', 'items', 'is_formula', 'type')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.is_formula:
+            formulas = POFormula.objects.filter(pk__in=instance.items)
+            data['items'] = FormatFormulaSerializer(formulas, many=True).data
+        else:
+            estimates = EstimateTemplate.objects.filter(pk__in=instance.items)
+            data['items'] = FormatEstimateSerializer(estimates, many=True).data
+        return data
+
+
 class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
+    template_groups = GroupTemplateSerializer('proposal', many=True, allow_null=True, required=False)
 
     class Meta:
         model = ProposalFormatting
-        fields = ('id', 'show_format_fields', 'contacts', 'intro', 'default_note', 'signature',
-                  'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact', 'sign_date')
+        fields = ('id', 'show_format_fields', 'show_formula_fields', 'contacts', 'intro', 'default_note', 'signature',
+                  'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact', 'sign_date',
+                  'template_groups', 'active_tab')
         read_only_fields = ['sign_date']
 
+    def create(self, validated_data):
+        template_groups = pop(validated_data, 'template_groups', [])
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        template_groups = pop(validated_data, 'template_groups', [])
+        instance.template_groups.all().delete()
+        for idx, group in enumerate(template_groups):
+            serializer = GroupTemplateSerializer(data=group)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(proposal=instance, order=idx)
+        return super().update(instance, validated_data)
+
     def to_representation(self, instance):
-        Contact = apps.get_model('sales', 'Contact')
         data = super().to_representation(instance)
         estimates = instance.proposal_writing.get_checked_estimate().order_by('format_order')
-        formulas = instance.proposal_writing.get_checked_formula()
         data['estimates'] = FormatEstimateSerializer(estimates, many=True).data
         data['total_price'] = sum([value['total_price'] for value in data['estimates']])
         data['contacts'] = ContactsSerializer(Contact.objects.filter(id__in=instance.contacts),
@@ -469,7 +514,6 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
             data['primary_contact'] = instance.contacts[0] if instance.contacts else None
         data['lead'] = instance.proposal_writing.lead.get_info_for_proposal_formatting() if instance.proposal_writing.lead else None
         data['proposal_progress'] = instance.proposal_writing.additional_information
-        # data['formulas'] = FormatFormulaSerializer(formulas, many=True).data
         return data
 
 
