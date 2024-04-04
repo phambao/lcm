@@ -457,16 +457,52 @@ class FormatFormulaSerializer(serializers.ModelSerializer):
         return data
 
 
+Contact = apps.get_model('sales', 'Contact')
+GroupTemplate = apps.get_model('sales', 'GroupTemplate')
+POFormula = apps.get_model('sales', 'POFormula')
+EstimateTemplate = apps.get_model('sales', 'EstimateTemplate')
+
+
+class GroupTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupTemplate
+        fields = ('id', 'name', 'order', 'is_single', 'items', 'is_formula')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.is_formula:
+            formulas = POFormula.objects.filter(pk__in=instance.items)
+            data['items'] = FormatFormulaSerializer(formulas, many=True).data
+        else:
+            estimates = EstimateTemplate.objects.filter(pk__in=instance.items)
+            data['items'] = FormatEstimateSerializer(estimates, many=True).data
+        return data
+
+
 class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
+    template_groups = GroupTemplateSerializer('proposal', many=True, allow_null=True, required=False)
 
     class Meta:
         model = ProposalFormatting
         fields = ('id', 'show_format_fields', 'show_formula_fields', 'contacts', 'intro', 'default_note', 'signature',
-                  'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact', 'sign_date')
+                  'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact', 'sign_date',
+                  'template_groups', 'active_tab')
         read_only_fields = ['sign_date']
 
+    def create(self, validated_data):
+        template_groups = pop(validated_data, 'template_groups', [])
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        template_groups = pop(validated_data, 'template_groups', [])
+        instance.template_groups.all().delete()
+        for idx, group in enumerate(template_groups):
+            serializer = GroupTemplateSerializer(data=group)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(proposal=instance, order=idx)
+        return super().update(instance, validated_data)
+
     def to_representation(self, instance):
-        Contact = apps.get_model('sales', 'Contact')
         data = super().to_representation(instance)
         estimates = instance.proposal_writing.get_checked_estimate().order_by('format_order')
         formulas = instance.proposal_writing.get_checked_formula()

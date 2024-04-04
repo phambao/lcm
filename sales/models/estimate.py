@@ -93,8 +93,6 @@ class POFormula(BaseModel):
     round_up = models.JSONField(blank=True, default=dict, null=True)
     order_quantity = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=None, null=True)
     selected_description = models.IntegerField(blank=True, default=None, null=True)
-    group_template = models.ForeignKey('sales.GroupTemplate', on_delete=models.SET_NULL,
-                                        related_name='group_template', null=True, blank=True)
 
     def parse_material(self):
         primary_key = eval(self.material)
@@ -278,6 +276,11 @@ class GroupTemplate(BaseModel):
     """
     name = models.CharField(blank=True, max_length=128)
     order = models.IntegerField(blank=True, default=0)
+    proposal = models.ForeignKey("sales.ProposalFormatting", on_delete=models.CASCADE,
+                                 blank=True, null=True, related_name='template_groups')
+    is_single = models.BooleanField(blank=True, null=True)
+    items = ArrayField(models.IntegerField(), default=list, blank=True, null=True)
+    is_formula = models.BooleanField(blank=True, default=False)
 
 
 class EstimateTemplate(BaseModel):
@@ -303,8 +306,6 @@ class EstimateTemplate(BaseModel):
                                default=list, blank=True, null=True)  # change order
     quantity = models.JSONField(blank=True, default=None, null=True)
     unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.CASCADE, null=True, blank=True)
-    group_template = models.ForeignKey('sales.GroupTemplate', on_delete=models.SET_NULL,
-                                       related_name='group', null=True, blank=True)
 
     def __str__(self):
         return self.name

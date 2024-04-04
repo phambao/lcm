@@ -210,7 +210,7 @@ class POFormulaSerializer(ContentTypeSerializerMixin):
 
     class Meta:
         model = POFormula
-        exclude  = ['group_template']
+        fields = '__all__'
         extra_kwargs = {**{'id': {'read_only': False, 'required': False}}, **extra_kwargs_for_base_model()}
         read_only_fields = ('assemble', 'group')
 
@@ -597,7 +597,7 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
 
     class Meta:
         model = EstimateTemplate
-        exclude  = ['group_template']
+        fields = '__all__'
         extra_kwargs = {**{'id': {'read_only': False, 'required': False}}, **extra_kwargs_for_base_model()}
         read_only_fields = ('group_by_proposal', )
 
