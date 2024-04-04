@@ -441,7 +441,8 @@ class FormatEstimateSerializer(serializers.ModelSerializer):
 class FormatFormulaSerializer(serializers.ModelSerializer):
     class Meta:
         model = apps.get_model('sales', 'POFormula')
-        fields = ('id', 'name', 'quantity', 'unit', 'unit_price')
+        fields = ('id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'unit',
+                  'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
