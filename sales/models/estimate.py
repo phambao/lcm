@@ -6,7 +6,7 @@ from django.db.models import Sum
 from api.middleware import get_request
 
 from api.models import BaseModel
-from base.constants import DECIMAL_PLACE, MAX_DIGIT
+from base.constants import DECIMAL_PLACE, MAX_DIGIT, null, true, false
 from sales.models import Catalog
 
 
@@ -93,6 +93,8 @@ class POFormula(BaseModel):
     round_up = models.JSONField(blank=True, default=dict, null=True)
     order_quantity = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=None, null=True)
     selected_description = models.IntegerField(blank=True, default=None, null=True)
+    group_template = models.ForeignKey('sales.GroupTemplate', on_delete=models.SET_NULL,
+                                        related_name='group_template', null=True, blank=True)
 
     def parse_material(self):
         primary_key = eval(self.material)
@@ -106,6 +108,15 @@ class POFormula(BaseModel):
             return catalog.get_full_ancestor()
         except:
             return []
+
+    def get_catalog(self):
+        material = eval(self.material)
+        if material:
+            return material['levels'][0]
+        material = self.catalog_materials
+        if material[0]:
+            return material[0]
+        return {'name' : ''}
 
     def _parse_value(self, name, value):
         return {
@@ -261,6 +272,14 @@ class DescriptionLibrary(BaseModel):
     linked_description = models.TextField(verbose_name='Description', blank=True)
 
 
+class GroupTemplate(BaseModel):
+    """
+    Used for proposal template
+    """
+    name = models.CharField(blank=True, max_length=128)
+    order = models.IntegerField(blank=True, default=0)
+
+
 class EstimateTemplate(BaseModel):
     class Meta:
         permissions = [('takeoff', 'Takeoff')]
@@ -284,6 +303,8 @@ class EstimateTemplate(BaseModel):
                                default=list, blank=True, null=True)  # change order
     quantity = models.JSONField(blank=True, default=None, null=True)
     unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.CASCADE, null=True, blank=True)
+    group_template = models.ForeignKey('sales.GroupTemplate', on_delete=models.SET_NULL,
+                                       related_name='group', null=True, blank=True)
 
     def __str__(self):
         return self.name

@@ -433,6 +433,7 @@ class FormatEstimateSerializer(serializers.ModelSerializer):
         data['total_price'] = instance.get_total_prices()
         data['unit_price'] = data['total_price'] / data['quantity']
         data['description'] = data['contract_description']
+        data['formulas'] = FormatFormulaSerializer(instance.get_formula(), many=True).data
         del data['contract_description']
         return data
 
@@ -444,8 +445,7 @@ class FormatFormulaSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        material = eval(instance.material) if instance.material else instance.catalog_materials
-        data['catalog_name'] = material['levels'][0]['name']
+        data['catalog_name'] = instance.get_catalog()['name']
         data['total_price'] = instance.total_cost
         return data
 
@@ -471,7 +471,7 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
             data['primary_contact'] = instance.contacts[0] if instance.contacts else None
         data['lead'] = instance.proposal_writing.lead.get_info_for_proposal_formatting() if instance.proposal_writing.lead else None
         data['proposal_progress'] = instance.proposal_writing.additional_information
-        data['formulas'] = FormatFormulaSerializer(formulas, many=True).data
+        # data['formulas'] = FormatFormulaSerializer(formulas, many=True).data
         return data
 
 
