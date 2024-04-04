@@ -455,7 +455,7 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProposalFormatting
-        fields = ('id', 'show_format_fields', 'contacts', 'intro', 'default_note', 'signature',
+        fields = ('id', 'show_format_fields', 'show_formula_fields', 'contacts', 'intro', 'default_note', 'signature',
                   'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact', 'sign_date')
         read_only_fields = ['sign_date']
 
