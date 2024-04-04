@@ -81,7 +81,6 @@ url_base = [
     path('company/trades/<int:pk>/', CompanyTradesSerializerDetailGenericView.as_view()),
     path('company/timezone/', get_timezone),
     path('dealer/info/<str:period>/', get_data_dealer),
-    # path('logout/', logout_view, name='logout'),
 
 ]
 # Create schema view for Swagger ------------------------------------------------

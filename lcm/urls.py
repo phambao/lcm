@@ -21,7 +21,7 @@ from drf_yasg import openapi
 from django.conf import settings
 from django.conf.urls.static import static
 
-from base.views.dealers import DealerLoginView, dashboard, logout_view
+from base.views.dealers import DealerLoginView, dashboard, logout_view, orders
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -40,6 +40,7 @@ urlpatterns = [
     path("dealer/login/", DealerLoginView.as_view(), name="dealer-login"),
     path("dealer/logout/", logout_view, name="dealer-logout"),
     path("dealer/", dashboard, name="dealer-dashboard"),
+    path("dealer/orders/", orders, name="dealer-orders"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
