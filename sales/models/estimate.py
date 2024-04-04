@@ -114,7 +114,7 @@ class POFormula(BaseModel):
         if material:
             return material['levels'][0]
         material = self.catalog_materials
-        if material[0]:
+        if len(material):
             return material[0]
         return {'name' : ''}
 
@@ -349,7 +349,7 @@ class EstimateTemplate(BaseModel):
                 filtered = formulas.filter(name__exact=name)
                 if filtered:
                     value = filtered.first().quantity
-        return Decimal(value or 1)
+        return Decimal(value) or Decimal(1)
 
     def get_info(self):
         self.info = self.get_formula().aggregate(total_charge=Sum('charge'), unit_cost=Sum('cost'),
