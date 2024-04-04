@@ -385,6 +385,7 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
             proposal_formatting.has_signed = False
             proposal_formatting.print_date = None
             proposal_formatting.signature = ''
+            proposal_formatting.sign_date = None
             proposal_formatting.save()
         return super().update(instance, validated_data)
 
@@ -505,7 +506,6 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         estimates = instance.proposal_writing.get_checked_estimate().order_by('format_order')
-        formulas = instance.proposal_writing.get_checked_formula()
         data['estimates'] = FormatEstimateSerializer(estimates, many=True).data
         data['total_price'] = sum([value['total_price'] for value in data['estimates']])
         data['contacts'] = ContactsSerializer(Contact.objects.filter(id__in=instance.contacts),
@@ -514,7 +514,6 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
             data['primary_contact'] = instance.contacts[0] if instance.contacts else None
         data['lead'] = instance.proposal_writing.lead.get_info_for_proposal_formatting() if instance.proposal_writing.lead else None
         data['proposal_progress'] = instance.proposal_writing.additional_information
-        # data['formulas'] = FormatFormulaSerializer(formulas, many=True).data
         return data
 
 

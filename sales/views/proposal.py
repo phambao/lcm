@@ -378,6 +378,8 @@ def proposal_formatting_public(request, pk):
     serializer.is_valid(raise_exception=True)
     proposal_template.print_date = serializer.validated_data['print_date']
     proposal_template.has_send_mail = True
+    proposal_template.sign_date = None
+    proposal_template.signature = ''
     proposal_template.save()
     proposal_writing.status = 'sent'
     proposal_writing.save(update_fields=['status'])
