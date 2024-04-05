@@ -75,10 +75,17 @@ class EstimateTemplateFilter(filters.FilterSet, FilterIDMixin):
     is_show = filters.BooleanFilter(field_name='is_show')
     id = filters.ModelMultipleChoiceFilter(queryset=EstimateTemplate.objects.filter(is_show=True), field_name='id',
                                            method='get_by_id')
+    assemble = filters.ModelMultipleChoiceFilter(queryset=Assemble.objects.filter(is_show=True), method='get_related_assembles')
 
     class Meta:
         model = EstimateTemplate
-        fields = ('name', 'created_date', 'modified_date')
+        fields = ('name', 'created_date', 'modified_date', 'assemble')
+
+    def get_related_assembles(self, query, name, value):
+        if value:
+            return query.filter(is_show=True, assembles__original__in=[v.id for v in value]).distinct()
+        else:
+            return query
 
 
 class AssembleFilter(filters.FilterSet, FilterIDMixin):
@@ -89,10 +96,17 @@ class AssembleFilter(filters.FilterSet, FilterIDMixin):
     modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
     id = filters.ModelMultipleChoiceFilter(queryset=Assemble.objects.filter(is_show=True), field_name='id',
                                            method='get_by_id')
+    formula = filters.ModelMultipleChoiceFilter(queryset=POFormula.objects.filter(is_show=True), method='get_related_formula')
 
     class Meta:
         model = Assemble
-        fields = ('name', 'created_date', 'formula_name', 'user_create', 'modified_date', 'id')
+        fields = ('name', 'created_date', 'formula_name', 'user_create', 'modified_date', 'id', 'formula')
+
+    def get_related_formula(self, query, name, value):
+        if value:
+            return query.filter(is_show=True, assemble_formulas__original__in=[v.id for v in value]).distinct()
+        else:
+            return query
 
 
 class DataEntryFilter(filters.FilterSet):
