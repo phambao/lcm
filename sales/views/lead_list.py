@@ -17,9 +17,10 @@ from base.utils import file_response
 from base.views.base import CompanyFilterMixin
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter
 from sales.serializers.proposal import PriceComparisonCompactSerializer, ProposalWritingByLeadSerializer
-from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter, CommunicationFilter
+from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter, CommunicationFilter, \
+    ActivitiesLogFilter
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, Photos, ContactTypeName, \
-    ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead, NoteTemplate, Communication, Status
+    ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead, NoteTemplate, Communication, Status, ActivitiesLog
 from ..serializers import lead_list
 from ..serializers.lead_list import PhotoSerializer, LeadDetailCreateSerializer
 
@@ -331,6 +332,14 @@ class CommunicationGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = CommunicationFilter
+
+
+class ActivitiesLogSerializerGenericView(CompanyFilterMixin, generics.ListAPIView):
+    queryset = ActivitiesLog.objects.all()
+    serializer_class = lead_list.ActivitiesLogSerializer
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = ActivitiesLogFilter
 
 
 @api_view(['DELETE'])

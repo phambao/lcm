@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.db.models import Subquery
 from django.db.models import F
+from django.utils import timezone
 from rest_framework import serializers
 
 from api.serializers.auth import UserCustomSerializer
@@ -15,7 +16,7 @@ from base.serializers import base
 from base.utils import pop, extra_kwargs_for_base_model
 from base.constants import true, null, false
 from base.views.base import remove_file
-from ..models import lead_schedule
+from ..models import lead_schedule, ActivitiesLog
 from ..models.lead_schedule import TagSchedule, ToDo, CheckListItems, Messaging, CheckListItemsTemplate, \
     TodoTemplateChecklistItem, DataType, ItemFieldDropDown, TodoCustomField, CustomFieldScheduleSetting, \
     CustomFieldScheduleDailyLogSetting, DailyLogCustomField, ItemFieldDropDownDailyLog, \
@@ -312,12 +313,28 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         user = get_user_model().objects.filter(pk__in=[at['id'] for at in assigned_to])
         todo_create.tags.add(*tags_objects)
         todo_create.assigned_to.add(*user)
+        duration = 0
+        if validated_data['sync_due_date']:
+            duration = timezone.now() - validated_data['sync_due_date']
+            duration = duration.days
+            if duration == 0:
+                duration = 1
+        activities_log = ActivitiesLog.objects.create(
+            title=validated_data['title'],
+            type=ActivitiesLog.Type.TODO,
+            duration=duration,
+            start_date=timezone.now(),
+            end_date=validated_data['sync_due_date'],
+            lead=validated_data['lead_list'],
+            type_id=todo_create.id
+        )
+        activities_log.assigned_to.add(*user)
 
         return todo_create
 
     def update(self, instance, data):
-        # check_list = pop(data, 'check_list', [])
-        # messaging = pop(data, 'messaging', [])
+        check_list = pop(data, 'check_list', [])
+        messaging = pop(data, 'messaging', [])
         todo_tags = pop(data, 'tags', [])
         assigned_to = pop(data, 'assigned_to', [])
         to_do = lead_schedule.ToDo.objects.filter(pk=instance.pk)
@@ -334,6 +351,20 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         to_do.assigned_to.clear()
         to_do.assigned_to.add(*user)
         instance.refresh_from_db()
+
+        activities_log = ActivitiesLog.objects.get(type_id=instance.id, type=ActivitiesLog.Type.TODO)
+        activities_log.title = instance.title
+        duration = activities_log.duration
+        if instance.sync_due_date:
+            data_duration = instance.sync_due_date - activities_log.start_date
+            duration = data_duration.days
+            if data_duration == 0:
+                duration = 1
+        activities_log.duration = duration
+        activities_log.end_date = instance.sync_due_date
+        activities_log.assigned_to.clear()
+        activities_log.assigned_to.add(*user)
+        activities_log.save()
         return instance
 
     def to_representation(self, instance):
@@ -433,6 +464,22 @@ class DailyLogSerializer(serializers.ModelSerializer):
             data_insert.append(temp)
         DailyLogCustomField.objects.bulk_create(data_insert)
 
+        duration = 0
+        if validated_data['date']:
+            duration = timezone.now() - validated_data['date']
+            duration = duration.days
+            if duration == 0:
+                duration = 1
+        activities_log = ActivitiesLog.objects.create(
+            title=validated_data['title'],
+            type=ActivitiesLog.Type.DAILY_LOG,
+            duration=duration,
+            start_date=timezone.now(),
+            end_date=validated_data['date'],
+            lead=lead_list,
+            type_id=daily_log_create.id
+        )
+
         return daily_log_create
 
     def update(self, instance, data):
@@ -475,6 +522,19 @@ class DailyLogSerializer(serializers.ModelSerializer):
             data_insert.append(temp)
         DailyLogCustomField.objects.bulk_create(data_insert)
         instance.refresh_from_db()
+
+        activities_log = ActivitiesLog.objects.get(type_id=instance.id, type=ActivitiesLog.Type.DAILY_LOG)
+        activities_log.title = instance.title
+        duration = 1
+        if data['date']:
+            duration = instance.date - activities_log.start_date
+            duration = duration.days
+            if duration == 0:
+                duration = 1
+        activities_log.duration = duration
+        activities_log.end_date = instance.date
+        activities_log.assigned_to.clear()
+        activities_log.save()
         return instance
 
     def to_representation(self, instance):
@@ -848,6 +908,20 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
             data_create.append(temp)
         ScheduleEventShift.objects.bulk_create(data_create)
 
+        phase = None
+        if schedule_event_create.phase_setting:
+            phase = schedule_event_create.phase_setting.label
+        activities_log = ActivitiesLog.objects.create(
+            title=validated_data['event_title'],
+            type=ActivitiesLog.Type.EVENT,
+            duration=validated_data['due_days'],
+            start_date=validated_data['start_day'],
+            end_date=validated_data['end_day'],
+            lead=lead_list,
+            type_id=schedule_event_create.id,
+            phase=phase
+        )
+        activities_log.assigned_to.add(*user)
         return schedule_event_create
 
     def update(self, instance, data):
@@ -934,6 +1008,14 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
                 **data_create_shift
             )
         instance.refresh_from_db()
+
+        activities_log = ActivitiesLog.objects.get(type_id=instance.id, type=ActivitiesLog.Type.EVENT)
+        activities_log.title = instance.event_title
+        activities_log.duration = instance.due_days
+        activities_log.end_date = instance.end_day
+        activities_log.assigned_to.clear()
+        activities_log.assigned_to.add(*user)
+        activities_log.save()
         return instance
 
     def to_representation(self, instance):

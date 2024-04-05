@@ -206,6 +206,40 @@ class Activities(BaseModel):
         LeadDetail, on_delete=models.CASCADE, related_name='activities')
 
 
+class ActivitiesLog(BaseModel):
+    class Meta:
+        db_table = 'activities_log'
+        ordering = ['-start_date']
+
+    class Status(models.TextChoices):
+        NONE = 'none', 'None'
+        UPCOMING = 'upcoming', 'Upcoming'
+        COMPLETED = 'completed', 'Completed'
+        IN_PROGRESS = 'in_progress', 'In Progress'
+        IN_COMPLETE = 'in_complete', 'In Complete'
+        PAST_DUE = 'past_due', 'Past Due'
+        UNCONFIRMED = 'unconfirmed', 'Unconfirmed'
+
+    class Type(models.TextChoices):
+        EVENT = 'event', 'Event'
+        TODO = 'todo', 'Todo'
+        DAILY_LOG = 'daily_log', 'Daily Log'
+        CHANGE_ORDER = 'change_order', 'Change Order'
+
+    title = models.CharField(max_length=128, blank=True)
+    type = models.CharField(max_length=128, choices=Type.choices, default=Type.EVENT)
+    phase = models.CharField(max_length=128, blank=True)
+    duration = models.IntegerField(null=True, blank=True)
+    status = models.CharField(
+        max_length=128, choices=Status.choices, default=Status.NONE)
+    start_date = models.DateTimeField(blank=True, null=True)
+    end_date = models.DateTimeField(blank=True, null=True)
+    assigned_to = models.ManyToManyField(get_user_model(), related_name='activities_log_assigned_to',
+                                         blank=True)
+    lead = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='activities_log_lead')
+    type_id = models.IntegerField(null=True, blank=True)
+
+
 class Photos(BaseModel):
     class Meta:
         db_table = 'photos'
