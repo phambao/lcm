@@ -458,11 +458,8 @@ class AssembleSerializer(ContentTypeSerializerMixin):
             try:
                 group = GroupTemplate.objects.filter(items__contains=[old_pk], is_formula=True)
                 for g in group:
-                    print("old", g.items)
                     g.items.remove(old_pk)
-                    print('remove', g.items)
                     g.items.append(new_pk)
-                    print('add', g.items)
                     g.save()
             except DataError:
                 pass
