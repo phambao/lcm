@@ -4,6 +4,7 @@ from django.db import IntegrityError
 from django.apps import apps
 from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
+from django.db.utils import DataError
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -454,11 +455,14 @@ class AssembleSerializer(ContentTypeSerializerMixin):
             po.is_valid(raise_exception=True)
             formula = po.save(assemble=instance, is_show=False)
             new_pk = formula.id
-            group = GroupTemplate.objects.filter(items__contains=[old_pk])
-            for g in group:
-                g.items.remove(old_pk)
-                g.items.append(new_pk)
-                g.save()
+            try:
+                group = GroupTemplate.objects.filter(items__contains=[old_pk], is_formula=True)
+                for g in group:
+                    g.items.remove(old_pk)
+                    g.items.append(new_pk)
+                    g.save()
+            except DataError:
+                pass
 
     def create(self, validated_data):
         po_formulas = pop(validated_data, 'assemble_formulas', [])
@@ -652,11 +656,14 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
         self.create_data_view(data_views, instance)
         self.create_material_view(material_views, instance)
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
-        group = GroupTemplate.objects.filter(items__contains=[old_pk])
-        for g in group:
-            g.items.remove(old_pk)
-            g.items.append(new_pk)
-            g.save()
+        try:
+            group = GroupTemplate.objects.filter(items__contains=[old_pk], is_formula=False)
+            for g in group:
+                g.items.remove(old_pk)
+                g.items.append(new_pk)
+                g.save()
+        except DataError:
+            pass
 
         from sales.views.estimate import EstimateTemplateList
         if isinstance(self.context.get('view'), EstimateTemplateList):
