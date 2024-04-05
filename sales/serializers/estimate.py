@@ -455,15 +455,14 @@ class AssembleSerializer(ContentTypeSerializerMixin):
             po.is_valid(raise_exception=True)
             formula = po.save(assemble=instance, is_show=False)
             new_pk = formula.id
-            group = []
             try:
                 group = GroupTemplate.objects.filter(items__contains=[old_pk], is_formula=True)
+                for g in group:
+                    g.items.remove(old_pk)
+                    g.items.append(new_pk)
+                    g.save()
             except DataError:
                 pass
-            for g in group:
-                g.items.remove(old_pk)
-                g.items.append(new_pk)
-                g.save()
 
     def create(self, validated_data):
         po_formulas = pop(validated_data, 'assemble_formulas', [])
@@ -657,15 +656,14 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
         self.create_data_view(data_views, instance)
         self.create_material_view(material_views, instance)
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
-        group = []
         try:
             group = GroupTemplate.objects.filter(items__contains=[old_pk], is_formula=False)
+            for g in group:
+                g.items.remove(old_pk)
+                g.items.append(new_pk)
+                g.save()
         except DataError:
             pass
-        for g in group:
-            g.items.remove(old_pk)
-            g.items.append(new_pk)
-            g.save()
 
         from sales.views.estimate import EstimateTemplateList
         if isinstance(self.context.get('view'), EstimateTemplateList):
