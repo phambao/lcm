@@ -23,12 +23,13 @@ from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter,
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, POFormula, \
     ProposalFormattingSign, ProposalSetting
 from sales.models.estimate import EstimateTemplate
+from sales.models.proposal import ProposalStatus
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateForFormattingSerializer, EstimateTemplateForInvoiceSerializer, POFormulaDataSerializer, POFormulaForInvoiceSerializer
 from sales.serializers.proposal import ProposalFormattingTemplateMinorSerializer, ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
     ProposalWritingCompactSerializer, ProposalTemplateHtmlCssSerializer, ProposalWritingDataSerializer, \
-    ProposalFormattingTemplateSignSerializer, ProposalFormattingTemplateSignsSerializer, ProposalSettingSerializer
+    ProposalFormattingTemplateSignSerializer, ProposalFormattingTemplateSignsSerializer, ProposalSettingSerializer, WritingStatusSerializer
 from sales.views.estimate import ALL_ESTIMATE_PREFETCH_RELATED
 
 
@@ -224,7 +225,7 @@ def get_items(request, pk):
 def proposal_formatting_view(request, pk):
     proposal_writing = get_object_or_404(ProposalWriting.objects.filter(company=get_request().user.company),
                                          pk=pk)
-    all_writing_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
+    all_writing_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'unit',
                          'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario']
     all_estimate_fields = ['id', 'name', 'quantity', 'unit', 'total_charge']
     if request.method == 'GET':
@@ -253,8 +254,8 @@ def proposal_formatting_view(request, pk):
 @api_view(['GET', 'PUT'])
 def proposal_formatting_v2_view(request, pk):
     proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
-    # all_writing_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
-    #                      'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario']
+    all_formula_fields = ['id', 'name', 'linked_description', 'formula', 'quantity', 'markup', 'charge', 'material', 'unit',
+                         'unit_price', 'cost', 'total_cost', 'gross_profit', 'description_of_formula', 'formula_scenario']
     company = proposal_writing.company
     try:
         proposal_setting = ProposalSetting.objects.get(company=company)
@@ -267,20 +268,22 @@ def proposal_formatting_v2_view(request, pk):
         )
     company_data = CompanySerializer(company).data
     all_format_fields = ['id', 'name', 'description', 'unit', 'quantity', 'total_price', 'unit_price']
+    data = {'all_format_fields': all_format_fields, 'company': company_data,
+            'all_formula_fields': all_formula_fields,
+            'status': proposal_writing.status,
+            'proposal_setting': ProposalSettingSerializer(proposal_setting).data}
     if request.method == 'GET':
         try:
             proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
         except ProposalFormatting.DoesNotExist:
             proposal_formatting = ProposalFormatting.objects.create(proposal_writing=proposal_writing)
         serializer = ProposalFormattingTemplateMinorSerializer(proposal_formatting, context={'request': request})
-        return Response(status=status.HTTP_200_OK, data={**serializer.data,
-                                                         **{'all_format_fields': all_format_fields, 'company': company_data,
-                                                            'status': proposal_writing.get_status(),
-                                                            'proposal_setting': ProposalSettingSerializer(proposal_setting).data}})
+        return Response(status=status.HTTP_200_OK, data={**serializer.data, **data})
 
     if request.method == 'PUT':
         proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
         estimate_params = request.data.get('estimates', [])
+        formula_params = request.data.get('formulas', [])
         query_set = EstimateTemplate.objects.filter(id__in=estimate_params)
         for obj in query_set:
             try:
@@ -289,13 +292,18 @@ def proposal_formatting_v2_view(request, pk):
                 pass
         EstimateTemplate.objects.bulk_update(query_set, ['format_order'])
 
+        query_set = POFormula.objects.filter(id__in=formula_params)
+        for obj in query_set:
+            try:
+                obj.order = formula_params.index(obj.pk)
+            except ValueError:
+                pass
+        POFormula.objects.bulk_update(query_set, ['order'])
+
         serializer = ProposalFormattingTemplateMinorSerializer(proposal_formatting, data=request.data, context={'request': request})
         serializer.is_valid()
         serializer.save()
-        return Response(status=status.HTTP_200_OK, data={**serializer.data,
-                                                         **{'all_format_fields': all_format_fields, 'company': company_data,
-                                                            'status': proposal_writing.get_status(),
-                                                            'proposal_setting': ProposalSettingSerializer(proposal_setting).data}})
+        return Response(status=status.HTTP_200_OK, data={**serializer.data, **data})
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -370,7 +378,11 @@ def proposal_formatting_public(request, pk):
     serializer.is_valid(raise_exception=True)
     proposal_template.print_date = serializer.validated_data['print_date']
     proposal_template.has_send_mail = True
+    proposal_template.sign_date = None
+    proposal_template.signature = ''
     proposal_template.save()
+    proposal_writing.status = 'sent'
+    proposal_writing.save(update_fields=['status'])
     contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts).distinct()
     for contact in contacts:
         url = f'{settings.BASE_URL}{request.data["path"]}'
@@ -407,6 +419,8 @@ def proposal_sign(request, pk):
             proposal_template.signature = signature
             proposal_template.sign_date = timezone.now()
             proposal_template.save(update_fields=['has_signed', 'signature', 'sign_date'])
+            proposal_writing.status = 'approved'
+            proposal_writing.save(update_fields=['status'])
             return Response(status=status.HTTP_200_OK, data={'data': 'Success'})
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={'data': 'Fail'})
@@ -476,3 +490,15 @@ def proposal_setting_field(request):
         serializer.save()
         return Response(status=status.HTTP_200_OK, data=serializer.data)
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([permissions.IsAuthenticated & ProposalPermissions])
+def status_writing(request, pk):
+    proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
+    if request.method == 'PUT':
+        serializer = WritingStatusSerializer(instance=proposal_writing, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+    status = proposal_writing.status
+    return Response(status=200, data={'status': status})

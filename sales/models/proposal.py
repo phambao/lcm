@@ -73,6 +73,12 @@ class PriceComparison(BaseModel):
         return poformulas
 
 
+class ProposalStatus(models.TextChoices):
+    DRAFT = 'draft', 'Draft'
+    SENT = 'sent', 'Send'
+    APPROVED = 'approved', 'Approved'
+
+
 class ProposalWriting(BaseModel):
     name = models.CharField(max_length=128)
     budget = models.DecimalField(blank=True, default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, null=True)
@@ -104,23 +110,13 @@ class ProposalWriting(BaseModel):
     additional_information = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
     lead = models.ForeignKey('sales.LeadDetail', on_delete=models.SET_NULL, blank=True, null=True, related_name='proposals')
+    status = models.CharField(max_length=16, choices=ProposalStatus.choices, default=ProposalStatus.DRAFT)
 
     class Meta:
         permissions = [('client_view', 'Client View'), ('internal_view', 'Internal View')]
 
     def __str__(self):
         return self.name
-
-    def get_status(self):
-        status = 'Draft'
-        try:
-            if self.proposal_formatting.has_send_mail:
-                status = 'Sent'
-            if self.proposal_formatting.has_signed:
-                status = 'Completed'
-        except:  # RelatedObjectDoesNotExist
-            pass
-        return status
 
     def _get_poformula(self):
         groups = self.writing_groups.all()
@@ -194,6 +190,7 @@ class ProposalFormatting(BaseModel):
     show_writing_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
     show_estimate_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
     show_format_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
+    show_formula_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
     has_send_mail = models.BooleanField(default=False, blank=True)
     has_signed = models.BooleanField(default=False, blank=True)
     element = models.TextField(blank=True, null=True, default='')
@@ -209,6 +206,7 @@ class ProposalFormatting(BaseModel):
     otp = models.CharField(max_length=8, blank=True, default='', null=True)
     signature = models.CharField(max_length=256, blank=True, default='')
     sign_date = models.DateTimeField(default=None, blank=True, null=True)
+    active_tab = models.CharField(max_length=128, blank=True, default='')
 
 
 class ProposalFormattingConfig(BaseModel):

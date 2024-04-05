@@ -4,6 +4,7 @@ from django.db import IntegrityError
 from django.apps import apps
 from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
+from django.db.utils import DataError
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -14,7 +15,7 @@ from base.tasks import activity_log
 from base.utils import pop, extra_kwargs_for_base_model
 from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, RoundUpActionChoice, RoundUpChoice, \
-    UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView, MaterialView
+    UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView, MaterialView, GroupTemplate
 from sales.serializers import ContentTypeSerializerMixin
 from sales.serializers.catalog import CatalogEstimateSerializer, DataPointForLinkDescription
 
@@ -448,10 +449,20 @@ class AssembleSerializer(ContentTypeSerializerMixin):
                 po_formula['created_from'] = po_formula['id']
             if not po_formula['formula_for_data_view']:
                 po_formula['formula_for_data_view'] = po_formula.get('id')
+            old_pk = po_formula['id']
             del po_formula['id']
             po = POFormulaSerializer(data=po_formula, context=self.context)
             po.is_valid(raise_exception=True)
-            po.save(assemble=instance, is_show=False)
+            formula = po.save(assemble=instance, is_show=False)
+            new_pk = formula.id
+            try:
+                group = GroupTemplate.objects.filter(items__contains=[old_pk], is_formula=True)
+                for g in group:
+                    g.items.remove(old_pk)
+                    g.items.append(new_pk)
+                    g.save()
+            except DataError:
+                pass
 
     def create(self, validated_data):
         po_formulas = pop(validated_data, 'assemble_formulas', [])
@@ -636,14 +647,23 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
         data_entries = pop(validated_data, 'data_entries', [])
         material_views = pop(validated_data, 'material_views', [])
         validated_data['unit_id'] = pop(validated_data, 'unit', {}).get('id')
-        pk = pop(validated_data, 'id', None)
+        old_pk = pop(validated_data, 'id', None)
 
         pk_assembles = self.create_assembles(assembles)
         instance = super().create(validated_data)
+        new_pk = instance.pk
         create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk)
         self.create_data_view(data_views, instance)
         self.create_material_view(material_views, instance)
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
+        try:
+            group = GroupTemplate.objects.filter(items__contains=[old_pk], is_formula=False)
+            for g in group:
+                g.items.remove(old_pk)
+                g.items.append(new_pk)
+                g.save()
+        except DataError:
+            pass
 
         from sales.views.estimate import EstimateTemplateList
         if isinstance(self.context.get('view'), EstimateTemplateList):

@@ -6,7 +6,7 @@ from django.db.models import Sum
 from api.middleware import get_request
 
 from api.models import BaseModel
-from base.constants import DECIMAL_PLACE, MAX_DIGIT
+from base.constants import DECIMAL_PLACE, MAX_DIGIT, null, true, false
 from sales.models import Catalog
 
 
@@ -51,6 +51,8 @@ class DataEntry(BaseModel):
 class RoundUpChoice(models.TextChoices):
     WHOLE_NUMBER = 'whole_number', 'Whole Number'
     INCREMENT = 'increment', 'Increment'
+    NONE = 'none', 'None'
+    CUSTOM = 'custom', 'Custom'
 
 
 class RoundUpActionChoice(models.TextChoices):
@@ -104,6 +106,15 @@ class POFormula(BaseModel):
             return catalog.get_full_ancestor()
         except:
             return []
+
+    def get_catalog(self):
+        material = eval(self.material)
+        if material:
+            return material['levels'][0]
+        material = self.catalog_materials
+        if len(material):
+            return material[0] or {'name' : ''}
+        return {'name' : ''}
 
     def _parse_value(self, name, value):
         return {
@@ -259,6 +270,20 @@ class DescriptionLibrary(BaseModel):
     linked_description = models.TextField(verbose_name='Description', blank=True)
 
 
+class GroupTemplate(BaseModel):
+    """
+    Used for proposal template
+    """
+    name = models.CharField(blank=True, max_length=128)
+    order = models.IntegerField(blank=True, default=0)
+    proposal = models.ForeignKey("sales.ProposalFormatting", on_delete=models.CASCADE,
+                                 blank=True, null=True, related_name='template_groups')
+    is_single = models.BooleanField(blank=True, null=True)
+    items = ArrayField(models.IntegerField(), default=list, blank=True, null=True)
+    is_formula = models.BooleanField(blank=True, default=False)
+    type = models.CharField(blank=True, max_length=128)
+
+
 class EstimateTemplate(BaseModel):
     class Meta:
         permissions = [('takeoff', 'Takeoff')]
@@ -326,7 +351,7 @@ class EstimateTemplate(BaseModel):
                 filtered = formulas.filter(name__exact=name)
                 if filtered:
                     value = filtered.first().quantity
-        return Decimal(value or 1)
+        return Decimal(value) or Decimal(1)
 
     def get_info(self):
         self.info = self.get_formula().aggregate(total_charge=Sum('charge'), unit_cost=Sum('cost'),
