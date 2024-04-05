@@ -13,6 +13,7 @@ from base.views.base import update_language_user, QuestionGenericView, QuestionD
     CompanyTradesSerializerDetailGenericView, get_timezone
 # Define path for Base App ------------------------------------------------------
 from base.views.country_state_city import address_search, detail_location
+from base.views.dealers import DealerLoginView, logout_view, dashboard, orders
 from base.views.payment import ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
     stripe_cancel_subscription, get_config, create_customer, create_subscription, cancel_subscription, \
     list_subscriptions, preview_invoice, update_subscription, webhook_received, PaymentHistoryStripePreview, \
@@ -83,6 +84,13 @@ url_base = [
     path('dealer/info/<str:period>/', get_data_dealer),
 
 ]
+
+url_dealer = [
+    path("dealer/login/", DealerLoginView.as_view(), name="dealer-login"),
+    path("dealer/logout/", logout_view, name="dealer-logout"),
+    path("dealer/", dashboard, name="dealer-dashboard"),
+    path("dealer/orders/", orders, name="dealer-orders"),
+]
 # Create schema view for Swagger ------------------------------------------------
 schema_view_base = get_schema_view(
     openapi.Info(
@@ -90,7 +98,7 @@ schema_view_base = get_schema_view(
         default_version='v1',
     ),
     patterns=[
-        path('api/base/', include(url_base))
+        path('api/base/', include(url_base)),
     ],
     public=True,
     permission_classes=[permissions.AllowAny],
