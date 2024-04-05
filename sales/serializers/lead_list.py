@@ -467,3 +467,9 @@ class CommunicationSerializer(serializers.ModelSerializer):
         validated_data['number'] = number
         communication_create = super().create(validated_data)
         return communication_create
+
+
+class ActivitiesLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.ActivitiesLog
+        fields = '__all__'

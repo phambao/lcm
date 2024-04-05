@@ -370,7 +370,7 @@ class DealerInformationAdmin(admin.ModelAdmin):
 
 
 class DealerCompanyAdmin(admin.ModelAdmin):
-    list_display = ('id', 'dealer', 'company', 'referral_code')
+    list_display = ('id', 'dealer', 'company', 'referral_code', 'bonus_commissions', 'created_at')
 
 
 admin.site.register(DealerCompany, DealerCompanyAdmin)

@@ -17,7 +17,7 @@ from base.views.payment import ProductPreviewDetail, ProductPreview, CreateCheck
     stripe_cancel_subscription, get_config, create_customer, create_subscription, cancel_subscription, \
     list_subscriptions, preview_invoice, update_subscription, webhook_received, PaymentHistoryStripePreview, \
     preview_subscription, check_promotion_code, update_customer, get_payment_history, create_subscription_v2, \
-    check_promotion_code_v2
+    check_promotion_code_v2, get_data_dealer
 
 url_base = [
     path('location-google/', address_search),
@@ -80,6 +80,8 @@ url_base = [
     path('company/trades/', CompanyTradesSerializerGenericView.as_view()),
     path('company/trades/<int:pk>/', CompanyTradesSerializerDetailGenericView.as_view()),
     path('company/timezone/', get_timezone),
+    path('dealer/info/<str:period>/', get_data_dealer),
+
 ]
 # Create schema view for Swagger ------------------------------------------------
 schema_view_base = get_schema_view(
