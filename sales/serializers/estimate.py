@@ -659,6 +659,7 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
         try:
             group = GroupTemplate.objects.filter(items__contains=[old_pk], is_formula=False)
             for g in group:
+                print(g.items)
                 g.items.remove(old_pk)
                 g.items.append(new_pk)
                 g.save()
