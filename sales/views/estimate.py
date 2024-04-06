@@ -417,27 +417,35 @@ def check_multiple_formula_action(request):
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def action_related_formulas(request, pk):
-    formula = get_object_or_404(POFormula.objects.all(), pk=pk)
+    current_formula = get_object_or_404(POFormula.objects.all(), pk=pk)
     if request.method == 'GET':
-        data = formula.get_related_formula()
+        data = current_formula.get_related_formula()
         return Response(status=status.HTTP_200_OK, data=data)
 
     if request.method == 'PUT':
-        serializer = POFormulaSerializer(formula, request.data, context={'request': request})
-        serializer.is_valid()
-        obj = serializer.save()
+        formula_payload = request.data.pop('formula', {})
+        assembles_params = request.data.pop('assembles', [])
+        estimate_params = request.data.pop('estimates', [])
+        writing_params = request.data.pop('writtings', [])
+        comparison_params = request.data.pop('comparisons', [])
 
-        # Update related formulas
-        related_formulas_ids = request.data.pop('related_formulas', [])
-        data = request.data
-        delist_column = ['group', 'assemble', 'is_show', 'id']
+        delist_column = ['group', 'assemble', 'is_show', 'id', 'original']
         for column in delist_column:
-            data.pop(column)
-        related_formulas = POFormula.objects.filter(pk__in=related_formulas_ids)
-        for formula in related_formulas:
-            serializer = POFormulaSerializer(formula, data, context={'request': request})
-            serializer.is_valid()
-            obj = serializer.save()
+            formula_payload.pop(column, None)
+
+        serializer = POFormulaSerializer(data=formula_payload)
+        serializer.is_valid()
+        new_obj = serializer.save(is_show=True)
+
+        assembles = Assemble.objects.filter(id__in=assembles_params)
+        formulas = POFormula.objects.filter(original=pk, assemble__in=assembles, is_show=False)
+        for formula in formulas:
+            serializer = POFormulaSerializer(instance=formula, data=formula_payload, context={'request': request})
+            serializer.is_valid(raise_exception=True)
+            serializer.save(assemble=formula.assemble, original=new_obj.pk, is_show=False, group=None)
+        if not current_formula.has_relation():
+            current_formula.delete()
+
         return Response(status=status.HTTP_200_OK)
 
     if request.method == 'DELETE':
