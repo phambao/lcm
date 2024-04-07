@@ -826,8 +826,8 @@ def check_update_data_entry(request, pk):
             formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=old_obj).exclude(po_formula__in=formulas)
             data = []
             for po in formula_with_data_entry:
-                if hasattr(po, 'po_formula'):
-                    po = po.po_formula
+                po = po.po_formula
+                if hasattr(po, 'formula_mentions'):
                     po.formula_mentions = re.sub(rf"\[(.*?)\]\({old_obj.pk}\)", rf"[\g<1>]({new_obj.pk})", po.formula_mentions)
                     data.append(po)
             formula_with_data_entry.update(data_entry=new_obj)
