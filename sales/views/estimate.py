@@ -414,6 +414,16 @@ def check_multiple_formula_action(request):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+def clone_object(query, Serializer, request):
+    new_data = {}
+    for obj in query:
+        data = Serializer(obj).data
+        serializer = Serializer(data=data, context={'request': request})
+        serializer.is_valid()
+        new_data[obj.id] = serializer.save(is_show=True, original=0)
+    return new_data
+
+
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def action_related_formulas(request, pk):
@@ -429,7 +439,7 @@ def action_related_formulas(request, pk):
         writing_params = request.data.pop('writtings', [])
         comparison_params = request.data.pop('comparisons', [])
 
-        delist_column = ['group', 'assemble', 'is_show', 'id', 'original']
+        delist_column = ['group', 'assemble', 'is_show', 'id', 'original', 'formula_for_data_view']
         for column in delist_column:
             formula_payload.pop(column, None)
 
@@ -437,15 +447,53 @@ def action_related_formulas(request, pk):
         serializer.is_valid()
         new_obj = serializer.save(is_show=True)
 
-        assembles = Assemble.objects.filter(id__in=assembles_params)
-        formulas = POFormula.objects.filter(original=pk, assemble__in=assembles, is_show=False)
-        for formula in formulas:
-            serializer = POFormulaSerializer(instance=formula, data=formula_payload, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            serializer.save(assemble=formula.assemble, original=new_obj.pk, is_show=False, group=None)
-        if not current_formula.has_relation():
-            current_formula.delete()
+        if not comparison_params and not writing_params and not estimate_params and assembles_params:
+            # update to assemble
+            assembles = Assemble.objects.filter(id__in=assembles_params)
+            formulas = POFormula.objects.filter(original=pk, assemble__in=assembles, is_show=False)
+            for formula in formulas:
+                serializer = POFormulaSerializer(instance=formula, data=formula_payload, context={'request': request})
+                serializer.is_valid(raise_exception=True)
+                serializer.save(assemble=formula.assemble, original=new_obj.pk, is_show=False, group=None)
+            if not current_formula.has_relation():
+                current_formula.delete()
 
+            return Response(status=status.HTTP_200_OK)
+
+        if not comparison_params and not writing_params and estimate_params and assembles_params:
+            # update to estimate
+            assembles = Assemble.objects.filter(id__in=assembles_params)
+            new_assembles = clone_object(assembles, AssembleSerializer, request)
+
+            formulas = POFormula.objects.filter(original=pk, assemble__in=new_assembles.values(), is_show=False)
+            for formula in formulas:
+                serializer = POFormulaSerializer(instance=formula, data=formula_payload, context={'request': request})
+                serializer.is_valid(raise_exception=True)
+                serializer.save(assemble=formula.assemble, original=new_obj.pk, is_show=False, group=None)
+    
+            # For estimate template
+            estimates = EstimateTemplate.objects.filter(id__in=estimate_params)
+            for estimate in estimates:
+                estimate_assembles = Assemble.objects.filter(
+                    is_show=False, original__in=[obj.id for obj in assembles], estimate_templates=estimate
+                )
+                estimate_formulas = POFormula.objects.filter(assemble__in=estimate_assembles, original=pk)
+                for formula in estimate_formulas:
+                    serializer = POFormulaSerializer(instance=formula, data=formula_payload, context={'request': request})
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save(assemble=formula.assemble, original=new_obj.pk, is_show=False, group=None)
+                change_assembles = []
+                for assemble in estimate_assembles:
+                    assemble.original = new_assembles[assemble.original].pk
+                    change_assembles.append(assemble)
+                Assemble.objects.bulk_update(change_assembles, ['original'])
+
+            #  Clean data
+            for assemble in assembles:
+                if assemble.has_relation():
+                    assemble.delete()
+            if not current_formula.has_relation():
+                current_formula.delete()
         return Response(status=status.HTTP_200_OK)
 
     if request.method == 'DELETE':

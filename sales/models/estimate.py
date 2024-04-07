@@ -140,7 +140,10 @@ class POFormula(BaseModel):
         return False
 
     def has_relation(self):
-        return Assemble.objects.filter(is_show=True, assemble_formulas__original=self.pk).exists()
+        return self.get_related_assembles().exists()
+
+    def get_related_assembles(self):
+        return Assemble.objects.filter(is_show=True, assemble_formulas__original=self.pk)
 
     def get_related_formula(self):
         from sales.models.proposal import PriceComparison, ProposalWriting
@@ -266,6 +269,9 @@ class Assemble(BaseModel):
 
     def export_to_json(self):
         return [self.name]
+
+    def has_relation(self):
+        return EstimateTemplate.objects.filter(is_show=True, assembles__original=self.pk).exists()
 
 
 class DescriptionLibrary(BaseModel):
