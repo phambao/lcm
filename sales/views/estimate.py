@@ -470,7 +470,7 @@ def action_related_formulas(request, pk):
                 serializer = POFormulaSerializer(instance=formula, data=formula_payload, context={'request': request})
                 serializer.is_valid(raise_exception=True)
                 serializer.save(assemble=formula.assemble, original=new_obj.pk, is_show=False, group=None)
-    
+
             # For estimate template
             estimates = EstimateTemplate.objects.filter(id__in=estimate_params)
             for estimate in estimates:
@@ -490,7 +490,7 @@ def action_related_formulas(request, pk):
 
             #  Clean data
             for assemble in assembles:
-                if assemble.has_relation():
+                if not assemble.has_relation():
                     assemble.delete()
             if not current_formula.has_relation():
                 current_formula.delete()
