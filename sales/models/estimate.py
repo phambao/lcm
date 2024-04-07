@@ -330,6 +330,15 @@ class EstimateTemplate(BaseModel):
     def export_to_json(self):
         return [self.name]
 
+    def has_relation(self):
+        PriceComparison = apps.get_model('sales', 'PriceComparison')
+        ProposalWriting = apps.get_model('sales', 'ProposalWriting')
+        if ProposalWriting.objects.filter(writing_groups__estimate_templates__original=self.pk).exists():
+            return True
+        if PriceComparison.objects.filter(groups__estimate_templates__original=self.pk).exists():
+            return True
+        return False
+
     def get_value_quantity(self):
         name = self.quantity.get('name')
         type = self.quantity.get('type')

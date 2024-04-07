@@ -443,6 +443,12 @@ def action_related_formulas(request, pk):
         for column in delist_column:
             formula_payload.pop(column, None)
 
+        if not comparison_params and not writing_params and not estimate_params and not assembles_params and formula_payload:
+            serializer = POFormulaSerializer(instance=current_formula, data=formula_payload)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(is_show=True)
+            return Response(status=status.HTTP_200_OK)
+
         serializer = POFormulaSerializer(data=formula_payload)
         serializer.is_valid()
         new_obj = serializer.save(is_show=True)
@@ -489,6 +495,83 @@ def action_related_formulas(request, pk):
                 Assemble.objects.bulk_update(change_assembles, ['original'])
 
             #  Clean data
+            for assemble in assembles:
+                if not assemble.has_relation():
+                    assemble.delete()
+            if not current_formula.has_relation():
+                current_formula.delete()
+
+        if (comparison_params or writing_params) and estimate_params and assembles_params:
+            # update to proposal
+            assembles = Assemble.objects.filter(id__in=assembles_params)
+            new_assembles = clone_object(assembles, AssembleSerializer, request)
+
+            formulas = POFormula.objects.filter(original=pk, assemble__in=new_assembles.values(), is_show=False)
+            for formula in formulas:
+                serializer = POFormulaSerializer(instance=formula, data=formula_payload, context={'request': request})
+                serializer.is_valid(raise_exception=True)
+                serializer.save(assemble=formula.assemble, original=new_obj.pk, is_show=False, group=None)
+
+            # For estimate template
+            estimates = EstimateTemplate.objects.filter(id__in=estimate_params)
+            new_estimates = clone_object(estimates, EstimateTemplateSerializer, request)
+            for estimate in new_estimates.values():
+                estimate_assembles = Assemble.objects.filter(
+                    is_show=False, original__in=[obj.id for obj in assembles], estimate_templates=estimate
+                )
+                estimate_formulas = POFormula.objects.filter(assemble__in=estimate_assembles, original=pk)
+                for formula in estimate_formulas:
+                    serializer = POFormulaSerializer(instance=formula, data=formula_payload, context={'request': request})
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save(assemble=formula.assemble, original=new_obj.pk, is_show=False, group=None)
+                change_assembles = []
+                for assemble in estimate_assembles:
+                    assemble.original = new_assembles[assemble.original].pk
+                    change_assembles.append(assemble)
+                Assemble.objects.bulk_update(change_assembles, ['original'])
+
+            for e in estimates:
+                data_estimate = []
+                writing_estimates = EstimateTemplate.objects.filter(original=e.pk, group_by_proposal__writing__id__in=writing_params)
+                for estimate in writing_estimates:
+                    estimate_assembles = Assemble.objects.filter(
+                        is_show=False, original__in=[obj.id for obj in assembles], estimate_templates=estimate
+                    )
+                    estimate_formulas = POFormula.objects.filter(assemble__in=estimate_assembles, original=pk)
+                    for formula in estimate_formulas:
+                        serializer = POFormulaSerializer(instance=formula, data=formula_payload, context={'request': request})
+                        serializer.is_valid(raise_exception=True)
+                        serializer.save(assemble=formula.assemble, original=new_obj.pk, is_show=False, group=None)
+                    change_assembles = []
+                    for assemble in estimate_assembles:
+                        assemble.original = new_assembles[assemble.original].pk
+                        change_assembles.append(assemble)
+                    estimate.original = new_estimates[e.pk].pk
+                    data_estimate.append(estimate)
+                    Assemble.objects.bulk_update(change_assembles, ['original'])
+                # Price comparison
+                comparison_estimate = EstimateTemplate.objects.filter(original=estimate.pk, group_price__price_comparison__id__in=comparison_params)
+                for estimate in comparison_estimate:
+                    estimate_assembles = Assemble.objects.filter(
+                        is_show=False, original__in=[obj.id for obj in assembles], estimate_templates=estimate
+                    )
+                    estimate_formulas = POFormula.objects.filter(assemble__in=estimate_assembles, original=pk)
+                    for formula in estimate_formulas:
+                        serializer = POFormulaSerializer(instance=formula, data=formula_payload, context={'request': request})
+                        serializer.is_valid(raise_exception=True)
+                        serializer.save(assemble=formula.assemble, original=new_obj.pk, is_show=False, group=None)
+                    change_assembles = []
+                    for assemble in estimate_assembles:
+                        assemble.original = new_assembles[assemble.original].pk
+                        change_assembles.append(assemble)
+                    estimate.original = new_estimates[e.pk].pk
+                    data_estimate.append(estimate)
+                    Assemble.objects.bulk_update(change_assembles, ['original'])
+                EstimateTemplate.objects.bulk_update(data_estimate, ['original'])
+            #  Clean data
+            for e in estimates:
+                if not e.has_relation():
+                    e.delete()
             for assemble in assembles:
                 if not assemble.has_relation():
                     assemble.delete()
