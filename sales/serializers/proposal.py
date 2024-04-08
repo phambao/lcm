@@ -387,6 +387,7 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
             proposal_formatting.signature = ''
             proposal_formatting.sign_date = None
             proposal_formatting.save()
+        validated_data['status'] = 'draft'
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):

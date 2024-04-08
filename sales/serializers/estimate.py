@@ -432,6 +432,12 @@ class AssembleCompactSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         raise ValidationError('Can not Create')
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        formula_ids = self.context['request'].GET.getlist('formula')
+        data['group_by'] = POFormula.objects.filter(original__in=formula_ids, assemble=instance).distinct().values('id', 'name')
+        return data
+
 
 class AssembleSerializer(ContentTypeSerializerMixin):
     assemble_formulas = POFormulaSerializer('assemble', many=True, required=False, allow_null=True)
@@ -556,6 +562,12 @@ class EstimateTemplateCompactSerializer(serializers.ModelSerializer):
         model = EstimateTemplate
         exclude = ('is_show', 'original', 'order', 'assembles', 'group_by_proposal', 'company', 'is_checked')
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        assemble_ids = self.context['request'].GET.getlist('assemble')
+        data['group_by'] = Assemble.objects.filter(estimate_templates=instance, original__in=assemble_ids).distinct().values('id', 'name')
+        return data
+
 
 class POFormulaItemSerializer(serializers.ModelSerializer):
     """
@@ -659,6 +671,7 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
         try:
             group = GroupTemplate.objects.filter(items__contains=[old_pk], is_formula=False)
             for g in group:
+                print(g.items)
                 g.items.remove(old_pk)
                 g.items.append(new_pk)
                 g.save()

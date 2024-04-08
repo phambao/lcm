@@ -1,5 +1,6 @@
 from django_filters import rest_framework as filters
 
+from sales.models.estimate import EstimateTemplate
 from ..models import PriceComparison, ProposalWriting, ProposalTemplate, LeadDetail
 
 
@@ -8,10 +9,17 @@ class PriceComparisonFilter(filters.FilterSet):
     created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
     modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
     lead = filters.ModelChoiceFilter(queryset=LeadDetail.objects.all())
+    estimate = filters.ModelMultipleChoiceFilter(queryset=EstimateTemplate.objects.filter(is_show=True), method='get_related_estimate')
 
     class Meta:
         model = PriceComparison
-        fields = ('name', 'created_date', 'modified_date', 'lead')
+        fields = ('name', 'created_date', 'modified_date', 'lead', 'estimate')
+
+    def get_related_estimate(self, query, name, value):
+        if value:
+            return query.filter(groups__estimate_templates__original__in=[v.id for v in value]).distinct()
+        else:
+            return query
 
 
 class ProposalWritingFilter(filters.FilterSet):
@@ -23,10 +31,17 @@ class ProposalWritingFilter(filters.FilterSet):
     avg_markup_min = filters.NumberFilter(field_name='avg_markup', lookup_expr='gte')
     avg_markup_max = filters.NumberFilter(field_name='avg_markup', lookup_expr='lte')
     lead = filters.ModelChoiceFilter(queryset=LeadDetail.objects.all())
+    estimate = filters.ModelMultipleChoiceFilter(queryset=EstimateTemplate.objects.filter(is_show=True), method='get_related_estimate')
 
     class Meta:
         model = ProposalWriting
-        fields = ('name', 'created_date', 'modified_date', 'total_project_cost', 'avg_markup', 'lead')
+        fields = ('name', 'created_date', 'modified_date', 'total_project_cost', 'avg_markup', 'lead', 'estimate')
+
+    def get_related_estimate(self, query, name, value):
+        if value:
+            return query.filter(writing_groups__estimate_templates__original__in=[v.id for v in value]).distinct()
+        else:
+            return query
 
 
 class ProposalTemplateFilter(filters.FilterSet):

@@ -49,7 +49,7 @@ class InvoiceDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestro
 class InvoiceProposal(ProposalWritingCompactList):
     serializer_class = ProposalForInvoiceSerializer
     queryset = ProposalWriting.objects.filter(
-        proposal_formatting__has_signed=True
+        status='approved'
     ).order_by('-modified_date').prefetch_related(*PROPOSAL_PREFETCH_RELATED)
 
 

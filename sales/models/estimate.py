@@ -139,6 +139,9 @@ class POFormula(BaseModel):
             return True
         return False
 
+    def has_relation(self):
+        return Assemble.objects.filter(is_show=True, assemble_formulas__original=self.pk).exists()
+
     def get_related_formula(self):
         from sales.models.proposal import PriceComparison, ProposalWriting
         data = {}
