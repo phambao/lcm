@@ -908,7 +908,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
             data_create.append(temp)
         ScheduleEventShift.objects.bulk_create(data_create)
 
-        phase = None
+        phase = ''
         if schedule_event_create.phase_setting:
             phase = schedule_event_create.phase_setting.label
         activities_log = ActivitiesLog.objects.create(
