@@ -292,6 +292,9 @@ class GroupTemplate(BaseModel):
     is_formula = models.BooleanField(blank=True, default=False)
     type = models.CharField(blank=True, max_length=128)
 
+    class Meta:
+        ordering = ['order']
+
 
 class EstimateTemplate(BaseModel):
     class Meta:
