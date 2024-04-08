@@ -140,7 +140,10 @@ class POFormula(BaseModel):
         return False
 
     def has_relation(self):
-        return Assemble.objects.filter(is_show=True, assemble_formulas__original=self.pk).exists()
+        return self.get_related_assembles().exists()
+
+    def get_related_assembles(self):
+        return Assemble.objects.filter(is_show=True, assemble_formulas__original=self.pk)
 
     def get_related_formula(self):
         from sales.models.proposal import PriceComparison, ProposalWriting
@@ -267,6 +270,9 @@ class Assemble(BaseModel):
     def export_to_json(self):
         return [self.name]
 
+    def has_relation(self):
+        return EstimateTemplate.objects.filter(is_show=True, assembles__original=self.pk).exists()
+
 
 class DescriptionLibrary(BaseModel):
     name = models.CharField(max_length=128)
@@ -285,6 +291,9 @@ class GroupTemplate(BaseModel):
     items = ArrayField(models.IntegerField(), default=list, blank=True, null=True)
     is_formula = models.BooleanField(blank=True, default=False)
     type = models.CharField(blank=True, max_length=128)
+
+    class Meta:
+        ordering = ['order']
 
 
 class EstimateTemplate(BaseModel):
@@ -323,6 +332,15 @@ class EstimateTemplate(BaseModel):
 
     def export_to_json(self):
         return [self.name]
+
+    def has_relation(self):
+        PriceComparison = apps.get_model('sales', 'PriceComparison')
+        ProposalWriting = apps.get_model('sales', 'ProposalWriting')
+        if ProposalWriting.objects.filter(writing_groups__estimate_templates__original=self.pk).exists():
+            return True
+        if PriceComparison.objects.filter(groups__estimate_templates__original=self.pk).exists():
+            return True
+        return False
 
     def get_value_quantity(self):
         name = self.quantity.get('name')

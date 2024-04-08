@@ -435,7 +435,8 @@ class AssembleCompactSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         formula_ids = self.context['request'].GET.getlist('formula')
-        data['group_by'] = POFormula.objects.filter(original__in=formula_ids, assemble=instance).distinct().values('id', 'name')
+        related_formula = POFormula.objects.filter(original__in=formula_ids, assemble=instance).values_list('original')
+        data['group_by'] = POFormula.objects.filter(pk__in=related_formula).distinct().values('id', 'name')
         return data
 
 
@@ -565,7 +566,8 @@ class EstimateTemplateCompactSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         assemble_ids = self.context['request'].GET.getlist('assemble')
-        data['group_by'] = Assemble.objects.filter(estimate_templates=instance, original__in=assemble_ids).distinct().values('id', 'name')
+        related_assembles = Assemble.objects.filter(estimate_templates=instance, original__in=assemble_ids).values_list('original')
+        data['group_by'] = Assemble.objects.filter(pk__in=related_assembles).distinct().values('id', 'name')
         return data
 
 
