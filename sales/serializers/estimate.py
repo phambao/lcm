@@ -196,6 +196,14 @@ class POFormulaCompactSerializer(serializers.ModelSerializer):
         exclude = ('material', 'formula_mentions', 'formula_data_mentions', 'description_of_formula', 'assemble', 'order',
                    'formula_scenario', 'formula_for_data_view', 'original', 'catalog_materials', 'company', 'created_from')
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data_entry_ids = self.context['request'].GET.getlist('data_entry')
+        data['group_by'] = DataEntry.objects.filter(
+            id__in=data_entry_ids, poformulatodataentry__po_formula=instance
+        ).distinct().values('id', 'name')
+        return data
+
 
 class RoundUPSeriailzer(serializers.Serializer):
     type = serializers.ChoiceField(choices=RoundUpChoice.choices, required=False, allow_null=True)
@@ -435,7 +443,8 @@ class AssembleCompactSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         formula_ids = self.context['request'].GET.getlist('formula')
-        data['group_by'] = POFormula.objects.filter(original__in=formula_ids, assemble=instance).distinct().values('id', 'name')
+        related_formula = POFormula.objects.filter(original__in=formula_ids, assemble=instance).values_list('original')
+        data['group_by'] = POFormula.objects.filter(pk__in=related_formula).distinct().values('id', 'name')
         return data
 
 
@@ -565,7 +574,8 @@ class EstimateTemplateCompactSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         assemble_ids = self.context['request'].GET.getlist('assemble')
-        data['group_by'] = Assemble.objects.filter(estimate_templates=instance, original__in=assemble_ids).distinct().values('id', 'name')
+        related_assembles = Assemble.objects.filter(estimate_templates=instance, original__in=assemble_ids).values_list('original')
+        data['group_by'] = Assemble.objects.filter(pk__in=related_assembles).distinct().values('id', 'name')
         return data
 
 

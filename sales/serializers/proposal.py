@@ -242,6 +242,11 @@ class PriceComparisonCompactSerializer(ContentTypeSerializerMixin):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['status'] = ''
+        estimate_ids = self.context['request'].GET.getlist('estimate')
+        related_estimate = EstimateTemplate.objects.filter(
+            group_price__price_comparison=instance, original__in=estimate_ids
+        ).values_list('original')
+        data['group_by'] = EstimateTemplate.objects.filter(id__in=related_estimate).distinct().values('id', 'name')
         return data
 
 
@@ -321,6 +326,11 @@ class ProposalWritingCompactSerializer(ContentTypeSerializerMixin):
                 'first_name', 'last_name', 'gender', 'email', 'phone_contacts', 'street',
                 'city', 'state', 'zip_code', 'country'
                 )
+        estimate_ids = self.context['request'].GET.getlist('estimate')
+        related_estimates = EstimateTemplate.objects.filter(
+            group_by_proposal__writing=instance, original__in=estimate_ids
+        ).values_list('original')
+        data['group_by'] = EstimateTemplate.objects.filter(pk__in=related_estimates).distinct().values('id', 'name')
         return data
 
 
