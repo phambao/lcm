@@ -196,6 +196,14 @@ class POFormulaCompactSerializer(serializers.ModelSerializer):
         exclude = ('material', 'formula_mentions', 'formula_data_mentions', 'description_of_formula', 'assemble', 'order',
                    'formula_scenario', 'formula_for_data_view', 'original', 'catalog_materials', 'company', 'created_from')
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data_entry_ids = self.context['request'].GET.getlist('data_entry')
+        data['group_by'] = DataEntry.objects.filter(
+            id__in=data_entry_ids, poformulatodataentry__po_formula=instance
+        ).distinct().values('id', 'name')
+        return data
+
 
 class RoundUPSeriailzer(serializers.Serializer):
     type = serializers.ChoiceField(choices=RoundUpChoice.choices, required=False, allow_null=True)
