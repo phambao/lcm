@@ -48,6 +48,9 @@ class ReferralCode(models.Model):
     number_discount_product = models.IntegerField(blank=True, null=True)
     percent_discount_product = models.IntegerField(blank=True, null=True)
     currency_product = models.CharField(max_length=100, blank=True)
+    number_discount_pro_launch = models.IntegerField(blank=True, null=True)
+    percent_discount_pro_launch = models.IntegerField(blank=True, null=True)
+    currency_pro_launch = models.CharField(max_length=100, blank=True)
     monthly_discounts = models.IntegerField(blank=True, null=True)
     products = models.ManyToManyField(Product, related_name='product_apply', blank=True)
     number_of_uses = models.IntegerField(blank=True, null=True)
@@ -80,3 +83,33 @@ class DealerCompany(models.Model):
     is_activate = models.BooleanField(default=True, blank=True)
     bonus_commissions = models.IntegerField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+
+class CouponCode(models.Model):
+    title = models.CharField(max_length=100, blank=True)
+    code = models.CharField(max_length=200, blank=True)
+    description = models.CharField(max_length=200, blank=True)
+    number_discount_sign_up = models.IntegerField(blank=True, null=True)
+    currency = models.CharField(max_length=100, blank=True)
+    percent_discount_sign_up = models.IntegerField(blank=True, null=True)
+    number_discount_product = models.IntegerField(blank=True, null=True)
+    percent_discount_product = models.IntegerField(blank=True, null=True)
+    currency_product = models.CharField(max_length=100, blank=True)
+    number_discount_pro_launch = models.IntegerField(blank=True, null=True)
+    percent_discount_pro_launch = models.IntegerField(blank=True, null=True)
+    currency_pro_launch = models.CharField(max_length=100, blank=True)
+    monthly_discounts = models.IntegerField(blank=True, null=True)
+    products = models.ManyToManyField(Product, related_name='product_coupon_apply', blank=True)
+    number_of_uses = models.IntegerField(blank=True, null=True)
+    start_date = models.DateTimeField(blank=True, null=True)
+    end_date = models.DateTimeField(blank=True, null=True)
+    coupon_stripe_id = models.CharField(max_length=100, blank=True)
+
+    def clean(self):
+        if self.code:
+            if CouponCode.objects.filter(code=self.code).exists():
+                raise ValidationError({'code': 'This coupon code already exists.'})
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)

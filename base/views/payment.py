@@ -18,7 +18,8 @@ import jwt
 
 from api.models import CompanyBuilder, User, SubscriptionStripeCompany
 from base.tasks import celery_send_mail
-from base.models.payment import Product, PaymentHistoryStripe, Price, ReferralCode, DealerInformation, DealerCompany
+from base.models.payment import Product, PaymentHistoryStripe, Price, ReferralCode, DealerInformation, DealerCompany, \
+    CouponCode
 from base.serializers.payment import ProductSerializer, CheckoutSessionSerializer, PaymentHistoryStripeSerializer
 
 stripe.api_key = config('STRIPE_SECRET_KEY', '')
@@ -157,6 +158,9 @@ def check_promotion_code_v2(request):
     promotion_code = data.get('coupon_code')
     products = data.get('products')
     total_discount = 0
+    total_discount_sign_up = 0
+    total_discount_product = 0
+    total_discount_pro_launch = 0
     try:
         promotion_codes = stripe.PromotionCode.list()
         coupon_id = None
@@ -169,16 +173,39 @@ def check_promotion_code_v2(request):
                     for product in products:
                         if product['type'] == 'recurring':
                             if percent_off:
+                                total_discount_product = (product['amount'] * int(percent_off)) / 100
                                 total_discount += (product['amount'] * int(percent_off)) / 100
 
                             if amount_off:
+                                total_discount_product = product['amount'] - int(amount_off)
                                 total_discount += product['amount'] - int(amount_off)
 
                         if product['type'] == 'one_time':
-                            total_discount += (product['amount'] * 30) / 100
+                            data_coupon = CouponCode.objects.get(coupon_stripe_id=coupon_id)
+                            if data_coupon.percent_discount_sign_up:
+                                total_discount_sign_up = (product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
+                                total_discount += (product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
+
+                            if data_coupon.number_discount_sign_up:
+                                total_discount_sign_up = int(data_coupon.number_discount_sign_up)
+                                total_discount += int(data_coupon.number_discount_sign_up)
+
+                        if product['type'] == 'one_time' and product['is_launch']:
+                            data_coupon = CouponCode.objects.get(coupon_stripe_id=coupon_id)
+                            if data_coupon.percent_discount_pro_launch:
+                                total_discount_pro_launch = (product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
+                                total_discount += (product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
+
+                            if data_coupon.number_discount_pro_launch:
+                                total_discount_pro_launch = int(data_coupon.number_discount_pro_launch)
+                                total_discount += int(data_coupon.number_discount_pro_launch)
+
         if not coupon_id:
             return Response({'error': {'message': 'Invalid promotion code'}}, status=400)
-        return Response({'promotion': coupon_id, 'total_discount': total_discount})
+        return Response({'promotion': coupon_id, 'total_discount': total_discount,
+                         'total_discount_product': total_discount_product,
+                         'total_discount_sign_up': total_discount_sign_up,
+                         'total_discount_pro_launch': total_discount_pro_launch})
     except Exception as e:
         return Response({'error': {'message': str(e)}}, status=400)
 
