@@ -314,8 +314,8 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         todo_create.tags.add(*tags_objects)
         todo_create.assigned_to.add(*user)
         duration = 0
-        if validated_data['sync_due_date']:
-            duration = timezone.now() - validated_data['sync_due_date']
+        if validated_data['due_date']:
+            duration = validated_data['due_date'] - timezone.now()
             duration = duration.days
             if duration == 0:
                 duration = 1
@@ -324,7 +324,7 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
             type=ActivitiesLog.Type.TODO,
             duration=duration,
             start_date=timezone.now(),
-            end_date=validated_data['sync_due_date'],
+            end_date=validated_data['due_date'],
             lead=validated_data['lead_list'],
             type_id=todo_create.id
         )
@@ -355,13 +355,13 @@ class ToDoCreateSerializer(serializers.ModelSerializer):
         activities_log = ActivitiesLog.objects.get(type_id=instance.id, type=ActivitiesLog.Type.TODO)
         activities_log.title = instance.title
         duration = activities_log.duration
-        if instance.sync_due_date:
-            data_duration = instance.sync_due_date - activities_log.start_date
+        if instance.due_date:
+            data_duration = instance.due_date - activities_log.start_date
             duration = data_duration.days
             if data_duration == 0:
                 duration = 1
         activities_log.duration = duration
-        activities_log.end_date = instance.sync_due_date
+        activities_log.end_date = instance.due_date
         activities_log.assigned_to.clear()
         activities_log.assigned_to.add(*user)
         activities_log.save()
@@ -466,7 +466,7 @@ class DailyLogSerializer(serializers.ModelSerializer):
 
         duration = 0
         if validated_data['date']:
-            duration = timezone.now() - validated_data['date']
+            duration = validated_data['date'] - timezone.now()
             duration = duration.days
             if duration == 0:
                 duration = 1
@@ -914,7 +914,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         activities_log = ActivitiesLog.objects.create(
             title=validated_data['event_title'],
             type=ActivitiesLog.Type.EVENT,
-            duration=validated_data['due_days'],
+            duration=validated_data['time'],
             start_date=validated_data['start_day'],
             end_date=validated_data['end_day'],
             lead=lead_list,
@@ -1011,7 +1011,7 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
 
         activities_log = ActivitiesLog.objects.get(type_id=instance.id, type=ActivitiesLog.Type.EVENT)
         activities_log.title = instance.event_title
-        activities_log.duration = instance.due_days
+        activities_log.duration = instance.time
         activities_log.end_date = instance.end_day
         activities_log.assigned_to.clear()
         activities_log.assigned_to.add(*user)
