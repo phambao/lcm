@@ -35,12 +35,19 @@ class FormulaFilter(filters.FilterSet, FilterIDMixin):
     is_show = filters.BooleanFilter(field_name='is_show')
     age_of_formula = filters.DateRangeFilter(field_name='created_date', choices=CHOICES, filters=FILTERS)
     id = filters.ModelMultipleChoiceFilter(queryset=POFormula.objects.filter(is_show=True), field_name='id', method='get_by_id')
+    data_entry = filters.ModelMultipleChoiceFilter(queryset=DataEntry.objects.all(), method='get_related_formula')
 
     class Meta:
         model = POFormula
         fields = ('group', 'assemble', 'quantity', 'formula', 'name', 'created_date', 'modified_date', 'markup',
                   'charge', 'material', 'unit', 'cost', 'gross_profit', 'description_of_formula', 'formula_scenario',
                   'user_create', 'user_update', 'id')
+
+    def get_related_formula(self, query, name, value):
+        if value:
+            return query.filter(is_show=True, self_data_entries__data_entry__in=value).distinct()
+        else:
+            return query
 
 
 class GroupFormulaFilter(filters.FilterSet):
