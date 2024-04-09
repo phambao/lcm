@@ -909,12 +909,16 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         ScheduleEventShift.objects.bulk_create(data_create)
 
         phase = ''
+        duration = validated_data['end_day'] - validated_data['start_day']
+        duration = duration.days
+        if duration == 0:
+            duration = 1
         if schedule_event_create.phase_setting:
             phase = schedule_event_create.phase_setting.label
         activities_log = ActivitiesLog.objects.create(
             title=validated_data['event_title'],
             type=ActivitiesLog.Type.EVENT,
-            duration=validated_data['time'],
+            duration=duration,
             start_date=validated_data['start_day'],
             end_date=validated_data['end_day'],
             lead=lead_list,
@@ -1010,8 +1014,12 @@ class ScheduleEventSerializer(serializers.ModelSerializer):
         instance.refresh_from_db()
 
         activities_log = ActivitiesLog.objects.get(type_id=instance.id, type=ActivitiesLog.Type.EVENT)
+        duration = instance.end_day - activities_log.start_date
+        duration = duration.days
+        if duration == 0:
+            duration = 1
         activities_log.title = instance.event_title
-        activities_log.duration = instance.time
+        activities_log.duration = duration
         activities_log.end_date = instance.end_day
         activities_log.assigned_to.clear()
         activities_log.assigned_to.add(*user)
