@@ -8,7 +8,7 @@
             $(document).ready(function() {
                 var percentDiscountSignUpField = $('#id_percent_discount_sign_up');
                 var numberDiscountSignUpField = $('#id_number_discount_sign_up');
-                var usdField = $('#id_currency');  // Thêm trường currency vào đây
+                var usdField = $('#id_currency');
                 var discountTypeField = $('<select id="id_discount_type"><option value="percentage">Percentage discount</option><option value="fixed">Fixed amount discount</option></select>');
 
                 // Insert discount type field above the number discount sign up field
@@ -17,7 +17,7 @@
                 // Hide discount fields on page load
                 percentDiscountSignUpField.closest('.form-row').hide();
                 numberDiscountSignUpField.closest('.form-row').hide();
-                usdField.closest('.form-row').hide();  // Ẩn trường currency
+                usdField.closest('.form-row').hide();
 
                 // Show discount fields based on discount type selection
                 discountTypeField.on('change', function() {
@@ -32,7 +32,7 @@
                     } else if (selectedOption === 'fixed') {
                         percentDiscountSignUpField.closest('.form-row').hide();
                         numberDiscountSignUpField.closest('.form-row').show();
-                        usdField.closest('.form-row').show();  // Hiển thị trường currency khi chọn Fixed amount discount
+                        usdField.closest('.form-row').show();
                         // Clear percent discount sign up field value
                         percentDiscountSignUpField.val('');
                     }
@@ -50,7 +50,7 @@
 
                 var percentDiscountProductField = $('#id_percent_discount_product');
                 var numberDiscountProductField = $('#id_number_discount_product');
-                var usdFieldProduct = $('#id_currency_product');  // Thêm trường currency vào đây
+                var usdFieldProduct = $('#id_currency_product');
                 var discountTypeFieldProduct = $('<select id="id_discount_type_product"><option value="percentage">Percentage discount</option><option value="fixed">Fixed amount discount</option></select>');
 
                 // Insert discount type field above the number discount sign up field
@@ -59,7 +59,7 @@
                 // Hide discount fields on page load
                 percentDiscountProductField.closest('.form-row').hide();
                 numberDiscountProductField.closest('.form-row').hide();
-                usdFieldProduct.closest('.form-row').hide();  // Ẩn trường currency
+                usdFieldProduct.closest('.form-row').hide();
 
                 // Show discount fields based on discount type selection
                 discountTypeFieldProduct.on('change', function() {
@@ -74,7 +74,7 @@
                     } else if (selectedOption === 'fixed') {
                         percentDiscountProductField.closest('.form-row').hide();
                         numberDiscountProductField.closest('.form-row').show();
-                        usdFieldProduct.closest('.form-row').show();  // Hiển thị trường currency khi chọn Fixed amount discount
+                        usdFieldProduct.closest('.form-row').show();
                         // Clear percent discount sign up field value
                         percentDiscountProductField.val('');
                     }
@@ -86,6 +86,47 @@
                 } else {
                     discountTypeFieldProduct.val('fixed').trigger('change');
                 }
+
+
+                var percentDiscountProLaunchField = $('#id_percent_discount_pro_launch');
+                var numberDiscountProLaunchField = $('#id_number_discount_pro_launch');
+                var usdFieldProLaunch = $('#id_currency_pro_launch');  // Thêm trường currency vào đây
+                var discountTypeProLaunchField = $('<select id="id_percent_discount_pro_launch"><option value="percentage">Percentage discount</option><option value="fixed">Fixed amount discount</option></select>');
+
+                // Insert discount type field above the number discount sign up field
+                discountTypeProLaunchField.insertBefore(numberDiscountProLaunchField.closest('.form-row'));
+
+                // Hide discount fields on page load
+                percentDiscountProLaunchField.closest('.form-row').hide();
+                numberDiscountProLaunchField.closest('.form-row').hide();
+                usdFieldProLaunch.closest('.form-row').hide();  // Ẩn trường currency
+
+                // Show discount fields based on discount type selection
+                discountTypeProLaunchField.on('change', function() {
+                    var selectedOption = $(this).val();
+
+                    if (selectedOption === 'percentage') {
+                        percentDiscountProLaunchField.closest('.form-row').show();
+                        numberDiscountProLaunchField.closest('.form-row').hide();
+                        usdFieldProLaunch.closest('.form-row').hide();
+                        // Clear number discount sign up field value
+                        numberDiscountProLaunchField.val('');
+                    } else if (selectedOption === 'fixed') {
+                        percentDiscountProLaunchField.closest('.form-row').hide();
+                        numberDiscountProLaunchField.closest('.form-row').show();
+                        usdFieldProLaunch.closest('.form-row').show();
+                        // Clear percent discount sign up field value
+                        percentDiscountProLaunchField.val('');
+                    }
+                });
+
+                // Check and show/hide fields on page load
+                if (percentDiscountProLaunchField.val()) {
+                    discountTypeProLaunchField.val('percentage').trigger('change');
+                } else {
+                    discountTypeProLaunchField.val('fixed').trigger('change');
+                }
+
             });
         })(django.jQuery);
     </script>
