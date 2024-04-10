@@ -501,7 +501,7 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
         model = ProposalFormatting
         fields = ('id', 'show_format_fields', 'show_formula_fields', 'contacts', 'intro', 'default_note', 'signature',
                   'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact', 'sign_date',
-                  'template_groups', 'active_tab')
+                  'template_groups', 'template_type')
         read_only_fields = ['sign_date']
 
     def create(self, validated_data):
