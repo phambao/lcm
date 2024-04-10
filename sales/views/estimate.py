@@ -834,6 +834,13 @@ def check_update_data_entry(request, pk):
     """
     data_entry = get_object_or_404(DataEntry.objects.all(), pk=pk)
     self_data_entries = data_entry.poformulatodataentry_set.all()
+    if request.method == 'GET':
+        data = {}
+        data['has_relation'] = data_entry.poformulatodataentry_set.all().exists()
+        formulas = POFormula.objects.filter(self_data_entries__in=self_data_entries, is_show=True).distinct()
+        data['formula_relation'] = formulas.values('id', 'name')
+        data['data_entry'] = DataEntrySerializer(data_entry).data
+        return Response(status=status.HTTP_200_OK, data=data)
 
     if request.method == 'PUT':
         data_entry_params = request.data.get('data_entry', {})
@@ -927,13 +934,7 @@ def check_update_data_entry(request, pk):
                 formula.delete()
         if not data_entry.has_relation():
             data_entry.delete()
-
-    data = {}
-    data['has_relation'] = data_entry.poformulatodataentry_set.all().exists()
-    formulas = POFormula.objects.filter(self_data_entries__in=self_data_entries, is_show=True).distinct()
-    data['formula_relation'] = formulas.values('id', 'name')
-    data['data_entry'] = DataEntrySerializer(data_entry).data
-    return Response(status=status.HTTP_200_OK, data=data)
+        return Response(status=status.HTTP_200_OK)
 
 
 @api_view(['GET', 'PUT'])
