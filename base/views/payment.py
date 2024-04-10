@@ -157,6 +157,7 @@ def check_promotion_code_v2(request):
     data = request.data
     promotion_code = data.get('coupon_code')
     products = data.get('products')
+    type_coupon = data.get('type')
     total_discount = 0
     total_discount_sign_up = 0
     total_discount_product = 0
@@ -170,6 +171,13 @@ def check_promotion_code_v2(request):
                     amount_off = code.coupon.amount_off
                     percent_off = code.coupon.percent_off
                     coupon_id = code
+                    data_coupon = None
+                    if type_coupon == 'coupon':
+                        data_coupon = CouponCode.objects.get(coupon_stripe_id=coupon_id.coupon.id)
+
+                    else:
+                        data_coupon = ReferralCode.objects.get(coupon_stripe_id=coupon_id.coupon.id)
+
                     for product in products:
                         if product['type'] == 'recurring':
                             if percent_off:
@@ -180,8 +188,8 @@ def check_promotion_code_v2(request):
                                 total_discount_product = product['amount'] - int(amount_off)
                                 total_discount += product['amount'] - int(amount_off)
 
-                        if product['type'] == 'one_time':
-                            data_coupon = CouponCode.objects.get(coupon_stripe_id=coupon_id)
+                        elif product['type'] == 'one_time' and not product['is_launch']:
+
                             if data_coupon.percent_discount_sign_up:
                                 total_discount_sign_up = (product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
                                 total_discount += (product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
@@ -190,8 +198,7 @@ def check_promotion_code_v2(request):
                                 total_discount_sign_up = int(data_coupon.number_discount_sign_up)
                                 total_discount += int(data_coupon.number_discount_sign_up)
 
-                        if product['type'] == 'one_time' and product['is_launch']:
-                            data_coupon = CouponCode.objects.get(coupon_stripe_id=coupon_id)
+                        elif product['type'] == 'one_time' and product['is_launch']:
                             if data_coupon.percent_discount_pro_launch:
                                 total_discount_pro_launch = (product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
                                 total_discount += (product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
@@ -265,27 +272,31 @@ def create_subscription_v2(request):
     # price_id = data['price_id']
     customer_id = data['customer_id']
     promotion_code = data.get('coupon_code')
+    coupon_id = data.get('coupon_id')
+    referral_code_id = data.get('referral_code_id')
     total_amount_price = 0
-    total_discount_amount = 0
-    price_one_time = None
+    total_discount_amount = data.get('total_discount_amount')
+    prices_one_time = []
     price_recurring = None
     for price in prices:
         price_create = {'price': price['id']}
         prices_create.append(price_create)
         total_amount_price += price['amount']
         if price['type'] == 'recurring':
-            total_discount_amount += (price['amount'] * 60) / 100
             price_recurring = price['id']
 
         if price['type'] == 'one_time':
-            total_discount_amount += (price['amount'] * 30) / 100
-            price_one_time = price['id']
+            data_create = {"price": price['id']}
+            prices_one_time.append(data_create)
 
     try:
         if not promotion_code:
             subscription = stripe.Subscription.create(
                 customer=customer_id,
-                items=prices_create,
+                items=[{
+                    'price': price_recurring,
+                }],
+                add_invoice_items=prices_one_time,
                 payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
             )
@@ -295,8 +306,13 @@ def create_subscription_v2(request):
             coupon = stripe.Coupon.create(
                 amount_off=int(total_discount_amount * 100),
                 currency="usd",
-                duration="forever",
+                duration="repeating",
                 name="Discount",
+                duration_in_months=12,
+                metadata={
+                    'referral_code': referral_code_id,
+                    'coupon_id': coupon_id,
+                }
             )
 
             subscription = stripe.Subscription.create(
@@ -304,7 +320,7 @@ def create_subscription_v2(request):
                 items=[{
                     'price': price_recurring,
                 }],
-                add_invoice_items=[{"price": price_one_time}],
+                add_invoice_items=prices_one_time,
                 payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
                 coupon=coupon,
@@ -456,15 +472,22 @@ def webhook_received(request):
             customer_stripe_id = data_object.customer
             customer = stripe.Customer.retrieve(customer_stripe_id)
             subscription_name = subscription.plan.product.name
-
             if data_object.discount:
                 coupon_code = data_object.discount.coupon.id
+                coupon = stripe.Coupon.retrieve(coupon_code)
+                referral_code_id = coupon.metadata['referral_code']
+                coupon_id = coupon.metadata['coupon_id']
                 is_use_one = False
-                data_referral_code = ReferralCode.objects.get(coupon_stripe_id=coupon_code)
-                company = data_referral_code.company
+                data_referral_code = None
+                company = None
+                if referral_code_id:
+                    data_referral_code = ReferralCode.objects.get(coupon_stripe_id=referral_code_id)
+                    company = data_referral_code.company
                 dealer = None
-                if data_referral_code.dealer:
+                if data_referral_code and data_referral_code.dealer:
                     dealer = DealerInformation.objects.get(user=data_referral_code.dealer.user)
+
+
                 if company:
                     data_subscription_stripe_company = SubscriptionStripeCompany.objects.get(company=company)
                     data_sub = stripe.Subscription.retrieve(data_subscription_stripe_company.subscription_id, expand=['plan.product'])
@@ -594,9 +617,27 @@ def webhook_received(request):
                         is_activate=True,
                         bonus_commissions=commission_amount
                     )
+                new_discount_amount = 0
+                if referral_code_id and coupon_id:
+                    data_coupon_code = CouponCode.objects.get(coupon_stripe_id=coupon_id)
+                    amount = subscription.plan.amount
+
+                    if data_referral_code.number_discount_product:
+                        new_discount_amount += amount - data_referral_code.number_discount_product
+
+                    if data_referral_code.percent_discount_product:
+                        new_discount_amount += (amount * data_referral_code.percent_discount_product) / 100
+
+                    if data_coupon_code.number_discount_product:
+                        new_discount_amount += amount - data_coupon_code.number_discount_product
+
+                    if data_referral_code.percent_discount_product:
+                        new_discount_amount += (amount * data_coupon_code.percent_discount_product) / 100
+
 
                 coupon = stripe.Coupon.create(
-                    percent_off=60,
+                    amount_off=int(new_discount_amount),
+                    currency="usd",
                     duration='repeating',
                     duration_in_months=11,
                 )
@@ -623,12 +664,12 @@ def webhook_received(request):
                 duration_in_months=data_object.discount.coupon.duration_in_months - 1,
                 is_activate=True
             )
-
+            product = stripe.Product.retrieve(subscription.plan.product)
             PaymentHistoryStripe.objects.create(
                 subscription_id=subscription_id,
                 customer_stripe_id=customer_stripe_id,
                 payment_method_id=payment_intent.payment_method.id,
-                subscription_name=subscription.plan.product.name,
+                subscription_name=product.name,
                 status=payment_intent.status,
                 payment_method=payment_intent.payment_method.card.brand,
                 card_number=payment_intent.payment_method.card.last4,
