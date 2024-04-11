@@ -141,8 +141,13 @@ class CommunicationFilter(filters.FilterSet):
 
 class ActivitiesLogFilter(filters.FilterSet):
     lead = filters.ModelChoiceFilter(queryset=LeadDetail.objects.all())
+    start_date = filters.DateFilter(field_name='start_date', lookup_expr='gte')
+    end_date = filters.DateFilter(field_name='end_date', lookup_expr='lte')
+    title = filters.CharFilter(field_name='title', lookup_expr='icontains')
+    status = filters.MultipleChoiceFilter(choices=ActivitiesLog.Status.choices)
+    type = filters.MultipleChoiceFilter(choices=ActivitiesLog.Type.choices)
 
     class Meta:
         model = ActivitiesLog
-        fields = ['start_date', 'lead']
+        fields = ['start_date', 'lead', 'title', 'type', 'phase', 'duration', 'status', 'start_date', 'end_date']
         # order_by = ['start_date']
