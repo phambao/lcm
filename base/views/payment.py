@@ -487,7 +487,6 @@ def webhook_received(request):
                 if data_referral_code and data_referral_code.dealer:
                     dealer = DealerInformation.objects.get(user=data_referral_code.dealer.user)
 
-
                 if company:
                     data_subscription_stripe_company = SubscriptionStripeCompany.objects.get(company=company)
                     data_sub = stripe.Subscription.retrieve(data_subscription_stripe_company.subscription_id, expand=['plan.product'])
@@ -621,7 +620,6 @@ def webhook_received(request):
                 if referral_code_id and coupon_id:
                     data_coupon_code = CouponCode.objects.get(coupon_stripe_id=coupon_id)
                     amount = subscription.plan.amount
-
                     if data_referral_code.number_discount_product:
                         new_discount_amount += amount - data_referral_code.number_discount_product
 
@@ -634,6 +632,22 @@ def webhook_received(request):
                     if data_referral_code.percent_discount_product:
                         new_discount_amount += (amount * data_coupon_code.percent_discount_product) / 100
 
+                elif referral_code_id and not coupon_id:
+                    amount = subscription.plan.amount
+                    if data_referral_code.number_discount_product:
+                        new_discount_amount += amount - data_referral_code.number_discount_product
+
+                    if data_referral_code.percent_discount_product:
+                        new_discount_amount += (amount * data_referral_code.percent_discount_product) / 100
+
+                elif coupon_id and not referral_code_id:
+                    data_coupon_code = CouponCode.objects.get(coupon_stripe_id=coupon_id)
+                    amount = subscription.plan.amount
+                    if data_coupon_code.number_discount_product:
+                        new_discount_amount += amount - data_coupon_code.number_discount_product
+
+                    if data_referral_code.percent_discount_product:
+                        new_discount_amount += (amount * data_coupon_code.percent_discount_product) / 100
 
                 coupon = stripe.Coupon.create(
                     amount_off=int(new_discount_amount),
