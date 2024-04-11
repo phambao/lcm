@@ -1,6 +1,7 @@
 from datetime import datetime
 from datetime import timedelta
 import json
+import re
 
 from django.utils.timezone import now
 from django.apps import apps
@@ -424,6 +425,22 @@ def clone_object(query, Serializer, request):
     return new_data
 
 
+def update_duplicate_name(Model, name):
+    same_objs = Model.objects.filter(name__exact=name, is_show=True).order_by('-created_date')
+    has_duplicated_objs = Model.objects.filter(name__regex=rf'{name} \((\d+)\)$')
+    #  Get name of duplicated objects
+    duplicated_names = [obj.name for obj in has_duplicated_objs]
+    #  Get the number of duplicated objects
+    duplicated_numbers = [int(re.search(rf'{name} \((\d+)\)$', obj).group(1)) for obj in duplicated_names]
+    for idx, obj in enumerate(same_objs):
+        if idx:
+            # get idx not in duplicated_numbers
+            idx = next((i for i in range(1, 1000) if i not in duplicated_numbers), None)
+            duplicated_numbers.append(idx)
+            obj.name = f'{name} ({idx})'
+    Model.objects.bulk_update(same_objs, ['name'])
+
+
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def action_related_formulas(request, pk):
@@ -515,13 +532,19 @@ def action_related_formulas(request, pk):
             EstimateTemplate.objects.bulk_update(data_estimate, ['original'])
         #  Clean data
         for e in estimates:
+            name = e.name
             if not e.has_relation():
                 e.delete()
+            update_duplicate_name(EstimateTemplate, name)
         for assemble in assembles:
+            name = assemble.name
             if not assemble.has_relation():
                 assemble.delete()
+            update_duplicate_name(Assemble, name)
+        name = formula_payload['name']
         if not current_formula.has_relation():
             current_formula.delete()
+        update_duplicate_name(POFormula, name)
         return Response(status=status.HTTP_200_OK)
 
     if request.method == 'DELETE':
@@ -920,16 +943,24 @@ def check_update_data_entry(request, pk):
             EstimateTemplate.objects.bulk_update(data_estimate, ['original'])
 
         for e in estimates:
+            name = e.name
             if not e.has_relation():
                 e.delete()
+            update_duplicate_name(EstimateTemplate, name)
         for assemble in assembles:
+            name = assemble.name
             if not assemble.has_relation():
                 assemble.delete()
+            update_duplicate_name(Assemble, name)
         for formula in formulas:
+            name = formula.name
             if not formula.has_relation():
                 formula.delete()
+            update_duplicate_name(POFormula, name)
+        name = data_entry_params['name']
         if not data_entry.has_relation():
             data_entry.delete()
+        update_duplicate_name(DataEntry, name)
         return Response(status=status.HTTP_200_OK, data={'data_entry': data_entry_params})
 
 
