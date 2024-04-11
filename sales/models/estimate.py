@@ -47,6 +47,9 @@ class DataEntry(BaseModel):
         return [self.name, unit, self.is_dropdown, str(self.dropdown), self.is_material_selection,
                 material_selections]
 
+    def has_relation(self):
+        return POFormula.objects.filter(self_data_entries__data_entry=self, is_show=True).exists()
+
 
 class RoundUpChoice(models.TextChoices):
     WHOLE_NUMBER = 'whole_number', 'Whole Number'
