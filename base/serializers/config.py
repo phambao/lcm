@@ -8,7 +8,7 @@ from django.db import IntegrityError
 from rest_framework import serializers
 
 from api.middleware import get_request
-from api.models import DivisionCompany, CompanyBuilder, Trades
+from api.models import DivisionCompany, CompanyBuilder, Trades, PersonalInformationDesignate
 from ..models.config import Column, Search, Config, GridSetting, Question, Answer, CompanyAnswerQuestion, \
     PersonalInformation
 from ..models.payment import ReferralCode
@@ -207,3 +207,9 @@ class PersonalInformationSerializer(serializers.ModelSerializer):
     class Meta:
         model = PersonalInformation
         fields = ('id', 'fullname', 'phone_number', 'email', 'address', 'company', 'first_name', 'last_name', 'nick_name')
+
+
+class PersonalInformationDesignateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PersonalInformationDesignate
+        fields = '__all__'

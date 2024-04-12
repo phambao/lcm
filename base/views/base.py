@@ -30,8 +30,9 @@ from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerialize
     FileBuilder365ResSerializer, DeleteDataSerializer
 from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSerializer, GridSettingSerializer, \
     CompanySerializer, DivisionSerializer, QuestionSerializer, AnswerSerializer, CompanyAnswerQuestionSerializer, \
-    CompanyAnswerQuestionResSerializer, TradesSerializer
-from api.models import ActivityLog, CompanyBuilder, DivisionCompany, Action, EstimatedAnnualRevenueChoices, InvoiceApproveType, SizeCompanyChoices, User, Trades
+    CompanyAnswerQuestionResSerializer, TradesSerializer, PersonalInformationDesignateSerializer
+from api.models import ActivityLog, CompanyBuilder, DivisionCompany, Action, EstimatedAnnualRevenueChoices, \
+    InvoiceApproveType, SizeCompanyChoices, User, Trades, PersonalInformationDesignate
 from decouple import config
 
 class ContentTypeList(generics.ListAPIView):
@@ -224,6 +225,16 @@ class CompanyTradesSerializerGenericView(generics.ListCreateAPIView):
 class CompanyTradesSerializerDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Trades.objects.all()
     serializer_class = TradesSerializer
+
+
+class PersonalInformationDesignateGenericView(generics.ListCreateAPIView):
+    queryset = PersonalInformationDesignate.objects.all()
+    serializer_class = PersonalInformationDesignateSerializer
+
+
+class PersonalInformationDesignateDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = PersonalInformationDesignate.objects.all()
+    serializer_class = PersonalInformationDesignateSerializer
 
 
 @api_view(['POST'])
