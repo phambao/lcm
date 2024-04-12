@@ -150,10 +150,11 @@ class CompanyBuilder(models.Model):
     trades = models.ManyToManyField('Trades', related_name='company_trades')
     company_size = models.CharField(max_length=128, choices=SizeCompanyChoices.choices, default=SizeCompanyChoices.SMALL)
     revenue = models.CharField(max_length=128, choices=EstimatedAnnualRevenueChoices.choices, default=EstimatedAnnualRevenueChoices.ESTIMATED_1)
-    referral_code = models.CharField(blank=True, max_length=6)
+    referral_code = models.CharField(blank=True, max_length=128)
     referral_code_current = models.ForeignKey('base.ReferralCode', on_delete=models.CASCADE, related_name='%(class)s_referral',null=True, blank=True)
     credit = models.IntegerField(null=True, blank=True)
     roc = models.CharField(blank=True, max_length=128, default='')
+    trades_others = models.CharField(blank=True, max_length=128, default='')
 
     def __str__(self):
         return self.company_name
@@ -254,3 +255,15 @@ class Trades(models.Model):
 
     name = models.CharField(max_length=64)
     is_show = models.BooleanField(default=False)
+
+
+class PersonalInformationDesignate(models.Model):
+    class Meta:
+        db_table = 'personal_information_designate'
+
+    first_name = models.CharField(max_length=128, blank=True)
+    last_name = models.CharField(max_length=128, blank=True)
+    phone_number = models.CharField(blank=True, max_length=20)
+    email = models.EmailField(blank=True, max_length=128)
+    company = models.ForeignKey(CompanyBuilder, on_delete=models.CASCADE,
+                                related_name='%(class)s_company_builder', null=True, blank=True)

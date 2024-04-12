@@ -10,7 +10,8 @@ from base.views.base import update_language_user, QuestionGenericView, QuestionD
     AnswerDetailGenericView, CompanyAnswerQuestionSerializerGenericView, \
     CompanyAnswerQuestionSerializerDetailGenericView, create_question_answer_company, update_question_answer_company, \
     get_data_config, manage_sub, manage_sub_detail, get_data_storage, CompanyTradesSerializerGenericView, \
-    CompanyTradesSerializerDetailGenericView, get_timezone
+    CompanyTradesSerializerDetailGenericView, get_timezone, PersonalInformationDesignateGenericView, \
+    PersonalInformationDesignateDetailGenericView
 # Define path for Base App ------------------------------------------------------
 from base.views.country_state_city import address_search, detail_location
 from base.views.dealers import DealerLoginView, logout_view, dashboard, orders
@@ -73,6 +74,8 @@ url_base = [
     path('company/update-question/<int:company_id>/', update_question_answer_company),
     path('personal-information/<int:pk>/', PersonalInformationDetailView.as_view()),
     path('personal-information/', PersonalInformationView.as_view()),
+    path('personal-information-designate/', PersonalInformationDesignateGenericView.as_view()),
+    path('personal-information-designate/<int:pk>/', PersonalInformationDesignateDetailGenericView.as_view()),
     path('get-config/', get_data_config),
     path('company/setting/payment/manage/', manage_sub),
     path('company/setting/payment/manage/<str:subscription_id>/', manage_sub_detail),

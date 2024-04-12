@@ -486,13 +486,36 @@ def webhook_received(request):
                 dealer = None
                 if data_referral_code and data_referral_code.dealer:
                     dealer = DealerInformation.objects.get(user=data_referral_code.dealer.user)
-
                 if company:
+
                     data_subscription_stripe_company = SubscriptionStripeCompany.objects.get(company=company)
+                    dealer_apply_for_ddr = company.referral_code_current.dealer
+                    # referral_code = ReferralCode.objects.filter(code=dealer_apply_for_ddr)
                     data_sub = stripe.Subscription.retrieve(data_subscription_stripe_company.subscription_id, expand=['plan.product'])
                     total_amount = data_sub.plan.amount/100
                     company_referral_code = company.referral_code_current
-                    commission_amount = ((data_object.subtotal - subscription.plan.amount) * 50) / 1000
+                    data_products = data_object.lines.data
+                    commission_amount = 0
+                    commission_amount_for_product_launch = 0
+                    for product in data_products:
+                        product_id = product.price.product
+                        data_product = stripe.Product.retrieve(product_id)
+                        metadata = data_product.metadata
+
+                        if metadata != {} and metadata['is_launch'] == 'True' and not product.price.recurring:
+                            commission_amount += (product.price.unit_amount * 10) / 10000
+                            commission_amount_for_product_launch = (product.price.unit_amount * 10) / 10000
+
+                        elif not product.price.recurring:
+                            commission_amount += (product.price.unit_amount * 50) / 10000
+
+                    # handle for case dealer recept commission to product launch of DSR when subscription
+                    if dealer_apply_for_ddr:
+                        # dealer_for_ddr = referral_code.dealer
+                        dealer_apply_for_ddr.total_bonus_commissions = dealer_apply_for_ddr.total_bonus_commissions + commission_amount_for_product_launch
+                        dealer_apply_for_ddr.save()
+
+                    # commission_amount = ((data_object.subtotal - subscription.plan.amount) * 50) / 1000
                     discount_amount = 0
 
                     # check coupon code is once or repeating
@@ -532,7 +555,7 @@ def webhook_received(request):
                                 number_discount_sign_up=total_amount,
                                 currency=data_sub.currency,
                                 coupon_stripe_id=coupon.id,
-                                dealer=data_referral_code.dealer,
+                                dealer=company_referral_code.dealer,
                             )
                         else:
                             total_discount_coupon = company.credit + discount_amount
@@ -579,7 +602,7 @@ def webhook_received(request):
                                 number_discount_sign_up=total_amount,
                                 currency=data_sub.currency,
                                 coupon_stripe_id=coupon.id,
-                                dealer=data_referral_code.dealer,
+                                dealer=company_referral_code.dealer,
                             )
                         else:
                             total_discount_coupon = discount_amount + company.credit
@@ -600,12 +623,24 @@ def webhook_received(request):
                                 number_discount_sign_up=total_discount_coupon,
                                 currency=data_sub.currency,
                                 coupon_stripe_id=coupon.id,
-                                dealer=data_referral_code.dealer,
+                                dealer=company_referral_code.dealer,
                             )
                         company.referral_code_current = create_referral_code
                         company.save()
-                else:
-                    commission_amount = ((data_object.subtotal - subscription.plan.amount) * 30) / 10000
+                if dealer:
+                    data_products = data_object.lines.data
+                    commission_amount = 0
+                    for product in data_products:
+                        product_id = product.price.product
+                        data_product = stripe.Product.retrieve(product_id)
+                        metadata = data_product.metadata
+
+                        if metadata != {} and metadata['is_launch'] == 'True' and not product.price.recurring:
+                            commission_amount += (product.price.unit_amount * 20) / 10000
+
+                        elif not product.price.recurring:
+                            commission_amount += (product.price.unit_amount * 30) / 10000
+
                     dealer.total_bonus_commissions = dealer.total_bonus_commissions + commission_amount
                     dealer.save()
                     data_company = CompanyBuilder.objects.get(pk=customer.metadata['company'])
