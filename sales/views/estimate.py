@@ -418,10 +418,27 @@ def clone_object(query, Serializer, request):
     new_data = {}
     for obj in query:
         data = Serializer(obj).data
+        # data['name'] = data['name'] + f' {1}'
         serializer = Serializer(data=data, context={'request': request})
         serializer.is_valid()
         new_data[obj.id] = serializer.save(is_show=True, original=0)
     return new_data
+
+
+def update_duplicate_name(Model, name):
+    same_objs = Model.objects.filter(name__exact=name, is_show=True).order_by('-created_date')
+    has_duplicated_objs = Model.objects.filter(name__regex=rf'{name} \((\d+)\)$')
+    #  Get name of duplicated objects
+    duplicated_names = [obj.name for obj in has_duplicated_objs]
+    #  Get the number of duplicated objects
+    duplicated_numbers = [int(re.search(rf'{name} \((\d+)\)$', obj).group(1)) for obj in duplicated_names]
+    for idx, obj in enumerate(same_objs):
+        if idx:
+            # get idx not in duplicated_numbers
+            idx = next((i for i in range(1, 1000) if i not in duplicated_numbers), None)
+            duplicated_numbers.append(idx)
+            obj.name = f'{name} ({idx})'
+    Model.objects.bulk_update(same_objs, ['name'])
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -444,7 +461,7 @@ def action_related_formulas(request, pk):
             formula_payload.pop(column, None)
 
         serializer = POFormulaSerializer(data=formula_payload)
-        serializer.is_valid()
+        serializer.is_valid(raise_exception=True)
         new_obj = serializer.save(is_show=True)
 
         # update to proposal
@@ -515,13 +532,19 @@ def action_related_formulas(request, pk):
             EstimateTemplate.objects.bulk_update(data_estimate, ['original'])
         #  Clean data
         for e in estimates:
+            name = e.name
             if not e.has_relation():
                 e.delete()
+            update_duplicate_name(EstimateTemplate, name)
         for assemble in assembles:
+            name = assemble.name
             if not assemble.has_relation():
                 assemble.delete()
+            update_duplicate_name(Assemble, name)
+        name = formula_payload['name']
         if not current_formula.has_relation():
             current_formula.delete()
+        update_duplicate_name(POFormula, name)
         return Response(status=status.HTTP_200_OK)
 
     if request.method == 'DELETE':
@@ -834,45 +857,122 @@ def check_update_data_entry(request, pk):
     """
     data_entry = get_object_or_404(DataEntry.objects.all(), pk=pk)
     self_data_entries = data_entry.poformulatodataentry_set.all()
+    if request.method == 'GET':
+        data = {}
+        data['has_relation'] = data_entry.poformulatodataentry_set.all().exists()
+        formulas = POFormula.objects.filter(self_data_entries__in=self_data_entries, is_show=True).distinct()
+        data['formula_relation'] = formulas.values('id', 'name')
+        data['data_entry'] = DataEntrySerializer(data_entry).data
+        return Response(status=status.HTTP_200_OK, data=data)
 
     if request.method == 'PUT':
-        formula_ids = request.data.get('formulas', [])
         data_entry_params = request.data.get('data_entry', {})
-        all_relation_number = POFormula.objects.filter(self_data_entries__in=self_data_entries, is_show=True).distinct().count()
-        updating_formula_number = len(formula_ids)
-        old_obj = get_object_or_404(DataEntry.objects.all(), pk=pk)
-        if updating_formula_number != all_relation_number:
-            # Create new object
-            old_serializer = DataEntrySerializer(old_obj).data
-            old_serializer.pop('id', None)
-            new_serializer = DataEntrySerializer(data=old_serializer)
-            new_serializer.is_valid(raise_exception=True)
-            new_obj = new_serializer.save(is_show=True)
-
-            # change formula relation between old and new
-            formulas = POFormula.objects.filter(pk__in=formula_ids)
-            formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=old_obj).exclude(po_formula__in=formulas)
-            data = []
-            for po in formula_with_data_entry:
-                po = po.po_formula
-                if hasattr(po, 'formula_mentions'):
-                    po.formula_mentions = re.sub(rf"\[(.*?)\]\({old_obj.pk}\)", rf"[\g<1>]({new_obj.pk})", po.formula_mentions)
-                    data.append(po)
-            formula_with_data_entry.update(data_entry=new_obj)
-            POFormula.objects.bulk_update(data, ['formula_mentions'])
-
-        # Update data entry
+        formula_params = request.data.get('formulas', [])
+        assembles_params = request.data.pop('assembles', [])
+        estimate_params = request.data.pop('estimates', [])
+        writing_params = request.data.pop('writtings', [])
+        comparison_params = request.data.pop('comparisons', [])
         data_entry_params.pop('id', None)
-        serializer = DataEntrySerializer(instance=old_obj, data=data_entry_params, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        obj = serializer.save()
+        new_serializer = DataEntrySerializer(data=data_entry_params)
+        new_serializer.is_valid(raise_exception=True)
+        new_obj = new_serializer.save()
 
-    data = {}
-    data['has_relation'] = data_entry.poformulatodataentry_set.all().exists()
-    formulas = POFormula.objects.filter(self_data_entries__in=self_data_entries, is_show=True).distinct()
-    data['formula_relation'] = formulas.values('id', 'name')
-    data['data_entry'] = DataEntrySerializer(data_entry).data
-    return Response(status=status.HTTP_200_OK, data=data)
+        formulas = POFormula.objects.filter(pk__in=formula_params, is_show=True)
+        new_formulas = clone_object(formulas, POFormulaSerializer, request)
+        formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=data_entry, po_formula__in=new_formulas.values())
+        update_po_data_entry(formula_with_data_entry, new_obj, data_entry)
+
+        # update to proposal
+        assembles = Assemble.objects.filter(id__in=assembles_params)
+        new_assembles = clone_object(assembles, AssembleSerializer, request)
+
+        for old_formula in formulas:
+            pos = POFormula.objects.filter(original=old_formula.pk, assemble__in=new_assembles.values(), is_show=False)
+            formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=data_entry, po_formula__in=pos)
+            update_po_data_entry(formula_with_data_entry, new_obj, data_entry)
+            pos.update(original=new_formulas[old_formula.pk].pk)
+
+        estimates = EstimateTemplate.objects.filter(id__in=estimate_params)
+        new_estimates = clone_object(estimates, EstimateTemplateSerializer, request)
+        for estimate in new_estimates.values():
+            estimate_assembles = Assemble.objects.filter(
+                is_show=False, original__in=[obj.id for obj in assembles], estimate_templates=estimate
+            )
+            estimate_formulas = POFormula.objects.filter(assemble__in=estimate_assembles, original__in=[obj.id for obj in formulas])
+            formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=data_entry, po_formula__in=estimate_formulas)
+            update_po_data_entry(formula_with_data_entry, new_obj, data_entry)
+            change_assembles = []
+            for assemble in estimate_assembles:
+                assemble.original = new_assembles[assemble.original].pk
+                change_assembles.append(assemble)
+            Assemble.objects.bulk_update(change_assembles, ['original'])
+
+        for e in estimates:
+            data_estimate = []
+            writing_estimates = EstimateTemplate.objects.filter(original=e.pk, group_by_proposal__writing__id__in=writing_params)
+            for estimate in writing_estimates:
+                estimate_assembles = Assemble.objects.filter(
+                    is_show=False, original__in=[obj.id for obj in assembles], estimate_templates=estimate
+                )
+                estimate_formulas = POFormula.objects.filter(assemble__in=estimate_assembles, original__in=[obj.id for obj in formulas])
+                formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=data_entry, po_formula__in=estimate_formulas)
+                update_po_data_entry(formula_with_data_entry, new_obj, data_entry)
+                change_assembles = []
+                for assemble in estimate_assembles:
+                    assemble.original = new_assembles[assemble.original].pk
+                    change_assembles.append(assemble)
+                estimate.original = new_estimates[e.pk].pk
+                data_estimate.append(estimate)
+                Assemble.objects.bulk_update(change_assembles, ['original'])
+            # Price comparison
+            comparison_estimate = EstimateTemplate.objects.filter(original=estimate.pk, group_price__price_comparison__id__in=comparison_params)
+            for estimate in comparison_estimate:
+                estimate_assembles = Assemble.objects.filter(
+                    is_show=False, original__in=[obj.id for obj in assembles], estimate_templates=estimate
+                )
+                estimate_formulas = POFormula.objects.filter(assemble__in=estimate_assembles, original=[obj.id for obj in formulas])
+                formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=data_entry, po_formula__in=estimate_formulas)
+                update_po_data_entry(formula_with_data_entry, new_obj, data_entry)
+                change_assembles = []
+                for assemble in estimate_assembles:
+                    assemble.original = new_assembles[assemble.original].pk
+                    change_assembles.append(assemble)
+                estimate.original = new_estimates[e.pk].pk
+                data_estimate.append(estimate)
+                Assemble.objects.bulk_update(change_assembles, ['original'])
+            EstimateTemplate.objects.bulk_update(data_estimate, ['original'])
+
+        for e in estimates:
+            name = e.name
+            if not e.has_relation():
+                e.delete()
+            update_duplicate_name(EstimateTemplate, name)
+        for assemble in assembles:
+            name = assemble.name
+            if not assemble.has_relation():
+                assemble.delete()
+            update_duplicate_name(Assemble, name)
+        for formula in formulas:
+            name = formula.name
+            if not formula.has_relation():
+                formula.delete()
+            update_duplicate_name(POFormula, name)
+        name = data_entry_params['name']
+        if not data_entry.has_relation():
+            data_entry.delete()
+        update_duplicate_name(DataEntry, name)
+        return Response(status=status.HTTP_200_OK, data={'data_entry': data_entry_params})
+
+
+def update_po_data_entry(formula_with_data_entry, new_obj, old_obj):
+    data = []
+    for po in formula_with_data_entry:
+        po = po.po_formula
+        if hasattr(po, 'formula_mentions'):
+            po.formula_mentions = po.formula_mentions.replace(f'$[{old_obj.name}]({old_obj.pk})', f'$[{new_obj.name}]({new_obj.pk})')
+            data.append(po)
+    formula_with_data_entry.update(data_entry=new_obj)
+    POFormula.objects.bulk_update(data, ['formula_mentions'])
 
 
 @api_view(['GET', 'PUT'])

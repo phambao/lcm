@@ -473,6 +473,7 @@ Contact = apps.get_model('sales', 'Contact')
 GroupTemplate = apps.get_model('sales', 'GroupTemplate')
 POFormula = apps.get_model('sales', 'POFormula')
 EstimateTemplate = apps.get_model('sales', 'EstimateTemplate')
+from decimal import Decimal
 
 
 class GroupTemplateSerializer(serializers.ModelSerializer):
@@ -485,9 +486,11 @@ class GroupTemplateSerializer(serializers.ModelSerializer):
         if instance.is_formula:
             formulas = POFormula.objects.filter(pk__in=instance.items)
             data['items'] = FormatFormulaSerializer(formulas, many=True).data
+            data['total_price'] = sum(Decimal(d['total_cost']) for d in data['items'])
         else:
             estimates = EstimateTemplate.objects.filter(pk__in=instance.items)
             data['items'] = FormatEstimateSerializer(estimates, many=True).data
+            data['total_price'] = sum(Decimal(d['total_price']) for d in data['items'])
         return data
 
 
@@ -498,7 +501,7 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
         model = ProposalFormatting
         fields = ('id', 'show_format_fields', 'show_formula_fields', 'contacts', 'intro', 'default_note', 'signature',
                   'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact', 'sign_date',
-                  'template_groups', 'active_tab')
+                  'template_groups', 'template_type')
         read_only_fields = ['sign_date']
 
     def create(self, validated_data):
@@ -525,6 +528,8 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
             data['primary_contact'] = instance.contacts[0] if instance.contacts else None
         data['lead'] = instance.proposal_writing.lead.get_info_for_proposal_formatting() if instance.proposal_writing.lead else None
         data['proposal_progress'] = instance.proposal_writing.additional_information
+        data['number_column'] = ['quantity', 'unit_price', 'total_price', 'markup', 'charge',
+                                 'unit_price', 'cost', 'total_cost', 'gross_profit']
         return data
 
 

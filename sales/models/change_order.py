@@ -69,3 +69,26 @@ class ChangeOrder(BaseModel):
     def get_items(self):
         items = self._get_changed_item() | self._get_new_items()
         return items
+
+
+class ChangeOrderTemplate(BaseModel):
+    change_order = models.OneToOneField('sales.ChangeOrder', on_delete=models.CASCADE,
+                                        blank=True, null=True, related_name='templates')
+    show_writing_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
+    show_estimate_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
+    show_format_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
+    show_formula_fields = ArrayField(models.CharField(blank=True, max_length=128), default=list, blank=True)
+    has_send_mail = models.BooleanField(default=False, blank=True)
+    has_signed = models.BooleanField(default=False, blank=True)
+    element = models.TextField(blank=True, null=True, default='')
+    html_view = models.TextField(blank=True, null=True, default='')
+    contacts = ArrayField(models.IntegerField(blank=True, null=True, default=None), default=list, blank=True, null=True)
+    print_date = models.DateTimeField(default=None, blank=True, null=True)
+    intro = models.TextField(blank=True)
+    default_note = models.TextField(blank=True)
+    pdf_file = models.CharField(max_length=128, blank=True)
+    primary_contact = models.IntegerField(blank=True, null=True, default=None)
+    otp = models.CharField(max_length=8, blank=True, default='', null=True)
+    signature = models.CharField(max_length=256, blank=True, default='')
+    sign_date = models.DateTimeField(default=None, blank=True, null=True)
+    template_type = models.CharField(max_length=128, blank=True, default='')
