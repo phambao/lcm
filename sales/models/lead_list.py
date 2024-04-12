@@ -224,6 +224,7 @@ class ActivitiesLog(BaseModel):
         EVENT = 'event', 'Event'
         TODO = 'todo', 'Todo'
         DAILY_LOG = 'daily_log', 'Daily Log'
+        PROPOSAL = 'proposal', 'Proposal'
         CHANGE_ORDER = 'change_order', 'Change Order'
 
     title = models.CharField(max_length=128, blank=True)

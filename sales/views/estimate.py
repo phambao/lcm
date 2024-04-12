@@ -426,7 +426,7 @@ def clone_object(query, Serializer, request):
 
 
 def update_duplicate_name(Model, name):
-    same_objs = Model.objects.filter(name__exact=name, is_show=True).order_by('-created_date')
+    same_objs = Model.objects.filter(name__exact=name, is_show=True).order_by('created_date')
     has_duplicated_objs = Model.objects.filter(name__regex=rf'{name} \((\d+)\)$')
     #  Get name of duplicated objects
     duplicated_names = [obj.name for obj in has_duplicated_objs]
