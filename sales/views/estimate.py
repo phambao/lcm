@@ -426,18 +426,18 @@ def clone_object(query, Serializer, request):
 
 
 def update_duplicate_name(Model, name):
-    same_objs = Model.objects.filter(name__exact=name, is_show=True).order_by('-created_date')
-    has_duplicated_objs = Model.objects.filter(name__regex=rf'{name} \((\d+)\)$')
+    same_objs = Model.objects.filter(name__exact=name, is_show=True).order_by('created_date')
+    has_duplicated_objs = Model.objects.filter(name__regex=rf'{name} (\d+)$')
     #  Get name of duplicated objects
     duplicated_names = [obj.name for obj in has_duplicated_objs]
     #  Get the number of duplicated objects
-    duplicated_numbers = [int(re.search(rf'{name} \((\d+)\)$', obj).group(1)) for obj in duplicated_names]
+    duplicated_numbers = [int(re.search(rf'{name} (\d+)$', obj).group(1)) for obj in duplicated_names]
     for idx, obj in enumerate(same_objs):
         if idx:
             # get idx not in duplicated_numbers
             idx = next((i for i in range(1, 1000) if i not in duplicated_numbers), None)
             duplicated_numbers.append(idx)
-            obj.name = f'{name} ({idx})'
+            obj.name = f'{name} {idx}'
     Model.objects.bulk_update(same_objs, ['name'])
 
 
@@ -545,6 +545,10 @@ def action_related_formulas(request, pk):
         if not current_formula.has_relation():
             current_formula.delete()
         update_duplicate_name(POFormula, name)
+
+        # sync new estimate
+        for estimate in new_estimates.values():
+            estimate.sync_data_entries()
         return Response(status=status.HTTP_200_OK)
 
     if request.method == 'DELETE':
@@ -961,18 +965,22 @@ def check_update_data_entry(request, pk):
         if not data_entry.has_relation():
             data_entry.delete()
         update_duplicate_name(DataEntry, name)
+        # sync new estimate
+        for estimate in new_estimates.values():
+            estimate.sync_data_entries()
         return Response(status=status.HTTP_200_OK, data={'data_entry': data_entry_params})
 
 
 def update_po_data_entry(formula_with_data_entry, new_obj, old_obj):
     data = []
     for po in formula_with_data_entry:
+        po.original = new_obj.pk
         po = po.po_formula
         if hasattr(po, 'formula_mentions'):
             po.formula_mentions = po.formula_mentions.replace(f'$[{old_obj.name}]({old_obj.pk})', f'$[{new_obj.name}]({new_obj.pk})')
             data.append(po)
     formula_with_data_entry.update(data_entry=new_obj)
-    POFormula.objects.bulk_update(data, ['formula_mentions'])
+    POFormula.objects.bulk_update(data, ['formula_mentions', 'original'])
 
 
 @api_view(['GET', 'PUT'])

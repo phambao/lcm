@@ -23,6 +23,7 @@ from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter,
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, POFormula, \
     ProposalFormattingSign, ProposalSetting
 from sales.models.estimate import EstimateTemplate
+from sales.models.lead_list import ActivitiesLog
 from sales.models.proposal import ProposalStatus
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateForFormattingSerializer, EstimateTemplateForInvoiceSerializer, POFormulaDataSerializer, POFormulaForInvoiceSerializer
@@ -384,6 +385,8 @@ def proposal_formatting_public(request, pk):
     proposal_writing.status = 'sent'
     proposal_writing.save(update_fields=['status'])
     contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts).distinct()
+    ActivitiesLog.objects.create(lead=proposal_writing.lead, status='unconfirmed', type_id=proposal_writing.pk,
+                                 title=f'{proposal_writing.name}', type='proposal')
     for contact in contacts:
         url = f'{settings.BASE_URL}{request.data["path"]}'
         if contact.pk == proposal_writing.proposal_formatting.primary_contact:
@@ -421,6 +424,8 @@ def proposal_sign(request, pk):
             proposal_template.save(update_fields=['has_signed', 'signature', 'sign_date'])
             proposal_writing.status = 'approved'
             proposal_writing.save(update_fields=['status'])
+            ActivitiesLog.objects.create(lead=proposal_writing.lead, status='completed', type_id=proposal_writing.pk,
+                                         title=f'{proposal_writing.name}', type='proposal')
             return Response(status=status.HTTP_200_OK, data={'data': 'Success'})
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={'data': 'Fail'})
@@ -500,5 +505,7 @@ def status_writing(request, pk):
         serializer = WritingStatusSerializer(instance=proposal_writing, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        ActivitiesLog.objects.create(lead=proposal_writing.lead, status='completed', type_id=proposal_writing.pk,
+                                     title=f'{proposal_writing.name}', type='proposal')
     status = proposal_writing.status
     return Response(status=200, data={'status': status})
