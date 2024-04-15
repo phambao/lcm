@@ -326,6 +326,23 @@ class EstimateTemplate(BaseModel):
     def __str__(self):
         return self.name
 
+    def sync_data_entries(self):
+        # Delete POFormulaToDataEntry with no data entry
+        POFormulaToDataEntry.objects.filter(estimate_template=self, data_entry__isnull=true).delete()
+
+        # Get data entries from formula
+        data_entries = DataEntry.objects.filter(poformulatodataentry__po_formula__in=self.get_formula()).distinct()
+        for data_entry in data_entries:
+            obj, is_created = POFormulaToDataEntry.objects.get_or_create(estimate_template=self, data_entry=data_entry)
+            if is_created:
+                # Get formula from data entry
+                formulas = self.get_formula().filter(self_data_entries__data_entry=data_entry)
+                obj.copies_from = [{'id': POFormulaToDataEntry.objects.get(po_formula=formula, data_entry=data_entry).pk,
+                                    'formula': formula.pk, 'data_entry': data_entry.pk, 'formula_name': formula.name}
+                                   for formula in formulas]
+                obj.value = ""
+                obj.save()
+
     def get_formula(self):
         assembles = self.assembles.all()
         poformulas = POFormula.objects.none()
