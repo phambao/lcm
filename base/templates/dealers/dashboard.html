@@ -279,13 +279,13 @@
         <div class="offcanvas-body d-md-flex flex-column p-0 pt-lg-3 overflow-y-auto">
           <ul class="nav flex-column">
             <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2 active" aria-current="page" href="http://127.0.0.1:8000/dealer/">
+              <a class="nav-link d-flex align-items-center gap-2 active" aria-current="page" href="{{ base_url }}/dealer/">
                 <svg class="bi"><use xlink:href="#house-fill"></use></svg>
                 Dashboard
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link d-flex align-items-center gap-2" href="http://127.0.0.1:8000/dealer/orders/">
+              <a class="nav-link d-flex align-items-center gap-2" href="{{ base_url }}/dealer/orders/">
                 <svg class="bi"><use xlink:href="#file-earmark"></use></svg>
                 Orders
               </a>
@@ -359,7 +359,7 @@
               </a>
             </li>
             <li class="nav-item">
-              <a id="logout-link" class="nav-link d-flex align-items-center gap-2" href="http://127.0.0.1:8000/dealer/logout/">
+              <a id="logout-link" class="nav-link d-flex align-items-center gap-2" href="{{ base_url }}/dealer/logout/">
                 <svg class="bi"><use xlink:href="#door-closed"></use></svg>
                 Sign out
               </a>
@@ -402,16 +402,16 @@
                   let url;
                   switch (filterValue) {
                       case 'week':
-                          url = 'http://127.0.0.1:8000/api/base/dealer/info/week';
+                          url = '{{ base_url }}/api/base/dealer/info/week';
                           break;
                       case 'last_month':
-                          url = 'http://127.0.0.1:8000/api/base/dealer/info/month';
+                          url = '{{ base_url }}/api/base/dealer/info/month';
                           break;
                       case 'last_year':
-                          url = 'http://127.0.0.1:8000/api/base/dealer/info/year';
+                          url = '{{ base_url }}/api/base/dealer/info/year';
                           break;
                       case 'all':
-                          url = 'http://127.0.0.1:8000/api/base/dealer/info/all';
+                          url = '{{ base_url }}/api/base/dealer/info/all';
                           break;
                       default:
                           return;
@@ -441,11 +441,11 @@
                 </div>
                 <div class="col-sm">
                      <p class="text">Total Earnings</p>
-                    <p class="text" id="total_earnings">{{ data_dealer.total_bonus_commissions }}</p>
+                    <p class="text" id="total_earnings">{{ data_dealer.total_bonus_commissions }} USD</p>
                 </div>
                 <div class="col-sm">
                     <p class="text">Total past earnings</p>
-                    <p class="text">{{ data_dealer.total_bonus_commissions }}</p>
+                    <p class="text">{{ data_dealer.total_bonus_commissions }} USD</p>
                 </div>
                 <div class="col-sm">
                     <p class="text">Total New Users</p>
