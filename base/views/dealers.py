@@ -34,7 +34,7 @@ def dashboard(request):
     total = 0
     temp = []
 
-    paginator = Paginator(dealers, 2)
+    paginator = Paginator(dealers, 10)
 
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
