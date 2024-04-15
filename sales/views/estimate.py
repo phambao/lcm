@@ -906,8 +906,12 @@ def check_update_data_entry(request, pk):
                 is_show=False, original__in=[obj.id for obj in assembles], estimate_templates=estimate
             )
             estimate_formulas = POFormula.objects.filter(assemble__in=estimate_assembles, original__in=[obj.id for obj in formulas])
-            formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=data_entry, po_formula__in=estimate_formulas)
-            update_po_data_entry(formula_with_data_entry, new_obj, data_entry)
+            for formula in estimate_formulas:
+                # Update original formula
+                formula.original = new_formulas[formula.original].pk
+                formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=data_entry, po_formula__in=estimate_formulas)
+                update_po_data_entry(formula_with_data_entry, new_obj, data_entry)
+            POFormula.objects.bulk_update(estimate_formulas, ['original'])
             change_assembles = []
             for assemble in estimate_assembles:
                 assemble.original = new_assembles[assemble.original].pk
@@ -922,8 +926,12 @@ def check_update_data_entry(request, pk):
                     is_show=False, original__in=[obj.id for obj in assembles], estimate_templates=estimate
                 )
                 estimate_formulas = POFormula.objects.filter(assemble__in=estimate_assembles, original__in=[obj.id for obj in formulas])
-                formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=data_entry, po_formula__in=estimate_formulas)
-                update_po_data_entry(formula_with_data_entry, new_obj, data_entry)
+                for formula in estimate_formulas:
+                    # Update original formula
+                    formula.original = new_formulas[formula.original].pk
+                    formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=data_entry, po_formula__in=estimate_formulas)
+                    update_po_data_entry(formula_with_data_entry, new_obj, data_entry)
+                POFormula.objects.bulk_update(estimate_formulas, ['original'])
                 change_assembles = []
                 for assemble in estimate_assembles:
                     assemble.original = new_assembles[assemble.original].pk
@@ -938,8 +946,12 @@ def check_update_data_entry(request, pk):
                     is_show=False, original__in=[obj.id for obj in assembles], estimate_templates=estimate
                 )
                 estimate_formulas = POFormula.objects.filter(assemble__in=estimate_assembles, original=[obj.id for obj in formulas])
-                formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=data_entry, po_formula__in=estimate_formulas)
-                update_po_data_entry(formula_with_data_entry, new_obj, data_entry)
+                for formula in estimate_formulas:
+                    # Update original formula
+                    formula.original = new_formulas[formula.original].pk
+                    formula_with_data_entry = POFormulaToDataEntry.objects.filter(data_entry=data_entry, po_formula__in=estimate_formulas)
+                    update_po_data_entry(formula_with_data_entry, new_obj, data_entry)
+                    POFormula.objects.bulk_update(estimate_formulas, ['original'])
                 change_assembles = []
                 for assemble in estimate_assembles:
                     assemble.original = new_assembles[assemble.original].pk
@@ -977,13 +989,12 @@ def check_update_data_entry(request, pk):
 def update_po_data_entry(formula_with_data_entry, new_obj, old_obj):
     data = []
     for po in formula_with_data_entry:
-        po.original = new_obj.pk
         po = po.po_formula
         if hasattr(po, 'formula_mentions'):
             po.formula_mentions = po.formula_mentions.replace(f'$[{old_obj.name}]({old_obj.pk})', f'$[{new_obj.name}]({new_obj.pk})')
             data.append(po)
     formula_with_data_entry.update(data_entry=new_obj)
-    POFormula.objects.bulk_update(data, ['formula_mentions', 'original'])
+    POFormula.objects.bulk_update(data, ['formula_mentions'])
 
 
 @api_view(['GET', 'PUT'])
