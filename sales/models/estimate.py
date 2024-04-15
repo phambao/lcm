@@ -338,7 +338,7 @@ class EstimateTemplate(BaseModel):
                 # Get formula from data entry
                 formulas = self.get_formula().filter(self_data_entries__data_entry=data_entry)
                 obj.copies_from = [{'id': POFormulaToDataEntry.objects.get(po_formula=formula, data_entry=data_entry).pk,
-                                    'formula': formula.pk, 'data_entry': data_entry.pk, 'formula_name': formula.name}
+                                    'formula': formula.formula_for_data_view, 'data_entry': data_entry.pk, 'formula_name': formula.name}
                                    for formula in formulas]
                 obj.value = ""
                 obj.save()
