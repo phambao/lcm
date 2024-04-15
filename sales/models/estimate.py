@@ -329,6 +329,11 @@ class EstimateTemplate(BaseModel):
     def sync_data_entries(self):
         # Delete POFormulaToDataEntry with no data entry
         POFormulaToDataEntry.objects.filter(estimate_template=self, data_entry__isnull=true).delete()
+        # Delete POFormulaToDataEntry with no formula
+        objs = POFormulaToDataEntry.objects.filter(estimate_template=self)
+        for obj in objs:
+            if POFormula.objects.filter(formula_for_data_view__in=[e['formula'] for e in obj.copies_from]).exists():
+                obj.delete()
 
         # Get data entries from formula
         data_entries = DataEntry.objects.filter(poformulatodataentry__po_formula__in=self.get_formula()).distinct()
