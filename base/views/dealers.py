@@ -1,4 +1,3 @@
-from decouple import config
 from django.contrib.auth.views import LoginView
 from django.core.paginator import Paginator
 from django.shortcuts import render, resolve_url, redirect
@@ -7,7 +6,6 @@ from django.contrib.auth import logout
 
 from base.forms import DealerAuthenticationForm
 from base.models.payment import DealerInformation, DealerCompany
-from lcm.settings import BASE_URL
 
 
 class DealerLoginView(LoginView):
@@ -49,8 +47,7 @@ def dashboard(request):
         'data_dealer': data_dealer,
         'total_referral_code': total,
         'total_new_user': len(dealers),
-        "page_obj": page_obj,
-        'base_url': config('BASE_URL')
+        "page_obj": page_obj
     }
     return render(request, 'dealers/dashboard.html', context)
 
