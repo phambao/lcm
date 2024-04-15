@@ -59,11 +59,13 @@ class ReferralCode(models.Model):
     coupon_stripe_id = models.CharField(max_length=100, blank=True)
     dealer = models.ForeignKey('DealerInformation', on_delete=models.SET_NULL, related_name='referral_code_dealer',null=True, blank=True)
     company = models.ForeignKey(CompanyBuilder, on_delete=models.SET_NULL, related_name='code_company',null=True, blank=True)
+    is_activate = models.BooleanField(blank=True, null=True)
+    promotion_code_id = models.CharField(max_length=100, blank=True)
 
-    def clean(self):
-        if self.code:
-            if ReferralCode.objects.filter(code=self.code).exists():
-                raise ValidationError({'code': 'This referral code already exists.'})
+    # def clean(self):
+    #     if self.code:
+    #         if ReferralCode.objects.filter(code=self.code).exists():
+    #             raise ValidationError({'code': 'This referral code already exists.'})
 
     def save(self, *args, **kwargs):
         self.clean()
@@ -105,11 +107,19 @@ class CouponCode(models.Model):
     end_date = models.DateTimeField(blank=True, null=True)
     coupon_stripe_id = models.CharField(max_length=100, blank=True)
 
-    def clean(self):
-        if self.code:
-            if CouponCode.objects.filter(code=self.code).exists():
-                raise ValidationError({'code': 'This coupon code already exists.'})
+    # def clean(self):
+    #     if self.code:
+    #         if CouponCode.objects.filter(code=self.code).exists():
+    #             raise ValidationError({'code': 'This coupon code already exists.'})
 
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+
+
+class ConfigReferralCode(models.Model):
+    title = models.CharField(max_length=100, blank=True)
+    description = models.CharField(max_length=200, blank=True)
+    default_percent_discount_sign_up = models.IntegerField(blank=True, null=True)
+    default_percent_discount_product = models.IntegerField(blank=True, null=True)
+    default_percent_discount_pro_launch = models.IntegerField(blank=True, null=True)
