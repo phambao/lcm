@@ -8,6 +8,7 @@ from api.middleware import get_request
 from sales.models import ProposalTemplate, ProposalElement, ProposalWidget, PriceComparison, ProposalFormatting, \
     ProposalWriting, GroupByEstimate, ProposalTemplateConfig, ProposalFormattingConfig, GroupEstimatePrice, \
     ProposalFormattingSign, ProposalSetting
+from sales.models.lead_list import ActivitiesLog
 from sales.serializers import ContentTypeSerializerMixin, estimate
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateSerializer
@@ -381,6 +382,8 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
         self.create_group(writing_groups, instance)
         activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
                            ProposalWritingSerializer.__name__, __name__, self.context['request'].user.pk)
+        ActivitiesLog.objects.create(lead=instance.lead, status='none', type_id=instance.pk,
+                                     title=f'{instance.name}', type='proposal')
         return instance
 
     def update(self, instance, validated_data):
