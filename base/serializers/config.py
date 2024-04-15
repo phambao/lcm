@@ -9,6 +9,7 @@ from rest_framework import serializers
 
 from api.middleware import get_request
 from api.models import DivisionCompany, CompanyBuilder, Trades, PersonalInformationDesignate
+from ..constants import PERCENT_DISCOUNT
 from ..models.config import Column, Search, Config, GridSetting, Question, Answer, CompanyAnswerQuestion, \
     PersonalInformation
 from ..models.payment import ReferralCode
@@ -77,7 +78,7 @@ class CompanySerializer(serializers.ModelSerializer):
         fields = ('id', 'logo', 'company_name', 'address', 'country', 'city', 'state', 'zip_code', 'tax', 'size',
                   'business_phone', 'fax', 'email', 'cell_phone', 'cell_mail', 'created_date', 'modified_date',
                   'user_create', 'user_update', 'currency', 'description', 'company_timezone', 'website', 'trades',
-                  'company_size', 'revenue', 'referral_code', 'customer_stripe', 'roc')
+                  'company_size', 'revenue', 'referral_code', 'customer_stripe', 'roc', 'trades_others')
         read_only_fields = ['currency']
 
     def create(self, validated_data):
@@ -103,7 +104,7 @@ class CompanySerializer(serializers.ModelSerializer):
         if not existing_promotion_code.data:
             coupon = stripe.Coupon.create(
                 name=f'referral code {company_name}',
-                percent_off=30,
+                percent_off=PERCENT_DISCOUNT,
                 duration='forever',
             )
             promotion_code = stripe.PromotionCode.create(
@@ -113,9 +114,13 @@ class CompanySerializer(serializers.ModelSerializer):
             ReferralCode.objects.create(
                 title=f'code_referral_{company_name}',
                 code=company_code,
-                percent_discount_product=30,
+                percent_discount_sign_up=PERCENT_DISCOUNT,
+                percent_discount_product=PERCENT_DISCOUNT,
+                percent_discount_pro_launch=PERCENT_DISCOUNT,
                 coupon_stripe_id=coupon.id,
-                company=company_create
+                company=company_create,
+                promotion_code_id=promotion_code.id,
+                is_activate=True
             )
         return company_create
 
