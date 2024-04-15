@@ -12,7 +12,8 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from api.models import CompanyBuilder, User, SubscriptionStripeCompany, Trades
 from base.models.config import Question, Answer
-from base.models.payment import Price, Product, ReferralCode, DealerInformation, DealerCompany, CouponCode
+from base.models.payment import Price, Product, ReferralCode, DealerInformation, DealerCompany, CouponCode, \
+    ConfigReferralCode
 
 
 class UserInline(admin.TabularInline):
@@ -307,7 +308,7 @@ class TradesAdmin(admin.ModelAdmin):
 
 class ReferralCodeAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'code', 'description', 'number_discount_sign_up', 'percent_discount_sign_up', 'number_discount_product',
-                    'percent_discount_product', 'number_discount_pro_launch', 'percent_discount_pro_launch', 'monthly_discounts', 'number_of_uses', 'start_date', 'end_date', 'coupon_stripe_id')
+                    'percent_discount_product', 'number_discount_pro_launch', 'percent_discount_pro_launch', 'monthly_discounts', 'number_of_uses', 'start_date', 'end_date', 'coupon_stripe_id', 'promotion_code_id')
     search_fields = ['code']
 
     def get_queryset(self, request):
@@ -362,6 +363,7 @@ class ReferralCodeAdmin(admin.ModelAdmin):
             code=obj.code,
         )
         obj.coupon_stripe_id = coupon.id
+        obj.promotion_code_id = promotion_code.id
         obj.save()
 
 
@@ -433,6 +435,51 @@ class DealerCompanyAdmin(admin.ModelAdmin):
     list_display = ('id', 'dealer', 'company', 'referral_code', 'bonus_commissions', 'created_at')
 
 
+class ConfigReferralCodeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'description', 'default_percent_discount_sign_up', 'default_percent_discount_product', 'default_percent_discount_pro_launch')
+    search_fields = ['title']
+
+    def save_model(self, request, obj, form, change):
+        data_referral_codes = ReferralCode.objects.filter(company__isnull=False, is_activate=True).exclude(promotion_code_id='')
+        for data_referral_code in data_referral_codes:
+            promotion_code_id = data_referral_code.promotion_code_id
+            data_referral_code.is_activate = False
+            data_referral_code.save()
+            if promotion_code_id:
+                promotion_code = stripe.PromotionCode.modify(
+                    promotion_code_id,
+                    active=False
+                )
+            if obj.default_percent_discount_product:
+                coupon = stripe.Coupon.create(
+                    percent_off=obj.default_percent_discount_product,
+                    duration='repeating',
+                    duration_in_months=data_referral_code.monthly_discounts,
+                    max_redemptions=data_referral_code.number_of_uses,
+                    name=data_referral_code.title,
+                )
+
+            promotion_code = stripe.PromotionCode.create(
+                coupon=coupon,
+                code=data_referral_code.code,
+            )
+            ReferralCode.objects.create(
+                title=data_referral_code.title,
+                code=data_referral_code.code,
+                description=data_referral_code.description,
+                percent_discount_sign_up=obj.default_percent_discount_sign_up,
+                percent_discount_product=obj.default_percent_discount_product,
+                percent_discount_pro_launch=obj.default_percent_discount_product,
+                monthly_discounts=obj.default_percent_discount_pro_launch,
+                number_of_uses=data_referral_code.number_of_uses,
+                company=data_referral_code.company,
+                is_activate=True,
+                coupon_stripe_id=coupon.id,
+                promotion_code_id=promotion_code.id
+            )
+        obj.save()
+
+
 admin.site.register(DealerCompany, DealerCompanyAdmin)
 admin.site.register(DealerInformation, DealerInformationAdmin)
 admin.site.register(ReferralCode, ReferralCodeAdmin)
@@ -445,4 +492,5 @@ admin.site.register(CompanyBuilder, CompanyAdmin)
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Answer, AnswerAdmin)
 admin.site.register(Trades, TradesAdmin)
+admin.site.register(ConfigReferralCode, ConfigReferralCodeAdmin)
 

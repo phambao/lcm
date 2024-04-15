@@ -206,7 +206,7 @@ class CompanyAnswerQuestionResSerializer(serializers.ModelSerializer):
 class PersonalInformationSerializer(serializers.ModelSerializer):
     class Meta:
         model = PersonalInformation
-        fields = ('id', 'fullname', 'phone_number', 'email', 'address', 'company', 'first_name', 'last_name', 'nick_name')
+        fields = ('id', 'fullname', 'phone_number', 'email', 'address', 'company', 'first_name', 'last_name', 'nick_name', 'job_title')
 
 
 class PersonalInformationDesignateSerializer(serializers.ModelSerializer):
