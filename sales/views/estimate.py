@@ -493,10 +493,12 @@ def action_related_formulas(request, pk):
                 change_assembles.append(assemble)
             Assemble.objects.bulk_update(change_assembles, ['original'])
 
+        related_estimates = []
         for e in estimates:
             data_estimate = []
             writing_estimates = EstimateTemplate.objects.filter(original=e.pk, group_by_proposal__writing__id__in=writing_params)
             for estimate in writing_estimates:
+                related_estimates.append(estimate)
                 estimate_assembles = Assemble.objects.filter(
                     is_show=False, original__in=[obj.id for obj in assembles], estimate_templates=estimate
                 )
@@ -515,6 +517,7 @@ def action_related_formulas(request, pk):
             # Price comparison
             comparison_estimate = EstimateTemplate.objects.filter(original=estimate.pk, group_price__price_comparison__id__in=comparison_params)
             for estimate in comparison_estimate:
+                related_estimates.append(estimate)
                 estimate_assembles = Assemble.objects.filter(
                     is_show=False, original__in=[obj.id for obj in assembles], estimate_templates=estimate
                 )
@@ -549,6 +552,8 @@ def action_related_formulas(request, pk):
 
         # sync new estimate
         for estimate in new_estimates.values():
+            estimate.sync_data_entries()
+        for estimate in related_estimates:
             estimate.sync_data_entries()
         return Response(status=status.HTTP_200_OK)
 
@@ -1041,3 +1046,14 @@ def check_update_estimate(request, pk):
     data['price_comparisons'] = price_comparisons.values('id', 'name')
 
     return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def check_action_assemble(request, pk):
+    Assemble = apps.get_model('sales', 'Assemble')
+    assemble = get_object_or_404(Assemble.objects.all(), pk=pk)
+    if request.method == 'GET':
+        return Response(status=status.HTTP_200_OK)
+    if request.method == 'PUT':
+        return Response(status=status.HTTP_200_OK)
