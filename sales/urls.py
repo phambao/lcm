@@ -244,6 +244,7 @@ url_estimate = [
     path('description-library/<int:pk>/', estimate.DescriptionLibraryDetail.as_view()),
     path('assemble/', estimate.AssembleList.as_view()),
     path('assemble/export/', estimate.export_assemble),
+    path('assemble/<int:pk>/check-action/', estimate.check_action_assemble),
     path('assemble/import/', estimate.import_assemble),
     path('assemble-compact/', estimate.AssembleCompactList.as_view()),
     path('assemble/<int:pk>/', estimate.AssembleDetail.as_view()),

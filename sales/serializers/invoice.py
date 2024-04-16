@@ -24,7 +24,7 @@ class UnitSerializerMixin:
 class PaymentHistorySerializer(ContentTypeSerializerMixin, SerializerMixin):
     class Meta:
         model = PaymentHistory
-        fields = ('id', 'date', 'amount', 'payment_method', 'received_by')
+        fields = ('id', 'date', 'amount', 'payment_method', 'received_by', 'status')
 
     def create(self, validated_data):
         invoice = get_object_or_404(Invoice.objects.all(), pk=self.get_params()['pk'])

@@ -382,8 +382,8 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
         self.create_group(writing_groups, instance)
         activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
                            ProposalWritingSerializer.__name__, __name__, self.context['request'].user.pk)
-        ActivitiesLog.objects.create(lead=instance.lead, status='none', type_id=instance.pk,
-                                     title=f'{instance.name}', type='proposal')
+        ActivitiesLog.objects.create(lead=instance.lead, status='draft', type_id=instance.pk,
+                                     title=f'{instance.name}', type='proposal', start_date=instance.created_date)
         return instance
 
     def update(self, instance, validated_data):
