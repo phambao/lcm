@@ -489,11 +489,11 @@ class GroupTemplateSerializer(serializers.ModelSerializer):
         if instance.is_formula:
             formulas = POFormula.objects.filter(pk__in=instance.items)
             data['items'] = FormatFormulaSerializer(formulas, many=True).data
-            data['total_price'] = sum(Decimal(d['total_cost']) for d in data['items'])
+            data['total_price'] = sum(Decimal(d['total_cost'] or 0) for d in data['items'])
         else:
             estimates = EstimateTemplate.objects.filter(pk__in=instance.items)
             data['items'] = FormatEstimateSerializer(estimates, many=True).data
-            data['total_price'] = sum(Decimal(d['total_price']) for d in data['items'])
+            data['total_price'] = sum(Decimal(d['total_price'] or 0) for d in data['items'])
         return data
 
 
