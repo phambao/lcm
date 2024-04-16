@@ -1052,4 +1052,69 @@ def check_action_assemble(request, pk):
     if request.method == 'GET':
         return Response(status=status.HTTP_200_OK)
     if request.method == 'PUT':
+        assembles_param = request.data.pop('assemble', {})
+        estimate_params = request.data.pop('estimates', [])
+        writing_params = request.data.pop('writtings', [])
+        comparison_params = request.data.pop('comparisons', [])
+        # Create new assemble using serializer
+        serializer = AssembleSerializer(data=assembles_param, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        new_assemble = serializer.save(is_show=True)
+
+        # Update to estimate template
+        estimates = EstimateTemplate.objects.filter(id__in=estimate_params)
+        new_estimates = clone_object(estimates, EstimateTemplateSerializer, request)
+        for estimate in new_estimates.values():
+            estimate_assembles = Assemble.objects.filter(
+                is_show=False, original=pk, estimate_templates=estimate
+            )
+            for obj in estimate_assembles:
+                serializer = AssembleSerializer(instance=obj, data=assembles_param, context={'request': request})
+                serializer.is_valid(raise_exception=True)
+                serializer.save(is_show=False, original=new_assemble.pk, estimate_templates=estimate)
+
+        related_estimates = []
+        for e in estimates:
+            data_estimate = []
+            writing_estimates = EstimateTemplate.objects.filter(original=e.pk, group_by_proposal__writing__id__in=writing_params)
+            for estimate in writing_estimates:
+                related_estimates.append(estimate)
+                estimate_assembles = Assemble.objects.filter(
+                    is_show=False, original=assemble.pk, estimate_templates=estimate
+                )
+                for obj in estimate_assembles:
+                    serializer = AssembleSerializer(instance=obj, data=assembles_param, context={'request': request})
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save(is_show=False, original=new_assemble.pk, estimate_templates=estimate)
+                estimate.original = new_estimates[e.pk].pk
+                data_estimate.append(estimate)
+            # Price comparison
+            comparison_estimate = EstimateTemplate.objects.filter(original=estimate.pk, group_price__price_comparison__id__in=comparison_params)
+            for estimate in comparison_estimate:
+                related_estimates.append(estimate)
+                estimate_assembles = Assemble.objects.filter(
+                    is_show=False, original=assemble.pk, estimate_templates=estimate
+                )
+                for obj in estimate_assembles:
+                    serializer = AssembleSerializer(instance=obj, data=assembles_param, context={'request': request})
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save(is_show=False, original=new_assemble.pk, estimate_templates=estimate)
+                estimate.original = new_estimates[e.pk].pk
+                data_estimate.append(estimate)
+            EstimateTemplate.objects.bulk_update(data_estimate, ['original'])
+        # clean old assemble
+        for e in estimates:
+            name = e.name
+            if not e.has_relation():
+                e.delete()
+            update_duplicate_name(EstimateTemplate, name)
+        name = assemble.name
+        if not assemble.has_relation():
+            assemble.delete()
+        update_duplicate_name(Assemble, name)
+        # sync new estimate
+        for estimate in new_estimates.values():
+            estimate.sync_data_entries()
+        for estimate in related_estimates:
+            estimate.sync_data_entries()
         return Response(status=status.HTTP_200_OK)

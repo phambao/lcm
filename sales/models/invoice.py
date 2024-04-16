@@ -23,8 +23,14 @@ class PaymentHistory(BaseModel):
         CREDIT_CARD = 'credit_card', 'Credit Card'
         CHECK = 'check', 'Check'
         OTHER = 'other', 'Other'
+    class InvoiceStatus(models.TextChoices):
+        DRAFT = 'draft', 'Draft'
+        SENT = 'sent', 'Sent'
+        UNPAID = 'unpaid', 'Unpaid'
+        PAID = 'paid', 'Paid'
     invoice = models.ForeignKey('sales.Invoice', blank=True, null=True,
                                 on_delete=models.CASCADE, related_name='payment_histories')
+    status = models.CharField(max_length=16, choices=InvoiceStatus.choices, default=InvoiceStatus.PAID)
     date = models.DateTimeField()
     amount = models.DecimalField(default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE)
     payment_method = models.CharField(max_length=32, choices=PaymentStatus.choices, default=PaymentStatus.CREDIT_CARD)
