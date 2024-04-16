@@ -470,7 +470,7 @@ class ConfigReferralCodeAdmin(admin.ModelAdmin):
                 percent_discount_sign_up=obj.default_percent_discount_sign_up,
                 percent_discount_product=obj.default_percent_discount_product,
                 percent_discount_pro_launch=obj.default_percent_discount_product,
-                monthly_discounts=obj.default_percent_discount_pro_launch,
+                monthly_discounts=data_referral_code.monthly_discounts,
                 number_of_uses=data_referral_code.number_of_uses,
                 company=data_referral_code.company,
                 is_activate=True,
