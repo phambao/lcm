@@ -455,8 +455,6 @@ def action_related_formulas(request, pk):
         estimate_params = request.data.pop('estimates', [])
         writing_params = request.data.pop('writtings', [])
         comparison_params = request.data.pop('comparisons', [])
-        writing_params = []
-        comparison_params = []
         delist_column = ['group', 'assemble', 'is_show', 'id', 'original', 'formula_for_data_view']
         for column in delist_column:
             formula_payload.pop(column, None)
@@ -882,8 +880,6 @@ def check_update_data_entry(request, pk):
         estimate_params = request.data.pop('estimates', [])
         writing_params = request.data.pop('writtings', [])
         comparison_params = request.data.pop('comparisons', [])
-        writing_params = []
-        comparison_params = []
         data_entry_params.pop('id', None)
         new_serializer = DataEntrySerializer(data=data_entry_params)
         new_serializer.is_valid(raise_exception=True)
