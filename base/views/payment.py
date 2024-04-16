@@ -522,7 +522,6 @@ def webhook_received(request):
                         if not referral.percent_discount_sign_up and not referral.percent_discount_pro_launch and referral.percent_discount_product == PERCENT_DISCOUNT:
                             pass
                         else:
-                            print('Truong oooooooo')
                             promotion_code_id = referral.promotion_code_id
                             referral.is_activate = False
                             referral.save()
@@ -701,7 +700,6 @@ def webhook_received(request):
                 new_discount_amount = 0
 
                 if referral_code_id and coupon_id:
-                    print('truong1')
                     data_coupon_code = CouponCode.objects.get(coupon_stripe_id=coupon_id)
                     amount = subscription.plan.amount
                     if data_referral_code.number_discount_product:
@@ -726,7 +724,6 @@ def webhook_received(request):
                         new_discount_amount += (amount * data_referral_code.percent_discount_product) / 100
 
                 elif coupon_id and not referral_code_id:
-                    print('truong 3')
                     data_coupon_code = CouponCode.objects.get(coupon_stripe_id=coupon_id)
                     amount = subscription.plan.amount
                     if data_coupon_code.number_discount_product:
