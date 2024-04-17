@@ -167,7 +167,7 @@ def check_promotion_code_v2(request):
         coupon_id = None
         rs_coupon = []
         for data_code in promotion_code:
-            promotion_codes = stripe.PromotionCode.list()
+            promotion_codes = stripe.PromotionCode.list(limit=100000)
             for code in promotion_codes:
                 if code.code == data_code['code'] and code.active:
                     if code.coupon.valid:
@@ -382,7 +382,6 @@ def handle_total_discount(total_sign_up_fee,  total_product,  total_pro_launch, 
                 total_product = total_product - int(amount_off)
 
         elif price['type'] == 'one_time' and not metadata:
-
             if data_coupon.percent_discount_sign_up:
                 total_discount_amount += (total_sign_up_fee * int(data_coupon.percent_discount_sign_up)) / 100
                 total_sign_up_fee = total_sign_up_fee - (total_sign_up_fee * int(data_coupon.percent_discount_sign_up)) / 100
