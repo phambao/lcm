@@ -338,7 +338,7 @@ def create_subscription_v2(request):
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
         else:
             coupon = stripe.Coupon.create(
-                amount_off=int(total_discount_amount * 100),
+                amount_off=int(total_discount_amount),
                 currency="usd",
                 duration="repeating",
                 name="Discount",
