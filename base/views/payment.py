@@ -167,7 +167,7 @@ def check_promotion_code_v2(request):
         coupon_id = None
         rs_coupon = []
         for data_code in promotion_code:
-            promotion_codes = stripe.PromotionCode.list(limit=100)
+            promotion_codes = stripe.PromotionCode.list(limit=100000)
             for code in promotion_codes:
                 if code.code == data_code['code'] and code.active:
                     if code.coupon.valid:
