@@ -213,6 +213,8 @@ class ActivitiesLog(BaseModel):
 
     class Status(models.TextChoices):
         NONE = 'none', 'None'
+        DRAFT = 'draft', 'Draft'
+        APPROVED = 'approved', 'Approved'
         UPCOMING = 'upcoming', 'Upcoming'
         COMPLETED = 'completed', 'Completed'
         IN_PROGRESS = 'in_progress', 'In Progress'

@@ -349,7 +349,8 @@ def duplicate_proposal(request):
             dup = ProposalWritingSerializer(data=serializer, context={'request': request})
             dup.is_valid(raise_exception=True)
             objs.append(dup.save(lead_id=lead, name=name).id)
-    serializer = ProposalWritingCompactSerializer(ProposalWriting.objects.filter(id__in=objs), many=True)
+    serializer = ProposalWritingCompactSerializer(ProposalWriting.objects.filter(id__in=objs),
+                                                  many=True, context={'request': request})
     return Response(status=status.HTTP_201_CREATED, data=serializer.data)
 
 
@@ -385,8 +386,8 @@ def proposal_formatting_public(request, pk):
     proposal_writing.status = 'sent'
     proposal_writing.save(update_fields=['status'])
     contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts).distinct()
-    ActivitiesLog.objects.create(lead=proposal_writing.lead, status='unconfirmed', type_id=proposal_writing.pk,
-                                 title=f'{proposal_writing.name}', type='proposal')
+    ActivitiesLog.objects.create(lead=proposal_writing.lead, status='sent', type_id=proposal_writing.pk,
+                                 title=f'{proposal_writing.name}', type='proposal', start_date=timezone.now())
     for contact in contacts:
         url = f'{settings.BASE_URL}{request.data["path"]}'
         if contact.pk == proposal_writing.proposal_formatting.primary_contact:
@@ -424,8 +425,8 @@ def proposal_sign(request, pk):
             proposal_template.save(update_fields=['has_signed', 'signature', 'sign_date'])
             proposal_writing.status = 'approved'
             proposal_writing.save(update_fields=['status'])
-            ActivitiesLog.objects.create(lead=proposal_writing.lead, status='completed', type_id=proposal_writing.pk,
-                                         title=f'{proposal_writing.name}', type='proposal')
+            ActivitiesLog.objects.create(lead=proposal_writing.lead, status='approved', type_id=proposal_writing.pk,
+                                         title=f'{proposal_writing.name}', type='proposal', start_date=proposal_template.sign_date)
             return Response(status=status.HTTP_200_OK, data={'data': 'Success'})
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={'data': 'Fail'})
@@ -505,7 +506,7 @@ def status_writing(request, pk):
         serializer = WritingStatusSerializer(instance=proposal_writing, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        ActivitiesLog.objects.create(lead=proposal_writing.lead, status='completed', type_id=proposal_writing.pk,
-                                     title=f'{proposal_writing.name}', type='proposal')
+        ActivitiesLog.objects.create(lead=proposal_writing.lead, status='approved', type_id=proposal_writing.pk,
+                                     title=f'{proposal_writing.name}', type='proposal', start_date=timezone.now())
     status = proposal_writing.status
     return Response(status=200, data={'status': status})

@@ -23,13 +23,20 @@ class PaymentHistory(BaseModel):
         CREDIT_CARD = 'credit_card', 'Credit Card'
         CHECK = 'check', 'Check'
         OTHER = 'other', 'Other'
+    class InvoiceStatus(models.TextChoices):
+        DRAFT = 'draft', 'Draft'
+        SENT = 'sent', 'Sent'
+        UNPAID = 'unpaid', 'Unpaid'
+        PAID = 'paid', 'Paid'
     invoice = models.ForeignKey('sales.Invoice', blank=True, null=True,
                                 on_delete=models.CASCADE, related_name='payment_histories')
+    status = models.CharField(max_length=16, choices=InvoiceStatus.choices, default=InvoiceStatus.PAID)
     date = models.DateTimeField()
     amount = models.DecimalField(default=0, max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE)
     payment_method = models.CharField(max_length=32, choices=PaymentStatus.choices, default=PaymentStatus.CREDIT_CARD)
     received_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, related_name='payments',
                                     null=True, blank=True)
+    other_payment_method = models.CharField(max_length=256, blank=True, default='')
 
 
 class CustomTable(BaseModel):
@@ -56,8 +63,8 @@ class GroupChangeOrder(BaseModel):
 
 
 class ProgressPayment(BaseModel):
-    table_invoice = models.OneToOneField('sales.TableInvoice', on_delete=models.CASCADE, blank=True, null=True,
-                                         related_name='progress_payment')
+    table_invoice = models.ForeignKey('sales.TableInvoice', on_delete=models.CASCADE, blank=True, null=True,
+                                      related_name='progress_payments')
     name = models.CharField(max_length=64)
     cost_type = models.CharField(max_length=128, blank=True, default='')
     percentage_payment = models.IntegerField(blank=True, default=100)
@@ -65,7 +72,6 @@ class ProgressPayment(BaseModel):
     quantity = models.IntegerField(default=0, blank=True)
     unit = models.CharField(blank=True, default='', max_length=32)
     invoice_amount = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
-    items = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
 
 class ChangeOrderItem(BaseModel):
@@ -123,6 +129,8 @@ class Invoice(BaseModel):
     comment = models.TextField(blank=True)
     note = models.TextField(blank=True)
     proposal = models.ForeignKey('sales.ProposalWriting', on_delete=models.CASCADE, related_name='invoices', blank=True, null=True)
+    owner_note = models.TextField(blank=True)
+    # internal_note = models.TextField(blank=True)
 
     def get_proposal(self):
         data = []
