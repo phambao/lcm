@@ -1118,3 +1118,14 @@ def check_action_assemble(request, pk):
         for estimate in related_estimates:
             estimate.sync_data_entries()
         return Response(status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def duplicate_formula(request, pk):
+    formula = get_object_or_404(POFormula.objects.all(), pk=pk)
+    data = POFormulaSerializer(formula, context={'request': request}).data
+    serializer = POFormulaSerializer(data=data, context={'request': request})
+    serializer.is_valid(raise_exception=True)
+    serializer.save(is_show=True, original=0)
+    return Response(status=status.HTTP_200_OK, data=serializer.data)
