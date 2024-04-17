@@ -164,53 +164,56 @@ def check_promotion_code_v2(request):
     total_discount_product = 0
     total_discount_pro_launch = 0
     try:
-        promotion_codes = stripe.PromotionCode.list()
         coupon_id = None
-        for code in promotion_codes:
-            if code.code == promotion_code and code.active:
-                if code.coupon.valid:
-                    amount_off = code.coupon.amount_off
-                    percent_off = code.coupon.percent_off
-                    coupon_id = code
-                    data_coupon = None
-                    if type_coupon == 'coupon':
-                        data_coupon = CouponCode.objects.get(coupon_stripe_id=coupon_id.coupon.id)
+        rs_coupon = []
+        for data_code in promotion_code:
+            promotion_codes = stripe.PromotionCode.list()
+            for code in promotion_codes:
+                if code.code == data_code['code'] and code.active:
+                    if code.coupon.valid:
+                        amount_off = code.coupon.amount_off
+                        percent_off = code.coupon.percent_off
+                        coupon_id = code
+                        rs_coupon.append(code)
+                        data_coupon = None
+                        if data_code['type'] == 'coupon':
+                            data_coupon = CouponCode.objects.get(coupon_stripe_id=coupon_id.coupon.id)
 
-                    else:
-                        data_coupon = ReferralCode.objects.get(coupon_stripe_id=coupon_id.coupon.id)
+                        else:
+                            data_coupon = ReferralCode.objects.get(coupon_stripe_id=coupon_id.coupon.id)
 
-                    for product in products:
-                        if product['type'] == 'recurring':
-                            if percent_off:
-                                total_discount_product = (product['amount'] * int(percent_off)) / 100
-                                total_discount += (product['amount'] * int(percent_off)) / 100
+                        for product in products:
+                            if product['type'] == 'recurring':
+                                if percent_off:
+                                    total_discount_product += (product['amount'] * int(percent_off)) / 100
+                                    total_discount += (product['amount'] * int(percent_off)) / 100
 
-                            if amount_off:
-                                total_discount_product = product['amount'] - int(amount_off)
-                                total_discount += product['amount'] - int(amount_off)
+                                if amount_off:
+                                    total_discount_product += int(amount_off)
+                                    total_discount += int(amount_off)
 
-                        elif product['type'] == 'one_time' and not product['is_launch']:
+                            elif product['type'] == 'one_time' and not product['is_launch']:
 
-                            if data_coupon.percent_discount_sign_up:
-                                total_discount_sign_up = (product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
-                                total_discount += (product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
+                                if data_coupon.percent_discount_sign_up:
+                                    total_discount_sign_up += (product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
+                                    total_discount += (product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
 
-                            if data_coupon.number_discount_sign_up:
-                                total_discount_sign_up = int(data_coupon.number_discount_sign_up)
-                                total_discount += int(data_coupon.number_discount_sign_up)
+                                if data_coupon.number_discount_sign_up:
+                                    total_discount_sign_up += int(data_coupon.number_discount_sign_up)
+                                    total_discount += int(data_coupon.number_discount_sign_up)
 
-                        elif product['type'] == 'one_time' and product['is_launch']:
-                            if data_coupon.percent_discount_pro_launch:
-                                total_discount_pro_launch = (product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
-                                total_discount += (product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
+                            elif product['type'] == 'one_time' and product['is_launch']:
+                                if data_coupon.percent_discount_pro_launch:
+                                    total_discount_pro_launch += (product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
+                                    total_discount += (product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
 
-                            if data_coupon.number_discount_pro_launch:
-                                total_discount_pro_launch = int(data_coupon.number_discount_pro_launch)
-                                total_discount += int(data_coupon.number_discount_pro_launch)
+                                if data_coupon.number_discount_pro_launch:
+                                    total_discount_pro_launch += int(data_coupon.number_discount_pro_launch)
+                                    total_discount += int(data_coupon.number_discount_pro_launch)
 
         if not coupon_id:
             return Response({'error': {'message': 'Invalid promotion code'}}, status=400)
-        return Response({'promotion': coupon_id, 'total_discount': total_discount,
+        return Response({'promotion': rs_coupon, 'total_discount': total_discount,
                          'total_discount_product': total_discount_product,
                          'total_discount_sign_up': total_discount_sign_up,
                          'total_discount_pro_launch': total_discount_pro_launch})
@@ -276,19 +279,49 @@ def create_subscription_v2(request):
     coupon_id = data.get('coupon_id')
     referral_code_id = data.get('referral_code_id')
     total_amount_price = 0
-    total_discount_amount = data.get('total_discount_amount')
+    total_discount_amount = 0
     prices_one_time = []
     price_recurring = None
+    total_product_amount = 0
+    total_sign_up_fee = 0
+    total_pro_launch = 0
+    data_coupon = None
+    data_referral = None
     for price in prices:
+        data_price = stripe.Price.retrieve(price['id'])
+        metadata = data_price.metadata
         price_create = {'price': price['id']}
         prices_create.append(price_create)
-        total_amount_price += price['amount']
-        if price['type'] == 'recurring':
-            price_recurring = price['id']
+        total_amount_price += data_price['unit_amount']
+        if data_price['type'] == 'recurring':
+            price_recurring = data_price['id']
+            total_product_amount = data_price['unit_amount']
 
-        if price['type'] == 'one_time':
-            data_create = {"price": price['id']}
+        elif data_price['type'] == 'one_time' and not metadata:
+            data_create = {"price": data_price['id']}
             prices_one_time.append(data_create)
+            total_sign_up_fee = data_price['unit_amount']
+
+        elif data_price['type'] == 'one_time' and metadata:
+            data_create = {"price": data_price['id']}
+            prices_one_time.append(data_create)
+            total_pro_launch = data_price['unit_amount']
+
+    if coupon_id:
+        data_coupon = CouponCode.objects.get(coupon_stripe_id=coupon_id)
+        rs_product, rs_sign_fee, rs_pro_launch, discount_amount = handle_total_discount(total_sign_up_fee, total_product_amount,total_pro_launch, data_coupon, prices)
+        total_discount_amount += discount_amount
+        total_product_amount = rs_product
+        total_sign_up_fee = rs_sign_fee
+        total_pro_launch = rs_pro_launch
+
+    if referral_code_id:
+        data_referral = ReferralCode.objects.get(coupon_stripe_id=referral_code_id)
+        rs_product, rs_sign_fee, rs_pro_launch, discount_amount = handle_total_discount(total_sign_up_fee, total_product_amount, total_pro_launch, data_referral, prices)
+        total_discount_amount += discount_amount
+        total_product_amount = rs_product
+        total_sign_up_fee = rs_sign_fee
+        total_pro_launch = rs_pro_launch
 
     try:
         if not promotion_code:
@@ -305,7 +338,7 @@ def create_subscription_v2(request):
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
         else:
             coupon = stripe.Coupon.create(
-                amount_off=int(total_discount_amount * 100),
+                amount_off=int(total_discount_amount),
                 currency="usd",
                 duration="repeating",
                 name="Discount",
@@ -329,6 +362,45 @@ def create_subscription_v2(request):
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
     except Exception as e:
         return Response({'error': {'message': str(e)}}, status=400)
+
+
+def handle_total_discount(total_sign_up_fee,  total_product,  total_pro_launch,  data_coupon, prices):
+    total_discount_amount = 0
+    percent_off = data_coupon.percent_discount_product
+    amount_off = data_coupon.number_discount_product
+    for price in prices:
+        data_price = stripe.Price.retrieve(price['id'])
+        metadata = data_price.metadata
+        amount = data_price['unit_amount']
+        if price['type'] == 'recurring':
+            if percent_off:
+                total_discount_amount += (total_product * int(percent_off)) / 100
+                total_product = total_product - (total_product * int(percent_off)) / 100
+
+            if amount_off:
+                total_discount_amount += int(amount_off)
+                total_product = total_product - int(amount_off)
+
+        elif price['type'] == 'one_time' and not metadata:
+
+            if data_coupon.percent_discount_sign_up:
+                total_discount_amount += (total_sign_up_fee * int(data_coupon.percent_discount_sign_up)) / 100
+                total_sign_up_fee = total_sign_up_fee - (total_sign_up_fee * int(data_coupon.percent_discount_sign_up)) / 100
+
+            if data_coupon.number_discount_sign_up:
+                total_discount_amount += int(data_coupon.number_discount_sign_up)
+                total_sign_up_fee = total_sign_up_fee - int(data_coupon.number_discount_sign_up)
+
+        elif price['type'] == 'one_time' and metadata:
+            if data_coupon.percent_discount_pro_launch:
+                total_discount_amount += (total_pro_launch * int(data_coupon.percent_discount_pro_launch)) / 100
+                total_pro_launch = total_pro_launch - (total_pro_launch * int(data_coupon.percent_discount_pro_launch)) / 100
+
+            if data_coupon.number_discount_pro_launch:
+                total_discount_amount += int(data_coupon.number_discount_pro_launch)
+                total_pro_launch = total_pro_launch - int(data_coupon.number_discount_pro_launch)
+
+    return total_discount_amount, total_product, total_sign_up_fee, total_pro_launch
 
 
 @api_view(['DELETE'])
