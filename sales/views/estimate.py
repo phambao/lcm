@@ -1071,7 +1071,7 @@ def check_action_assemble(request, pk):
             for obj in estimate_assembles:
                 serializer = AssembleSerializer(instance=obj, data=assembles_param, context={'request': request})
                 serializer.is_valid(raise_exception=True)
-                serializer.save(is_show=False, original=new_assemble.pk, estimate_templates=estimate)
+                serializer.save(is_show=False, original=new_assemble.pk)
 
         related_estimates = []
         for e in estimates:
@@ -1085,7 +1085,7 @@ def check_action_assemble(request, pk):
                 for obj in estimate_assembles:
                     serializer = AssembleSerializer(instance=obj, data=assembles_param, context={'request': request})
                     serializer.is_valid(raise_exception=True)
-                    serializer.save(is_show=False, original=new_assemble.pk, estimate_templates=estimate)
+                    serializer.save(is_show=False, original=new_assemble.pk)
                 estimate.original = new_estimates[e.pk].pk
                 data_estimate.append(estimate)
             # Price comparison
@@ -1098,7 +1098,7 @@ def check_action_assemble(request, pk):
                 for obj in estimate_assembles:
                     serializer = AssembleSerializer(instance=obj, data=assembles_param, context={'request': request})
                     serializer.is_valid(raise_exception=True)
-                    serializer.save(is_show=False, original=new_assemble.pk, estimate_templates=estimate)
+                    serializer.save(is_show=False, original=new_assemble.pk)
                 estimate.original = new_estimates[e.pk].pk
                 data_estimate.append(estimate)
             EstimateTemplate.objects.bulk_update(data_estimate, ['original'])
