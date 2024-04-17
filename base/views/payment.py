@@ -342,7 +342,6 @@ def create_subscription_v2(request):
                 expand=['latest_invoice.payment_intent'],
                 coupon=coupon,
             )
-            print(subscription.latest_invoice)
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
     except Exception as e:
