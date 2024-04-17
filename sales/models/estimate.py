@@ -345,7 +345,10 @@ class EstimateTemplate(BaseModel):
                 obj.copies_from = [{'id': POFormulaToDataEntry.objects.get(po_formula=formula, data_entry=data_entry).pk,
                                     'formula': formula.formula_for_data_view, 'data_entry': data_entry.pk, 'formula_name': formula.name}
                                    for formula in formulas]
-                obj.value = ""
+                if obj.copies_from:
+                    default_obj = POFormulaToDataEntry.objects.get(pk=obj.copies_from[0]['id'])
+                    obj.value = default_obj.value
+                    obj.dropdown_value = default_obj.dropdown_value
                 obj.save()
 
     def get_formula(self):

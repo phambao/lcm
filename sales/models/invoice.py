@@ -130,7 +130,7 @@ class Invoice(BaseModel):
     note = models.TextField(blank=True)
     proposal = models.ForeignKey('sales.ProposalWriting', on_delete=models.CASCADE, related_name='invoices', blank=True, null=True)
     owner_note = models.TextField(blank=True)
-    internal_note = models.TextField(blank=True)
+    # internal_note = models.TextField(blank=True)
 
     def get_proposal(self):
         data = []
