@@ -62,8 +62,8 @@ class GroupChangeOrder(BaseModel):
 
 
 class ProgressPayment(BaseModel):
-    table_invoice = models.OneToOneField('sales.TableInvoice', on_delete=models.CASCADE, blank=True, null=True,
-                                         related_name='progress_payment')
+    table_invoice = models.ForeignKey('sales.TableInvoice', on_delete=models.CASCADE, blank=True, null=True,
+                                      related_name='progress_payments')
     name = models.CharField(max_length=64)
     cost_type = models.CharField(max_length=128, blank=True, default='')
     percentage_payment = models.IntegerField(blank=True, default=100)
@@ -71,7 +71,6 @@ class ProgressPayment(BaseModel):
     quantity = models.IntegerField(default=0, blank=True)
     unit = models.CharField(blank=True, default='', max_length=32)
     invoice_amount = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
-    items = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)
 
 
 class ChangeOrderItem(BaseModel):
