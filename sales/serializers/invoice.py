@@ -24,12 +24,18 @@ class UnitSerializerMixin:
 class PaymentHistorySerializer(ContentTypeSerializerMixin, SerializerMixin):
     class Meta:
         model = PaymentHistory
-        fields = ('id', 'date', 'amount', 'payment_method', 'received_by', 'status')
+        fields = ('id', 'date', 'amount', 'payment_method', 'received_by', 'status', 'other_payment_method')
 
     def create(self, validated_data):
         invoice = get_object_or_404(Invoice.objects.all(), pk=self.get_params()['pk'])
         validated_data['invoice'] = invoice
         return super().create(validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data['payment_method'] == 'other':
+            del data['other_payment_method']
+        return data
 
 
 class ProposalItemSerializer(UnitSerializerMixin, serializers.ModelSerializer):

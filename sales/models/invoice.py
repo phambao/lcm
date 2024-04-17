@@ -36,6 +36,7 @@ class PaymentHistory(BaseModel):
     payment_method = models.CharField(max_length=32, choices=PaymentStatus.choices, default=PaymentStatus.CREDIT_CARD)
     received_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, related_name='payments',
                                     null=True, blank=True)
+    other_payment_method = models.CharField(max_length=256, blank=True, default='')
 
 
 class CustomTable(BaseModel):
