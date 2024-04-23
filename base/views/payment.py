@@ -214,6 +214,7 @@ def check_promotion_code_v2(request):
         if not coupon_id:
             return Response({'error': {'message': 'Invalid promotion code'}}, status=400)
         return Response({'promotion': rs_coupon, 'total_discount': total_discount,
+                         'coupon_id': 'abc',
                          'total_discount_product': total_discount_product,
                          'total_discount_sign_up': total_discount_sign_up,
                          'total_discount_pro_launch': total_discount_pro_launch})
@@ -745,6 +746,7 @@ def webhook_received(request):
                         company.referral_code_current = create_referral_code
                         company.save()
                 if dealer:
+
                     data_products = data_object.lines.data
                     commission_amount = 0
                     for product in data_products:
@@ -752,7 +754,8 @@ def webhook_received(request):
                         data_product = stripe.Product.retrieve(product_id)
                         metadata = data_product.metadata
 
-                        if metadata != {} and metadata['is_launch'] == 'True' and not product.price.recurring:
+                        is_launch = metadata.get('is_launch', None)
+                        if metadata != {} and is_launch == 'True' and not product.price.recurring:
                             commission_amount += (product.price.unit_amount * 20) / 10000
 
                         elif not product.price.recurring:
