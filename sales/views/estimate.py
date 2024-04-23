@@ -42,6 +42,7 @@ ESTIMATE_DATA_ENTRY_PREFETCH_RELATED = ['data_entries__' + i for i in DATA_ENTRY
 MATERIAL_PREFETCH_RELATED = ['material_views__' + i for i in DATA_ENTRY_PREFETCH_RELATED]
 ALL_ESTIMATE_PREFETCH_RELATED = [*ESTIMATE_PREFETCH_RELATED, *MATERIAL_PREFETCH_RELATED,
                                  *ESTIMATE_DATA_ENTRY_PREFETCH_RELATED, 'data_views', 'data_views__unit']
+ProposalWriting = apps.get_model('sales', 'ProposalWriting')
 
 
 class POFormulaList(CompanyFilterMixin, generics.ListCreateAPIView):
@@ -989,6 +990,8 @@ def check_update_data_entry(request, pk):
             estimate.sync_data_entries()
         for estimate in related_estimates:
             estimate.sync_data_entries()
+        for proposal in ProposalWriting.objects.filter(id__in=writing_params):
+            proposal.update_info()
         return Response(status=status.HTTP_200_OK, data={'data_entry': data_entry_params})
 
 
@@ -1031,6 +1034,10 @@ def check_update_estimate(request, pk):
             serializer.is_valid()
             serializer.save(is_show=False, original=pk)
 
+        # Get proposal
+        proposal_writings = ProposalWriting.objects.filter(id__in=proposal_writing_params)
+        for proposal in proposal_writings:
+            proposal.update_info()
         # Estimate template
         serializer = EstimateTemplateSerializer(data=estimate_params, instance=estimate, context={'request': request})
         serializer.is_valid()
@@ -1117,6 +1124,8 @@ def check_action_assemble(request, pk):
             estimate.sync_data_entries()
         for estimate in related_estimates:
             estimate.sync_data_entries()
+        for proposal in ProposalWriting.objects.filter(id__in=writing_params):
+            proposal.update_info()
         return Response(status=status.HTTP_200_OK)
 
 

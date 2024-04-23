@@ -1,7 +1,8 @@
-from django.contrib.auth import get_user_model
+from decimal import Decimal
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
+from django.db.models import Sum
 
 from api.models import BaseModel
 from sales.models import EstimateTemplate, Assemble, POFormula, Catalog
@@ -118,25 +119,66 @@ class ProposalWriting(BaseModel):
     def __str__(self):
         return self.name
 
-    def _get_poformula(self):
-        groups = self.writing_groups.all()
-        estimates = EstimateTemplate.objects.none()
-        for group in groups:
-            estimates |= group.estimate_templates.all()
-        assembles = Assemble.objects.none()
-        for estimate in estimates:
-            assembles |= estimate.assembles.all()
-        poformulas = POFormula.objects.none()
-        for assemble in assembles:
-            poformulas |= assemble.assemble_formulas.all()
-        return poformulas
+    def sync_data(self):
+        self.cost_breakdown = self.sync_data_type(type=GroupByEstimate.Type.GENERAL)
+        self.add_on_cost_breakdown = self.sync_data_type(type=GroupByEstimate.Type.ADD_ON)
+        self.additional_cost_breakdown = self.sync_data_type(type=GroupByEstimate.Type.ADDITIONAL_COST)
+        self.save(update_fields=['cost_breakdown', 'add_on_cost_breakdown', 'additional_cost_breakdown'])
 
-    def get_estimates(self):
+    def update_info(self):
+        total_charge, total_cost, gross_profit, markup, gross_profit_percent = self.calculation_formula(self.get_formulas(type=GroupByEstimate.Type.GENERAL))
+        self.gross_profit = gross_profit
+        self.avg_markup = markup
+        self.total_project_price = total_charge
+        self.gross_profit_percent = gross_profit_percent
+        self.total_project_cost = total_cost
+        self.save(update_fields=['total_project_price', 'total_project_cost', 'gross_profit', 'avg_markup', 'gross_profit_percent'])
+
+    def sync_data_type(self, type):
+        data = []
+        for estimate in self.get_estimates(type=type):
+            formulas = estimate.get_formula()
+            # Sum charge field for formulas
+            total_charge, total_cost, gross_profit, markup, gross_profit_percent = self.calculation_formula(formulas)
+            data.append({'id': estimate.original, 'cost': str(total_cost), 'count': formulas.count(), 'total_price': total_charge,
+                        'profit': str(gross_profit.quantize(Decimal('1.00'))),  'markup': str(markup), 'name': estimate.name,
+                        'profit_percent': f'{gross_profit_percent:.2f})'})
+        return data
+
+    def calculation_formula(self, formulas):
+        aggregate = formulas.aggregate(total_charge=Sum('charge'), total_costs=Sum('total_cost'), avg_markup=Sum('markup'))
+        total_charge = aggregate.get('total_charge', Decimal(0)).quantize(Decimal('1.00'))
+        total_cost = aggregate.get('total_costs', Decimal(0)).quantize(Decimal('1.00'))
+        gross_profit = total_charge - total_cost
+        gross_profit_percent = (gross_profit / total_charge) * 100 if total_charge != 0 else 0
+        markup = aggregate.get('avg_markup', Decimal(0)).quantize(Decimal('1.00'))
+        return total_charge, total_cost, gross_profit, markup, gross_profit_percent
+
+    def _get_poformula(self):
+        return self.get_formulas()
+
+    def get_estimates(self, type=None):
         groups = self.writing_groups.all()
+        if type != None:
+            groups = self.writing_groups.filter(type=type)
         estimates = EstimateTemplate.objects.none()
         for group in groups:
             estimates |= group.estimate_templates.all()
         return estimates
+
+    def get_assembles(self, type=None):
+        estimates = self.get_estimates(type=type)
+        assembles = Assemble.objects.none()
+        for estimate in estimates:
+            assembles |= estimate.assembles.all()
+        return assembles
+
+    def get_formulas(self, type=None):
+        assembles = self.get_assembles(type=type)
+        poformulas = POFormula.objects.none()
+        for assemble in assembles:
+            poformulas |= assemble.assemble_formulas.all()
+        return poformulas
 
     def get_checked_estimate(self):
         return self.get_estimates().filter(is_selected=True)
