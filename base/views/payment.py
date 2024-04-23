@@ -575,7 +575,7 @@ def webhook_received(request):
                         product_id = product.price.product
                         data_product = stripe.Product.retrieve(product_id)
                         metadata = data_product.metadata
-                        if metadata != {} and metadata['is_launch'] == 'True' and not product.price.recurring:
+                        if not metadata and metadata['is_launch'] == 'True' and not product.price.recurring:
                             commission_amount += (product.price.unit_amount * 10) / 10000
                             commission_amount_for_product_launch = (product.price.unit_amount * 10) / 10000
 
@@ -753,9 +753,8 @@ def webhook_received(request):
                         product_id = product.price.product
                         data_product = stripe.Product.retrieve(product_id)
                         metadata = data_product.metadata
-
                         is_launch = metadata.get('is_launch', None)
-                        if metadata != {} and is_launch == 'True' and not product.price.recurring:
+                        if not metadata and is_launch == 'True' and not product.price.recurring:
                             commission_amount += (product.price.unit_amount * 20) / 10000
 
                         elif not product.price.recurring:
