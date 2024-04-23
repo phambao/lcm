@@ -1,9 +1,8 @@
-from decimal import Decimal, localcontext
-from django.contrib.auth import get_user_model
+from decimal import Decimal
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
-from django.db.models import Sum, Avg
+from django.db.models import Sum
 
 from api.models import BaseModel
 from sales.models import EstimateTemplate, Assemble, POFormula, Catalog
