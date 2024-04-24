@@ -1132,10 +1132,11 @@ def check_action_assemble(request, pk):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated & EstimatePermissions])
 def duplicate_formula(request):
-    formulas = request.POST.get('formulas', [])
+    formulas = request.data
     for formula in POFormula.objects.filter(id__in=formulas):
         data = POFormulaSerializer(formula, context={'request': request}).data
         serializer = POFormulaSerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        serializer.save(is_show=True, original=0)
-    return Response(status=status.HTTP_200_OK, data=serializer.data)
+        serializer.save(is_show=True, original=0, group=None)
+        update_duplicate_name(POFormula, formula.name)
+    return Response(status=status.HTTP_200_OK)
