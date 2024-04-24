@@ -603,4 +603,5 @@ def get_data_storage(request, *args, **kwargs):
 
 @api_view(['GET'])
 def get_timezone(request, *args, **kwargs):
-    return Response(status=status.HTTP_200_OK, data=pytz.all_timezones)
+    us_timezones = [tz for tz in pytz.all_timezones if tz.startswith('America/')]
+    return Response(status=status.HTTP_200_OK, data=us_timezones)
