@@ -559,9 +559,8 @@ def webhook_received(request):
                 if data_referral_code and data_referral_code.dealer:
                     dealer = DealerInformation.objects.get(user=data_referral_code.dealer.user)
                 if company:
-
                     dealer_apply_for_ddr = None
-                    data_subscription_stripe_company = SubscriptionStripeCompany.objects.get(company=company)
+                    data_subscription_stripe_company = SubscriptionStripeCompany.objects.filter(company=company).first()
                     if company.referral_code_current:
                         dealer_apply_for_ddr = company.referral_code_current.dealer
 
@@ -575,7 +574,8 @@ def webhook_received(request):
                         product_id = product.price.product
                         data_product = stripe.Product.retrieve(product_id)
                         metadata = data_product.metadata
-                        if not metadata and metadata['is_launch'] == 'True' and not product.price.recurring:
+                        is_launch = metadata.get('is_launch', None)
+                        if is_launch and is_launch == 'True' and not product.price.recurring:
                             commission_amount += (product.price.unit_amount * 10) / 10000
                             commission_amount_for_product_launch = (product.price.unit_amount * 10) / 10000
 
@@ -583,7 +583,6 @@ def webhook_received(request):
                             commission_amount += (product.price.unit_amount * 50) / 10000
 
                     # handle for case dealer recept commission to product launch of DSR when subscription
-
                     if dealer_apply_for_ddr:
                         # dealer_for_ddr = referral_code.dealer
                         dealer_apply_for_ddr.total_bonus_commissions = dealer_apply_for_ddr.total_bonus_commissions + commission_amount_for_product_launch
@@ -646,7 +645,6 @@ def webhook_received(request):
 
                     company.credit = int(company.credit + commission_amount)
                     company.save()
-
                     # if company not coupon code when payment first
                     if not company_referral_code or is_use_one:
                         temp_amount = total_amount - discount_amount
@@ -859,7 +857,7 @@ def webhook_received(request):
                 # dealer = DealerInformation.objects.get(user=data_referral_code.dealer.user)
                 company = CompanyBuilder.objects.get(pk=customer.metadata['company'])
                 if company:
-                    data_subscription_stripe_company = SubscriptionStripeCompany.objects.get(company=company)
+                    data_subscription_stripe_company = SubscriptionStripeCompany.objects.filter(company=company).first()
                     total_amount = subscription.plan.amount / 100
                     company_referral_code = company.referral_code_current
                     discount_amount = 0

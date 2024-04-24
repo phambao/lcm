@@ -44,7 +44,7 @@ class ReferralCode(models.Model):
     description = models.CharField(max_length=200, blank=True)
     number_discount_sign_up = models.IntegerField(blank=True, null=True)
     currency = models.CharField(max_length=100, blank=True)
-    percent_discount_sign_up = models.IntegerField(blank=True, null=True)
+    percent_discount_sign_up = models.IntegerField(blank=True, null=True, verbose_name='Percent discount')
     number_discount_product = models.IntegerField(blank=True, null=True)
     percent_discount_product = models.IntegerField(blank=True, null=True)
     currency_product = models.CharField(max_length=100, blank=True)
