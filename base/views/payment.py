@@ -187,29 +187,35 @@ def check_promotion_code_v2(request):
                                 if percent_off:
                                     total_discount_product += (product['amount'] * int(percent_off)) / 100
                                     total_discount += (product['amount'] * int(percent_off)) / 100
+                                    product['amount'] = product['amount'] - (product['amount'] * int(percent_off)) / 100
 
                                 if amount_off:
                                     total_discount_product += int(amount_off)
                                     total_discount += int(amount_off)
+                                    product['amount'] = product['amount'] - int(amount_off)
 
                             elif product['type'] == 'one_time' and not product['is_launch']:
 
                                 if data_coupon.percent_discount_sign_up:
                                     total_discount_sign_up += (product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
                                     total_discount += (product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
+                                    product['amount'] = product['amount'] - (product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
 
                                 if data_coupon.number_discount_sign_up:
                                     total_discount_sign_up += int(data_coupon.number_discount_sign_up)
                                     total_discount += int(data_coupon.number_discount_sign_up)
+                                    product['amount'] = product['amount'] - int(data_coupon.number_discount_sign_up)
 
                             elif product['type'] == 'one_time' and product['is_launch']:
                                 if data_coupon.percent_discount_pro_launch:
                                     total_discount_pro_launch += (product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
                                     total_discount += (product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
+                                    product['amount'] = product['amount'] - (product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
 
                                 if data_coupon.number_discount_pro_launch:
                                     total_discount_pro_launch += int(data_coupon.number_discount_pro_launch)
                                     total_discount += int(data_coupon.number_discount_pro_launch)
+                                    product['amount'] = product['amount'] - int(data_coupon.number_discount_pro_launch)
 
         if not coupon_id:
             return Response({'error': {'message': 'Invalid promotion code'}}, status=400)
