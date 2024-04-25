@@ -152,7 +152,7 @@ class CompanyBuilder(models.Model):
     revenue = models.CharField(max_length=128, choices=EstimatedAnnualRevenueChoices.choices, default=EstimatedAnnualRevenueChoices.ESTIMATED_1)
     referral_code = models.CharField(blank=True, max_length=128)
     referral_code_current = models.ForeignKey('base.ReferralCode', on_delete=models.CASCADE, related_name='%(class)s_referral',null=True, blank=True)
-    credit = models.IntegerField(null=True, blank=True)
+    credit = models.FloatField(null=True, blank=True, default=0)
     roc = models.CharField(blank=True, max_length=128, default='')
     trades_others = models.CharField(blank=True, max_length=128, default='')
 
