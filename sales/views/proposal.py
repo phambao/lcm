@@ -27,7 +27,7 @@ from sales.models.lead_list import ActivitiesLog
 from sales.models.proposal import ProposalStatus
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateForFormattingSerializer, EstimateTemplateForInvoiceSerializer, POFormulaDataSerializer, POFormulaForInvoiceSerializer
-from sales.serializers.proposal import ProposalFormattingTemplateMinorSerializer, ProposalTemplateSerializer, PriceComparisonSerializer, \
+from sales.serializers.proposal import FormatEstimateSerializer, FormatFormulaSerializer, ProposalFormattingTemplateMinorSerializer, ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
     ProposalWritingCompactSerializer, ProposalTemplateHtmlCssSerializer, ProposalWritingDataSerializer, \
     ProposalFormattingTemplateSignSerializer, ProposalFormattingTemplateSignsSerializer, ProposalSettingSerializer, WritingStatusSerializer
@@ -510,3 +510,41 @@ def status_writing(request, pk):
                                      title=f'{proposal_writing.name}', type='proposal', start_date=timezone.now())
     status = proposal_writing.status
     return Response(status=200, data={'status': status})
+
+
+def get_data_template_group(estimates, tab):
+    template_groups = []
+    for estimate in estimates:
+        estimate.get_info()
+        estimate_data = FormatEstimateSerializer(estimate).data
+        del estimate_data['formulas']
+        estimate_data['section'] = tab
+        estimate_data['is_formula'] = False
+        template_groups.append(estimate_data)
+        for formula in estimate.get_formula():
+            data = FormatFormulaSerializer(formula).data
+            data['section'] = tab
+            data['is_formula'] = True
+            template_groups.append(data)
+    return template_groups
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated & ProposalPermissions])
+def parse_template(request):
+    #  Get Proposal Serializer
+    data = request.data
+    data['name'] = 'Template'
+    serializer = ProposalWritingSerializer(data=request.data, context={'request': request})
+    serializer.is_valid(raise_exception=True)
+    proposal_writing = serializer.save()
+    template_groups = []
+    #  Get Proposal Formatting
+    general_estimates = proposal_writing.get_estimates(type=0)
+    template_groups += get_data_template_group(general_estimates, 'General')
+    add_on_estimates = proposal_writing.get_estimates(type=1)
+    template_groups += get_data_template_group(add_on_estimates, 'Optional Add-on Services')
+    additional_estimates = proposal_writing.get_estimates(type=2)
+    template_groups += get_data_template_group(additional_estimates, 'Additional Costs')
+    proposal_writing.delete()
+    return Response(status=status.HTTP_200_OK, data=template_groups)
