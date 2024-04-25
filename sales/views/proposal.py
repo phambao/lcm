@@ -27,7 +27,7 @@ from sales.models.lead_list import ActivitiesLog
 from sales.models.proposal import ProposalStatus
 from sales.serializers.catalog import CatalogImageSerializer
 from sales.serializers.estimate import EstimateTemplateForFormattingSerializer, EstimateTemplateForInvoiceSerializer, POFormulaDataSerializer, POFormulaForInvoiceSerializer
-from sales.serializers.proposal import FormatFormulaSerializer, ProposalFormattingTemplateMinorSerializer, ProposalTemplateSerializer, PriceComparisonSerializer, \
+from sales.serializers.proposal import FormatEstimateSerializer, FormatFormulaSerializer, ProposalFormattingTemplateMinorSerializer, ProposalTemplateSerializer, PriceComparisonSerializer, \
     ProposalFormattingTemplateSerializer, ProposalWritingSerializer, PriceComparisonCompactSerializer, \
     ProposalWritingCompactSerializer, ProposalTemplateHtmlCssSerializer, ProposalWritingDataSerializer, \
     ProposalFormattingTemplateSignSerializer, ProposalFormattingTemplateSignsSerializer, ProposalSettingSerializer, WritingStatusSerializer
@@ -516,11 +516,15 @@ def get_data_template_group(estimates, tab):
     template_groups = []
     for estimate in estimates:
         estimate.get_info()
-        template_groups.append({'id': estimate.id, 'name': estimate.name,
-                                'section': tab, 'total_price': estimate.get_total_prices()})
+        estimate_data = FormatEstimateSerializer(estimate).data
+        del estimate_data['formulas']
+        estimate_data['section'] = tab
+        estimate_data['is_formula'] = False
+        template_groups.append(estimate_data)
         for formula in estimate.get_formula():
             data = FormatFormulaSerializer(formula).data
             data['section'] = tab
+            data['is_formula'] = True
             template_groups.append(data)
     return template_groups
 

@@ -14,6 +14,7 @@ class GroupEstimate(BaseModel):
                                                 related_name='change_order_group')
     change_order = models.ForeignKey('sales.ChangeOrder', on_delete=models.CASCADE, blank=True, null=True,
                                      related_name='groups')
+    tab = models.IntegerField(default=0, blank=True, null=True)  # Change order
 
 
 class GroupFlatRate(BaseModel):
