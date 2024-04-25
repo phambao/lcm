@@ -139,7 +139,8 @@ class CompanySerializer(serializers.ModelSerializer):
 
     def validate_company_timezone(self, value):
         if value:
-            if value not in pytz.all_timezones:
+            us_timezones = [tz for tz in pytz.all_timezones if tz.startswith('America/')]
+            if value not in us_timezones:
                 raise serializers.ValidationError('timezones error')
         return value
 

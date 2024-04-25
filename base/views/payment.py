@@ -184,6 +184,11 @@ def check_promotion_code_v2(request):
 
                     else:
                         data_coupon = ReferralCode.objects.get(coupon_stripe_id=coupon_id.coupon.id)
+                        company = data_coupon.company
+                        if company and not company.referral_code_current.dealer:
+                            data_coupon.percent_discount_sign_up = None
+                            data_coupon.percent_discount_pro_launch = None
+                            data_coupon.save()
 
                     for product in products:
                         if product['type'] == 'recurring':
@@ -675,7 +680,7 @@ def webhook_received(request):
                                 coupon=coupon,
                             )
                             create_referral_code = ReferralCode.objects.create(
-                                number_discount_sign_up=total_amount,
+                                number_discount_product=total_amount,
                                 currency=data_sub.currency,
                                 coupon_stripe_id=coupon.id,
                                 dealer=company_referral_code.dealer,
@@ -699,7 +704,7 @@ def webhook_received(request):
                             )
 
                             create_referral_code = ReferralCode.objects.create(
-                                number_discount_sign_up=total_discount_coupon,
+                                number_discount_product=total_discount_coupon,
                                 currency=data_sub.currency,
                                 coupon_stripe_id=coupon.id,
                                 dealer=data_referral_code.dealer,
@@ -725,7 +730,7 @@ def webhook_received(request):
                                 coupon=coupon,
                             )
                             create_referral_code = ReferralCode.objects.create(
-                                number_discount_sign_up=total_amount,
+                                number_discount_product=total_amount,
                                 currency=data_sub.currency,
                                 coupon_stripe_id=coupon.id,
                                 dealer=company_referral_code.dealer,
@@ -746,7 +751,7 @@ def webhook_received(request):
                                 coupon=coupon,
                             )
                             create_referral_code = ReferralCode.objects.create(
-                                number_discount_sign_up=total_discount_coupon,
+                                number_discount_product=total_discount_coupon,
                                 currency=data_sub.currency,
                                 coupon_stripe_id=coupon.id,
                                 dealer=company_referral_code.dealer,
@@ -891,7 +896,7 @@ def webhook_received(request):
                                 coupon=coupon,
                             )
                             create_referral_code = ReferralCode.objects.create(
-                                number_discount_sign_up=total_amount,
+                                number_discount_product=total_amount,
                                 currency=subscription.currency,
                                 coupon_stripe_id=coupon.id,
                                 dealer=data_referral_code.dealer,
@@ -913,7 +918,7 @@ def webhook_received(request):
                                 coupon=coupon,
                             )
                             create_referral_code = ReferralCode.objects.create(
-                                number_discount_sign_up=total_amount,
+                                number_discount_product=total_amount,
                                 currency=subscription.currency,
                                 coupon_stripe_id=coupon.id,
                                 dealer=data_referral_code.dealer,
@@ -941,7 +946,7 @@ def webhook_received(request):
                                     coupon=coupon,
                                 )
                                 create_referral_code = ReferralCode.objects.create(
-                                    number_discount_sign_up=total_amount,
+                                    number_discount_product=total_amount,
                                     currency=subscription.currency,
                                     coupon_stripe_id=coupon.id,
                                     dealer=data_referral_code.dealer,
@@ -964,7 +969,7 @@ def webhook_received(request):
                                     coupon=coupon,
                                 )
                                 create_referral_code = ReferralCode.objects.create(
-                                    number_discount_sign_up=total_discount_coupon,
+                                    number_discount_product=total_discount_coupon,
                                     currency=subscription.currency,
                                     coupon_stripe_id=coupon.id,
                                     dealer=data_referral_code.dealer,
