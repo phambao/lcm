@@ -17,11 +17,21 @@ class GroupEstimate(BaseModel):
     tab = models.IntegerField(default=0, blank=True, null=True)  # Change order
 
 
+class WritingGroup(BaseModel):
+    group = models.ForeignKey('sales.GroupEstimate', on_delete=models.CASCADE, blank=True, null=True, related_name='writing_groups')
+    estimate_templates = models.ManyToManyField('sales.EstimateTemplate', blank=True, symmetrical=False,
+                                                related_name='change_order_groups')
+    open_index = models.CharField(max_length=64, blank=True, default='')
+    type = models.IntegerField(default=0, blank=True, null=True)  # Change order
+    order = models.IntegerField(default=0, blank=True, null=True)
+
+
 class GroupFlatRate(BaseModel):
     name = models.CharField(max_length=128, blank=True)
     change_order = models.ForeignKey('sales.ChangeOrder', on_delete=models.CASCADE,
                                      blank=True, null=True, related_name='flat_rate_groups')
     order = models.IntegerField(default=0, blank=True)
+    tab = models.IntegerField(default=0, blank=True, null=True) 
 
 
 class FlatRate(BaseModel):

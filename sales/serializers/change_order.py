@@ -4,16 +4,18 @@ from rest_framework import serializers
 from base.utils import pop, extra_kwargs_for_base_model
 from base.tasks import activity_log
 from sales.models import ChangeOrder, GroupEstimate, FlatRate, GroupFlatRate
+from sales.models.change_order import WritingGroup
 from sales.serializers.estimate import EstimateTemplateForInvoiceSerializer, EstimateTemplateSerializer, POFormulaDataSerializer, \
     POFormulaForInvoiceSerializer
 
 
-class GroupEstimateSerializer(serializers.ModelSerializer):
+class WritingGroupSerializer(serializers.ModelSerializer):
     estimate_templates = EstimateTemplateSerializer('change_order_group', many=True, required=False, allow_null=True)
+
     class Meta:
-        model = GroupEstimate
+        model = WritingGroup
         fields = '__all__'
-        extra_kwargs = {**extra_kwargs_for_base_model(), **{'change_order': {'read_only': True}}}
+        extra_kwargs = {**extra_kwargs_for_base_model(), **{'group': {'read_only': True}}}
 
     def create_estimate_template(self, estimates):
         objs = []
@@ -29,6 +31,40 @@ class GroupEstimateSerializer(serializers.ModelSerializer):
         instance = super().create(validated_data)
         estimate_templates = self.create_estimate_template(estimate_templates)
         instance.estimate_templates.add(*estimate_templates)
+        return instance
+
+
+class GroupEstimateSerializer(serializers.ModelSerializer):
+    estimate_templates = EstimateTemplateSerializer('change_order_group', many=True, required=False, allow_null=True)
+    writing_groups = WritingGroupSerializer('group', many=True, required=False, allow_null=True)
+
+    class Meta:
+        model = GroupEstimate
+        fields = '__all__'
+        extra_kwargs = {**extra_kwargs_for_base_model(), **{'change_order': {'read_only': True}}}
+
+    def create_writing_groups(self, writing_groups, instance):
+        for writing_group in writing_groups:
+            obj = WritingGroupSerializer(data=writing_group, context=self.context)
+            obj.is_valid(raise_exception=True)
+            obj.save(group=instance)
+
+    def create_estimate_template(self, estimates):
+        objs = []
+        for estimate in estimates:
+            serializer = EstimateTemplateSerializer(data=estimate, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save(is_show=False)
+            objs.append(obj)
+        return objs
+
+    def create(self, validated_data):
+        estimate_templates = pop(validated_data, 'estimate_templates', [])
+        writing_groups = pop(validated_data, 'writing_groups', [])
+        instance = super().create(validated_data)
+        estimate_templates = self.create_estimate_template(estimate_templates)
+        instance.estimate_templates.add(*estimate_templates)
+        self.create_writing_groups(writing_groups, instance)
         return instance
 
 
