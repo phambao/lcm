@@ -207,12 +207,18 @@ class InvoiceSerializer(ContentTypeSerializerMixin, SerializerMixin):
     tables = TableInvoiceSerializer('invoice', many=True, required=False, allow_null=True)
     payment_histories = PaymentHistorySerializer('invoice', many=True, required=False, allow_null=True)
     attachments = AttachmentInvoiceSerializer(many=True, required=False, allow_null=True)
+    template = InvoiceTemplateMinorSerializer('invoice', allow_null=True, required=False)
 
     class Meta:
         model = Invoice
-        fields = ('id', 'name', 'tables', 'date_paid', 'status', 'deadline', 'attachments', 'deadline_datetime',
+        fields = ('id', 'name', 'tables', 'date_paid', 'status', 'deadline', 'attachments', 'deadline_datetime', 'template',
                   'comment', 'note', 'proposal', 'link_to_event', 'payment_histories', 'created_date', 'owner_note',)
         read_only_fields = ('created_date', )
+
+    def create_format(self, format, instance):
+        serializer = InvoiceTemplateMinorSerializer(data=format, context=self.context)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(invoice=instance)
 
     def create_attachment(self, instance, attachments):
         for attachment in attachments:
@@ -236,9 +242,11 @@ class InvoiceSerializer(ContentTypeSerializerMixin, SerializerMixin):
     def create(self, validated_data):
         tables = pop(validated_data, 'tables', [])
         payment_histories = pop(validated_data, 'payment_histories', [])
+        format = pop(validated_data, 'template', {})
         attachments = pop(validated_data, 'attachments', [])
         instance = super().create(validated_data)
         self.create_talbes(instance, tables)
+        self.create_format(format, instance)
         # self.create_payment_history(instance, payment_histories)
         self.create_attachment(instance, attachments)
         activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
@@ -248,13 +256,16 @@ class InvoiceSerializer(ContentTypeSerializerMixin, SerializerMixin):
     def update(self, instance, validated_data):
         tables = pop(validated_data, 'tables', [])
         payment_histories = pop(validated_data, 'payment_histories', [])
+        format = pop(validated_data, 'template', {})
         attachments = pop(validated_data, 'attachments', [])
         instance = super().update(instance, validated_data)
+        instance.template.delete()
         instance.tables.all().delete()
         # instance.payment_histories.all().delete()
         AttachmentInvoice.objects.filter(content_type=ContentType.objects.get_for_model(instance),
                                          object_id=instance.id).delete()
         self.create_talbes(instance, tables)
+        self.create_format(format, instance)
         # self.create_payment_history(instance, payment_histories)
         self.create_attachment(instance, attachments)
         activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
