@@ -131,11 +131,11 @@ class CompanyBuilder(models.Model):
     zip_code = models.CharField(verbose_name='Zip Code', max_length=6, blank=True)
     size = models.IntegerField(null=True, blank=True)
     tax = models.CharField(blank=True, max_length=128)
-    business_phone = models.CharField(blank=True, max_length=15)
+    business_phone = models.CharField(blank=True, max_length=20)
     fax = models.CharField(blank=True, max_length=15)
     email = models.EmailField(blank=True, max_length=128)
     cell_mail = models.CharField(blank=True, max_length=128)
-    cell_phone = models.CharField(blank=True, max_length=15)
+    cell_phone = models.CharField(blank=True, max_length=20)
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
     user_create = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='%(class)s_user_create',
@@ -152,7 +152,7 @@ class CompanyBuilder(models.Model):
     revenue = models.CharField(max_length=128, choices=EstimatedAnnualRevenueChoices.choices, default=EstimatedAnnualRevenueChoices.ESTIMATED_1)
     referral_code = models.CharField(blank=True, max_length=128)
     referral_code_current = models.ForeignKey('base.ReferralCode', on_delete=models.CASCADE, related_name='%(class)s_referral',null=True, blank=True)
-    credit = models.IntegerField(null=True, blank=True)
+    credit = models.FloatField(null=True, blank=True, default=0)
     roc = models.CharField(blank=True, max_length=128, default='')
     trades_others = models.CharField(blank=True, max_length=128, default='')
 
