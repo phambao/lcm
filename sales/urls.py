@@ -221,6 +221,7 @@ url_estimate = [
     path('formula/import/', estimate.import_formula),
     path('po-formula-compact/', estimate.POFormulaCompactList.as_view()),
     path('po-formula/<int:pk>/', estimate.POFormulaDetail.as_view()),
+    path('po-formula/<int:pk>/description/', estimate.get_formula_description),
     path('po-formula/duplicate/', estimate.duplicate_formula),
     path('po-formula/<int:pk>/check-action/', estimate.action_related_formulas),
     path('po-formula/check-action/', estimate.check_multiple_formula_action),
