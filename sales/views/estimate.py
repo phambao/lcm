@@ -23,7 +23,7 @@ from sales.filters.estimate import FormulaFilter, EstimateTemplateFilter, Assemb
 from sales.models import DataPoint, Catalog
 from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, UnitLibrary, \
     DescriptionLibrary, Assemble, EstimateTemplate, MaterialView
-from sales.serializers.catalog import CatalogEstimateSerializer, CatalogEstimateWithParentSerializer, CatalogLevelValueSerializer
+from sales.serializers.catalog import CatalogEstimateSerializer, CatalogEstimateWithParentSerializer, CatalogLevelValueSerializer, CatalogSerializer
 from sales.serializers.estimate import POFormulaGroupCompactSerializer, POFormulaSerializer, POFormulaGroupingSerializer, DataEntrySerializer, \
     UnitLibrarySerializer, DescriptionLibrarySerializer, LinkedDescriptionSerializer, AssembleSerializer, \
     EstimateTemplateSerializer, TaggingSerializer, GroupFormulasSerializer, POFormulaCompactSerializer, \
@@ -779,6 +779,18 @@ def import_formula(request):
     rs = POFormulaGroupCompactSerializer(
         temp_rs, many=True, context={'request': request}).data
     return Response(status=status.HTTP_200_OK, data=rs)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated & EstimatePermissions])
+def get_formula_description(request, pk):
+    formula = get_object_or_404(POFormula.objects.all(), pk=pk)
+    catalog_params = request.GET.getlist('catalogs', [])
+    catalogs = Catalog.objects.filter(pk__in=catalog_params)
+    data = {}
+    data['formula'] = formula.linked_description
+    data['catalogs'] = CatalogSerializer(catalogs, many=True).data
+    return Response(status=status.HTTP_200_OK, data=data)
 
 
 @api_view(['GET'])
