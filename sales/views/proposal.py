@@ -18,7 +18,7 @@ from base.permissions import ProposalPermissions
 from base.serializers.config import CompanySerializer
 from base.utils import file_response, pop
 from base.views.base import CompanyFilterMixin
-from base.tasks import celery_send_mail, export_proposal
+from base.tasks import celery_send_mail, export_proposal, send_published_article, send_mail_with_attachment
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter, ProposalTemplateFilter
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, POFormula, \
     ProposalFormattingSign, ProposalSetting
