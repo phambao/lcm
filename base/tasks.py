@@ -5,7 +5,7 @@ from io import BytesIO
 from celery import shared_task, current_task
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 from django.http import HttpRequest
 from django.core.files.base import ContentFile
 from django.apps import apps
@@ -138,6 +138,16 @@ def celery_send_mail(subject, message, from_email, recipient_list,
               fail_silently=fail_silently, auth_user=auth_user, auth_password=auth_password,
               connection=connection, html_message=html_message)
 
+
+@shared_task(name='send-email')
+def send_mail_with_attachment(subject, body, from_email, to, attachments, bcc=None, connection=None,
+                              headers=None, cc=None, reply_to=None):
+    email = EmailMessage(subject, body, from_email, to, bcc=bcc, connection=connection,
+                         attachments=None, headers=headers, cc=cc, reply_to=reply_to)
+
+    for attachment in attachments:
+        email.attach(attachment.name, attachment.read())
+    email.send()
 
 @shared_task()
 def activity_log(model, instance, action, serializer_name, base_import_file, user_id):

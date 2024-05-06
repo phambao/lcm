@@ -310,7 +310,6 @@ class ReferralCodeAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'code', 'description', 'number_discount_sign_up', 'percent_discount_sign_up', 'number_discount_product',
                     'percent_discount_product', 'number_discount_pro_launch', 'percent_discount_pro_launch', 'monthly_discounts', 'number_of_uses', 'start_date', 'end_date', 'coupon_stripe_id', 'promotion_code_id')
     search_fields = ['code']
-
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         return queryset.exclude(code__exact='')
@@ -371,7 +370,6 @@ class CouponCodeAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'code', 'description', 'number_discount_sign_up', 'percent_discount_sign_up', 'number_discount_product',
                     'percent_discount_product', 'number_discount_pro_launch', 'percent_discount_pro_launch', 'monthly_discounts', 'number_of_uses', 'start_date', 'end_date', 'coupon_stripe_id')
     search_fields = ['code']
-
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         return queryset.exclude(code__exact='')
@@ -426,9 +424,31 @@ class CouponCodeAdmin(admin.ModelAdmin):
         obj.save()
 
 
+class ReferralCodeInline(admin.TabularInline):
+    model = ReferralCode
+    extra = 0
+    can_delete = False
+    fields = ["title", "code", "number_discount_sign_up", "currency", "percent_discount_sign_up", 'number_discount_product',
+              'percent_discount_product', 'currency_product', 'number_discount_pro_launch', 'percent_discount_pro_launch',
+              'currency_pro_launch', 'monthly_discounts', 'number_of_uses', 'is_activate', 'promotion_code_id']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.exclude(code='')
+
+
 class DealerInformationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'total_bonus_commissions')
-    # search_fields = ['name', 'name']
+    list_display = ('id', 'dealer_name', 'user', 'total_bonus_commissions')
+    inlines = [ReferralCodeInline]
+
+    def dealer_name(self, obj):
+        return obj.user.get_full_name() if obj.user else "N/A"
+
+    dealer_name.short_description = 'Dealer Name'
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.prefetch_related('referral_code_dealer')
 
 
 class DealerCompanyAdmin(admin.ModelAdmin):
