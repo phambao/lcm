@@ -133,7 +133,7 @@ def handle_save_file(bytes_io, file_name, user_id, task_id):
 @shared_task()
 def celery_send_mail(subject, message, from_email, recipient_list,
                      fail_silently=False, auth_user=None, auth_password=None,
-                     connection=None, html_message=None, file=None):
+                     connection=None, html_message=None):
     send_mail(subject, message, from_email, recipient_list,
               fail_silently=fail_silently, auth_user=auth_user, auth_password=auth_password,
               connection=connection, html_message=html_message)
@@ -148,7 +148,6 @@ def send_mail_with_attachment(subject, body, from_email, to, attachments, bcc=No
     for attachment in attachments:
         email.attach(attachment.name, attachment.read())
     email.send()
-
 
 @shared_task()
 def activity_log(model, instance, action, serializer_name, base_import_file, user_id):
