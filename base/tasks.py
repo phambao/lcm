@@ -207,9 +207,10 @@ def import_catalog_task(file_pk, company_pk, user_pk):
         length_level, length_cost_table, levels, c_table_header = count_level(header, parent)
         c_table_header = ['name', 'unit', 'cost', *c_table_header[3:]]
 
+        cost_table_cache = set()
         unit = set()
         for row in catalog_sheet.iter_rows(min_row=2, values_only=True):
-            unit.add(create_catalog_by_row(row, length_level, company, parent, levels, c_table_header))
+            unit.add(create_catalog_by_row(row, length_level, company, parent, levels, c_table_header, cost_table_cache))
 
         unit_library = set(UnitLibrary.objects.filter(company=company).values_list('name', flat=True))
         UnitLibrary.objects.bulk_create([UnitLibrary(name=i, company=company) for i in unit.difference(unit_library) if i])
@@ -251,7 +252,7 @@ def count_level(header, level_catalog):
     return level_column_number, length - length_level, levels, c_table_header
 
 
-def create_catalog_by_row(row, length_level, company, root, levels, level_header):
+def create_catalog_by_row(row, length_level, company, root, levels, level_header, cache=set()):
     """
     Parameters:
         row: tuple
@@ -288,21 +289,20 @@ def create_catalog_by_row(row, length_level, company, root, levels, level_header
         parent = catalog
     else:
         if length_level:
-            c_table = parent.c_table
+            c_table = parent.c_table or {'header': level_header, 'data': []}
+            if parent.id not in cache:
+                #  Get all data from dictionary except key 'data' and 'header'
+                c_table = {key: value for key, value in parent.c_table.items() if key not in ['data', 'header']} if parent.c_table else {}
+                c_table['header'] = level_header
+                c_table['data'] = []
             # Validate cost table data
             data_create = ['' if value is None else str(value) for value in row[i*5 + 5:]]
             if any(row[i*5 + 5:]):
-                # cost table has created
-                if c_table:
-                    data = c_table['data']
-                    if data_create not in data:
-                        data.append(data_create)
-                else:
-                    if row[i*5 + 5:]:
-                        parent.c_table = {'header': level_header,
-                            'data': [data_create] }
+                c_table['data'].append(data_create)
+                parent.c_table = c_table
                 parent.save()
             # No cost table
+            cache.add(parent.id)
             try:
                 unit = row[i*5 + 6]
             except IndexError:
