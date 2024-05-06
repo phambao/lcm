@@ -150,13 +150,6 @@ def send_mail_with_attachment(subject, body, from_email, to, attachments, bcc=No
     email.send()
 
 
-@shared_task(name='send-email')
-def send_published_article(sender, subject, body, attachment, recipients):
-    email = EmailMessage(subject, body, sender, recipients)
-    email.attach(attachment.name, attachment.read())
-    email.send()
-
-
 @shared_task()
 def activity_log(model, instance, action, serializer_name, base_import_file, user_id):
     """

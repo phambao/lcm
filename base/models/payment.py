@@ -59,7 +59,7 @@ class ReferralCode(models.Model):
     coupon_stripe_id = models.CharField(max_length=100, blank=True)
     dealer = models.ForeignKey('DealerInformation', on_delete=models.SET_NULL, related_name='referral_code_dealer',null=True, blank=True)
     company = models.ForeignKey(CompanyBuilder, on_delete=models.SET_NULL, related_name='code_company',null=True, blank=True)
-    is_activate = models.BooleanField(blank=True, null=True)
+    is_activate = models.BooleanField(blank=True, null=True, default=True)
     promotion_code_id = models.CharField(max_length=100, blank=True)
 
     # def clean(self):
@@ -76,6 +76,9 @@ class DealerInformation(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, related_name='user_dealer',null=True, blank=True)
     total_bonus_commissions = models.IntegerField(blank=True, null=True, default=0)
     created_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+    def __str__(self):
+        return self.user.get_full_name()
 
 
 class DealerCompany(models.Model):
