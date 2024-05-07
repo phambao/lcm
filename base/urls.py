@@ -15,7 +15,7 @@ from base.views.base import update_language_user, QuestionGenericView, QuestionD
 # Define path for Base App ------------------------------------------------------
 from base.views.country_state_city import address_search, detail_location
 from base.views.dealers import DealerLoginView, logout_view, dashboard, orders
-from base.views.payment import ProductPreviewDetail, ProductPreview, CreateCheckOutSession, \
+from base.views.payment import ProductPreviewDetail, ProductPreview, \
     stripe_cancel_subscription, get_config, create_customer, create_subscription, cancel_subscription, \
     list_subscriptions, preview_invoice, update_subscription, webhook_received, PaymentHistoryStripePreview, \
     preview_subscription, check_promotion_code, update_customer, get_payment_history, create_subscription_v2, \
@@ -48,7 +48,6 @@ url_base = [
     path('lang/<str:lang>/', update_language_user),
     path('product/<int:pk>/', ProductPreviewDetail.as_view()),
     path('product/', ProductPreview.as_view()),
-    path('payment/stripe/create-checkout-session/', csrf_exempt(CreateCheckOutSession.as_view()), name='checkout_session'),
     path('payment/stripe/stripe-cancel-subscription/<str:subscription_id>/', stripe_cancel_subscription),
     path('payment/stripe/config/', get_config),
     path('payment/stripe/create-customer/', create_customer),

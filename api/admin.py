@@ -307,9 +307,11 @@ class TradesAdmin(admin.ModelAdmin):
 
 
 class ReferralCodeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'code', 'description', 'number_discount_sign_up', 'percent_discount_sign_up', 'number_discount_product',
+    list_display = ('id', 'title', 'code', 'description', 'number_discount_sign_up', 'percent_discount_sign_up', 'number_discount_product', 'company',
                     'percent_discount_product', 'number_discount_pro_launch', 'percent_discount_pro_launch', 'monthly_discounts', 'number_of_uses', 'start_date', 'end_date', 'coupon_stripe_id', 'promotion_code_id')
     search_fields = ['code']
+    exclude = ('company',)
+
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         return queryset.exclude(code__exact='')

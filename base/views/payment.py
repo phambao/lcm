@@ -17,7 +17,7 @@ from decouple import config
 import jwt
 
 from api.models import CompanyBuilder, User, SubscriptionStripeCompany
-from base.constants import PERCENT_DISCOUNT
+from base.constants import PERCENT_DISCOUNT, YEAR, MONTH, WEEK
 from base.tasks import celery_send_mail
 from base.models.payment import Product, PaymentHistoryStripe, Price, ReferralCode, DealerInformation, DealerCompany, \
     CouponCode
@@ -31,6 +31,7 @@ class ProductPreview(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Product.objects.all()
 
+
 class ProductPreviewDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -40,32 +41,6 @@ class ProductPreviewDetail(generics.RetrieveUpdateDestroyAPIView):
 class PaymentHistoryStripePreview(generics.ListCreateAPIView):
     serializer_class = PaymentHistoryStripeSerializer
     queryset = PaymentHistoryStripe.objects.all()
-
-
-class CreateCheckOutSession(APIView):
-    def post(self, request, *args, **kwargs):
-        try:
-            # serializer = CheckoutSessionSerializer(data=request.data)
-            # serializer.is_valid(raise_exception=True)
-            # data_insert = dict(serializer.validated_data)
-            checkout_session = stripe.checkout.Session.create(
-                line_items=[
-                    {
-                        'price': 'price_1NSAw2E4OZckNkJ5fvwlIRxN',
-                        'quantity': 1
-                    },
-                ],
-                metadata={
-                    "stripe_email": 'truong123@gmail.com'
-                },
-                mode='subscription',
-                success_url="http://localhost:3000/success",
-                cancel_url="http://localhost:3000/cancel.html",
-                client_reference_id='1'
-            )
-            return redirect(checkout_session.url)
-        except stripe.error.StripeError as e:
-            return Response({'msg': 'something went wrong while creating stripe session', 'error': str(e)}, status=500)
 
 
 @api_view(['DELETE'])
@@ -158,7 +133,6 @@ def check_promotion_code_v2(request):
     data = request.data
     promotion_code = data.get('coupon_code')
     products = data.get('products')
-    type_coupon = data.get('type')
     total_discount = 0
     total_discount_sign_up = 0
     total_discount_product = 0
@@ -177,7 +151,6 @@ def check_promotion_code_v2(request):
                     percent_off = code.coupon.percent_off
                     coupon_id = code
                     rs_coupon.append(code)
-
                     data_coupon = None
                     if data_code['type'] == 'coupon':
                         data_coupon = CouponCode.objects.get(coupon_stripe_id=coupon_id.coupon.id)
@@ -286,10 +259,8 @@ def create_subscription(request):
 @csrf_exempt
 def create_subscription_v2(request):
     data = request.data
-    # customer_id = request.COOKIES.get('customer')
     prices_create = []
     prices = data['prices']
-    # price_id = data['price_id']
     customer_id = data['customer_id']
     promotion_code = data.get('coupon_code')
     coupon_id = data.get('coupon_id')
@@ -425,10 +396,6 @@ def cancel_subscription(request):
     try:
         deleted_subscription = stripe.Subscription.delete(data['subscriptionId'])
         return Response({'subscription': deleted_subscription})
-        # stripe.Subscription.modify(
-        #     "sub_49ty4767H20z6a",
-        #     cancel_at_period_end=True,
-        # )
     except Exception as e:
         return Response({'error': str(e)}, status=403)
 
@@ -1029,17 +996,6 @@ def webhook_received(request):
         data_payment_history = PaymentHistoryStripe.objects.filter(
             customer_stripe_id=customer_stripe_id
         )
-        # PaymentHistoryStripe.objects.create(
-        #     subscription_id=subscription_id,
-        #     customer_stripe_id=customer_stripe_id,
-        #     payment_method_id=payment_intent.payment_method.id,
-        #     subscription_name=subscription.plan.product.name,
-        #     status=payment_intent.status,
-        #     payment_method=payment_intent.payment_method.card.brand,
-        #     card_number=payment_intent.payment_method.card.last4,
-        #     price=payment_intent.amount,
-        #     payment_day=payment_intent.created,
-        # )
         if not data_payment_history:
             payload = {
                 'sub': subscription_id,
@@ -1064,7 +1020,6 @@ def webhook_received(request):
         user = User.objects.get(stripe_customer=customer)
         company_name = user.company.company_name
         customer_name = user.username
-        # url = BASE_URL
         url_login = config('BASE_URL') + '/login/'
         content = render_to_string('auth/payment-failse.html', {
             'subscription_name': subscription.plan.product.name,
@@ -1095,13 +1050,13 @@ def get_data_dealer(request, period):
         total_user = 0
         end_date = datetime.now()
         start_date = None
-        if period == 'week':
+        if period == WEEK:
             start_date = end_date - timedelta(days=7)
 
-        elif period == 'month':
+        elif period == MONTH:
             start_date = end_date - timedelta(days=30)
 
-        elif period == 'year':
+        elif period == YEAR:
             start_date = end_date - timedelta(days=365)
 
         if start_date:
