@@ -360,61 +360,6 @@ class WritingStatusSerializer(serializers.ModelSerializer):
         fields = ('status',)
 
 
-class ProposalWritingSerializer(ContentTypeSerializerMixin):
-    writing_groups = GroupByEstimateSerializers('writing', many=True, allow_null=True, required=False)
-    cost_breakdown = CostBreakDownSerializer(many=True, allow_null=True, required=False)
-
-    class Meta:
-        model = ProposalWriting
-        fields = '__all__'
-        read_only_fields = ['status']
-        extra_kwargs = extra_kwargs_for_base_model()
-
-    def create_group(self, writing_groups, instance):
-        for writing_group in writing_groups:
-            serializer = GroupByEstimateSerializers(data=writing_group, context=self.context)
-            serializer.is_valid(raise_exception=True)
-            serializer.save(writing_id=instance.pk)
-
-    def create(self, validated_data):
-        writing_groups = pop(validated_data, 'writing_groups', [])
-        instance = super().create(validated_data)
-        self.create_group(writing_groups, instance)
-        activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
-                           ProposalWritingSerializer.__name__, __name__, self.context['request'].user.pk)
-        if instance.lead:
-            ActivitiesLog.objects.create(lead=instance.lead, status='draft', type_id=instance.pk,
-                                        title=f'{instance.name}', type='proposal', start_date=instance.created_date)
-        return instance
-
-    def update(self, instance, validated_data):
-        writing_groups = pop(validated_data, 'writing_groups', [])
-        instance.writing_groups.all().update(writing=None)
-        self.create_group(writing_groups, instance)
-        activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
-                           ProposalWritingSerializer.__name__, __name__, self.context['request'].user.pk)
-        if hasattr(instance, 'proposal_formatting'):
-            proposal_formatting = instance.proposal_formatting
-            proposal_formatting.has_send_mail = False
-            proposal_formatting.has_signed = False
-            proposal_formatting.print_date = None
-            proposal_formatting.signature = ''
-            proposal_formatting.sign_date = None
-            proposal_formatting.save()
-        validated_data['status'] = 'draft'
-        return super().update(instance, validated_data)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        user = get_request().user
-        data['permissions'] = {
-            'internal_view': user.check_perm('internal_view'),
-            'client_view': user.check_perm('client_view')
-        }
-
-        return data
-
-
 class ProposalFormattingTemplateConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProposalFormattingConfig
@@ -483,7 +428,7 @@ from decimal import Decimal
 class GroupTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupTemplate
-        fields = ('id', 'name', 'order', 'is_single', 'items', 'is_formula', 'type')
+        fields = ('id', 'name', 'order', 'is_single', 'items', 'is_formula', 'type', 'section')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -552,3 +497,71 @@ class ProposalSettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProposalSetting
         fields = ('intro', 'default_note', 'pdf_file', 'closing_note', 'contract_note')
+
+
+class ProposalWritingSerializer(ContentTypeSerializerMixin):
+    writing_groups = GroupByEstimateSerializers('writing', many=True, allow_null=True, required=False)
+    cost_breakdown = CostBreakDownSerializer(many=True, allow_null=True, required=False)
+    proposal_formatting = ProposalFormattingTemplateMinorSerializer('proposal_writing', allow_null=True, required=False)
+
+    class Meta:
+        model = ProposalWriting
+        fields = '__all__'
+        read_only_fields = ['status']
+        extra_kwargs = extra_kwargs_for_base_model()
+
+    def create_group(self, writing_groups, instance):
+        for writing_group in writing_groups:
+            serializer = GroupByEstimateSerializers(data=writing_group, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(writing_id=instance.pk)
+
+    def create_formatting(self, proposal_formatting, instance):
+        if proposal_formatting:
+            serializer = ProposalFormattingTemplateMinorSerializer(data=proposal_formatting, context=self.context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(proposal_writing=instance)
+
+    def create(self, validated_data):
+        writing_groups = pop(validated_data, 'writing_groups', [])
+        proposal_formatting = pop(validated_data, 'proposal_formatting', {})
+        instance = super().create(validated_data)
+        self.create_formatting(proposal_formatting, instance)
+        self.create_group(writing_groups, instance)
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 1,
+                           ProposalWritingSerializer.__name__, __name__, self.context['request'].user.pk)
+        if instance.lead:
+            ActivitiesLog.objects.create(lead=instance.lead, status='draft', type_id=instance.pk,
+                                        title=f'{instance.name}', type='proposal', start_date=instance.created_date)
+        return instance
+
+    def update(self, instance, validated_data):
+        writing_groups = pop(validated_data, 'writing_groups', [])
+        proposal_formatting = pop(validated_data, 'proposal_formatting', {})
+        if instance.proposal_formatting:
+            instance.proposal_formatting.delete()
+        self.create_formatting(proposal_formatting, instance)
+        instance.writing_groups.all().update(writing=None)
+        self.create_group(writing_groups, instance)
+        activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
+                           ProposalWritingSerializer.__name__, __name__, self.context['request'].user.pk)
+        if hasattr(instance, 'proposal_formatting'):
+            proposal_formatting = instance.proposal_formatting
+            proposal_formatting.has_send_mail = False
+            proposal_formatting.has_signed = False
+            proposal_formatting.print_date = None
+            proposal_formatting.signature = ''
+            proposal_formatting.sign_date = None
+            proposal_formatting.save()
+        validated_data['status'] = 'draft'
+        return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        user = get_request().user
+        data['permissions'] = {
+            'internal_view': user.check_perm('internal_view'),
+            'client_view': user.check_perm('client_view')
+        }
+
+        return data
