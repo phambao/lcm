@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from api.models import CompanyBuilder
+from base.constants import PERCENT_DISCOUNT
 
 
 class Product(models.Model):
@@ -44,12 +45,12 @@ class ReferralCode(models.Model):
     description = models.CharField(max_length=200, blank=True)
     number_discount_sign_up = models.FloatField(blank=True, null=True, verbose_name='Sign-up Fee Discount ($)')
     currency = models.CharField(max_length=100, blank=True, default='USD')
-    percent_discount_sign_up = models.IntegerField(blank=True, null=True, verbose_name='Sign-up Fee Discount (%)')
+    percent_discount_sign_up = models.IntegerField(default=PERCENT_DISCOUNT, blank=True, null=True, verbose_name='Sign-up Fee Discount (%)')
     number_discount_product = models.FloatField(blank=True, null=True, verbose_name='Subscription Discount ($)')
-    percent_discount_product = models.IntegerField(blank=True, null=True, verbose_name='Subscription Discount (%)')
+    percent_discount_product = models.IntegerField(default=PERCENT_DISCOUNT,blank=True, null=True, verbose_name='Subscription Discount (%)')
     currency_product = models.CharField(max_length=100, blank=True, default='USD')
     number_discount_pro_launch = models.FloatField(blank=True, null=True, verbose_name='Pro-Launch Discount ($)')
-    percent_discount_pro_launch = models.IntegerField(blank=True, null=True, verbose_name='Pro-Launch Discount (%)')
+    percent_discount_pro_launch = models.IntegerField(default=PERCENT_DISCOUNT, blank=True, null=True, verbose_name='Pro-Launch Discount (%)')
     currency_pro_launch = models.CharField(max_length=100, blank=True)
     monthly_discounts = models.IntegerField(blank=True, null=True)
     products = models.ManyToManyField(Product, related_name='product_apply', blank=True)
@@ -96,12 +97,12 @@ class CouponCode(models.Model):
     description = models.CharField(max_length=200, blank=True)
     number_discount_sign_up = models.IntegerField(blank=True, null=True, verbose_name='Sign-up Fee Discount ($)')
     currency = models.CharField(max_length=100, blank=True, default='USD')
-    percent_discount_sign_up = models.IntegerField(blank=True, null=True, verbose_name='Sign-up Fee Discount (%)')
+    percent_discount_sign_up = models.IntegerField(default=PERCENT_DISCOUNT, blank=True, null=True, verbose_name='Sign-up Fee Discount (%)')
     number_discount_product = models.IntegerField(blank=True, null=True, verbose_name='Subscription Discount ($)')
-    percent_discount_product = models.IntegerField(blank=True, null=True, verbose_name='Subscription Discount (%)')
+    percent_discount_product = models.IntegerField(default=PERCENT_DISCOUNT, blank=True, null=True, verbose_name='Subscription Discount (%)')
     currency_product = models.CharField(max_length=100, blank=True, default='USD')
     number_discount_pro_launch = models.IntegerField(blank=True, null=True, verbose_name='Pro-Launch Discount ($)')
-    percent_discount_pro_launch = models.IntegerField(blank=True, null=True, verbose_name='Pro-Launch Discount (%)')
+    percent_discount_pro_launch = models.IntegerField(default=PERCENT_DISCOUNT, blank=True, null=True, verbose_name='Pro-Launch Discount (%)')
     currency_pro_launch = models.CharField(max_length=100, blank=True, default='USD')
     monthly_discounts = models.IntegerField(blank=True, null=True)
     products = models.ManyToManyField(Product, related_name='product_coupon_apply', blank=True)
