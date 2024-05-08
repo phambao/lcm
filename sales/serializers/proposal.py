@@ -538,9 +538,9 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
     def update(self, instance, validated_data):
         writing_groups = pop(validated_data, 'writing_groups', [])
         proposal_formatting = pop(validated_data, 'proposal_formatting', {})
-        if instance.proposal_formatting:
+        if hasattr(instance, 'proposal_formatting'):
             instance.proposal_formatting.delete()
-        self.create_formatting(proposal_formatting, instance)
+            self.create_formatting(proposal_formatting, instance)
         instance.writing_groups.all().update(writing=None)
         self.create_group(writing_groups, instance)
         activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
