@@ -295,6 +295,7 @@ class GroupTemplate(BaseModel):
     items = ArrayField(models.IntegerField(), default=list, blank=True, null=True)
     is_formula = models.BooleanField(blank=True, default=False)
     type = models.CharField(blank=True, max_length=128)
+    section = models.CharField(blank=True, max_length=128)
 
     class Meta:
         ordering = ['order']
