@@ -112,13 +112,17 @@ class POFormula(BaseModel):
             return []
 
     def get_catalog(self):
-        material = eval(self.material)
+        default = {'name' : ''}
+        try:
+            material = eval(self.material)
+        except NameError:
+            return default
         if material:
             return material['levels'][0]
         material = self.catalog_materials
         if len(material):
-            return material[0] or {'name' : ''}
-        return {'name' : ''}
+            return material[0] or default
+        return default
 
     def _parse_value(self, name, value):
         return {
@@ -374,6 +378,8 @@ class EstimateTemplate(BaseModel):
         return False
 
     def get_value_quantity(self):
+        if not self.quantity:
+            return Decimal(1)
         name = self.quantity.get('name')
         type = self.quantity.get('type')
         data_entries = self.data_entries.all()

@@ -249,6 +249,7 @@ class ProposalFormatting(BaseModel):
     signature = models.CharField(max_length=256, blank=True, default='')
     sign_date = models.DateTimeField(default=None, blank=True, null=True)
     template_type = models.CharField(max_length=128, blank=True, default='')
+    group_templates = models.JSONField(default=dict, blank=True)
 
 
 class ProposalFormattingConfig(BaseModel):
