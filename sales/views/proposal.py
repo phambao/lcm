@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
@@ -7,7 +9,6 @@ from django_filters import rest_framework as filters
 from django.apps import apps
 from django.utils import timezone
 from openpyxl.reader.excel import load_workbook
-from openpyxl.workbook import Workbook
 from rest_framework import generics, permissions, filters as rf_filters, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -537,27 +538,27 @@ def parse_template(request):
                        'formulas': {'General': [], 'Optional Add-on Services': [], 'Additional Costs': []}}
     #  Get Proposal Formatting
     general_estimates = proposal_writing.get_estimates(type=0)
-    template_groups['estimates']['General'].append({'name': 'Unassigned', 'id': 0, 'type': 'estimate',
+    template_groups['estimates']['General'].append({'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'estimate',
                                                     'items': get_data_template_group(general_estimates, 'General')})
     general_items = FormatFormulaSerializer(proposal_writing.get_formulas(0), many=True).data
-    template_groups['formulas']['General'].append({'name': 'Unassigned', 'id': 0, 'type': 'formulas', 'items': general_items})
+    template_groups['formulas']['General'].append({'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': general_items})
     add_on_estimates = proposal_writing.get_estimates(type=1)
-    template_groups['estimates']['Optional Add-on Services'].append({'name': 'Unassigned', 'id': 0, 'type': 'estimate',
+    template_groups['estimates']['Optional Add-on Services'].append({'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'estimate',
                                                     'items': get_data_template_group(add_on_estimates, 'Optional Add-on Services')})
     service_items = FormatFormulaSerializer(proposal_writing.get_formulas(1), many=True).data
-    template_groups['formulas']['Optional Add-on Services'].append({'name': 'Unassigned', 'id': 0, 'type': 'formulas', 'items': service_items})
+    template_groups['formulas']['Optional Add-on Services'].append({'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': service_items})
     additional_estimates = proposal_writing.get_estimates(type=2)
-    template_groups['estimates']['Additional Costs'].append({'name': 'Unassigned', 'id': 0, 'type': 'estimate',
+    template_groups['estimates']['Additional Costs'].append({'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'estimate',
                                                     'items': get_data_template_group(additional_estimates, 'Additional Costs')})
     addon_items = FormatFormulaSerializer(proposal_writing.get_formulas(2), many=True).data
-    template_groups['formulas']['Additional Costs'].append({'name': 'Unassigned', 'id': 0, 'type': 'formulas', 'items': addon_items})
+    template_groups['formulas']['Additional Costs'].append({'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': addon_items})
 
     for formula in general_items:
         if formula['catalog_name']:
             template_groups[formula['catalog_name']] = {
-                'General': [{'name': 'Unassigned', 'id': 0, 'type': 'formulas', 'items': []}],
-                'Optional Add-on Services': [{'name': 'Unassigned', 'id': 0, 'type': 'formulas', 'items': []}],
-                'Additional Costs': [{'name': 'Unassigned', 'id': 0, 'type': 'formulas', 'items': []}]}
+                'General': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}],
+                'Optional Add-on Services': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}],
+                'Additional Costs': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}]}
     for formula in general_items:
         if formula['catalog_name']:
             template_groups[formula['catalog_name']]['General'][0]['items'].append(formula)
