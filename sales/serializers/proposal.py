@@ -444,27 +444,14 @@ class GroupTemplateSerializer(serializers.ModelSerializer):
 
 
 class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
-    template_groups = GroupTemplateSerializer('proposal', many=True, allow_null=True, required=False)
+    # template_groups = GroupTemplateSerializer('proposal', many=True, allow_null=True, required=False)
 
     class Meta:
         model = ProposalFormatting
         fields = ('id', 'show_format_fields', 'show_formula_fields', 'contacts', 'intro', 'default_note', 'signature',
                   'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact', 'sign_date',
-                  'template_groups', 'template_type')
+                  'group_templates', 'template_type')
         read_only_fields = ['sign_date']
-
-    def create(self, validated_data):
-        template_groups = pop(validated_data, 'template_groups', [])
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        template_groups = pop(validated_data, 'template_groups', [])
-        instance.template_groups.all().delete()
-        for idx, group in enumerate(template_groups):
-            serializer = GroupTemplateSerializer(data=group)
-            serializer.is_valid(raise_exception=True)
-            serializer.save(proposal=instance, order=idx)
-        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
