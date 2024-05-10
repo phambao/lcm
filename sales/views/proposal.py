@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
@@ -7,7 +9,6 @@ from django_filters import rest_framework as filters
 from django.apps import apps
 from django.utils import timezone
 from openpyxl.reader.excel import load_workbook
-from openpyxl.workbook import Workbook
 from rest_framework import generics, permissions, filters as rf_filters, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -521,12 +522,11 @@ def get_data_template_group(estimates, tab):
         estimate_data['section'] = tab
         estimate_data['is_formula'] = False
         template_groups.append(estimate_data)
-        for formula in estimate.get_formula():
-            data = FormatFormulaSerializer(formula).data
-            data['section'] = tab
-            data['is_formula'] = True
-            template_groups.append(data)
     return template_groups
+
+
+def get_data(type, items):
+    return {'name': 'Unassigned', 'id': uuid.uuid4(), 'type': type, 'can_edit': False, 'items': items}
 
 
 @api_view(['POST'])
@@ -538,13 +538,40 @@ def parse_template(request):
     serializer = ProposalWritingSerializer(data=request.data, context={'request': request})
     serializer.is_valid(raise_exception=True)
     proposal_writing = serializer.save()
-    template_groups = []
+    template_groups = {'estimates': {'General': [], 'Optional Add-on Services': [], 'Additional Costs': []},
+                       'formulas': {'General': [], 'Optional Add-on Services': [], 'Additional Costs': []}}
     #  Get Proposal Formatting
     general_estimates = proposal_writing.get_estimates(type=0)
-    template_groups += get_data_template_group(general_estimates, 'General')
+    template_groups['estimates']['General'].append(get_data('estimates', get_data_template_group(general_estimates, 'General')))
+    general_items = FormatFormulaSerializer(proposal_writing.get_formulas(0), many=True).data
+    template_groups['formulas']['General'].append(get_data('formulas', general_items))
+
     add_on_estimates = proposal_writing.get_estimates(type=1)
-    template_groups += get_data_template_group(add_on_estimates, 'Optional Add-on Services')
+    template_groups['estimates']['Optional Add-on Services'].append(
+        get_data('estimates', get_data_template_group(add_on_estimates, 'Optional Add-on Services'))
+    )
+    service_items = FormatFormulaSerializer(proposal_writing.get_formulas(1), many=True).data
+    template_groups['formulas']['Optional Add-on Services'].append(get_data('formulas', service_items))
+
     additional_estimates = proposal_writing.get_estimates(type=2)
-    template_groups += get_data_template_group(additional_estimates, 'Additional Costs')
+    template_groups['estimates']['Additional Costs'].append(get_data('estimates', get_data_template_group(additional_estimates, 'Additional Costs')))
+    addon_items = FormatFormulaSerializer(proposal_writing.get_formulas(2), many=True).data
+    template_groups['formulas']['Additional Costs'].append(get_data('formulas', addon_items))
+
+    for formula in general_items:
+        if formula['catalog_name']:
+            template_groups[formula['catalog_name']] = {
+                'General': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}],
+                'Optional Add-on Services': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}],
+                'Additional Costs': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}]}
+    for formula in general_items:
+        if formula['catalog_name']:
+            template_groups[formula['catalog_name']]['General'][0]['items'].append(formula)
+    for formula in service_items:
+        if formula['catalog_name']:
+            template_groups[formula['catalog_name']]['Optional Add-on Services'][0]['items'].append(formula)
+    for formula in addon_items:
+        if formula['catalog_name']:
+            template_groups[formula['catalog_name']]['Additional Costs'][0]['items'].append(formula)
     proposal_writing.delete()
     return Response(status=status.HTTP_200_OK, data=template_groups)
