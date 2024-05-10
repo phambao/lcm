@@ -564,6 +564,19 @@ def parse_template(request):
                 'General': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}],
                 'Optional Add-on Services': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}],
                 'Additional Costs': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}]}
+    for formula in service_items:
+        if formula['catalog_name']:
+            template_groups[formula['catalog_name']] = {
+                'General': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}],
+                'Optional Add-on Services': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}],
+                'Additional Costs': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}]}
+    for formula in addon_items:
+        if formula['catalog_name']:
+            template_groups[formula['catalog_name']] = {
+                'General': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}],
+                'Optional Add-on Services': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}],
+                'Additional Costs': [{'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': []}]}
+
     for formula in general_items:
         if formula['catalog_name']:
             template_groups[formula['catalog_name']]['General'][0]['items'].append(formula)
