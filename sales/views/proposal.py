@@ -525,6 +525,10 @@ def get_data_template_group(estimates, tab):
     return template_groups
 
 
+def get_data(type, items):
+    return {'name': 'Unassigned', 'id': uuid.uuid4(), 'type': type, 'can_edit': False, 'items': items}
+
+
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated & ProposalPermissions])
 def parse_template(request):
@@ -538,20 +542,21 @@ def parse_template(request):
                        'formulas': {'General': [], 'Optional Add-on Services': [], 'Additional Costs': []}}
     #  Get Proposal Formatting
     general_estimates = proposal_writing.get_estimates(type=0)
-    template_groups['estimates']['General'].append({'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'estimate',
-                                                    'items': get_data_template_group(general_estimates, 'General')})
+    template_groups['estimates']['General'].append(get_data('estimates', get_data_template_group(general_estimates, 'General')))
     general_items = FormatFormulaSerializer(proposal_writing.get_formulas(0), many=True).data
-    template_groups['formulas']['General'].append({'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': general_items})
+    template_groups['formulas']['General'].append(get_data('formulas', general_items))
+
     add_on_estimates = proposal_writing.get_estimates(type=1)
-    template_groups['estimates']['Optional Add-on Services'].append({'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'estimate',
-                                                    'items': get_data_template_group(add_on_estimates, 'Optional Add-on Services')})
+    template_groups['estimates']['Optional Add-on Services'].append(
+        get_data('estimates', get_data_template_group(add_on_estimates, 'Optional Add-on Services'))
+    )
     service_items = FormatFormulaSerializer(proposal_writing.get_formulas(1), many=True).data
-    template_groups['formulas']['Optional Add-on Services'].append({'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': service_items})
+    template_groups['formulas']['Optional Add-on Services'].append(get_data('formulas', service_items))
+
     additional_estimates = proposal_writing.get_estimates(type=2)
-    template_groups['estimates']['Additional Costs'].append({'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'estimate',
-                                                    'items': get_data_template_group(additional_estimates, 'Additional Costs')})
+    template_groups['estimates']['Additional Costs'].append(get_data('estimates', get_data_template_group(additional_estimates, 'Additional Costs')))
     addon_items = FormatFormulaSerializer(proposal_writing.get_formulas(2), many=True).data
-    template_groups['formulas']['Additional Costs'].append({'name': 'Unassigned', 'id': uuid.uuid4(), 'type': 'formulas', 'items': addon_items})
+    template_groups['formulas']['Additional Costs'].append(get_data('formulas', addon_items))
 
     for formula in general_items:
         if formula['catalog_name']:
