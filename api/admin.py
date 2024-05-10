@@ -434,6 +434,10 @@ class ReferralCodeInline(admin.TabularInline):
               'percent_discount_product', 'currency_product', 'number_discount_pro_launch', 'percent_discount_pro_launch',
               'currency_pro_launch', 'monthly_discounts', 'number_of_uses', 'is_activate', 'promotion_code_id']
 
+    readonly_fields = ["title", "code", "number_discount_sign_up", "currency", "percent_discount_sign_up", 'number_discount_product',
+              'percent_discount_product', 'currency_product', 'number_discount_pro_launch', 'percent_discount_pro_launch',
+              'currency_pro_launch', 'monthly_discounts', 'number_of_uses', 'is_activate', 'promotion_code_id']
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.exclude(code='')
