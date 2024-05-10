@@ -415,6 +415,7 @@ class FormatFormulaSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         data['catalog_name'] = instance.get_catalog()['name']
         data['total_price'] = instance.total_cost
+        data['estimate_name'] = instance.assemble.estimate_templates.first().name
         return data
 
 
