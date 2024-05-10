@@ -1029,8 +1029,8 @@ def check_update_estimate(request, pk):
 
     if request.method == 'PUT':
         estimate_params = request.data.get('estimate', {})
-        proposal_writing_params = request.data.get('proposal_writings', [])
-        price_comparison_params = request.data.get('price_comparisons', [])
+        proposal_writing_params = request.data.get('writtings', [])
+        price_comparison_params = request.data.get('comparisons', [])
         # Get related estimate on proposal writings
         writing_estimates = EstimateTemplate.objects.filter(original=pk, group_by_proposal__writing__id__in=proposal_writing_params)
 
@@ -1057,8 +1057,8 @@ def check_update_estimate(request, pk):
         return Response(status=status.HTTP_200_OK, data=serializer.data)
     data = {}
     data['has_relation'] = proposal_writings.exists() or price_comparisons.exists()
-    data['proposal_writings'] = proposal_writings.values('id', 'name')
-    data['price_comparisons'] = price_comparisons.values('id', 'name')
+    data['writtings'] = proposal_writings.values('id', 'name')
+    data['comparisons'] = price_comparisons.values('id', 'name')
 
     return Response(status=status.HTTP_200_OK, data=data)
 
