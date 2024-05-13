@@ -240,6 +240,7 @@ class POFormulaToDataEntry(BaseModel):
     material_data_entry_link = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)  # Need delete
     levels = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)  # Next level of data entry
     is_client_view = models.BooleanField(blank=True, default=False)
+    nick_name = models.CharField(max_length=128, blank=True, default='')
 
     def get_value(self):
         value = self.value or self.dropdown_value.get('value') or '1'

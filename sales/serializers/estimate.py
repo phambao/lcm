@@ -141,8 +141,14 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = POFormulaToDataEntry
-        fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value',
+        fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value', 'nick_name',
                   'copies_from', 'group', 'material_data_entry_link', 'levels', 'is_client_view')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data['nick_name']:
+            data['nick_name'] = instance.data_entry.name
+        return data
 
 
 def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
@@ -152,7 +158,8 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
                   'dropdown_value': data_entry.get('dropdown_value', ''), 'estimate_template_id': estimate_id,
                   'material_value': data_entry.get('material_value', ''), 'copies_from': data_entry.get('copies_from'),
                   'group': data_entry.get('group', ''), 'material_data_entry_link': data_entry.get('material_data_entry_link'),
-                  'levels': data_entry.get('levels', []), 'is_client_view': data_entry.get('is_client_view', True)}
+                  'levels': data_entry.get('levels', []), 'is_client_view': data_entry.get('is_client_view', True),
+                  'nick_name': data_entry.get('nick_name', '')}
         try:
             data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
             if data_entry_pk:
