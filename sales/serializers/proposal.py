@@ -397,7 +397,7 @@ class FormatEstimateSerializer(serializers.ModelSerializer):
         data['unit'] = instance.unit.name if instance.unit else ''
         data['quantity'] = instance.get_value_quantity()
         instance.get_info()
-        data['total_price'] = instance.get_total_prices()
+        data['total_price'] = instance.get_total_prices() or Decimal(0)
         data['unit_price'] = data['total_price'] / data['quantity']
         data['description'] = data['contract_description']
         data['formulas'] = FormatFormulaSerializer(instance.get_formula().order_by('order'), many=True).data
