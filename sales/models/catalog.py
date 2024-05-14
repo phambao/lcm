@@ -79,7 +79,7 @@ class Catalog(BaseModel):
     level = models.ForeignKey(CatalogLevel, on_delete=models.CASCADE, null=True,
                               blank=True, default=None, related_name='catalogs')
     level_index = models.IntegerField(default=0, blank=True, null=True)
-    index = models.IntegerField(default=0)
+    index = models.IntegerField(default=0, blank=True)
 
     def __str__(self):
         return self.name

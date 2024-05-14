@@ -134,9 +134,8 @@ class CatalogSerializer(serializers.ModelSerializer):
                 data_catalog_parent.c_table = dict()
                 data_catalog_parent.save()
 
-            catalog_parent = catalog.Catalog.objects.get(pk=parent)
-            if not catalog_parent.parents.first():
-                count = catalog.Catalog.objects.filter(parents=catalog_parent.id, company=self.context['request'].user.company).count()
+            if not data_catalog_parent.parents.first():
+                count = catalog.Catalog.objects.filter(parents=data_catalog_parent.id, company=self.context['request'].user.company).count()
 
         instance = super().create(validated_data)
         if instance.is_ancestor:
