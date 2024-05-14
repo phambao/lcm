@@ -207,6 +207,7 @@ def add_multiple_level(request):
         catalog_serializer = catalog.CatalogSerializer(data=request.data.get('catalog'), context={'request': request})
         catalog_serializer.is_valid(raise_exception=True)
         c = catalog_serializer.save()
+        parent = c.parents
         parent = None
         data = []
         for name in request.data.get('levels', []):
@@ -685,3 +686,20 @@ def delete(request):
     serializer.is_valid(raise_exception=True)
     serializer.save()
     return Response(status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
+def move_catalog(request):
+    """
+    Payload: [{"id": int, "index": int}]
+    """
+    data = request.data
+    for data_catalog in data:
+        catalog = Catalog.objects.get(pk=data_catalog['id'])
+        catalog.index = data_catalog['index']
+        catalog.save()
+
+    return Response(status=status.HTTP_200_OK)
+
+
