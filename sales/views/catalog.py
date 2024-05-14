@@ -207,7 +207,6 @@ def add_multiple_level(request):
         catalog_serializer = catalog.CatalogSerializer(data=request.data.get('catalog'), context={'request': request})
         catalog_serializer.is_valid(raise_exception=True)
         c = catalog_serializer.save()
-        parent = c.parents
         parent = None
         data = []
         for name in request.data.get('levels', []):
