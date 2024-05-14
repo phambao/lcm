@@ -533,14 +533,7 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
         self.create_group(writing_groups, instance)
         activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            ProposalWritingSerializer.__name__, __name__, self.context['request'].user.pk)
-        if hasattr(instance, 'proposal_formatting'):
-            proposal_formatting = instance.proposal_formatting
-            proposal_formatting.has_send_mail = False
-            proposal_formatting.has_signed = False
-            proposal_formatting.print_date = None
-            proposal_formatting.signature = ''
-            proposal_formatting.sign_date = None
-            proposal_formatting.save()
+        instance.reset_formatting()
         validated_data['status'] = 'draft'
         return super().update(instance, validated_data)
 

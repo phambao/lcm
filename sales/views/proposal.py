@@ -513,6 +513,16 @@ def status_writing(request, pk):
     return Response(status=200, data={'status': status})
 
 
+@api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated & ProposalPermissions])
+def reset_signature(request, pk):
+    proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
+    proposal_writing.reset_formatting()
+    proposal_writing.status = 'draft'
+    proposal_writing.save()
+    return Response(status=200)
+
+
 def get_data_template_group(estimates, tab):
     template_groups = []
     for estimate in estimates:
