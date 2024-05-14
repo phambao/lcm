@@ -68,7 +68,7 @@ class DataPoint(BaseModel):
 class Catalog(BaseModel):
     class Meta:
         db_table = 'catalog'
-        ordering = ['-modified_date']
+        ordering = ['index', '-modified_date']
 
     sequence = models.IntegerField(default=0)
     name = models.CharField(max_length=256)
@@ -79,6 +79,7 @@ class Catalog(BaseModel):
     level = models.ForeignKey(CatalogLevel, on_delete=models.CASCADE, null=True,
                               blank=True, default=None, related_name='catalogs')
     level_index = models.IntegerField(default=0, blank=True, null=True)
+    index = models.IntegerField(default=0, blank=True)
 
     def __str__(self):
         return self.name
