@@ -469,7 +469,7 @@ class AssembleSerializer(ContentTypeSerializerMixin):
             created_from = po_formula.get('created_from')
             if not created_from:
                 po_formula['created_from'] = po_formula['id']
-            if not po_formula['formula_for_data_view']:
+            if not po_formula.get('formula_for_data_view'):
                 po_formula['formula_for_data_view'] = po_formula.get('id')
             old_pk = po_formula['id']
             del po_formula['id']
