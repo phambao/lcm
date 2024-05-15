@@ -260,6 +260,7 @@ class ProposalFormatting(BaseModel):
     sign_date = models.DateTimeField(default=None, blank=True, null=True)
     template_type = models.CharField(max_length=128, blank=True, default='')
     group_templates = models.JSONField(default=dict, blank=True)
+    active_tab = models.CharField(max_length=128, blank=True, default='')
 
 
 class ProposalFormattingConfig(BaseModel):
