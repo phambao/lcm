@@ -81,7 +81,7 @@ class PriceComparisonDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ProposalWritingList(CompanyFilterMixin, generics.ListCreateAPIView):
-    queryset = ProposalWriting.objects.all().order_by('-modified_date').prefetch_related(*PROPOSAL_PREFETCH_RELATED)
+    queryset = ProposalWriting.objects.filter(is_show=True).order_by('-modified_date').prefetch_related(*PROPOSAL_PREFETCH_RELATED)
     serializer_class = ProposalWritingSerializer
     permission_classes = [permissions.IsAuthenticated & ProposalPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -90,7 +90,7 @@ class ProposalWritingList(CompanyFilterMixin, generics.ListCreateAPIView):
 
 
 class ProposalWritingCompactList(CompanyFilterMixin, generics.ListAPIView):
-    queryset = ProposalWriting.objects.all().order_by('-modified_date').prefetch_related(*PROPOSAL_PREFETCH_RELATED)
+    queryset = ProposalWriting.objects.filter(is_show=True).order_by('-modified_date').prefetch_related(*PROPOSAL_PREFETCH_RELATED)
     serializer_class = ProposalWritingCompactSerializer
     permission_classes = [permissions.IsAuthenticated & ProposalPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
@@ -547,7 +547,7 @@ def parse_template(request):
     data['name'] = 'Template'
     serializer = ProposalWritingSerializer(data=request.data, context={'request': request})
     serializer.is_valid(raise_exception=True)
-    proposal_writing = serializer.save()
+    proposal_writing = serializer.save(is_show=False)
     template_groups = {'estimates': {'General': [], 'Optional Add-on Services': [], 'Additional Costs': []},
                        'formulas': {'General': [], 'Optional Add-on Services': [], 'Additional Costs': []}}
     #  Get Proposal Formatting

@@ -112,6 +112,7 @@ class ProposalWriting(BaseModel):
 
     lead = models.ForeignKey('sales.LeadDetail', on_delete=models.SET_NULL, blank=True, null=True, related_name='proposals')
     status = models.CharField(max_length=16, choices=ProposalStatus.choices, default=ProposalStatus.DRAFT)
+    is_show = models.BooleanField(default=True, blank=True)
 
     class Meta:
         permissions = [('client_view', 'Client View'), ('internal_view', 'Internal View')]
