@@ -451,14 +451,11 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
         model = ProposalFormatting
         fields = ('id', 'show_format_fields', 'show_formula_fields', 'contacts', 'intro', 'default_note', 'signature',
                   'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact', 'sign_date',
-                  'group_templates', 'template_type')
+                  'group_templates', 'template_type', 'active_tab')
         read_only_fields = ['sign_date']
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        estimates = instance.proposal_writing.get_checked_estimate().order_by('format_order')
-        data['estimates'] = FormatEstimateSerializer(estimates, many=True).data
-        data['total_price'] = sum([value['total_price'] for value in data['estimates']])
         data['contacts'] = ContactsSerializer(Contact.objects.filter(id__in=instance.contacts),
                                               many=True, context=self.context).data
         if not data['primary_contact']:
