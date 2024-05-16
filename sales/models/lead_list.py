@@ -78,7 +78,7 @@ class LeadDetail(BaseModel):
 
     def get_info_for_proposal_formatting(self):
         return {
-            'name': self.lead_title,
+            'lead_title': self.lead_title,
             'street_address': self.street_address,
             'country': self.country,
             'city': self.city,
