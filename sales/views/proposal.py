@@ -361,6 +361,9 @@ Contact = apps.get_model('sales', 'Contact')
 @api_view(['POST'])
 def proposal_formatting_public(request, pk):
     proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
+    contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts).distinct()
+    if not contacts:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={'message': 'No contact'})
     proposal_template = ProposalFormatting.objects.get_or_create(proposal_writing=proposal_writing)[0]
     serializer = ProposalFormattingTemplateMinorSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -371,7 +374,6 @@ def proposal_formatting_public(request, pk):
     proposal_template.save()
     proposal_writing.status = 'sent'
     proposal_writing.save(update_fields=['status'])
-    contacts = Contact.objects.filter(id__in=proposal_writing.proposal_formatting.contacts).distinct()
     ActivitiesLog.objects.create(lead=proposal_writing.lead, status='sent', type_id=proposal_writing.pk,
                                  title=f'{proposal_writing.name}', type='proposal', start_date=timezone.now())
     for contact in contacts:
