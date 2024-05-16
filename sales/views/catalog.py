@@ -21,7 +21,7 @@ from base.utils import file_response
 from ..filters.catalog import CatalogFilter
 from ..models.catalog import Catalog, CatalogLevel, DataPointUnit, DataPoint, CostTableTemplate
 from ..serializers import catalog
-from ..serializers.catalog import CatalogEstimateSerializer
+from ..serializers.catalog import CatalogEstimateSerializer, CatalogSerializer
 from api.middleware import get_request
 from base.views.base import CompanyFilterMixin
 
@@ -685,3 +685,23 @@ def delete(request):
     serializer.is_valid(raise_exception=True)
     serializer.save()
     return Response(status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated & CatalogPermissions])
+def move_catalog(request):
+    """
+    Payload: [id: int]
+    """
+    data = request.data
+    catalog_update = []
+    for index, data_catalog in enumerate(data):
+        catalog = Catalog.objects.get(pk=data_catalog)
+        catalog.index = index
+        catalog_update.append(catalog)
+
+    Catalog.objects.bulk_update(catalog_update, ['index'])
+    rs = Catalog.objects.filter(id__in=data)
+    catalogs = CatalogSerializer(
+        rs, many=True, context={'request': request}).data
+    return Response(status=status.HTTP_200_OK, data=catalogs)

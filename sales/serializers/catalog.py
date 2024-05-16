@@ -104,7 +104,7 @@ class CatalogSerializer(serializers.ModelSerializer):
         model = catalog.Catalog
         fields = ('id', 'name', 'parents', 'parent', 'sequence', 'icon',
                   'is_ancestor', 'level', 'data_points', 'level_index', 'c_table',
-                  'created_date', 'modified_date', 'user_create', 'user_update'
+                  'created_date', 'modified_date', 'user_create', 'user_update', 'index'
                   )
         extra_kwargs = {'icon': {'required': False,
                                  'allow_null': True},
@@ -115,6 +115,7 @@ class CatalogSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         data_points = validated_data.pop('data_points', '[]')
+        count = 0
         if data_points:
             data_points = eval(data_points)
         else:
@@ -132,9 +133,16 @@ class CatalogSerializer(serializers.ModelSerializer):
                 validated_data['c_table'] = data_catalog_parent.c_table
                 data_catalog_parent.c_table = dict()
                 data_catalog_parent.save()
+
+            if not data_catalog_parent.parents.first():
+                count = catalog.Catalog.objects.filter(parents=data_catalog_parent.id, company=self.context['request'].user.company).count()
+
         instance = super().create(validated_data)
+        if instance.is_ancestor:
+            count = Catalog.objects.filter(is_ancestor=True, company=self.context['request'].user.company).count()
         instance.user_create = self.context['request'].user
         instance.created_date = timezone.now()
+        instance.index = count
         instance.save()
         for data_point in data_points:
             unit = data_point.pop('unit')

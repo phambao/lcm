@@ -116,6 +116,7 @@ url_catalog = [
     path('list/add-catalog-levels/', catalog.add_multiple_level, name='add-multiple-level'),
     path('unit/', catalog.DataPointUnitView.as_view()),
     path('unit/<int:pk>/', catalog.DataPointUnitDetailView.as_view()),
+    path('list/move-catalog/', catalog.move_catalog, name='move-catalog'),
 ]
 # define path for Schedule -------------------------------------------------------
 url_schedule = [
