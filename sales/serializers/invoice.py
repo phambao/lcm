@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Sum
 from rest_framework import serializers
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.generics import get_object_or_404
@@ -281,12 +282,9 @@ class InvoiceSerializer(ContentTypeSerializerMixin, SerializerMixin):
         data['lead_name'] = ''
         data['lead_id'] = None
         total_price = 0
-        amount_paid = 0
+        amount_paid = instance.payment_histories.all().aggregate(total=Sum('amount'))['total']
         for item in instance.get_items():
             total_price += item['total_price']
-
-        for payment in instance.payment_histories.all():
-            amount_paid += payment.amount
 
         data['invoice_amount'] = total_price
         data['amount_paid'] = amount_paid
