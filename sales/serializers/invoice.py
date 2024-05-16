@@ -282,7 +282,10 @@ class InvoiceSerializer(ContentTypeSerializerMixin, SerializerMixin):
         data['lead_name'] = ''
         data['lead_id'] = None
         total_price = 0
-        amount_paid = instance.payment_histories.all().aggregate(total=Sum('amount'))['total']
+        amount_paid = 0
+        data_amount_paid = instance.payment_histories.all().aggregate(total=Sum('amount'))['total']
+        if data_amount_paid:
+            amount_paid = data_amount_paid
         for item in instance.get_items():
             total_price += item['total_price']
 
