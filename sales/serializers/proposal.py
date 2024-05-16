@@ -464,6 +464,7 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
         data['proposal_progress'] = instance.proposal_writing.additional_information
         data['number_column'] = ['quantity', 'unit_price', 'total_price', 'markup', 'charge',
                                  'unit_price', 'cost', 'total_cost', 'gross_profit']
+        data['proposal_name'] = instance.proposal_writing.name
         return data
 
 
