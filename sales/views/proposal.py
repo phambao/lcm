@@ -361,22 +361,7 @@ Contact = apps.get_model('sales', 'Contact')
 @api_view(['POST'])
 def proposal_formatting_public(request, pk):
     proposal_writing = get_object_or_404(ProposalWriting.objects.all(), pk=pk)
-    proposal_template = proposal_writing.proposal_formatting
-    # data = request.data
-    # serializer = ProposalFormattingTemplateSignsSerializer(data=request.data)
-    # serializer.is_valid(raise_exception=True)
-    # check_email = []
-    # data_proposal_formatting = ProposalFormatting.objects.get(proposal_writing=proposal_writing)
-    # for data_proposal_sign in data['signs']:
-    #     if data_proposal_sign['email'] not in check_email:
-    #         url = pop(data_proposal_sign, 'url', None)
-    #         proposal_formatting_sign_create = ProposalFormattingSign.objects.create(
-    #             proposal_formatting=data_proposal_formatting,
-    #             **data_proposal_sign
-    #         )
-    #         content = render_to_string('proposal-formatting-sign.html', {'url': url})
-    #         celery_send_mail.delay(f'Sign Electronically', content, settings.EMAIL_HOST_USER, [proposal_formatting_sign_create.email], False, html_message=content)
-    #         check_email.append(data_proposal_sign['email'])
+    proposal_template = ProposalFormatting.objects.get_or_create(proposal_writing=proposal_writing)[0]
     serializer = ProposalFormattingTemplateMinorSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     proposal_template.print_date = serializer.validated_data['print_date']
