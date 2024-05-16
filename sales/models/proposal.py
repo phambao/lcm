@@ -112,6 +112,7 @@ class ProposalWriting(BaseModel):
 
     lead = models.ForeignKey('sales.LeadDetail', on_delete=models.SET_NULL, blank=True, null=True, related_name='proposals')
     status = models.CharField(max_length=16, choices=ProposalStatus.choices, default=ProposalStatus.DRAFT)
+    is_show = models.BooleanField(default=True, blank=True)
 
     class Meta:
         permissions = [('client_view', 'Client View'), ('internal_view', 'Internal View')]
@@ -198,6 +199,16 @@ class ProposalWriting(BaseModel):
         poformulas = self._get_poformula()
         return poformulas
 
+    def reset_formatting(self):
+        if hasattr(self, 'proposal_formatting'):
+            proposal_formatting = self.proposal_formatting
+            proposal_formatting.has_send_mail = False
+            proposal_formatting.has_signed = False
+            proposal_formatting.print_date = None
+            proposal_formatting.signature = ''
+            proposal_formatting.sign_date = None
+            proposal_formatting.save()
+
     def get_imgs(self):
         """Get image from catalog"""
         poformulas = self._get_poformula()
@@ -250,6 +261,7 @@ class ProposalFormatting(BaseModel):
     sign_date = models.DateTimeField(default=None, blank=True, null=True)
     template_type = models.CharField(max_length=128, blank=True, default='')
     group_templates = models.JSONField(default=dict, blank=True)
+    active_tab = models.CharField(max_length=128, blank=True, default='')
 
 
 class ProposalFormattingConfig(BaseModel):

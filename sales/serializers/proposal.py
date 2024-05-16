@@ -451,14 +451,11 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
         model = ProposalFormatting
         fields = ('id', 'show_format_fields', 'show_formula_fields', 'contacts', 'intro', 'default_note', 'signature',
                   'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact', 'sign_date',
-                  'group_templates', 'template_type')
+                  'group_templates', 'template_type', 'active_tab')
         read_only_fields = ['sign_date']
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        estimates = instance.proposal_writing.get_checked_estimate().order_by('format_order')
-        data['estimates'] = FormatEstimateSerializer(estimates, many=True).data
-        data['total_price'] = sum([value['total_price'] for value in data['estimates']])
         data['contacts'] = ContactsSerializer(Contact.objects.filter(id__in=instance.contacts),
                                               many=True, context=self.context).data
         if not data['primary_contact']:
@@ -533,14 +530,7 @@ class ProposalWritingSerializer(ContentTypeSerializerMixin):
         self.create_group(writing_groups, instance)
         activity_log.delay(instance.get_content_type().pk, instance.pk, 2,
                            ProposalWritingSerializer.__name__, __name__, self.context['request'].user.pk)
-        if hasattr(instance, 'proposal_formatting'):
-            proposal_formatting = instance.proposal_formatting
-            proposal_formatting.has_send_mail = False
-            proposal_formatting.has_signed = False
-            proposal_formatting.print_date = None
-            proposal_formatting.signature = ''
-            proposal_formatting.sign_date = None
-            proposal_formatting.save()
+        instance.reset_formatting()
         validated_data['status'] = 'draft'
         return super().update(instance, validated_data)
 

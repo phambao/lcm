@@ -461,16 +461,13 @@ class AssembleSerializer(ContentTypeSerializerMixin):
     class Meta:
         model = Assemble
         fields = ('id', 'name', 'created_date', 'modified_date', 'user_create', 'user_update',
-                  'assemble_formulas', 'description', 'is_show', 'original')
+                  'assemble_formulas', 'description', 'is_show', 'original', 'is_custom')
         extra_kwargs = extra_kwargs_for_base_model()
 
     def create_po_formula(self, po_formulas, instance):
         for po_formula in po_formulas:
-            created_from = po_formula.get('created_from')
-            if not created_from:
-                po_formula['created_from'] = po_formula['id']
-            if not po_formula['formula_for_data_view']:
-                po_formula['formula_for_data_view'] = po_formula.get('id')
+            if not po_formula.get('formula_for_data_view'):
+                po_formula['formula_for_data_view'] = po_formula.get('id') if po_formula.get('id') < 2147483647 else 1
             old_pk = po_formula['id']
             del po_formula['id']
             po = POFormulaSerializer(data=po_formula, context=self.context)
