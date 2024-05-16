@@ -280,6 +280,17 @@ class InvoiceSerializer(ContentTypeSerializerMixin, SerializerMixin):
         data['attachments'] = attachment_data
         data['lead_name'] = ''
         data['lead_id'] = None
+        total_price = 0
+        amount_paid = 0
+        for item in instance.get_items():
+            total_price += item['total_price']
+
+        for payment in instance.payment_histories.all():
+            amount_paid += payment.amount
+
+        data['invoice_amount'] = total_price
+        data['amount_paid'] = amount_paid
+        data['balance'] = total_price - amount_paid
         if instance.proposal:
             if instance.proposal.lead:
                 data['lead_name'] = instance.proposal.lead.lead_title

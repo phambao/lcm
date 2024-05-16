@@ -183,6 +183,7 @@ class Invoice(BaseModel):
         data.extend(self.get_custom())
         data.extend(self.get_progress())
         return data
+        # caculator total amount
 
 
 class TemplateInvoice(BaseModel):
