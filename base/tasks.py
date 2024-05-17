@@ -287,6 +287,12 @@ def create_catalog_by_row(row, length_level, company, root, levels, level_header
                 c_table = {key: value for key, value in parent.c_table.items() if key not in ['data', 'header']} if parent.c_table else {}
                 c_table['header'] = level_header
                 c_table['data'] = []
+                new_header = []
+                for header in level_header:
+                    format_header = [i for i in c_table.get('header_format', []) if i['name'] == header]
+                    new_header.append(format_header[0] if format_header else {'name': header, 'isDisable': True, 'isFormula': False})
+                c_table['header_format'] = new_header
+
             # Validate cost table data
             data_create = ['' if value is None else str(value) for value in row[i*5 + 5:]]
             if any(row[i*5 + 5:]):
