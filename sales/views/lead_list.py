@@ -99,6 +99,8 @@ class LeadActivitiesViewSet(generics.ListCreateAPIView):
     search_fields = ['title', 'phase', 'tag', 'status', 'assigned_to']
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Activities.objects.none()
         get_object_or_404(LeadDetail.objects.filter(company=get_request().user.company), pk=self.kwargs['pk_lead'])
         return Activities.objects.filter(lead_id=self.kwargs['pk_lead'])
 
@@ -122,6 +124,8 @@ class LeadPhotosViewSet(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Photos.objects.none()
         get_object_or_404(LeadDetail.objects.filter(company=get_request().user.company), pk=self.kwargs['pk_lead'])
         return Photos.objects.filter(lead_id=self.kwargs['pk_lead'])
 
@@ -157,6 +161,8 @@ class LeadNoContactsViewSet(generics.ListAPIView):
     search_fields = ['first_name', 'last_name']
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Contact.objects.none()
         return Contact.objects.filter(company=get_request().user.company).exclude(
             leads=self.kwargs['pk_lead']).distinct()
 
@@ -172,6 +178,8 @@ class PhoneOfContactsViewSet(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return PhoneOfContact.objects.none()
         get_object_or_404(Contact.objects.filter(company=get_request().user.company), pk=self.kwargs['pk_contact'])
         return PhoneOfContact.objects.filter(contact_id=self.kwargs['pk_contact'])
 
@@ -185,6 +193,8 @@ class LeadContactsViewSet(generics.ListCreateAPIView):
     search_fields = ['first_name', 'last_name', 'email', 'phone_contacts__phone_number']
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Contact.objects.none()
         get_object_or_404(LeadDetail.objects.filter(company=get_request().user.company), pk=self.kwargs['pk_lead'])
         return Contact.objects.filter(leads__id=self.kwargs['pk_lead'])
 
