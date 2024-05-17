@@ -75,6 +75,7 @@ class SignUpUserCompanyAPI(generics.GenericAPIView, TokenMixin):
 
 
 class MainUser(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
     permission_classes = [
         permissions.IsAuthenticated
     ]

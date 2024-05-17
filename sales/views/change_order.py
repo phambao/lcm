@@ -43,6 +43,8 @@ class ChangeOrderFromProposalWritingList(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated & ChangeOrderPermissions]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return ProposalWriting.objects.none()
         proposal = get_object_or_404(ProposalWriting.objects.all(), pk=self.kwargs.get('pk'))
         change_orders = proposal.change_orders.all()
         return change_orders

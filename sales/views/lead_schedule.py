@@ -34,6 +34,8 @@ class ScheduleAttachmentsGenericView(GenericViewSet):
     permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Attachments.objects.none()
         get_object_or_404(ToDo.objects.all(), pk=self.kwargs['pk_todo'])
         return Attachments.objects.filter(to_do=self.kwargs['pk_todo'])
 
@@ -78,6 +80,8 @@ class AttachmentsDailyLogGenericView(GenericViewSet):
     permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return AttachmentDailyLog.objects.none()
         get_object_or_404(DailyLog.objects.all(), pk=self.kwargs['pk_daily_log'])
         return AttachmentDailyLog.objects.filter(to_do=self.kwargs['pk_daily_log'])
 
@@ -122,6 +126,8 @@ class AttachmentsEventGenericView(GenericViewSet):
     permission_classes = [permissions.IsAuthenticated & SchedulePermissions]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return FileScheduleEvent.objects.none()
         get_object_or_404(ScheduleEvent.objects.all(), pk=self.kwargs['pk_event'])
         return FileScheduleEvent.objects.filter(event=self.kwargs['pk_event'])
 

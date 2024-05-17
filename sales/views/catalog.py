@@ -62,6 +62,8 @@ class CatalogLevelList(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated & CatalogPermissions]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return CatalogLevel.objects.none()
         catalog = get_object_or_404(Catalog.objects.all(), pk=self.kwargs['pk_catalog'])
         try:
             ancester_level = catalog.all_levels.get(parent=None)
