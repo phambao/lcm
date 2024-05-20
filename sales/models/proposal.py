@@ -207,7 +207,7 @@ class ProposalWriting(BaseModel):
             proposal_formatting.print_date = None
             proposal_formatting.signature = ''
             proposal_formatting.sign_date = None
-            proposal_formatting.active_tab = ''
+            # proposal_formatting.active_tab = ''
             proposal_formatting.save()
 
     def get_imgs(self):
