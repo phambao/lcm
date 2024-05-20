@@ -263,6 +263,7 @@ class ProposalFormatting(BaseModel):
     template_type = models.CharField(max_length=128, blank=True, default='')
     group_templates = models.JSONField(default=dict, blank=True)
     active_tab = models.CharField(max_length=128, blank=True, default='')
+    otp_for_signing = models.BooleanField(default=True, blank=True)
 
 
 class ProposalFormattingConfig(BaseModel):
