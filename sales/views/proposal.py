@@ -416,7 +416,7 @@ def proposal_sign(request, pk):
             ActivitiesLog.objects.create(lead=proposal_writing.lead, status='approved', type_id=proposal_writing.pk,
                                          title=f'{proposal_writing.name}', type='proposal', start_date=proposal_template.sign_date)
 
-            files = request.data.getlist('files')
+            files = request.data.getlist('file')
             contact = Contact.objects.get(pk=proposal_template.primary_contact)
             content = render_to_string('proposal-formatting-sign-otp-success.html', {'contact': contact})
             send_mail_with_attachment(f'Sign Electronically OTP', content, settings.EMAIL_HOST_USER,
