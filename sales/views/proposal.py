@@ -406,7 +406,7 @@ def proposal_sign(request, pk):
     if request.method == 'POST':
         otp = request.data['otp']
         signature = request.data['signature']
-        if otp == proposal_template.otp:
+        if otp == proposal_template.otp or not proposal_template.is_sent_otp:
             proposal_template.has_signed = True
             proposal_template.signature = signature
             proposal_template.sign_date = timezone.now()
