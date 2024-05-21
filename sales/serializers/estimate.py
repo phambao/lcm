@@ -461,7 +461,7 @@ class AssembleSerializer(ContentTypeSerializerMixin):
     class Meta:
         model = Assemble
         fields = ('id', 'name', 'created_date', 'modified_date', 'user_create', 'user_update',
-                  'assemble_formulas', 'description', 'is_show', 'original', 'is_custom')
+                  'assemble_formulas', 'description', 'is_show', 'original', 'is_custom_assemble')
         extra_kwargs = extra_kwargs_for_base_model()
 
     def create_po_formula(self, po_formulas, instance):
