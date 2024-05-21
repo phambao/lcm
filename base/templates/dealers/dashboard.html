@@ -396,6 +396,11 @@
 
           <input type="radio" id="all" name="filter" value="all" onchange="handleFilterChange('all')">
           <label for="all">All</label>
+          <style>
+            .green-text {
+              color: #22C55E;
+            }
+          </style>
 
           <script>
               function handleFilterChange(filterValue) {
@@ -421,7 +426,17 @@
                       .then(response => response.json())
                       .then(data => {
                           const leadCount = data.data;
-                          document.getElementById('total_earnings').innerText = leadCount;
+                          const totalEarningsElement = document.getElementById('total_earnings');
+                          totalEarningsElement.innerHTML = '';
+                          const leadCountSpan = document.createElement('span');
+                          leadCountSpan.innerText = leadCount;
+                          leadCountSpan.style.color = '#22C55E';
+
+                          const usdSpan = document.createElement('span');
+                          usdSpan.innerText = ' USD';
+                          totalEarningsElement.appendChild(leadCountSpan);
+                          totalEarningsElement.appendChild(usdSpan);
+
                           const TotalUser = data.total_user;
                           document.getElementById('total_users').innerText = TotalUser;
                       })
@@ -430,9 +445,6 @@
                       });
               }
           </script>
-
-
-
             <div class="row" style="gap:30px; justify-content: space-between; margin:10px 12px" >
                {% block content %}
                 <div class="col-sm">
@@ -441,11 +453,17 @@
                 </div>
                 <div class="col-sm">
                      <p class="text">Total Earnings</p>
-                    <p class="text" id="total_earnings">{{ data_dealer.total_bonus_commissions }} USD</p>
+                     <p class="text" id="total_earnings">
+                          <span id="lead_count" style="color: #22C55E;">{{ data_dealer.total_bonus_commissions }}</span>
+                          <span> USD</span>
+                      </p>
                 </div>
                 <div class="col-sm">
                     <p class="text">Total past earnings</p>
-                    <p class="text">{{ data_dealer.total_bonus_commissions }} USD</p>
+                    <p class="text">
+                          <span style="color: #22C55E;">{{ data_dealer.total_bonus_commissions }}</span>
+                          <span> USD</span>
+                      </p>
                 </div>
                 <div class="col-sm">
                     <p class="text">Total Users</p>

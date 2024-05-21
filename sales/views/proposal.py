@@ -19,7 +19,7 @@ from base.permissions import ProposalPermissions
 from base.serializers.config import CompanySerializer
 from base.utils import file_response, pop
 from base.views.base import CompanyFilterMixin
-from base.tasks import celery_send_mail, export_proposal
+from base.tasks import celery_send_mail, export_proposal, send_mail_with_attachment
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter, ProposalTemplateFilter
 from sales.models import ProposalTemplate, PriceComparison, ProposalFormatting, ProposalWriting, POFormula, \
     ProposalFormattingSign, ProposalSetting
@@ -415,6 +415,12 @@ def proposal_sign(request, pk):
             proposal_writing.save(update_fields=['status'])
             ActivitiesLog.objects.create(lead=proposal_writing.lead, status='approved', type_id=proposal_writing.pk,
                                          title=f'{proposal_writing.name}', type='proposal', start_date=proposal_template.sign_date)
+
+            files = request.data.getlist('signature')
+            contact = Contact.objects.get(pk=proposal_template.primary_contact)
+            content = render_to_string('proposal-formatting-sign-otp-success.html', {'contact': contact})
+            send_mail_with_attachment(f'Sign Electronically OTP', content, settings.EMAIL_HOST_USER,
+                                      [contact.email], files)
             return Response(status=status.HTTP_200_OK, data={'data': 'Success'})
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={'data': 'Fail'})
