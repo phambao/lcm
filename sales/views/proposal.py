@@ -406,7 +406,7 @@ def proposal_sign(request, pk):
     if request.method == 'POST':
         otp = request.data['otp']
         signature = request.data['signature']
-        if otp != proposal_template.otp:
+        if otp == proposal_template.otp:
             proposal_template.has_signed = True
             proposal_template.signature = signature
             proposal_template.sign_date = timezone.now()
@@ -415,12 +415,6 @@ def proposal_sign(request, pk):
             proposal_writing.save(update_fields=['status'])
             ActivitiesLog.objects.create(lead=proposal_writing.lead, status='approved', type_id=proposal_writing.pk,
                                          title=f'{proposal_writing.name}', type='proposal', start_date=proposal_template.sign_date)
-
-            files = request.data.getlist('signature')
-            contact = Contact.objects.get(pk=proposal_template.primary_contact)
-            content = render_to_string('proposal-formatting-sign-otp-success.html', {'contact': contact})
-            send_mail_with_attachment(f'Sign Electronically OTP', content, settings.EMAIL_HOST_USER,
-                                            ['nguyenxuantruongee@gmail.com'], files)
             return Response(status=status.HTTP_200_OK, data={'data': 'Success'})
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={'data': 'Fail'})

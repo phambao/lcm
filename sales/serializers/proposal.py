@@ -451,7 +451,7 @@ class ProposalFormattingTemplateMinorSerializer(serializers.ModelSerializer):
         model = ProposalFormatting
         fields = ('id', 'show_format_fields', 'show_formula_fields', 'contacts', 'intro', 'default_note', 'signature',
                   'pdf_file', 'closing_note', 'contract_note', 'print_date', 'primary_contact', 'sign_date',
-                  'group_templates', 'template_type', 'active_tab')
+                  'group_templates', 'template_type', 'active_tab', 'is_sent_otp')
         read_only_fields = ['sign_date']
 
     def to_representation(self, instance):

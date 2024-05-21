@@ -275,7 +275,7 @@ class Assemble(BaseModel):
     description = models.TextField(blank=True)
     is_show = models.BooleanField(default=True, blank=True)
     original = models.IntegerField(default=0, blank=True, null=True)
-    is_custom = models.BooleanField(default=False, blank=True)
+    is_custom_assemble = models.BooleanField(default=False, blank=True)
 
     def export_to_json(self):
         return [self.name]
@@ -331,7 +331,7 @@ class EstimateTemplate(BaseModel):
     quantity = models.JSONField(blank=True, default=None, null=True)
     unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.CASCADE, null=True, blank=True)
     tab = models.IntegerField(default=0, blank=True, null=True)  # Change order
-    is_custom = models.BooleanField(default=False, blank=True)
+    is_custom_estimate = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.name

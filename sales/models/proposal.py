@@ -207,6 +207,7 @@ class ProposalWriting(BaseModel):
             proposal_formatting.print_date = None
             proposal_formatting.signature = ''
             proposal_formatting.sign_date = None
+            # proposal_formatting.active_tab = ''
             proposal_formatting.save()
 
     def get_imgs(self):
@@ -262,6 +263,7 @@ class ProposalFormatting(BaseModel):
     template_type = models.CharField(max_length=128, blank=True, default='')
     group_templates = models.JSONField(default=dict, blank=True)
     active_tab = models.CharField(max_length=128, blank=True, default='')
+    is_sent_otp = models.BooleanField(default=True, blank=True)
 
 
 class ProposalFormattingConfig(BaseModel):
