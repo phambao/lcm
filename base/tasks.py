@@ -148,7 +148,6 @@ def celery_send_mail(subject, message, from_email, recipient_list,
 #         file_content = base64.b64decode(encoded_file['content'])
 #         email.attach(encoded_file['name'], file_content, encoded_file['content_type'])
 #     email.send()
-
 @shared_task(name='send-email')
 def send_mail_with_attachment(subject, body, from_email, to, attachments, bcc=None, connection=None,
                               headers=None, cc=None, reply_to=None):
@@ -158,7 +157,6 @@ def send_mail_with_attachment(subject, body, from_email, to, attachments, bcc=No
     for attachment in attachments:
         email.attach(attachment.name, attachment.read())
     email.send()
-
 
 @shared_task()
 def activity_log(model, instance, action, serializer_name, base_import_file, user_id):
