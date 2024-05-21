@@ -138,6 +138,7 @@ def celery_send_mail(subject, message, from_email, recipient_list,
               fail_silently=fail_silently, auth_user=auth_user, auth_password=auth_password,
               connection=connection, html_message=html_message)
 
+
 @shared_task(name='send-email')
 def send_mail_with_attachment(subject, body, from_email, to, attachments, bcc=None, connection=None,
                               headers=None, cc=None, reply_to=None):
