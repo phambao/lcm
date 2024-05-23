@@ -13,7 +13,7 @@ from api.models import InvoiceSetting
 from base.permissions import InvoicePermissions
 from base.serializers.config import CompanySerializer
 from base.views.base import CompanyFilterMixin
-from base.tasks import celery_send_mail
+from base.tasks import celery_send_mail, send_mail_with_attachment
 from sales.models import Invoice, PaymentHistory, LeadDetail, CreditMemo, InvoiceTemplate
 from sales.models.invoice import TemplateInvoice
 from sales.models.proposal import ProposalWriting
@@ -199,6 +199,11 @@ def invoice_sign(request, pk):
             invoice.status = 'unpaid'
             invoice.save()
             invoice_template.save(update_fields=['has_signed', 'signature'])
+            files = request.data.getlist('file')
+            contact = Contact.objects.get(pk=invoice_template.primary_contact)
+            content = render_to_string('proposal-formatting-sign-otp-success.html', {'contact': contact})
+            send_mail_with_attachment(f'Sign Electronically OTP', content, settings.EMAIL_HOST_USER,
+                                      [contact.email], files)
             return Response(status=status.HTTP_200_OK, data={'data': 'Success'})
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={'data': 'Fail'})

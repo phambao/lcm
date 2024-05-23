@@ -628,7 +628,7 @@ def webhook_received(request):
                     company.credit = round(company.credit + commission_amount, 2)
                     company.save()
                     # if company not coupon code when payment first
-                    if not company_referral_code or is_use_one:
+                    if not company_referral_code or is_use_one and company.is_automatic_commission_payment:
                         temp_amount = total_amount - discount_amount
                         create_referral_code = None
                         if company.credit >= temp_amount:
@@ -679,7 +679,7 @@ def webhook_received(request):
                         company.referral_code_current = create_referral_code
                         company.save()
 
-                    elif company_referral_code and discount_amount < total_amount and not is_use_one:
+                    elif company_referral_code and discount_amount < total_amount and not is_use_one and company.is_automatic_commission_payment:
                         temp_amount = total_amount - discount_amount
                         create_referral_code = None
                         if company.credit >= temp_amount:
@@ -687,8 +687,11 @@ def webhook_received(request):
                             company.save()
                             coupon = stripe.Coupon.create(
                                 percent_off=None,
+
                                 amount_off=int(total_amount * 100),
                                 currency=data_sub.currency,
+
+
                                 duration='repeating',
                                 duration_in_months=data_subscription_stripe_company.duration_in_months,
                             )

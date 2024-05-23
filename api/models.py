@@ -129,6 +129,7 @@ class CompanyBuilder(models.Model):
     city = models.CharField(blank=True, max_length=128, null=True)
     state = models.CharField(blank=True, max_length=128, null=True)
     zip_code = models.CharField(verbose_name='Zip Code', max_length=6, blank=True)
+
     size = models.IntegerField(null=True, blank=True)
     tax = models.CharField(blank=True, max_length=128)
     business_phone = models.CharField(blank=True, max_length=20)
@@ -155,6 +156,7 @@ class CompanyBuilder(models.Model):
     credit = models.FloatField(null=True, blank=True, default=0)
     roc = models.CharField(blank=True, max_length=128, default='')
     trades_others = models.CharField(blank=True, max_length=128, default='')
+    is_automatic_commission_payment = models.BooleanField(default=True)
 
     def __str__(self):
         return self.company_name
