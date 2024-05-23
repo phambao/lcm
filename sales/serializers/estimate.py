@@ -542,7 +542,8 @@ class MaterialViewSerializers(serializers.ModelSerializer):
     class Meta:
         model = MaterialView
         fields = ('id', 'name', 'material_value', 'copies_from', 'catalog_materials',
-                  'levels', 'data_entry', 'is_client_view', 'default_column')
+                  'levels', 'data_entry', 'is_client_view', 'default_column',
+                  'po_group_index', 'po_index', 'custom_group_name', 'custom_group_index', 'custom_index')
 
     def validate_data_entry(self, value):
         if value:
@@ -551,6 +552,11 @@ class MaterialViewSerializers(serializers.ModelSerializer):
             except DataEntry.DoesNotExist:
                 return None
         return value
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['po_group_name'] = instance.get_po_group_name()
+        return data
 
 
 class EstimateTemplateForFormattingSerializer(serializers.ModelSerializer):

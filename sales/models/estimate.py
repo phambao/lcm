@@ -225,9 +225,12 @@ class POFormulaToDataEntry(BaseModel):
         return None
 
     def get_po_group_name(self):
+        formulas = POFormula.objects.none()
+        if self.estimate_template:
+            formulas |= self.estimate_template.get_formula()
         if self.copies_from:
             formula_id = [e['formula'] for e in self.copies_from]
-            formulas = POFormula.objects.filter(pk__in=formula_id).order_by('id')
+            formulas = formulas.filter(formula_for_data_view__in=formula_id).order_by('name').distinct('name')
             return ', '.join([f.name for f in formulas])
         return self.po_formula.name if self.po_formula else ''
 
@@ -244,6 +247,23 @@ class MaterialView(BaseModel):
     levels = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
     is_client_view = models.BooleanField(blank=True, default=False)
     default_column = models.JSONField(blank=True, default=dict)
+
+    # For grouping
+    po_group_index = models.IntegerField(blank=True, default=0, null=True)
+    po_index = models.IntegerField(blank=True, default=0, null=True)
+    custom_group_name = models.CharField(max_length=128, blank=True, default='Default')
+    custom_group_index = models.IntegerField(blank=True, default=0, null=True)
+    custom_index = models.IntegerField(blank=True, default=0, null=True)
+
+    def get_po_group_name(self):
+        formulas = POFormula.objects.none()
+        if self.estimate_template:
+            formulas |= self.estimate_template.get_formula()
+        if self.copies_from:
+            formula_id = [e['formula'] for e in self.copies_from]
+            formulas = formulas.filter(formula_for_data_view__in=formula_id).order_by('name').distinct('name')
+            return ', '.join([f.name for f in formulas])
+        return self.name
 
 
 class POFormulaGrouping(BaseModel):
