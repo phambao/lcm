@@ -142,12 +142,14 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = POFormulaToDataEntry
         fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value', 'nick_name',
-                  'copies_from', 'group', 'material_data_entry_link', 'levels', 'is_client_view')
+                  'copies_from', 'group', 'material_data_entry_link', 'levels', 'is_client_view', 
+                  'po_group_index', 'po_index', 'custom_group_name', 'custom_group_index', 'custom_index')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if not data['nick_name']:
             data['nick_name'] = instance.data_entry.name
+        data['po_group_name'] = instance.get_po_group_name()
         return data
 
 
@@ -159,7 +161,9 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
                   'material_value': data_entry.get('material_value', ''), 'copies_from': data_entry.get('copies_from'),
                   'group': data_entry.get('group', ''), 'material_data_entry_link': data_entry.get('material_data_entry_link'),
                   'levels': data_entry.get('levels', []), 'is_client_view': data_entry.get('is_client_view', True),
-                  'nick_name': data_entry.get('nick_name', '')}
+                  'nick_name': data_entry.get('nick_name', ''), 'po_group_index': data_entry.get('po_group_index'),
+                  'po_index': data_entry.get('po_index'), 'custom_group_name': data_entry.get('custom_group_name'),
+                  'custom_group_index': data_entry.get('custom_group_index'), 'custom_index': data_entry.get('custom_index')}
         try:
             data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
             if data_entry_pk:
