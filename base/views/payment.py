@@ -687,11 +687,8 @@ def webhook_received(request):
                             company.save()
                             coupon = stripe.Coupon.create(
                                 percent_off=None,
-
                                 amount_off=int(total_amount * 100),
                                 currency=data_sub.currency,
-
-
                                 duration='repeating',
                                 duration_in_months=data_subscription_stripe_company.duration_in_months,
                             )
