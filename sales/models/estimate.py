@@ -118,7 +118,10 @@ class POFormula(BaseModel):
         except NameError:
             return default
         if material:
-            return material['levels'][0]
+            try:
+                return material['levels'][0]
+            except KeyError:
+                return default
         material = self.catalog_materials
         if len(material):
             return material[0] or default
