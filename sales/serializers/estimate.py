@@ -1,4 +1,5 @@
 import re
+import random
 
 from django.db import IntegrityError
 from django.apps import apps
@@ -142,12 +143,14 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = POFormulaToDataEntry
         fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value', 'nick_name',
-                  'copies_from', 'group', 'material_data_entry_link', 'levels', 'is_client_view')
+                  'copies_from', 'group', 'material_data_entry_link', 'levels', 'is_client_view', 
+                  'po_group_index', 'po_index', 'custom_group_name', 'custom_group_index', 'custom_index')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if not data['nick_name']:
             data['nick_name'] = instance.data_entry.name
+        data['po_group_name'] = instance.get_po_group_name()
         return data
 
 
@@ -159,7 +162,9 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
                   'material_value': data_entry.get('material_value', ''), 'copies_from': data_entry.get('copies_from'),
                   'group': data_entry.get('group', ''), 'material_data_entry_link': data_entry.get('material_data_entry_link'),
                   'levels': data_entry.get('levels', []), 'is_client_view': data_entry.get('is_client_view', True),
-                  'nick_name': data_entry.get('nick_name', '')}
+                  'nick_name': data_entry.get('nick_name', ''), 'po_group_index': data_entry.get('po_group_index'),
+                  'po_index': data_entry.get('po_index'), 'custom_group_name': data_entry.get('custom_group_name'),
+                  'custom_group_index': data_entry.get('custom_group_index'), 'custom_index': data_entry.get('custom_index')}
         try:
             data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
             if data_entry_pk:
@@ -465,9 +470,10 @@ class AssembleSerializer(ContentTypeSerializerMixin):
         extra_kwargs = extra_kwargs_for_base_model()
 
     def create_po_formula(self, po_formulas, instance):
+        max_int = 2147483647
         for po_formula in po_formulas:
             if not po_formula.get('formula_for_data_view'):
-                po_formula['formula_for_data_view'] = po_formula.get('id') if po_formula.get('id') < 2147483647 else 1
+                po_formula['formula_for_data_view'] = po_formula.get('id') if po_formula.get('id') < max_int else random.randint(1, 10000)
             old_pk = po_formula['id']
             del po_formula['id']
             po = POFormulaSerializer(data=po_formula, context=self.context)
@@ -538,7 +544,8 @@ class MaterialViewSerializers(serializers.ModelSerializer):
     class Meta:
         model = MaterialView
         fields = ('id', 'name', 'material_value', 'copies_from', 'catalog_materials',
-                  'levels', 'data_entry', 'is_client_view', 'default_column')
+                  'levels', 'data_entry', 'is_client_view', 'default_column',
+                  'po_group_index', 'po_index', 'custom_group_name', 'custom_group_index', 'custom_index')
 
     def validate_data_entry(self, value):
         if value:
@@ -547,6 +554,11 @@ class MaterialViewSerializers(serializers.ModelSerializer):
             except DataEntry.DoesNotExist:
                 return None
         return value
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['po_group_name'] = instance.get_po_group_name()
+        return data
 
 
 class EstimateTemplateForFormattingSerializer(serializers.ModelSerializer):
