@@ -155,6 +155,7 @@ class CompanyBuilder(models.Model):
     credit = models.FloatField(null=True, blank=True, default=0)
     roc = models.CharField(blank=True, max_length=128, default='')
     trades_others = models.CharField(blank=True, max_length=128, default='')
+    is_automatic_commission_payment = models.BooleanField(default=True)
 
     def __str__(self):
         return self.company_name
