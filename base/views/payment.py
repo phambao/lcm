@@ -158,7 +158,12 @@ def check_promotion_code_v2(request):
                     else:
                         data_coupon = ReferralCode.objects.get(coupon_stripe_id=coupon_id.coupon.id)
                         company = data_coupon.company
-                        if company and not company.referral_code_current.dealer:
+                        if company and not company.referral_code_current:
+                            data_coupon.percent_discount_sign_up = None
+                            data_coupon.percent_discount_pro_launch = None
+                            data_coupon.save()
+
+                        if company and company.referral_code_current and not company.referral_code_current.dealer:
                             data_coupon.percent_discount_sign_up = None
                             data_coupon.percent_discount_pro_launch = None
                             data_coupon.save()
