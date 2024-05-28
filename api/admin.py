@@ -33,10 +33,10 @@ class AnswerInline(admin.TabularInline):
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ["id","company_name", "logo", "description", "address", "country", "city", "state",
                     "business_phone", "zip_code", "size", "tax", "email", "cell_mail", "cell_phone", "created_date",
-                    "modified_date", "user_create", "user_update", "currency", "customer_stripe", "is_payment", 'website', 'company_size', 'revenue', 'trades_others']
+                    "modified_date", "user_create", "user_update", "currency", "customer_stripe", "is_payment", 'website', 'company_size', 'revenue', 'trades_others', 'is_automatic_commission_payment']
     fields = ["company_name", "logo", "description", "address", "country", "city", "state",
                     "business_phone", "zip_code", "size", "tax", "email", "cell_mail", "cell_phone",
-                    "user_create", "user_update", "currency", "customer_stripe", "is_payment", 'website', 'company_size', 'revenue', 'referral_code_current', 'credit', 'referral_code', 'trades_others']
+                    "user_create", "user_update", "currency", "customer_stripe", "is_payment", 'website', 'company_size', 'revenue', 'referral_code_current', 'credit', 'referral_code', 'trades_others', 'is_automatic_commission_payment']
     list_filter = ["company_name"]
     search_fields = ['company_name', 'business_phone']
     inlines = [UserInline]
