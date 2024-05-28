@@ -149,21 +149,6 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
                   'custom_po_index', 'is_lock_estimate', 'is_lock_proposal', 'is_press_enter',
                   'default_value', 'default_dropdown_value', 'default_material_value')
 
-    def validate_default_material_value(self, value):
-        if not value:
-            return {}
-        return value
-
-    def validate_default_dropdown_value(self, value):
-        if not value:
-            return {}
-        return value
-
-    def validate_default_value(self, value):
-        if not value:
-            return ''
-        return value
-
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if not data['nick_name']:
@@ -181,16 +166,14 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None, ch
                   'group': data_entry.get('group', ''), 'material_data_entry_link': data_entry.get('material_data_entry_link'),
                   'levels': data_entry.get('levels', []), 'is_client_view': data_entry.get('is_client_view', True),
                   'nick_name': data_entry.get('nick_name', ''), 'po_group_index': data_entry.get('po_group_index'),
-                  'po_index': data_entry.get('po_index'), 'custom_group_name': data_entry.get('custom_group_name'),
+                  'po_index': data_entry.get('po_index'), 'custom_group_name': data_entry.get('custom_group_name') or '',
                   'custom_group_index': data_entry.get('custom_group_index'), 'custom_index': data_entry.get('custom_index'),
-                  'custom_po_index': data_entry.get('custom_po_index'), 'is_lock_estimate': data_entry.get('is_lock_estimate'),
-                  'is_lock_proposal': data_entry.get('is_lock_proposal'), 'is_press_enter': data_entry.get('is_press_enter'),
-                  'default_value': data_entry.get('default_value'), 'default_dropdown_value': data_entry.get('default_dropdown_value', ''),
-                  'default_material_value': data_entry.get('default_material_value')}
+                  'custom_po_index': data_entry.get('custom_po_index'), 'is_lock_estimate': data_entry.get('is_lock_estimate') or False,
+                  'is_lock_proposal': data_entry.get('is_lock_proposal') or False, 'is_press_enter': data_entry.get('is_press_enter') or False}
         if change_default:
-            params['default_value'] = data_entry.get('value')
-            params['default_dropdown_value'] = data_entry.get('dropdown_value')
-            params['default_material_value'] = data_entry.get('material_value')
+            params['default_value'] = data_entry.get('value') or ''
+            params['default_dropdown_value'] = data_entry.get('dropdown_value') or {}
+            params['default_material_value'] = data_entry.get('material_value') or {}
         try:
             data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
             if data_entry_pk:
