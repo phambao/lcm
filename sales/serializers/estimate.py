@@ -149,6 +149,21 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
                   'custom_po_index', 'is_lock_estimate', 'is_lock_proposal', 'is_press_enter',
                   'default_value', 'default_dropdown_value', 'default_material_value')
 
+    def validate_default_material_value(self, value):
+        if not value:
+            return {}
+        return value
+
+    def validate_default_dropdown_value(self, value):
+        if not value:
+            return {}
+        return value
+
+    def validate_default_value(self, value):
+        if not value:
+            return ''
+        return value
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if not data['nick_name']:
