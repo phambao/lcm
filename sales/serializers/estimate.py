@@ -6,6 +6,7 @@ from django.apps import apps
 from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
 from django.db.utils import DataError
+from django.urls import reverse
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -144,7 +145,9 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
         model = POFormulaToDataEntry
         fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value', 'nick_name',
                   'copies_from', 'group', 'material_data_entry_link', 'levels', 'is_client_view', 
-                  'po_group_index', 'po_index', 'custom_group_name', 'custom_group_index', 'custom_index')
+                  'po_group_index', 'po_index', 'custom_group_name', 'custom_group_index', 'custom_index',
+                  'custom_po_index', 'is_lock_estimate', 'is_lock_proposal', 'is_press_enter',
+                  'default_value', 'default_dropdown_value', 'default_material_value')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -154,7 +157,7 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
         return data
 
 
-def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
+def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None, change_default=False):
     data = []
     for data_entry in data_entries:
         params = {"po_formula_id": instance.pk, "value": data_entry['value'], 'index': data_entry.get('index'),
@@ -164,7 +167,15 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None):
                   'levels': data_entry.get('levels', []), 'is_client_view': data_entry.get('is_client_view', True),
                   'nick_name': data_entry.get('nick_name', ''), 'po_group_index': data_entry.get('po_group_index'),
                   'po_index': data_entry.get('po_index'), 'custom_group_name': data_entry.get('custom_group_name'),
-                  'custom_group_index': data_entry.get('custom_group_index'), 'custom_index': data_entry.get('custom_index')}
+                  'custom_group_index': data_entry.get('custom_group_index'), 'custom_index': data_entry.get('custom_index'),
+                  'custom_po_index': data_entry.get('custom_po_index'), 'is_lock_estimate': data_entry.get('is_lock_estimate'),
+                  'is_lock_proposal': data_entry.get('is_lock_proposal'), 'is_press_enter': data_entry.get('is_press_enter'),
+                  'default_value': data_entry.get('default_value'), 'default_dropdown_value': data_entry.get('default_dropdown_value', ''),
+                  'default_material_value': data_entry.get('default_material_value')}
+        if change_default:
+            params['default_value'] = data_entry.get('value')
+            params['default_dropdown_value'] = data_entry.get('dropdown_value')
+            params['default_material_value'] = data_entry.get('material_value')
         try:
             data_entry_pk = data_entry.get('data_entry', {}).get('id', None)
             if data_entry_pk:
@@ -690,7 +701,10 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
         pk_assembles = self.create_assembles(assembles)
         instance = super().create(validated_data)
         new_pk = instance.pk
-        create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk)
+        change_default = False
+        if self.context.get('request').path == reverse('sales.estimate.list'):
+            change_default = True
+        create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk, change_default)
         self.create_data_view(data_views, instance)
         self.create_material_view(material_views, instance)
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
@@ -718,7 +732,10 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
         pk = pop(validated_data, 'id', None)
 
         instance.data_entries.all().delete()
-        create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk)
+        change_default = False
+        if self.context.get('request').path == reverse('sales.estimate.detail', kwargs={'pk': instance.pk}):
+            change_default = True
+        create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk, change_default)
         pk_assembles = self.create_assembles(assembles)
 
         instance = super().update(instance, validated_data)

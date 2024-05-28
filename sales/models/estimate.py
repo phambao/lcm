@@ -211,9 +211,17 @@ class POFormulaToDataEntry(BaseModel):
     # For grouping
     po_group_index = models.IntegerField(blank=True, default=0, null=True)
     po_index = models.IntegerField(blank=True, default=0, null=True)
-    custom_group_name = models.CharField(max_length=128, blank=True, default='Default')
+    custom_group_name = models.CharField(max_length=128, blank=True, default='Default', null=True)
     custom_group_index = models.IntegerField(blank=True, default=0, null=True)
     custom_index = models.IntegerField(blank=True, default=0, null=True)
+    custom_po_index = models.IntegerField(blank=True, default=0, null=True)
+
+    is_lock_estimate = models.BooleanField(blank=True, default=False)
+    is_lock_proposal = models.BooleanField(blank=True, default=None, null=True)
+    is_press_enter = models.BooleanField(blank=True, default=False)
+    default_value = models.CharField(verbose_name='Default Value', max_length=32, blank=True)
+    default_dropdown_value = models.JSONField(blank=True, default=dict)
+    default_material_value = models.JSONField(blank=True, default=dict)
 
     def get_value(self):
         value = self.value or self.dropdown_value.get('value') or '1'
