@@ -169,7 +169,9 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None, ch
                   'po_index': data_entry.get('po_index'), 'custom_group_name': data_entry.get('custom_group_name') or '',
                   'custom_group_index': data_entry.get('custom_group_index'), 'custom_index': data_entry.get('custom_index'),
                   'custom_po_index': data_entry.get('custom_po_index'), 'is_lock_estimate': data_entry.get('is_lock_estimate') or False,
-                  'is_lock_proposal': data_entry.get('is_lock_proposal') or False, 'is_press_enter': data_entry.get('is_press_enter') or False}
+                  'is_lock_proposal': data_entry.get('is_lock_proposal') or False, 'is_press_enter': data_entry.get('is_press_enter') or False,
+                  'default_value': data_entry.get('default_value') or '', 'default_dropdown_value': data_entry.get('default_dropdown_value') or {},
+                  'default_material_value': data_entry.get('default_material_value') or {}}
         if change_default:
             params['default_value'] = data_entry.get('value') or ''
             params['default_dropdown_value'] = data_entry.get('dropdown_value') or {}
