@@ -262,6 +262,7 @@ class MaterialView(BaseModel):
     custom_group_name = models.CharField(max_length=128, blank=True, default='Default')
     custom_group_index = models.IntegerField(blank=True, default=0, null=True)
     custom_index = models.IntegerField(blank=True, default=0, null=True)
+    custom_po_index = models.IntegerField(blank=True, default=0, null=True)
 
     def get_po_group_name(self):
         formulas = POFormula.objects.none()
