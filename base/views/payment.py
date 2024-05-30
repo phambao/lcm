@@ -315,6 +315,7 @@ def create_subscription_v2(request):
         total_sign_up_fee = rs_sign_fee
         total_pro_launch = rs_pro_launch
 
+    discounts = []
     try:
         if not promotion_code:
             subscription = stripe.Subscription.create(
@@ -340,15 +341,23 @@ def create_subscription_v2(request):
                     'coupon_id': coupon_id,
                 }
             )
+            if coupon_id:
+                discounts.append({"coupon": coupon_id})
+
+            if referral_code_id:
+                discounts.append({"coupon": referral_code_id})
+
             subscription = stripe.Subscription.create(
                 customer=customer_id,
                 items=[{
                     'price': price_recurring,
+                    'discounts': discounts,
                 }],
                 add_invoice_items=prices_one_time,
                 payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
                 coupon=coupon,
+                # discounts=discounts,
             )
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
@@ -365,13 +374,14 @@ def handle_total_discount(total_sign_up_fee,  total_product,  total_pro_launch, 
         metadata = data_price.metadata
         amount = data_price['unit_amount']
         if price['type'] == 'recurring':
-            if percent_off:
-                total_discount_amount += (total_product * int(percent_off)) / 100
-                total_product = total_product - (total_product * int(percent_off)) / 100
-
-            if amount_off:
-                total_discount_amount += int(amount_off)
-                total_product = total_product - int(amount_off)
+            pass
+            # if percent_off:
+            #     total_discount_amount += (total_product * int(percent_off)) / 100
+            #     total_product = total_product - (total_product * int(percent_off)) / 100
+            #
+            # if amount_off:
+            #     total_discount_amount += int(amount_off)
+            #     total_product = total_product - int(amount_off)
 
         elif price['type'] == 'one_time' and not metadata:
             if data_coupon.percent_discount_sign_up:
