@@ -298,8 +298,8 @@ def create_subscription_v2(request):
             data_create = {"price": data_price['id']}
             prices_one_time.append(data_create)
             total_pro_launch = data_price['unit_amount']
-
     if coupon_id:
+
         data_coupon = CouponCode.objects.get(coupon_stripe_id=coupon_id)
         rs_product, rs_sign_fee, rs_pro_launch, discount_amount = handle_total_discount(total_sign_up_fee, total_product_amount,total_pro_launch, data_coupon, prices)
         total_discount_amount += discount_amount
@@ -314,7 +314,6 @@ def create_subscription_v2(request):
         total_product_amount = rs_product
         total_sign_up_fee = rs_sign_fee
         total_pro_launch = rs_pro_launch
-
     discounts = []
     try:
         if not promotion_code:
@@ -333,9 +332,9 @@ def create_subscription_v2(request):
             coupon = stripe.Coupon.create(
                 amount_off=int(total_discount_amount),
                 currency="usd",
-                duration="repeating",
+                duration="once",
                 name="Discount",
-                duration_in_months=12,
+                max_redemptions=1,
                 metadata={
                     'referral_code': referral_code_id,
                     'coupon_id': coupon_id,
@@ -357,7 +356,6 @@ def create_subscription_v2(request):
                 payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
                 coupon=coupon,
-                # discounts=discounts,
             )
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
@@ -538,6 +536,7 @@ def webhook_received(request):
             customer_stripe_id = data_object.customer
             customer = stripe.Customer.retrieve(customer_stripe_id)
             subscription_name = subscription.plan.product.name
+            referral_code_rs = None
             if data_object.discount:
                 coupon_code = data_object.discount.coupon.id
                 coupon = stripe.Coupon.retrieve(coupon_code)
@@ -548,6 +547,7 @@ def webhook_received(request):
                 company = None
                 if referral_code_id:
                     data_referral_code = ReferralCode.objects.get(coupon_stripe_id=referral_code_id)
+                    referral_code_rs = data_referral_code
                     company = data_referral_code.company
                 dealer = None
                 if data_referral_code and data_referral_code.dealer:
@@ -555,6 +555,7 @@ def webhook_received(request):
                 if company:
                     dealer_apply_for_ddr = None
                     data_subscription_stripe_company = SubscriptionStripeCompany.objects.filter(company=company).first()
+
                     if company.referral_code_current:
                         dealer_apply_for_ddr = company.referral_code_current.dealer
 
@@ -645,11 +646,14 @@ def webhook_received(request):
                     )
 
                     discount_amount_next_invoice = (upcoming_invoice.subtotal - upcoming_invoice.total) / 100
-                    # discount_amount = data_sub.discount.coupon.amount_off / 100
-                    temp_amount = total_amount - discount_amount_next_invoice
+                    discount_amount = 0
+                    if data_sub.discount:
+                        discount_amount = data_sub.discount.coupon.amount_off / 100
 
+                    # temp_amount = total_amount - discount_amount_next_invoice
+                    temp_amount = upcoming_invoice.total / 100
                     # if company not coupon code when payment first
-                    if not company_referral_code or is_use_one and company.is_automatic_commission_payment:
+                    if not company_referral_code or is_use_one and company.is_automatic_commission_payment and upcoming_invoice.total > 0:
                         # temp_amount = total_amount - discount_amount
                         create_referral_code = None
                         if company.credit >= temp_amount:
@@ -700,13 +704,11 @@ def webhook_received(request):
                         company.referral_code_current = create_referral_code
                         company.save()
 
-                    elif company_referral_code and discount_amount_next_invoice < total_amount and not is_use_one and company.is_automatic_commission_payment:
-                        coupon_id_last = company.referral_code_current.coupon_stripe_id
-                        create_referral_code = None
+                    elif company_referral_code and discount_amount_next_invoice < total_amount and not is_use_one and company.is_automatic_commission_payment and temp_amount > 0:
                         if company.credit >= temp_amount and temp_amount > 0:
                             company.credit = round(company.credit - temp_amount, 2)
                             company.save()
-                            data_discount = discount_amount_next_invoice - discount_amount + temp_amount
+                            data_discount = round(temp_amount + discount_amount, 2)
                             coupon = stripe.Coupon.create(
                                 percent_off=None,
                                 amount_off=int(data_discount * 100),
@@ -717,17 +719,11 @@ def webhook_received(request):
 
                             subscription = stripe.Subscription.modify(
                                 data_subscription_stripe_company.subscription_id,
-                                discounts=[{"coupon": coupon_id_last}, {"coupon": coupon.id}],
-
-                            )
-                            create_referral_code = ReferralCode.objects.create(
-                                number_discount_product=total_amount,
-                                currency=data_sub.currency,
-                                coupon_stripe_id=coupon_id_last,
-                                dealer=company_referral_code.dealer,
+                                discounts=[{"coupon": coupon.id}],
                             )
                         else:
-                            total_discount_coupon = company.credit + discount_amount_next_invoice - discount_amount
+                            total_discount_coupon = company.credit + discount_amount
+
                             if temp_amount > 0:
                                 company.credit = 0
                                 company.save()
@@ -740,16 +736,9 @@ def webhook_received(request):
                                 )
                                 subscription = stripe.Subscription.modify(
                                     data_subscription_stripe_company.subscription_id,
-                                    discounts=[{"coupon": coupon_id_last}, {"coupon": coupon.id}],
+                                    discounts=[{"coupon": coupon.id}],
                                 )
-                                create_referral_code = ReferralCode.objects.create(
-                                    number_discount_product=total_discount_coupon,
-                                    currency=data_sub.currency,
-                                    coupon_stripe_id=coupon_id_last,
-                                    dealer=company_referral_code.dealer,
-                            )
-                        company.referral_code_current = create_referral_code
-                        company.save()
+
                 if dealer:
                     data_products = data_object.lines.data
                     commission_amount = 0
@@ -774,63 +763,9 @@ def webhook_received(request):
                         is_activate=True,
                         bonus_commissions=commission_amount
                     )
-                new_discount_amount = 0
 
-                if referral_code_id and coupon_id:
-                    data_coupon_code = CouponCode.objects.get(coupon_stripe_id=coupon_id)
-                    amount = subscription.plan.amount
-                    if data_referral_code.number_discount_product:
-                        new_discount_amount += amount - data_referral_code.number_discount_product
-                        amount = amount - data_referral_code.number_discount_product
-
-                    if data_referral_code.percent_discount_product:
-                        new_discount_amount += (amount * data_referral_code.percent_discount_product) / 100
-                        amount = amount - (amount * data_referral_code.percent_discount_product) / 100
-
-                    if data_coupon_code.number_discount_product:
-                        new_discount_amount += amount - data_coupon_code.number_discount_product
-                        amount = amount - data_coupon_code.number_discount_product
-
-                    if data_coupon_code.percent_discount_product:
-                        new_discount_amount += (amount * data_coupon_code.percent_discount_product) / 100
-                        amount = amount - (amount * data_coupon_code.percent_discount_product) / 100
-
-                elif referral_code_id and not coupon_id:
-
-                    amount = subscription.plan.amount
-                    if data_referral_code.number_discount_product:
-                        new_discount_amount += amount - data_referral_code.number_discount_product
-
-                    if data_referral_code.percent_discount_product:
-                        new_discount_amount += (amount * data_referral_code.percent_discount_product) / 100
-
-                elif coupon_id and not referral_code_id:
-                    data_coupon_code = CouponCode.objects.get(coupon_stripe_id=coupon_id)
-                    amount = subscription.plan.amount
-                    if data_coupon_code.number_discount_product:
-                        new_discount_amount += amount - data_coupon_code.number_discount_product
-
-                    if data_referral_code.percent_discount_product:
-                        new_discount_amount += (amount * data_coupon_code.percent_discount_product) / 100
-
-                coupon = stripe.Coupon.create(
-                    amount_off=int(new_discount_amount),
-                    currency="usd",
-                    duration='repeating',
-                    duration_in_months=11,
-                )
-
-                subscription = stripe.Subscription.modify(
-                    subscription_id,
-                    coupon=coupon,
-                )
-                create_referral_code = ReferralCode.objects.create(
-                    number_discount_product=new_discount_amount/100,
-                    coupon_stripe_id=coupon.id,
-                    dealer=data_referral_code.dealer
-                )
                 data_company = CompanyBuilder.objects.get(pk=customer.metadata['company'])
-                data_company.referral_code_current = create_referral_code
+                data_company.referral_code_current = referral_code_rs
                 data_company.save()
 
             SubscriptionStripeCompany.objects.create(
@@ -839,7 +774,7 @@ def webhook_received(request):
                 company_id=int(customer.metadata['company']),
                 subscription_name=subscription_name,
                 expiration_date=expiration_date,
-                duration_in_months=data_object.discount.coupon.duration_in_months - 1,
+                # duration_in_months=data_object.discount.coupon.duration_in_months - 1,
                 is_activate=True
             )
             product = stripe.Product.retrieve(subscription.plan.product)
@@ -860,13 +795,20 @@ def webhook_received(request):
     if event_type == 'invoice.upcoming':
         subscription_id = data_object['subscription']
         subscription = stripe.Subscription.retrieve(subscription_id,
-                                                    expand=['plan.product'])
-        if data_object.discounts:
+                                                       expand=['plan.product'])
+        discount_check = data_object.discounts
+        discount_amount = 0
+
+        for discount in data_object.total_discount_amounts:
+            if discount.discount not in discount_check:
+                discount_amount += discount.amount / 100
+        if data_object.discounts or data_object.total_discount_amounts:
             is_use_one = False
             customer = stripe.Customer.retrieve(data_object.customer)
             company = CompanyBuilder.objects.get(pk=customer.metadata['company'])
             coupon_code = company.referral_code_current.coupon_stripe_id
             coupon_company = stripe.Coupon.retrieve(coupon_code)
+
             if coupon_company.duration == 'once':
                 is_use_one = True
 
@@ -921,58 +863,36 @@ def webhook_received(request):
                         company.referral_code_current = create_referral_code
                         company.save()
                 else:
-                    data_coupon_last = stripe.Coupon.retrieve(data_referral_code.coupon_stripe_id)
-                    discount_amount = data_coupon_last.amount_off / 100
-                    if discount_amount < total_amount:
-                        temp_amount = total_amount - discount_amount
-                        if company.credit >= temp_amount:
-                            company.credit = round(company.credit - temp_amount, 2)
-                            coupon = stripe.Coupon.create(
-                                percent_off=None,
-                                amount_off=int(temp_amount * 100),
-                                currency=subscription.currency,
-                                duration='once',
-                                max_redemptions=1
-                            )
+                    temp_amount = total_amount - discount_amount
+                    if company.credit >= temp_amount and temp_amount > 0:
+                        company.credit = round(company.credit - temp_amount, 2)
+                        company.save()
+                        coupon = stripe.Coupon.create(
+                            percent_off=None,
+                            amount_off=data_object.total,
+                            currency=subscription.currency,
+                            duration='once',
+                            max_redemptions=1
+                        )
 
-                            subscription = stripe.Subscription.modify(
-                                data_subscription_stripe_company.subscription_id,
-                                discounts=[{"coupon": data_coupon_last}, {"coupon": coupon}],
-                                # coupon=coupon,
-                            )
-                            create_referral_code = ReferralCode.objects.create(
-                                number_discount_product=total_amount,
-                                currency=subscription.currency,
-                                coupon_stripe_id=data_coupon_last.id,
-                                dealer=data_referral_code.dealer,
-
-                            )
-                            company.referral_code_current = create_referral_code
-                            company.save()
-
-                        elif company.credit > 0 and company.credit < temp_amount:
-                            total_discount_coupon = discount_amount + company.credit
-                            coupon = stripe.Coupon.create(
-                                percent_off=None,
-                                amount_off=int(company.credit * 100),
-                                currency=subscription.currency,
-                                duration='once',
-                                max_redemptions=1
-                            )
-                            subscription = stripe.Subscription.modify(
-                                subscription.id,
-                                discounts=[{"coupon": data_coupon_last}, {"coupon": coupon}],
-                            )
-                            create_referral_code = ReferralCode.objects.create(
-                                number_discount_product=total_discount_coupon,
-                                currency=subscription.currency,
-                                coupon_stripe_id=data_coupon_last.id,
-                                dealer=data_referral_code.dealer,
-
-                            )
-                            company.credit = 0
-                            company.referral_code_current = create_referral_code
-                            company.save()
+                        stripe.Subscription.modify(
+                            data_subscription_stripe_company.subscription_id,
+                            discounts=[{"coupon": coupon.id}],
+                        )
+                    elif company.credit > 0 and company.credit < temp_amount:
+                        coupon = stripe.Coupon.create(
+                            percent_off=None,
+                            amount_off=int(company.credit * 100),
+                            currency=subscription.currency,
+                            duration='once',
+                            max_redemptions=1
+                        )
+                        stripe.Subscription.modify(
+                            subscription.id,
+                            discounts=[{"coupon": coupon.id}],
+                        )
+                        company.credit = 0
+                        company.save()
 
             customer_stripe_id = customer.id
             PaymentHistoryStripe.objects.create(
@@ -1008,47 +928,49 @@ def webhook_received(request):
         )
 
     if event.type == 'payment_intent.succeeded':
+        pass
         # subscription_id = data_object.stripe_id
-        payment_intent = stripe.PaymentIntent.retrieve(data_object.stripe_id, expand=['invoice', 'source', 'payment_method'])
-        subscription = stripe.Subscription.retrieve(payment_intent.invoice.lines.data[0].subscription, expand=['plan.product'])
-        subscription_id = payment_intent.invoice.subscription
-        customer_stripe_id = data_object.customer
-        data_payment_history = PaymentHistoryStripe.objects.filter(
-            customer_stripe_id=customer_stripe_id
-        )
-        if not data_payment_history:
-            payload = {
-                'sub': subscription_id,
-                'customer': customer_stripe_id,
-            }
-            customer = stripe.Customer.retrieve(customer_stripe_id)
-            jwt_token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-            registration_link = f'{settings.BASE_URL}/register/?link={jwt_token.decode()}'
-            content = render_to_string('auth/link-create-account.html', {'registration_link': registration_link})
-            celery_send_mail.delay(f'Create account',
-                                   content, settings.EMAIL_HOST_USER, [customer.email], False)
+        # payment_intent = stripe.PaymentIntent.retrieve(data_object.stripe_id, expand=['invoice', 'source', 'payment_method'])
+        # subscription = stripe.Subscription.retrieve(payment_intent.invoice.lines.data[0].subscription, expand=['plan.product'])
+        # subscription_id = payment_intent.invoice.subscription
+        # customer_stripe_id = data_object.customer
+        # data_payment_history = PaymentHistoryStripe.objects.filter(
+        #     customer_stripe_id=customer_stripe_id
+        # )
+        # if not data_payment_history:
+        #     payload = {
+        #         'sub': subscription_id,
+        #         'customer': customer_stripe_id,
+        #     }
+        #     customer = stripe.Customer.retrieve(customer_stripe_id)
+        #     jwt_token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+        #     registration_link = f'{settings.BASE_URL}/register/?link={jwt_token.decode()}'
+        #     content = render_to_string('auth/link-create-account.html', {'registration_link': registration_link})
+        #     celery_send_mail.delay(f'Create account',
+        #                            content, settings.EMAIL_HOST_USER, [customer.email], False)
     elif event.type == 'payment_method.attached':
         pass
 
     elif event.type == 'charge.failed':
-        payment_intent = stripe.PaymentIntent.retrieve(data_object['payment_intent'],
-                                                       expand=['invoice', 'source', 'payment_method'])
-        subscription = stripe.Subscription.retrieve(payment_intent.invoice.lines.data[0].subscription,
-                                                    expand=['plan.product'])
-
-        customer = data_object['customer']
-        user = User.objects.get(stripe_customer=customer)
-        company_name = user.company.company_name
-        customer_name = user.username
-        url_login = config('BASE_URL') + '/login/'
-        content = render_to_string('auth/payment-failse.html', {
-            'subscription_name': subscription.plan.product.name,
-            'company_name': company_name,
-            'customer_name': customer_name,
-            'url_login': url_login
-        })
-        celery_send_mail.delay(f'Stripe Fail Payment - this is a test',
-                               content, settings.EMAIL_HOST_USER, [user.email], False)
+        # payment_intent = stripe.PaymentIntent.retrieve(data_object['payment_intent'],
+        #                                                expand=['invoice', 'source', 'payment_method'])
+        # subscription = stripe.Subscription.retrieve(payment_intent.invoice.lines.data[0].subscription,
+        #                                             expand=['plan.product'])
+        #
+        # customer = data_object['customer']
+        # user = User.objects.get(stripe_customer=customer)
+        # company_name = user.company.company_name
+        # customer_name = user.username
+        # url_login = config('BASE_URL') + '/login/'
+        # content = render_to_string('auth/payment-failse.html', {
+        #     'subscription_name': subscription.plan.product.name,
+        #     'company_name': company_name,
+        #     'customer_name': customer_name,
+        #     'url_login': url_login
+        # })
+        # celery_send_mail.delay(f'Stripe Fail Payment - this is a test',
+        #                        content, settings.EMAIL_HOST_USER, [user.email], False)
+        pass
     return HttpResponse(status=200)
 
 
