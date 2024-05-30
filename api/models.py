@@ -121,6 +121,7 @@ class CompanyBuilder(models.Model):
         db_table = 'company_builder'
 
     logo = models.CharField(blank=True, max_length=128)
+    logo_height = models.IntegerField(null=True, blank=True, default=None)
     description = models.CharField(blank=True, max_length=128)
     company_name = models.CharField(blank=True, max_length=256)
     address = models.CharField(blank=True, max_length=128)
