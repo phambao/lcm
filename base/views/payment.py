@@ -329,17 +329,6 @@ def create_subscription_v2(request):
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
         else:
-            # coupon = stripe.Coupon.create(
-            #     amount_off=int(total_discount_amount),
-            #     currency="usd",
-            #     duration="repeating",
-            #     name="Discount",
-            #     duration_in_months=12,
-            #     metadata={
-            #         'referral_code': referral_code_id,
-            #         'coupon_id': coupon_id,
-            #     }
-            # )
             coupon = stripe.Coupon.create(
                 amount_off=int(total_discount_amount),
                 currency="usd",
@@ -367,11 +356,6 @@ def create_subscription_v2(request):
                 payment_behavior='default_incomplete',
                 expand=['latest_invoice.payment_intent'],
                 coupon=coupon,
-                metadata={
-                    'referral_code': referral_code_id,
-                    'coupon_id': coupon_id,
-                }
-                # discounts=discounts,
             )
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
