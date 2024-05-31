@@ -264,6 +264,13 @@ class MaterialView(BaseModel):
     custom_index = models.IntegerField(blank=True, default=0, null=True)
     custom_po_index = models.IntegerField(blank=True, default=0, null=True)
 
+    is_lock_estimate = models.BooleanField(blank=True, default=False)
+    is_lock_proposal = models.BooleanField(blank=True, default=None, null=True)
+    is_press_enter = models.BooleanField(blank=True, default=False)
+    default_value = models.CharField(verbose_name='Default Value', max_length=32, blank=True)
+    default_dropdown_value = models.JSONField(blank=True, default=dict)
+    default_material_value = models.JSONField(blank=True, default=dict)
+
     def get_po_group_name(self):
         formulas = POFormula.objects.none()
         if self.estimate_template:
