@@ -359,6 +359,10 @@ def create_subscription_v2(request):
                     payment_behavior='default_incomplete',
                     expand=['latest_invoice.payment_intent'],
                     coupon=coupon,
+                    metadata={
+                        'referral_code': referral_code_id,
+                        'coupon_id': coupon_id,
+                    }
                 )
             else:
                 subscription = stripe.Subscription.create(
@@ -371,6 +375,10 @@ def create_subscription_v2(request):
                     payment_behavior='default_incomplete',
                     expand=['latest_invoice.payment_intent'],
                     coupon=coupon,
+                    metadata={
+                        'referral_code': referral_code_id,
+                        'coupon_id': coupon_id,
+                    }
                 )
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
