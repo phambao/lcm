@@ -556,7 +556,9 @@ class MaterialViewSerializers(serializers.ModelSerializer):
         model = MaterialView
         fields = ('id', 'name', 'material_value', 'copies_from', 'catalog_materials',
                   'levels', 'data_entry', 'is_client_view', 'default_column', 'custom_po_index',
-                  'po_group_index', 'po_index', 'custom_group_name', 'custom_group_index', 'custom_index')
+                  'po_group_index', 'po_index', 'custom_group_name', 'custom_group_index', 'custom_index',
+                  'is_lock_estimate', 'is_lock_proposal', 'is_press_enter', 'default_value', 'default_material_value',
+                  'default_dropdown_value')
 
     def validate_data_entry(self, value):
         if value:
@@ -677,7 +679,7 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
             serializer.is_valid(raise_exception=True)
             serializer.save(estimate_template_id=instance.pk)
 
-    def create_material_view(self, material_views, instance):
+    def create_material_view(self, material_views, instance, change_default=False):
         for data_view in material_views:
             data_view['estimate_template'] = instance.pk
             data_entry = pop(data_view, 'data_entry', None)
@@ -688,7 +690,13 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
                     raise serializers.ValidationError('Data Entry is not exist')
             serializer = MaterialViewSerializers(data=data_view)
             serializer.is_valid(raise_exception=True)
-            serializer.save(estimate_template_id=instance.pk, data_entry=data_entry)
+            params = {
+                'estimate_template_id': instance.pk,
+                'data_entry': data_entry
+            }
+            if change_default:
+                params['default_material_value'] = data_view.get('material_value', {}).get('name') or {}
+            serializer.save(**params)
 
     def create(self, validated_data):
         assembles = pop(validated_data, 'assembles', [])
@@ -706,7 +714,7 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
             change_default = True
         create_po_formula_to_data_entry(EstimateTemplate(name='name'), data_entries, instance.pk, change_default)
         self.create_data_view(data_views, instance)
-        self.create_material_view(material_views, instance)
+        self.create_material_view(material_views, instance, change_default)
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
         try:
             group = GroupTemplate.objects.filter(items__contains=[old_pk], is_formula=False)
