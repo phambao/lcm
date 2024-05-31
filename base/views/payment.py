@@ -329,17 +329,19 @@ def create_subscription_v2(request):
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
         else:
-            coupon = stripe.Coupon.create(
-                amount_off=int(total_discount_amount),
-                currency="usd",
-                duration="once",
-                name="Discount",
-                max_redemptions=1,
-                metadata={
-                    'referral_code': referral_code_id,
-                    'coupon_id': coupon_id,
-                }
-            )
+            coupon = None
+            if total_discount_amount > 0:
+                coupon = stripe.Coupon.create(
+                    amount_off=int(total_discount_amount),
+                    currency="usd",
+                    duration="once",
+                    name="Discount",
+                    max_redemptions=1,
+                    metadata={
+                        'referral_code': referral_code_id,
+                        'coupon_id': coupon_id,
+                    }
+                )
             if coupon_id:
                 discounts.append({"coupon": coupon_id})
 
