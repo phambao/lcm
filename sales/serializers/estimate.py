@@ -695,7 +695,7 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
                 'data_entry': data_entry
             }
             if change_default:
-                params['default_material_value'] = data_view.get('material_value', {}).get('name') or {}
+                params['default_material_value'] = data_view.get('material_value', {})
             serializer.save(**params)
 
     def create(self, validated_data):
