@@ -374,7 +374,6 @@ def create_subscription_v2(request):
                     add_invoice_items=prices_one_time,
                     payment_behavior='default_incomplete',
                     expand=['latest_invoice.payment_intent'],
-                    coupon=coupon,
                     metadata={
                         'referral_code': referral_code_id,
                         'coupon_id': coupon_id,
