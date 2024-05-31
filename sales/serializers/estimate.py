@@ -570,7 +570,8 @@ class MaterialViewSerializers(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['po_group_name'] = instance.get_po_group_name()
+        if isinstance(instance, MaterialView):
+            data['po_group_name'] = instance.get_po_group_name()
         return data
 
 
@@ -695,7 +696,7 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
                 'data_entry': data_entry
             }
             if change_default:
-                params['default_material_value'] = data_view.get('material_value', {})
+                params['default_material_value'] = data_view
             serializer.save(**params)
 
     def create(self, validated_data):
