@@ -750,7 +750,7 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
         instance.data_views.all().delete()
         self.create_data_view(data_views, instance)
         instance.material_views.all().delete()
-        self.create_material_view(material_views, instance)
+        self.create_material_view(material_views, instance, change_default)
 
         instance.assembles.all().delete()
         instance.assembles.add(*Assemble.objects.filter(pk__in=pk_assembles))
