@@ -570,7 +570,8 @@ class MaterialViewSerializers(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['po_group_name'] = instance.get_po_group_name()
+        if isinstance(instance, MaterialView):
+            data['po_group_name'] = instance.get_po_group_name()
         return data
 
 
@@ -689,13 +690,13 @@ class EstimateTemplateSerializer(ContentTypeSerializerMixin):
                 except DataEntry.DoesNotExist:
                     raise serializers.ValidationError('Data Entry is not exist')
             serializer = MaterialViewSerializers(data=data_view)
-            obj = serializer.is_valid(raise_exception=True)
+            serializer.is_valid(raise_exception=True)
             params = {
                 'estimate_template_id': instance.pk,
                 'data_entry': data_entry
             }
             if change_default:
-                params['default_material_value'] = MaterialViewSerializers(obj).data
+                params['default_material_value'] = serializer.data
             serializer.save(**params)
 
     def create(self, validated_data):
