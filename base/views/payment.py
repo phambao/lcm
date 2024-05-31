@@ -348,37 +348,21 @@ def create_subscription_v2(request):
             if referral_code_id:
                 discounts.append({"coupon": referral_code_id})
 
-            if coupon:
-                subscription = stripe.Subscription.create(
-                    customer=customer_id,
-                    items=[{
-                        'price': price_recurring,
-                        'discounts': discounts,
-                    }],
-                    add_invoice_items=prices_one_time,
-                    payment_behavior='default_incomplete',
-                    expand=['latest_invoice.payment_intent'],
-                    coupon=coupon,
-                    metadata={
-                        'referral_code': referral_code_id,
-                        'coupon_id': coupon_id,
-                    }
-                )
-            else:
-                subscription = stripe.Subscription.create(
-                    customer=customer_id,
-                    items=[{
-                        'price': price_recurring,
-                        'discounts': discounts,
-                    }],
-                    add_invoice_items=prices_one_time,
-                    payment_behavior='default_incomplete',
-                    expand=['latest_invoice.payment_intent'],
-                    metadata={
-                        'referral_code': referral_code_id,
-                        'coupon_id': coupon_id,
-                    }
-                )
+            subscription = stripe.Subscription.create(
+                customer=customer_id,
+                items=[{
+                    'price': price_recurring,
+                    'discounts': discounts,
+                }],
+                add_invoice_items=prices_one_time,
+                payment_behavior='default_incomplete',
+                expand=['latest_invoice.payment_intent'],
+                coupon=coupon,
+                metadata={
+                    'referral_code': referral_code_id,
+                    'coupon_id': coupon_id,
+                }
+            )
             return Response({'subscription_id': subscription.id,
                              'client_secret': subscription.latest_invoice.payment_intent.client_secret})
     except Exception as e:
@@ -559,11 +543,13 @@ def webhook_received(request):
             customer = stripe.Customer.retrieve(customer_stripe_id)
             subscription_name = subscription.plan.product.name
             referral_code_rs = None
-            if data_object.discount:
-                coupon_code = data_object.discount.coupon.id
-                coupon = stripe.Coupon.retrieve(coupon_code)
-                referral_code_id = coupon.metadata.get('referral_code', None)
-                coupon_id = coupon.metadata.get('coupon_id', None)
+            if data_object.discount or data_object.total_discount_amounts:
+                referral_code_id = subscription.metadata.get('referral_code', None)
+                if data_object.discount:
+                    coupon_code = data_object.discount.coupon.id
+                    coupon = stripe.Coupon.retrieve(coupon_code)
+                    referral_code_id = coupon.metadata.get('referral_code', None)
+                    coupon_id = coupon.metadata.get('coupon_id', None)
                 is_use_one = False
                 data_referral_code = None
                 company = None
