@@ -183,9 +183,11 @@ def check_promotion_code_v2(request):
                         elif product['type'] == 'one_time' and not product['is_launch']:
 
                             if data_coupon.percent_discount_sign_up:
-                                total_discount_sign_up += (product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
+                                total_discount_sign_up += (product['amount'] * int(
+                                    data_coupon.percent_discount_sign_up)) / 100
                                 total_discount += (product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
-                                product['amount'] = product['amount'] - (product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
+                                product['amount'] = product['amount'] - (
+                                            product['amount'] * int(data_coupon.percent_discount_sign_up)) / 100
 
                             if data_coupon.number_discount_sign_up:
                                 total_discount_sign_up += int(data_coupon.number_discount_sign_up)
@@ -194,9 +196,12 @@ def check_promotion_code_v2(request):
 
                         elif product['type'] == 'one_time' and product['is_launch']:
                             if data_coupon.percent_discount_pro_launch:
-                                total_discount_pro_launch += (product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
-                                total_discount += (product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
-                                product['amount'] = product['amount'] - (product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
+                                total_discount_pro_launch += (product['amount'] * int(
+                                    data_coupon.percent_discount_pro_launch)) / 100
+                                total_discount += (product['amount'] * int(
+                                    data_coupon.percent_discount_pro_launch)) / 100
+                                product['amount'] = product['amount'] - (
+                                            product['amount'] * int(data_coupon.percent_discount_pro_launch)) / 100
 
                             if data_coupon.number_discount_pro_launch:
                                 total_discount_pro_launch += int(data_coupon.number_discount_pro_launch)
@@ -299,9 +304,11 @@ def create_subscription_v2(request):
             prices_one_time.append(data_create)
             total_pro_launch = data_price['unit_amount']
     if coupon_id:
-
         data_coupon = CouponCode.objects.get(coupon_stripe_id=coupon_id)
-        rs_product, rs_sign_fee, rs_pro_launch, discount_amount = handle_total_discount(total_sign_up_fee, total_product_amount,total_pro_launch, data_coupon, prices)
+        rs_product, rs_sign_fee, rs_pro_launch, discount_amount = handle_total_discount(total_sign_up_fee,
+                                                                                        total_product_amount,
+                                                                                        total_pro_launch, data_coupon,
+                                                                                        prices)
         total_discount_amount += discount_amount
         total_product_amount = rs_product
         total_sign_up_fee = rs_sign_fee
@@ -309,7 +316,10 @@ def create_subscription_v2(request):
 
     if referral_code_id:
         data_referral = ReferralCode.objects.get(coupon_stripe_id=referral_code_id)
-        rs_product, rs_sign_fee, rs_pro_launch, discount_amount = handle_total_discount(total_sign_up_fee, total_product_amount, total_pro_launch, data_referral, prices)
+        rs_product, rs_sign_fee, rs_pro_launch, discount_amount = handle_total_discount(total_sign_up_fee,
+                                                                                        total_product_amount,
+                                                                                        total_pro_launch, data_referral,
+                                                                                        prices)
         total_discount_amount += discount_amount
         total_product_amount = rs_product
         total_sign_up_fee = rs_sign_fee
@@ -369,7 +379,7 @@ def create_subscription_v2(request):
         return Response({'error': {'message': str(e)}}, status=400)
 
 
-def handle_total_discount(total_sign_up_fee,  total_product,  total_pro_launch,  data_coupon, prices):
+def handle_total_discount(total_sign_up_fee, total_product, total_pro_launch, data_coupon, prices):
     total_discount_amount = 0
     percent_off = data_coupon.percent_discount_product
     amount_off = data_coupon.number_discount_product
@@ -390,7 +400,8 @@ def handle_total_discount(total_sign_up_fee,  total_product,  total_pro_launch, 
         elif price['type'] == 'one_time' and not metadata:
             if data_coupon.percent_discount_sign_up:
                 total_discount_amount += (total_sign_up_fee * int(data_coupon.percent_discount_sign_up)) / 100
-                total_sign_up_fee = total_sign_up_fee - (total_sign_up_fee * int(data_coupon.percent_discount_sign_up)) / 100
+                total_sign_up_fee = total_sign_up_fee - (
+                            total_sign_up_fee * int(data_coupon.percent_discount_sign_up)) / 100
 
             if data_coupon.number_discount_sign_up:
                 total_discount_amount += int(data_coupon.number_discount_sign_up)
@@ -399,7 +410,8 @@ def handle_total_discount(total_sign_up_fee,  total_product,  total_pro_launch, 
         elif price['type'] == 'one_time' and metadata:
             if data_coupon.percent_discount_pro_launch:
                 total_discount_amount += (total_pro_launch * int(data_coupon.percent_discount_pro_launch)) / 100
-                total_pro_launch = total_pro_launch - (total_pro_launch * int(data_coupon.percent_discount_pro_launch)) / 100
+                total_pro_launch = total_pro_launch - (
+                            total_pro_launch * int(data_coupon.percent_discount_pro_launch)) / 100
 
             if data_coupon.number_discount_pro_launch:
                 total_discount_amount += int(data_coupon.number_discount_pro_launch)
@@ -516,7 +528,7 @@ def webhook_received(request):
 
     if event_type == 'price.updated':
         data_price = Price.objects.get(stripe_price_id=data_object['id'])
-        data_price.amount = data_object['unit_amount']/100
+        data_price.amount = data_object['unit_amount'] / 100
         data_price.currency = data_object['currency']
         data_price.is_activate = data_object['active']
         data_price.save()
@@ -533,7 +545,8 @@ def webhook_received(request):
         subscription = stripe.Subscription.retrieve(subscription_id, expand=['plan.product'])
 
         if data_object['billing_reason'] == 'subscription_create':
-            payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id, expand=['invoice', 'source', 'payment_method'])
+            payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id,
+                                                           expand=['invoice', 'source', 'payment_method'])
             stripe.Subscription.modify(
                 subscription_id,
                 default_payment_method=payment_intent.payment_method
@@ -567,9 +580,10 @@ def webhook_received(request):
                     if company.referral_code_current:
                         dealer_apply_for_ddr = company.referral_code_current.dealer
 
-                    data_sub = stripe.Subscription.retrieve(data_subscription_stripe_company.subscription_id, expand=['plan.product'])
+                    data_sub = stripe.Subscription.retrieve(data_subscription_stripe_company.subscription_id,
+                                                            expand=['plan.product'])
 
-                    total_amount = data_sub.plan.amount/100
+                    total_amount = data_sub.plan.amount / 100
                     company_referral_code = company.referral_code_current
                     data_products = data_object.lines.data
                     commission_amount = 0
@@ -642,7 +656,7 @@ def webhook_received(request):
                             is_use_one = True
 
                     if company_referral_code and company_referral_code.percent_discount_product:
-                        discount_amount = total_amount * company_referral_code.percent_discount_product/100
+                        discount_amount = total_amount * company_referral_code.percent_discount_product / 100
 
                     elif company_referral_code and company_referral_code.number_discount_product:
                         discount_amount = company_referral_code.number_discount_product
@@ -661,8 +675,10 @@ def webhook_received(request):
                     # temp_amount = total_amount - discount_amount_next_invoice
                     temp_amount = upcoming_invoice.total / 100
                     # if company not coupon code when payment first
-                    if not company_referral_code or is_use_one and company.is_automatic_commission_payment and upcoming_invoice.total > 0:
-
+                    if (not company_referral_code and company.is_automatic_commission_payment
+                        and upcoming_invoice.total > 0) or (company_referral_code and is_use_one
+                                                            and company.is_automatic_commission_payment
+                                                            and upcoming_invoice.total > 0):
                         # temp_amount = total_amount - discount_amount
                         create_referral_code = None
                         if company.credit >= temp_amount:
@@ -802,17 +818,39 @@ def webhook_received(request):
     if event_type == 'invoice.upcoming':
         subscription_id = data_object['subscription']
         subscription = stripe.Subscription.retrieve(subscription_id,
-                                                       expand=['plan.product'])
+                                                    expand=['plan.product'])
         discount_check = data_object.discounts
+        customer = stripe.Customer.retrieve(data_object.customer)
+        company = CompanyBuilder.objects.get(pk=customer.metadata['company'])
+        data_subscription_stripe_company = SubscriptionStripeCompany.objects.filter(company=company).first()
         discount_amount = 0
-
         for discount in data_object.total_discount_amounts:
             if discount.discount not in discount_check:
                 discount_amount += discount.amount / 100
+        if not data_object.total_discount_amounts and company.credit > 0:
+            total_discount_amount = company.credit
+            coupon = stripe.Coupon.create(
+                percent_off=None,
+                amount_off=int(total_discount_amount * 100),
+                currency=subscription.currency,
+                duration='once',
+                max_redemptions=1
+            )
+            company.credit = 0
+            subscription = stripe.Subscription.modify(
+                data_subscription_stripe_company.subscription_id,
+                coupon=coupon,
+            )
+            create_referral_code = ReferralCode.objects.create(
+                number_discount_product=total_discount_amount,
+                currency=subscription.currency,
+                coupon_stripe_id=coupon.id,
+
+            )
+            company.referral_code_current = create_referral_code
+            company.save()
         if data_object.discounts or data_object.total_discount_amounts:
             is_use_one = False
-            customer = stripe.Customer.retrieve(data_object.customer)
-            company = CompanyBuilder.objects.get(pk=customer.metadata['company'])
             coupon_code = company.referral_code_current.coupon_stripe_id
             coupon_company = stripe.Coupon.retrieve(coupon_code)
 
@@ -821,7 +859,6 @@ def webhook_received(request):
 
             data_referral_code = ReferralCode.objects.filter(coupon_stripe_id=coupon_code).first()
             if company and company.is_automatic_commission_payment:
-                data_subscription_stripe_company = SubscriptionStripeCompany.objects.filter(company=company).first()
                 total_amount = subscription.plan.amount / 100
                 if is_use_one:
                     if company.credit >= total_amount:
@@ -847,10 +884,11 @@ def webhook_received(request):
                         company.referral_code_current = create_referral_code
                         company.save()
 
-                    elif company.credit >= total_amount:
+                    elif company.credit < total_amount:
+                        total_discount_amount = company.credit
                         coupon = stripe.Coupon.create(
                             percent_off=None,
-                            amount_off=int(company.credit * 100),
+                            amount_off=int(total_discount_amount * 100),
                             currency=subscription.currency,
                             duration='once',
                             max_redemptions=1
@@ -861,7 +899,7 @@ def webhook_received(request):
                             coupon=coupon,
                         )
                         create_referral_code = ReferralCode.objects.create(
-                            number_discount_product=total_amount,
+                            number_discount_product=total_discount_amount,
                             currency=subscription.currency,
                             coupon_stripe_id=coupon.id,
                             dealer=data_referral_code.dealer,
@@ -1009,7 +1047,8 @@ def get_data_dealer(request, period):
             start_date = end_date - timedelta(days=365)
 
         if start_date:
-            data_dealer = DealerCompany.objects.filter(created_at__gte=start_date, created_at__lt=end_date, dealer=dealer_info)
+            data_dealer = DealerCompany.objects.filter(created_at__gte=start_date, created_at__lt=end_date,
+                                                       dealer=dealer_info)
             total_user = len(data_dealer)
             for data in data_dealer:
                 total_amount += data.bonus_commissions
