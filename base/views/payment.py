@@ -492,6 +492,7 @@ def webhook_received(request):
         event = stripe.Webhook.construct_event(
             request.body, sig_header, config('ENDPOINT_SECRET')
         )
+
     except ValueError as e:
         return HttpResponse(status=400)
     except stripe.error.SignatureVerificationError as e:
@@ -661,8 +662,7 @@ def webhook_received(request):
                     # temp_amount = total_amount - discount_amount_next_invoice
                     temp_amount = upcoming_invoice.total / 100
                     # if company not coupon code when payment first
-                    if not company_referral_code or is_use_one and company.is_automatic_commission_payment and upcoming_invoice.total > 0:
-
+                    if (not company_referral_code and company.is_automatic_commission_payment and upcoming_invoice.total > 0) or (company_referral_code and is_use_one and company.is_automatic_commission_payment and upcoming_invoice.total > 0):
                         # temp_amount = total_amount - discount_amount
                         create_referral_code = None
                         if company.credit >= temp_amount:
@@ -804,15 +804,38 @@ def webhook_received(request):
         subscription = stripe.Subscription.retrieve(subscription_id,
                                                        expand=['plan.product'])
         discount_check = data_object.discounts
+        customer = stripe.Customer.retrieve(data_object.customer)
+        company = CompanyBuilder.objects.get(pk=customer.metadata['company'])
+        data_subscription_stripe_company = SubscriptionStripeCompany.objects.filter(company=company).first()
         discount_amount = 0
-
         for discount in data_object.total_discount_amounts:
             if discount.discount not in discount_check:
                 discount_amount += discount.amount / 100
+        if not data_object.total_discount_amounts and company.credit > 0:
+            total_discount_amount = company.credit
+            coupon = stripe.Coupon.create(
+                percent_off=None,
+                amount_off=int(total_discount_amount * 100),
+                currency=subscription.currency,
+                duration='once',
+                max_redemptions=1
+            )
+            company.credit = 0
+            subscription = stripe.Subscription.modify(
+                data_subscription_stripe_company.subscription_id,
+                coupon=coupon,
+            )
+            create_referral_code = ReferralCode.objects.create(
+                number_discount_product=total_discount_amount,
+                currency=subscription.currency,
+                coupon_stripe_id=coupon.id,
+
+
+            )
+            company.referral_code_current = create_referral_code
+            company.save()
         if data_object.discounts or data_object.total_discount_amounts:
             is_use_one = False
-            customer = stripe.Customer.retrieve(data_object.customer)
-            company = CompanyBuilder.objects.get(pk=customer.metadata['company'])
             coupon_code = company.referral_code_current.coupon_stripe_id
             coupon_company = stripe.Coupon.retrieve(coupon_code)
 
@@ -821,7 +844,6 @@ def webhook_received(request):
 
             data_referral_code = ReferralCode.objects.filter(coupon_stripe_id=coupon_code).first()
             if company and company.is_automatic_commission_payment:
-                data_subscription_stripe_company = SubscriptionStripeCompany.objects.filter(company=company).first()
                 total_amount = subscription.plan.amount / 100
                 if is_use_one:
                     if company.credit >= total_amount:
@@ -847,10 +869,11 @@ def webhook_received(request):
                         company.referral_code_current = create_referral_code
                         company.save()
 
-                    elif company.credit >= total_amount:
+                    elif company.credit < total_amount:
+                        total_discount_amount = company.credit
                         coupon = stripe.Coupon.create(
                             percent_off=None,
-                            amount_off=int(company.credit * 100),
+                            amount_off=int(total_discount_amount * 100),
                             currency=subscription.currency,
                             duration='once',
                             max_redemptions=1
@@ -861,7 +884,7 @@ def webhook_received(request):
                             coupon=coupon,
                         )
                         create_referral_code = ReferralCode.objects.create(
-                            number_discount_product=total_amount,
+                            number_discount_product=total_discount_amount,
                             currency=subscription.currency,
                             coupon_stripe_id=coupon.id,
                             dealer=data_referral_code.dealer,
