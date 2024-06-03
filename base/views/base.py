@@ -2,10 +2,11 @@ import uuid
 
 import pytz
 import stripe
-from django.utils import timezone
+from decouple import config
 from django.utils.translation import gettext  as _
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
+from django.apps import apps
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -19,11 +20,11 @@ from storages.backends.s3boto3 import S3Boto3Storage
 
 from api.middleware import get_request
 from api.serializers.base import ActivityLogSerializer
-from sales.models import LeadDetail, Priority, Type, Contact, PhoneOfContact, Activities, DataPoint, BuilderView, \
+from sales.models import LeadDetail, Priority, Type, Contact, PhoneOfContact, Activities, BuilderView, \
     DataType, DataView, TableInvoice, PaymentHistory, Invoice, Day, HolidayType
 from sales.models.estimate import RoundUpActionChoice, RoundUpChoice
 from ..constants import URL_CLOUD
-from ..filters import SearchFilter, ColumnFilter, ConfigFilter, GridSettingFilter, ActivityLogFilter, TradesFilter
+from ..filters import SearchFilter, ColumnFilter, GridSettingFilter, ActivityLogFilter, TradesFilter
 from ..models.config import Column, Search, Config, GridSetting, FileBuilder365, Question, Answer, CompanyAnswerQuestion
 from ..models.payment import PaymentHistoryStripe
 from ..serializers.base import ContentTypeSerializer, FileBuilder365ReqSerializer, \
@@ -33,7 +34,7 @@ from ..serializers.config import SearchSerializer, ColumnSerializer, ConfigSeria
     CompanyAnswerQuestionResSerializer, TradesSerializer, PersonalInformationDesignateSerializer
 from api.models import ActivityLog, CompanyBuilder, DivisionCompany, Action, EstimatedAnnualRevenueChoices, \
     InvoiceApproveType, SizeCompanyChoices, User, Trades, PersonalInformationDesignate
-from decouple import config
+
 
 class ContentTypeList(generics.ListAPIView):
     """
@@ -114,6 +115,11 @@ class ColumnLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
         data = super().get_queryset()
         data = data.filter(user=self.request.user)
         return data
+
+    def get(self, request, *args, **kwargs):
+        request.session[self.get_object().content_type.model] = kwargs.get('pk')
+        request.session.save()
+        return super().get(request, *args, **kwargs)
 
 
 class GridSettingDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
@@ -457,6 +463,17 @@ def get_data_config(request, *args, **kwargs):
            ('estimate.formula.round_up', RoundUpChoice.choices), ('estimate.formula.round_up_action', RoundUpActionChoice.choices)]
     for data in arr:
         data_as_dict[data[0]] = [{'id': item[0], 'name': item[1]} for item in data[1]]
+    data_as_dict['leaddetail'] = request.session.get('leaddetail', None)
+    data_as_dict['estimatetemplate'] = request.session.get('estimatetemplate', None)
+    data_as_dict['poformula'] = request.session.get('poformula', None)
+    data_as_dict['assemble'] = request.session.get('assemble', None)
+    data_as_dict['descriptionlibrary'] = request.session.get('descriptionlibrary', None)
+    data_as_dict['unitlibrary'] = request.session.get('unitlibrary', None)
+    data_as_dict['dataentry'] = request.session.get('dataentry', None)
+    data_as_dict['proposalcomparison'] = request.session.get('proposalcomparison', None)
+    data_as_dict['proposalwriting'] = request.session.get('proposalwriting', None)
+    data_as_dict['changeorder'] = request.session.get('changeorder', None)
+    data_as_dict['invoice'] = request.session.get('invoice', None)
     return Response(status=status.HTTP_200_OK, data=data_as_dict)
 
 

@@ -5,21 +5,19 @@ from django.db.models import Value
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from django.apps import apps
-from openpyxl.reader.excel import load_workbook
 from openpyxl.workbook import Workbook
 from rest_framework import generics, permissions, status, filters as rf_filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from storages.backends.s3boto3 import S3Boto3Storage
 
 from base.constants import URL_CLOUD
 from base.models.config import FileBuilder365
 from base.permissions import CatalogPermissions
 from base.serializers.base import FileBuilder365ResSerializer
-from base.tasks import count_level, create_catalog_by_row, import_catalog_task, process_export_catalog
+from base.tasks import import_catalog_task, process_export_catalog
 from base.utils import file_response
 from ..filters.catalog import CatalogFilter
-from ..models.catalog import Catalog, CatalogLevel, DataPointUnit, DataPoint, CostTableTemplate
+from ..models.catalog import Catalog, CatalogLevel, DataPointUnit, CostTableTemplate
 from ..serializers import catalog
 from ..serializers.catalog import CatalogEstimateSerializer, CatalogSerializer
 from api.middleware import get_request
