@@ -492,7 +492,6 @@ def webhook_received(request):
         event = stripe.Webhook.construct_event(
             request.body, sig_header, config('ENDPOINT_SECRET')
         )
-
     except ValueError as e:
         return HttpResponse(status=400)
     except stripe.error.SignatureVerificationError as e:
