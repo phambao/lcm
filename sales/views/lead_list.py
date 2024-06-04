@@ -363,7 +363,7 @@ class JobSerializerGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
         if getattr(self, 'swagger_fake_view', False):
             return Job.objects.none()
         get_object_or_404(LeadDetail.objects.filter(company=get_request().user.company), pk=self.kwargs['pk_lead'])
-        return Job.objects.filter(leads__id=self.kwargs['pk_lead'])
+        return Job.objects.filter(lead__id=self.kwargs['pk_lead'])
 
 
 class JobSerializerDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
@@ -376,7 +376,7 @@ class JobSerializerDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdate
         if getattr(self, 'swagger_fake_view', False):
             return Job.objects.none()
         get_object_or_404(LeadDetail.objects.filter(company=get_request().user.company), pk=self.kwargs['pk_lead'])
-        return Job.objects.filter(leads__id=self.kwargs['pk_lead'])
+        return Job.objects.filter(lead__id=self.kwargs['pk_lead'])
 
 
 @api_view(['DELETE'])
