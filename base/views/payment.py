@@ -828,7 +828,16 @@ def webhook_received(request):
             if discount.discount not in discount_check:
                 discount_amount += discount.amount / 100
         if not data_object.total_discount_amounts and company.credit > 0:
-            total_discount_amount = company.credit
+            total_amount = subscription.plan.amount / 100
+            total_discount_amount = 0
+            if company.credit <= total_amount:
+                total_discount_amount = company.credit
+                company.credit = 0
+
+            else:
+                total_discount_amount = total_amount
+                company.credit = company.credit - total_amount
+
             coupon = stripe.Coupon.create(
                 percent_off=None,
                 amount_off=int(total_discount_amount * 100),
@@ -836,7 +845,6 @@ def webhook_received(request):
                 duration='once',
                 max_redemptions=1
             )
-            company.credit = 0
             subscription = stripe.Subscription.modify(
                 data_subscription_stripe_company.subscription_id,
                 coupon=coupon,
@@ -864,7 +872,7 @@ def webhook_received(request):
                     if company.credit >= total_amount:
                         coupon = stripe.Coupon.create(
                             percent_off=None,
-                            amount_off=int((company.credit - total_amount) * 100),
+                            amount_off=int(total_amount * 100),
                             currency=subscription.currency,
                             duration='once',
                             max_redemptions=1
