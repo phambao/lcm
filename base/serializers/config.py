@@ -27,6 +27,10 @@ class ColumnSerializer(serializers.ModelSerializer):
                   'hidden_params', 'is_active')
         extra_kwargs = {'is_active': {'read_only': True}}
 
+    def to_representation(self, instance):
+        data['template_default'] = self.context.get('request').session.get(instance.content_type.model)
+        data = super().to_representation(instance)
+
 
 class SearchSerializer(serializers.ModelSerializer):
     class Meta:
