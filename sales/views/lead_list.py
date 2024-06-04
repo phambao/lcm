@@ -20,7 +20,8 @@ from sales.serializers.proposal import PriceComparisonCompactSerializer, Proposa
 from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter, CommunicationFilter, \
     ActivitiesLogFilter
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, Photos, ContactTypeName, \
-    ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead, NoteTemplate, Communication, Status, ActivitiesLog
+    ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead, NoteTemplate, Communication, Status, ActivitiesLog, \
+    Job
 from ..serializers import lead_list
 from ..serializers.lead_list import PhotoSerializer, LeadDetailCreateSerializer
 
@@ -350,6 +351,32 @@ class ActivitiesLogSerializerGenericView(CompanyFilterMixin, generics.ListAPIVie
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
     filterset_class = ActivitiesLogFilter
+
+
+class JobSerializerGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
+    queryset = Job.objects.all()
+    serializer_class = lead_list.JobSerializer
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Job.objects.none()
+        get_object_or_404(LeadDetail.objects.filter(company=get_request().user.company), pk=self.kwargs['pk_lead'])
+        return Job.objects.filter(leads__id=self.kwargs['pk_lead'])
+
+
+class JobSerializerDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdateDestroyAPIView):
+    queryset = Job.objects.all()
+    serializer_class = lead_list.JobSerializer
+    permission_classes = [permissions.IsAuthenticated & LeadPermissions]
+    filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Job.objects.none()
+        get_object_or_404(LeadDetail.objects.filter(company=get_request().user.company), pk=self.kwargs['pk_lead'])
+        return Job.objects.filter(leads__id=self.kwargs['pk_lead'])
 
 
 @api_view(['DELETE'])

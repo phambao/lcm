@@ -473,3 +473,9 @@ class ActivitiesLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.ActivitiesLog
         fields = '__all__'
+
+
+class JobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.Job
+        fields = '__all__'
