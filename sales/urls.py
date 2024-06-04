@@ -85,7 +85,6 @@ url_leads = [
     path('activity-log/', lead_list.ActivitiesLogSerializerGenericView.as_view()),
     path('leads/<int:pk_lead>/job/', lead_list.JobSerializerGenericView.as_view()),
     path('leads/<int:pk_lead>/job/<int:pk>/', lead_list.JobSerializerDetailGenericView.as_view()),
-
 ]
 
 # Define Path for Catalog -------------------------------------------------------
