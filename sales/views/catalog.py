@@ -336,7 +336,7 @@ def parse_dict(dictionary, is_formula=[]):
     data = []
     i = 0
     for name, value in dictionary.items():
-        data.append({'name': name, 'value': value, 'is_formula': is_formula[i] if i <= len(is_formula) else False})
+        data.append({'name': name, 'value': value, 'is_formula': is_formula[i] if i < len(is_formula) else False})
         i += 1
     return data
 
@@ -364,7 +364,8 @@ def parse_c_table(children):
                 clone.pop('levels')
                 content['columns'] = parse_dict(clone, header_formats)
                 data.append(content)
-        except:
+        except Exception as e:
+            raise e
             """Some old data is not valid"""
     return data
 
