@@ -845,7 +845,6 @@ def webhook_received(request):
                 duration='once',
                 max_redemptions=1
             )
-
             subscription = stripe.Subscription.modify(
                 data_subscription_stripe_company.subscription_id,
                 coupon=coupon,
