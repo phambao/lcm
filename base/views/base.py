@@ -463,17 +463,6 @@ def get_data_config(request, *args, **kwargs):
            ('estimate.formula.round_up', RoundUpChoice.choices), ('estimate.formula.round_up_action', RoundUpActionChoice.choices)]
     for data in arr:
         data_as_dict[data[0]] = [{'id': item[0], 'name': item[1]} for item in data[1]]
-    data_as_dict['leaddetail'] = request.session.get('leaddetail', None)
-    data_as_dict['estimatetemplate'] = request.session.get('estimatetemplate', None)
-    data_as_dict['poformula'] = request.session.get('poformula', None)
-    data_as_dict['assemble'] = request.session.get('assemble', None)
-    data_as_dict['descriptionlibrary'] = request.session.get('descriptionlibrary', None)
-    data_as_dict['unitlibrary'] = request.session.get('unitlibrary', None)
-    data_as_dict['dataentry'] = request.session.get('dataentry', None)
-    data_as_dict['proposalcomparison'] = request.session.get('proposalcomparison', None)
-    data_as_dict['proposalwriting'] = request.session.get('proposalwriting', None)
-    data_as_dict['changeorder'] = request.session.get('changeorder', None)
-    data_as_dict['invoice'] = request.session.get('invoice', None)
     return Response(status=status.HTTP_200_OK, data=data_as_dict)
 
 
