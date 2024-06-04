@@ -355,7 +355,7 @@ def parse_c_table(children):
 
             if len(header) >= 3:
                 header[:3] = 'name', 'unit', 'cost'
-            header_formats = [is_formula['isFormula'] for is_formula in c_table['header_format']]
+            header_formats = [is_formula.get('isFormula') for is_formula in c_table.get('header_format', [])]
             for i, d in enumerate(c_table['data']):
                 content = {**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child.pk}:{i}'},
                            'levels': levels}
