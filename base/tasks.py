@@ -138,6 +138,13 @@ def celery_send_mail(subject, message, from_email, recipient_list,
               fail_silently=fail_silently, auth_user=auth_user, auth_password=auth_password,
               connection=connection, html_message=html_message)
 
+@shared_task()
+def check_events():
+    print('11111111111')
+    # send_mail('truong create', 'truong 123', 'acctmgmt@builder365.com', ['nguyenxuantruongee@gmail.com'],
+    #           fail_silently=False, auth_user=None, auth_password=None,
+    #           connection=None, html_message=None)
+
 
 @shared_task(name='send-email')
 def send_mail_with_attachment(subject, body, from_email, to, attachments, bcc=None, connection=None,
