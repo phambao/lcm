@@ -78,6 +78,11 @@ class SearchLeadDetailGenericView(generics.RetrieveUpdateDestroyAPIView):
         data = data.filter(user=self.request.user)
         return data
 
+    def get(self, request, *args, **kwargs):
+        request.session[f'{self.get_object().content_type.model}-search'] = kwargs.get('pk')
+        request.session.save()
+        return super().get(request, *args, **kwargs)
+
 
 class ColumnLeadGenericView(generics.ListCreateAPIView):
     queryset = Column.objects.all()
