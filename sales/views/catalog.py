@@ -364,8 +364,7 @@ def parse_c_table(children):
                 clone.pop('levels')
                 content['columns'] = parse_dict(clone, header_formats)
                 data.append(content)
-        except Exception as e:
-            raise e
+        except:
             """Some old data is not valid"""
     return data
 
