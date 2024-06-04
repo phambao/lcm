@@ -473,3 +473,15 @@ class ActivitiesLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = lead_list.ActivitiesLog
         fields = '__all__'
+
+
+class JobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = lead_list.Job
+        fields = '__all__'
+        extra_kwargs = {**extra_kwargs_for_base_model(), **{'company': {'read_only': True},
+                                                            'user_update': {'read_only': True},
+                                                            'user_create': {'read_only': True},
+                                                            'modified_date': {'read_only': True},
+                                                            'created_date': {'read_only': True}
+                                                            }}
