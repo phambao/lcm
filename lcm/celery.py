@@ -33,11 +33,3 @@ def test():
     send_mail('truong create', 'truong 123', 'acctmgmt@builder365.com', ['nguyenxuantruongee@gmail.com'],fail_silently=False, auth_user=None, auth_password=None,connection=None, html_message=None)
     logger.info(f"Email sent successfully with argument:")
     return f"Email sent with argument: "
-# app.conf.beat_schedule = {
-#     'add-every-30-seconds': {
-#         'task': 'base.tasks.check_events',
-#         'schedule': 20.0,
-#
-#     },
-# }
-# app.conf.timezone = 'UTC'
