@@ -292,7 +292,7 @@ class Job(BaseModel):
     zip_code = models.CharField(max_length=16, blank=True)
     salesperson = models.ManyToManyField(get_user_model(), related_name='jobs_persons', blank=True)
     status = models.CharField(max_length=128, choices=StatusJob.choices, default=StatusJob.OPENED)
-    confident = models.IntegerField(null=True, blank=True)
+    confidence = models.IntegerField(null=True, blank=True)
     estimate_revenue_from = models.DecimalField(
         max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
     estimate_revenue_to = models.DecimalField(
