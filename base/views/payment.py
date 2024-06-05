@@ -527,8 +527,6 @@ def webhook_received(request):
         company.save()
 
     if event_type == 'price.updated':
-        print('222222222222222')
-        print(data_object)
         data_price = Price.objects.get(stripe_price_id=data_object['id'])
         data_price.amount = data_object['unit_amount'] / 100
         data_price.currency = data_object['currency']
