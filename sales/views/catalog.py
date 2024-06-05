@@ -332,11 +332,12 @@ def swap_level(request, pk_catalog):
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-def parse_dict(dictionary, is_formula=[]):
+def parse_dict(dictionary, is_formula=[], actual_data=[]):
     data = []
     i = 0
     for name, value in dictionary.items():
-        data.append({'name': name, 'value': value, 'is_formula': is_formula[i] if i < len(is_formula) else False})
+        data.append({'name': name, 'value': value, 'is_formula': is_formula[i] if i < len(is_formula) else False, 
+                     'default_value': actual_data[i] if i < len(actual_data) else 0})
         i += 1
     return data
 
@@ -356,13 +357,15 @@ def parse_c_table(children):
             if len(header) >= 3:
                 header[:3] = 'name', 'unit', 'cost'
             header_formats = [is_formula.get('isFormula') for is_formula in c_table.get('header_format', [])]
+            actual_data = c_table.get('actual_data', [])
             for i, d in enumerate(c_table['data']):
+                actual_value = actual_data[i] if i < len(actual_data) else []
                 content = {**{header[j]: d[j] for j in range(len(header))}, **{"id": f'{child.pk}:{i}'},
                            'levels': levels}
                 clone = content.copy()
                 clone.pop('id')
                 clone.pop('levels')
-                content['columns'] = parse_dict(clone, header_formats)
+                content['columns'] = parse_dict(clone, header_formats, actual_value)
                 data.append(content)
         except:
             """Some old data is not valid"""
