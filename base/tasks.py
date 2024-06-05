@@ -17,7 +17,7 @@ from api.models import ActivityLog, CompanyBuilder
 from base.models.config import FileBuilder365
 from base.utils import str_to_class
 from base.constants import null, true, false
-from sales.models import Catalog, UnitLibrary, CatalogLevel, DataPoint
+from sales.models import Catalog, UnitLibrary, CatalogLevel, DataPoint, ScheduleEvent
 
 
 @shared_task()
@@ -140,10 +140,13 @@ def celery_send_mail(subject, message, from_email, recipient_list,
 
 @shared_task()
 def check_events():
-    print('11111111111')
-    # send_mail('truong create', 'truong 123', 'acctmgmt@builder365.com', ['nguyenxuantruongee@gmail.com'],
-    #           fail_silently=False, auth_user=None, auth_password=None,
-    #           connection=None, html_message=None)
+    data_event = ScheduleEvent.objects.filter(is_reminder=False)
+    recipient_list = []
+    for event in data_event:
+        pass
+    send_mail('truong create', 'truong 123', 'acctmgmt@builder365.com', ['nguyenxuantruongee@gmail.com'],
+              fail_silently=False, auth_user=None, auth_password=None,
+              connection=None, html_message=None)
 
 
 @shared_task(name='send-email')
