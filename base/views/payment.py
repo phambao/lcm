@@ -64,8 +64,7 @@ def get_config(request):
         expand=['data.product'],
         limit=100
     )
-    all_prices = [price for price in prices.auto_paging_iter()]
-    active_prices = [price for price in all_prices if price.product['active']]
+    active_prices = [price for price in prices.auto_paging_iter() if price.product['active']]
     return Response(
         {'publishable_key': config('STRIPE_PUBLIC_KEY'),
          'prices': active_prices},
