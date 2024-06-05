@@ -278,9 +278,8 @@ class Communication(BaseModel):
 
 
 class StatusJob(models.TextChoices):
-    OPENED = 'opened', 'OPENED'
-    PENDING = 'pending', 'PENDING'
-    SUCCESS = 'success', 'SUCCESS'
+    OPEN = 'open', 'OPEN'
+    CLOSE = 'close', 'CLOSE'
 
 
 class Job(BaseModel):
@@ -291,7 +290,7 @@ class Job(BaseModel):
     state = models.CharField(max_length=128, blank=True, default='', null=True)
     zip_code = models.CharField(max_length=16, blank=True)
     salesperson = models.ManyToManyField(get_user_model(), related_name='jobs_persons', blank=True)
-    status = models.CharField(max_length=128, choices=StatusJob.choices, default=StatusJob.OPENED)
+    status = models.CharField(max_length=128, choices=StatusJob.choices, default=StatusJob.OPEN)
     confidence = models.IntegerField(null=True, blank=True)
     estimate_revenue_from = models.DecimalField(
         max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)

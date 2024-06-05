@@ -527,12 +527,20 @@ def webhook_received(request):
         company.save()
 
     if event_type == 'price.updated':
+        print('222222222222222')
+        print(data_object)
         data_price = Price.objects.get(stripe_price_id=data_object['id'])
         data_price.amount = data_object['unit_amount'] / 100
         data_price.currency = data_object['currency']
         data_price.is_activate = data_object['active']
         data_price.save()
 
+    if event_type == 'product.created':
+        Product.objects.create(
+            name=data_object['name'],
+            description=data_object['description'],
+            stripe_product_id=data_object['id']
+        )
     if event_type == 'product.updated':
         data_product = Product.objects.get(stripe_product_id=data_object['id'])
         data_product.name = data_object['name']
