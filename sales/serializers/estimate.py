@@ -147,13 +147,15 @@ class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
                   'copies_from', 'group', 'material_data_entry_link', 'levels', 'is_client_view', 
                   'po_group_index', 'po_index', 'custom_group_name', 'custom_group_index', 'custom_index',
                   'custom_po_index', 'is_lock_estimate', 'is_lock_proposal', 'is_press_enter',
-                  'default_value', 'default_dropdown_value', 'default_material_value')
+                  'default_value', 'default_dropdown_value', 'default_material_value', 'original')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if not data['nick_name']:
             data['nick_name'] = instance.data_entry.name
         data['po_group_name'] = instance.get_po_group_name()
+        if not data['original']:
+            data['original'] = instance.pk
         return data
 
 
@@ -171,7 +173,7 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None, ch
                   'custom_po_index': data_entry.get('custom_po_index'), 'is_lock_estimate': data_entry.get('is_lock_estimate') or False,
                   'is_lock_proposal': data_entry.get('is_lock_proposal') or False, 'is_press_enter': data_entry.get('is_press_enter') or False,
                   'default_value': data_entry.get('default_value') or '', 'default_dropdown_value': data_entry.get('default_dropdown_value') or {},
-                  'default_material_value': data_entry.get('default_material_value') or {}}
+                  'default_material_value': data_entry.get('default_material_value') or {}, 'original': data_entry.get('original') or 0}
         if change_default:
             params['default_value'] = data_entry.get('value') or ''
             params['default_dropdown_value'] = data_entry.get('dropdown_value') or {}
@@ -558,7 +560,7 @@ class MaterialViewSerializers(serializers.ModelSerializer):
                   'levels', 'data_entry', 'is_client_view', 'default_column', 'custom_po_index',
                   'po_group_index', 'po_index', 'custom_group_name', 'custom_group_index', 'custom_index',
                   'is_lock_estimate', 'is_lock_proposal', 'is_press_enter', 'default_value', 'default_material_value',
-                  'default_dropdown_value')
+                  'default_dropdown_value', 'original')
 
     def validate_data_entry(self, value):
         if value:
@@ -572,6 +574,8 @@ class MaterialViewSerializers(serializers.ModelSerializer):
         data = super().to_representation(instance)
         if isinstance(instance, MaterialView):
             data['po_group_name'] = instance.get_po_group_name()
+        if not data['original']:
+            data['original'] = instance.pk
         return data
 
 
