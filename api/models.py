@@ -85,7 +85,7 @@ class BaseModel(models.Model):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         request = get_request()
-        if not request.user.is_anonymous:
+        if request and not request.user.is_anonymous:
             if self.pk:
                 self.user_update = request.user
             else:

@@ -1,14 +1,16 @@
 import zipfile
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import BytesIO
 
 from celery import shared_task, current_task
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.mail import send_mail, EmailMessage
 from django.http import HttpRequest
 from django.core.files.base import ContentFile
 from django.apps import apps
+from django.utils import timezone
 from openpyxl.workbook import Workbook
 from openpyxl.reader.excel import load_workbook
 
@@ -138,15 +140,22 @@ def celery_send_mail(subject, message, from_email, recipient_list,
               fail_silently=fail_silently, auth_user=auth_user, auth_password=auth_password,
               connection=connection, html_message=html_message)
 
+
 @shared_task()
 def check_events():
-    data_event = ScheduleEvent.objects.filter(is_reminder=False)
+    now = timezone.now()
+    one_hour_later = now + timedelta(hours=1)
+    data_event = ScheduleEvent.objects.filter(is_reminder=False, end_day__gte=now, end_day__lte=one_hour_later)
     recipient_list = []
     for event in data_event:
-        pass
-    send_mail('truong create', 'truong 123', 'acctmgmt@builder365.com', ['nguyenxuantruongee@gmail.com'],
-              fail_silently=False, auth_user=None, auth_password=None,
-              connection=None, html_message=None)
+        recipient_list.append(event.user_create.email)
+        event.is_reminder = True
+        event.save()
+
+    if recipient_list:
+        send_mail('Reminder Event', 'You have an event happening in about 1 hour', settings.EMAIL_HOST_USER, recipient_list,
+                  fail_silently=False, auth_user=None, auth_password=None,
+                  connection=None, html_message=None)
 
 
 @shared_task(name='send-email')

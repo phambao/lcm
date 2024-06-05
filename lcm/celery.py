@@ -23,20 +23,7 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'add-every-30-seconds': {
         'task': 'base.tasks.check_events',
-        'schedule': 20.0
+        'schedule': 30.0
     },
 }
 app.conf.timezone = 'UTC'
-# logger = logging.getLogger(__name__)
-# @app.on_after_configure.connect
-# def setup_periodic_tasks(sender, **kwargs):
-#     # Calls test('hello') every 10 seconds.
-#     sender.add_periodic_task(20.0, test.s(), name='add every 20')
-#
-# @app.task
-# def test():
-#     logger.info(f"Email sent successfully with argument 11:")
-#     print('3333333333333333')
-#     send_mail('truong create', 'truong 123', 'acctmgmt@builder365.com', ['nguyenxuantruongee@gmail.com'],fail_silently=False, auth_user=None, auth_password=None,connection=None, html_message=None)
-#     logger.info(f"Email sent successfully with argument:")
-#     return f"Email sent with argument: "
