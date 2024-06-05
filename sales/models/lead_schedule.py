@@ -295,6 +295,7 @@ class ScheduleEvent(BaseModel):
                              null=True)
     daily_log = models.ForeignKey(DailyLog, on_delete=models.SET_NULL, related_name='schedule_event_daily_log',
                                   blank=True, null=True)
+    is_reminder = models.BooleanField(default=False)
 
 
 class MessageEvent(BaseModel):

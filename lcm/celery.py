@@ -1,7 +1,8 @@
 import os
-
+import logging
 from celery import Celery
 from django.conf import settings
+from django.core.mail import send_mail
 
 # Set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lcm.settings')
@@ -18,3 +19,11 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Load task modules from all registered Django apps.
 app.autodiscover_tasks()
+
+app.conf.beat_schedule = {
+    'add-every-30-seconds': {
+        'task': 'base.tasks.check_events',
+        'schedule': 30.0
+    },
+}
+app.conf.timezone = 'UTC'
