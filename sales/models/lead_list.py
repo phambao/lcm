@@ -283,6 +283,8 @@ class StatusJob(models.TextChoices):
 
 
 class Job(BaseModel):
+    class Meta:
+        ordering = ['-created_date']
     lead = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='job_lead', null=True)
     title = models.CharField('Jobs Title', max_length=128)
     street_address = models.CharField(max_length=128, blank=True)

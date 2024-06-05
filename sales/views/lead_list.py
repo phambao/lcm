@@ -18,7 +18,7 @@ from base.views.base import CompanyFilterMixin
 from sales.filters.proposal import PriceComparisonFilter, ProposalWritingFilter
 from sales.serializers.proposal import PriceComparisonCompactSerializer, ProposalWritingByLeadSerializer
 from ..filters.lead_list import ContactsFilter, ActivitiesFilter, LeadDetailFilter, CommunicationFilter, \
-    ActivitiesLogFilter
+    ActivitiesLogFilter, JobFilter
 from ..models.lead_list import LeadDetail, Activities, Contact, PhoneOfContact, Photos, ContactTypeName, \
     ProjectType, TagLead, PhaseActivity, TagActivity, SourceLead, NoteTemplate, Communication, Status, ActivitiesLog, \
     Job
@@ -358,6 +358,7 @@ class JobSerializerGenericView(CompanyFilterMixin, generics.ListCreateAPIView):
     serializer_class = lead_list.JobSerializer
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = JobFilter
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
@@ -371,6 +372,7 @@ class JobSerializerDetailGenericView(CompanyFilterMixin, generics.RetrieveUpdate
     serializer_class = lead_list.JobSerializer
     permission_classes = [permissions.IsAuthenticated & LeadPermissions]
     filter_backends = (filters.DjangoFilterBackend, rf_filters.SearchFilter)
+    filterset_class = JobFilter
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
