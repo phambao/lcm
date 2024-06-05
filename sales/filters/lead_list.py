@@ -7,7 +7,7 @@ from django_filters.filters import _truncate
 
 from ..models import lead_list
 from ..models.lead_list import Contact, Activities, LeadDetail, TagActivity, PhaseActivity, Communication, Status, \
-    ActivitiesLog
+    ActivitiesLog, StatusJob, Job
 
 CHOICES = [
     ("today", "Today"),
@@ -151,3 +151,13 @@ class ActivitiesLogFilter(filters.FilterSet):
         model = ActivitiesLog
         fields = ['start_date', 'lead', 'title', 'type', 'phase', 'duration', 'status', 'start_date', 'end_date']
         # order_by = ['start_date']
+
+
+class JobFilter(filters.FilterSet):
+    lead = filters.ModelChoiceFilter(queryset=LeadDetail.objects.all())
+    title = filters.CharFilter(field_name='title', lookup_expr='icontains')
+    status = filters.MultipleChoiceFilter(choices=StatusJob.choices)
+
+    class Meta:
+        model = Job
+        fields = ['lead', 'title', 'status']
