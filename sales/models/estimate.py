@@ -207,6 +207,7 @@ class POFormulaToDataEntry(BaseModel):
     levels = ArrayField(models.JSONField(blank=True, null=True), default=list, blank=True)  # Next level of data entry
     is_client_view = models.BooleanField(blank=True, default=False)
     nick_name = models.CharField(max_length=128, blank=True, default='')
+    original = models.IntegerField(default=0, blank=True)
 
     # For grouping
     po_group_index = models.IntegerField(blank=True, default=0, null=True)
@@ -255,6 +256,7 @@ class MaterialView(BaseModel):
     levels = ArrayField(models.JSONField(default=dict), default=list, blank=True, null=True)
     is_client_view = models.BooleanField(blank=True, default=False)
     default_column = models.JSONField(blank=True, default=dict)
+    original = models.IntegerField(default=0, blank=True)
 
     # For grouping
     po_group_index = models.IntegerField(blank=True, default=0, null=True)
