@@ -61,9 +61,10 @@ def stripe_cancel_subscription(request, *args, **kwargs):
 @csrf_exempt
 def get_config(request):
     prices = stripe.Price.list(
-        expand=['data.product']
+        expand=['data.product'],
+        limit=100
     )
-    active_prices = [price for price in prices.data if price.product['active']]
+    active_prices = [price for price in prices.auto_paging_iter() if price.product['active']]
     return Response(
         {'publishable_key': config('STRIPE_PUBLIC_KEY'),
          'prices': active_prices},
@@ -533,6 +534,12 @@ def webhook_received(request):
         data_price.is_activate = data_object['active']
         data_price.save()
 
+    if event_type == 'product.created':
+        Product.objects.create(
+            name=data_object['name'],
+            description=data_object['description'],
+            stripe_product_id=data_object['id']
+        )
     if event_type == 'product.updated':
         data_product = Product.objects.get(stripe_product_id=data_object['id'])
         data_product.name = data_object['name']
@@ -828,7 +835,16 @@ def webhook_received(request):
             if discount.discount not in discount_check:
                 discount_amount += discount.amount / 100
         if not data_object.total_discount_amounts and company.credit > 0:
-            total_discount_amount = company.credit
+            total_amount = subscription.plan.amount / 100
+            total_discount_amount = 0
+            if company.credit <= total_amount:
+                total_discount_amount = company.credit
+                company.credit = 0
+
+            else:
+                total_discount_amount = total_amount
+                company.credit = company.credit - total_amount
+
             coupon = stripe.Coupon.create(
                 percent_off=None,
                 amount_off=int(total_discount_amount * 100),
@@ -836,7 +852,6 @@ def webhook_received(request):
                 duration='once',
                 max_redemptions=1
             )
-            company.credit = 0
             subscription = stripe.Subscription.modify(
                 data_subscription_stripe_company.subscription_id,
                 coupon=coupon,
@@ -864,7 +879,7 @@ def webhook_received(request):
                     if company.credit >= total_amount:
                         coupon = stripe.Coupon.create(
                             percent_off=None,
-                            amount_off=int((company.credit - total_amount) * 100),
+                            amount_off=int(total_amount * 100),
                             currency=subscription.currency,
                             duration='once',
                             max_redemptions=1

@@ -275,3 +275,29 @@ class Communication(BaseModel):
     number = models.IntegerField(null=True, blank=True)
     last_date = models.DateTimeField(auto_now=True, blank=True, null=True)
     type = models.CharField(max_length=128, choices=Status.choices, default=Status.TEXT)
+
+
+class StatusJob(models.TextChoices):
+    OPEN = 'open', 'OPEN'
+    CLOSE = 'close', 'CLOSE'
+
+
+class Job(BaseModel):
+    lead = models.ForeignKey(LeadDetail, on_delete=models.CASCADE, related_name='job_lead', null=True)
+    title = models.CharField('Jobs Title', max_length=128)
+    street_address = models.CharField(max_length=128, blank=True)
+    city = models.CharField(max_length=128, blank=True, default='', null=True)
+    state = models.CharField(max_length=128, blank=True, default='', null=True)
+    zip_code = models.CharField(max_length=16, blank=True)
+    salesperson = models.ManyToManyField(get_user_model(), related_name='jobs_persons', blank=True)
+    status = models.CharField(max_length=128, choices=StatusJob.choices, default=StatusJob.OPEN)
+    confidence = models.IntegerField(null=True, blank=True)
+    estimate_revenue_from = models.DecimalField(
+        max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
+    estimate_revenue_to = models.DecimalField(
+        max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, default=0, blank=True)
+    projected_sale_date = models.DateTimeField(verbose_name='Projected Sales Date', null=True)
+    project_types = models.ManyToManyField(ProjectType, related_name='jobs_project_type', blank=True)
+    sources = models.ManyToManyField(SourceLead, related_name='jobs_source', blank=True)
+    tags = models.ManyToManyField(TagLead, related_name='job_tags', blank=True)
+    note = models.TextField(blank=True)
