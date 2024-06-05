@@ -61,9 +61,10 @@ def stripe_cancel_subscription(request, *args, **kwargs):
 @csrf_exempt
 def get_config(request):
     prices = stripe.Price.list(
-        expand=['data.product']
+        expand=['data.product'],
+        limit=100
     )
-    active_prices = [price for price in prices.data if price.product['active']]
+    active_prices = [price for price in prices.auto_paging_iter() if price.product['active']]
     return Response(
         {'publishable_key': config('STRIPE_PUBLIC_KEY'),
          'prices': active_prices},
