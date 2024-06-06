@@ -252,6 +252,15 @@ class ScheduleEventPhaseSetting(BaseModel):
                                       null=True, blank=True, on_delete=models.SET_NULL)
 
 
+class TypeTime(models.TextChoices):
+    MINUTE = 'minute', 'MINUTE'
+    HOUR = 'hour', 'HOUR'
+    DAY = 'day', 'DAY'
+    WEEK = 'week', 'WEEK'
+    MONTH = 'month', 'MONTH'
+    YEAR = 'year', 'YEAR'
+
+
 class ScheduleEvent(BaseModel):
     class Meta:
         db_table = 'schedule_event'
@@ -263,6 +272,8 @@ class ScheduleEvent(BaseModel):
     assigned_user = models.ManyToManyField(get_user_model(), related_name='schedule_event_assigned_user',
                                            blank=True)
     reminder = models.IntegerField(blank=True, null=True, choices=ReminderType.choices, default=ReminderType.NO)
+    time_reminder = models.IntegerField(default=None, null=True, blank=True)
+    type_time = models.CharField(max_length=128, choices=TypeTime.choices, default=TypeTime.MINUTE, null=True, blank=True)
     start_day = models.DateTimeField(null=True, blank=True)
     end_day = models.DateTimeField(null=True, blank=True)
     start_hour = models.DateTimeField(blank=True, null=True)

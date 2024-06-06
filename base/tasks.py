@@ -19,7 +19,7 @@ from api.models import ActivityLog, CompanyBuilder
 from base.models.config import FileBuilder365
 from base.utils import str_to_class
 from base.constants import null, true, false
-from sales.models import Catalog, UnitLibrary, CatalogLevel, DataPoint, ScheduleEvent
+from sales.models import Catalog, UnitLibrary, CatalogLevel, DataPoint, ScheduleEvent, ReminderType, TypeTime
 
 
 @shared_task()
@@ -144,18 +144,48 @@ def celery_send_mail(subject, message, from_email, recipient_list,
 @shared_task()
 def check_events():
     now = timezone.now()
-    one_hour_later = now + timedelta(hours=1)
-    data_event = ScheduleEvent.objects.filter(is_reminder=False, end_day__gte=now, end_day__lte=one_hour_later)
+    data_event = ScheduleEvent.objects.filter(is_reminder=False, reminder=ReminderType.YES)
     recipient_list = []
     for event in data_event:
-        recipient_list.append(event.user_create.email)
-        event.is_reminder = True
-        event.save()
+        time_reminder = event.time_reminder
+        type_time = event.type_time
+        rs_time = 0
+        if type_time == TypeTime.MINUTE:
+            rs_time = time_reminder
 
-    if recipient_list:
-        send_mail('Reminder Event', 'You have an event happening in about 1 hour', settings.EMAIL_HOST_USER, recipient_list,
-                  fail_silently=False, auth_user=None, auth_password=None,
-                  connection=None, html_message=None)
+        elif type_time == TypeTime.HOUR:
+            rs_time = convert_to_minutes(0,0,0,0,time_reminder,0)
+
+        elif type_time == TypeTime.DAY:
+            rs_time = convert_to_minutes(0, 0, 0, time_reminder, 0, 0)
+
+        elif type_time == TypeTime.WEEK:
+            rs_time = convert_to_minutes(0, 0, time_reminder, 0, 0, 0)
+
+        elif type_time == TypeTime.MONTH:
+            rs_time = convert_to_minutes(0, time_reminder, 0, 0, 0, 0)
+        elif type_time == TypeTime.YEAR:
+            rs_time = convert_to_minutes(time_reminder, 0, 0, 0, 0, 0)
+
+        time_check = now + timedelta(minutes=rs_time)
+        if event.start_day >= now and event.start_day <= time_check:
+            recipient_list.append(event.user_create.email)
+            event.is_reminder = True
+            event.save()
+            send_mail('Reminder Event', f'You have an event {event.event_title} happening in about {time_reminder} {type_time}', settings.EMAIL_HOST_USER,
+                      recipient_list,
+                      fail_silently=False, auth_user=None, auth_password=None,
+                      connection=None, html_message=None)
+
+
+def convert_to_minutes(years, months, weeks, days, hours, minutes):
+    total_minutes = (years * 365 * 24 * 60 +
+                     months * 30 * 24 * 60 +
+                     weeks * 7 * 24 * 60 +
+                     days * 24 * 60 +
+                     hours * 60 +
+                     minutes)
+    return total_minutes
 
 
 @shared_task(name='send-email')
