@@ -550,7 +550,6 @@ def webhook_received(request):
         subscription_id = data_object['subscription']
         payment_intent_id = data_object['payment_intent']
         subscription = stripe.Subscription.retrieve(subscription_id, expand=['plan.product'])
-
         if data_object['billing_reason'] == 'subscription_create':
             payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id,
                                                            expand=['invoice', 'source', 'payment_method'])
@@ -807,7 +806,12 @@ def webhook_received(request):
                 # duration_in_months=data_object.discount.coupon.duration_in_months - 1,
                 is_activate=True
             )
-            product = stripe.Product.retrieve(subscription.plan.product.id)
+            if isinstance(subscription.plan.product, str):
+                product = stripe.Product.retrieve(subscription.plan.product)
+
+            else:
+                product = stripe.Product.retrieve(subscription.plan.product.id)
+
             PaymentHistoryStripe.objects.create(
                 subscription_id=subscription_id,
                 customer_stripe_id=customer_stripe_id,
