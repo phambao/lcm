@@ -1,7 +1,7 @@
 from django_filters import rest_framework as filters
 
 from sales.models.estimate import EstimateTemplate
-from ..models import PriceComparison, ProposalWriting, ProposalTemplate, LeadDetail
+from ..models import PriceComparison, ProposalWriting, ProposalTemplate, LeadDetail, Job
 
 
 class PriceComparisonFilter(filters.FilterSet):
@@ -32,10 +32,11 @@ class ProposalWritingFilter(filters.FilterSet):
     avg_markup_max = filters.NumberFilter(field_name='avg_markup', lookup_expr='lte')
     lead = filters.ModelChoiceFilter(queryset=LeadDetail.objects.all())
     estimate = filters.ModelMultipleChoiceFilter(queryset=EstimateTemplate.objects.filter(is_show=True), method='get_related_estimate')
+    job = filters.ModelChoiceFilter(queryset=Job.objects.all())
 
     class Meta:
         model = ProposalWriting
-        fields = ('name', 'created_date', 'modified_date', 'total_project_cost', 'avg_markup', 'lead', 'estimate')
+        fields = ('name', 'created_date', 'modified_date', 'total_project_cost', 'avg_markup', 'lead', 'estimate', 'job')
 
     def get_related_estimate(self, query, name, value):
         if value:
