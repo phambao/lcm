@@ -223,6 +223,11 @@ class CatalogEstimateSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'level', 'level_index')
         extra_kwargs = {'id': {'read_only': False, 'required': False}}
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['data_point'] = instance.data_points.values().first()
+        return data
+
 
 class CatalogEstimateWithParentSerializer(CatalogEstimateSerializer):
     def to_representation(self, instance):
