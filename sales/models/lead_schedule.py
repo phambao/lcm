@@ -34,8 +34,8 @@ class BuilderView(models.TextChoices):
 
 
 class ReminderType(models.IntegerChoices):
-    NO = 2,
-    YES = 1,
+    NO = 1,
+    YES = 2,
 
 
 class ToDo(BaseModel):
