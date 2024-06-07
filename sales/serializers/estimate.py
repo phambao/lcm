@@ -533,7 +533,7 @@ class DataViewSerializer(serializers.ModelSerializer):
     unit = UnitLibrarySerializer(required=False, allow_null=True)
     class Meta:
         model = DataView
-        fields = ('id', 'formula', 'name', 'estimate_template', 'type', 'is_client_view', 'unit', 'result')
+        fields = ('id', 'formula', 'name', 'estimate_template', 'type', 'is_client_view', 'unit', 'result', 'original')
         read_only_fields = ('estimate_template', )
 
     def create(self, validated_data):
@@ -549,6 +549,12 @@ class DataViewSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
+        return data
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data['original']:
+            data['original'] = data['id']
         return data
 
 
