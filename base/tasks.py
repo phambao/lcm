@@ -169,7 +169,8 @@ def check_events():
 
         time_check = now + timedelta(minutes=rs_time)
         if event.start_day >= now and event.start_day <= time_check:
-            recipient_list.append(event.user_create.email)
+            for data_assigned_user in event.assigned_user:
+                recipient_list.append(data_assigned_user.email)
             event.is_reminder = True
             event.save()
             send_mail('Reminder Event', f'You have an event {event.event_title} happening in about {time_reminder} {type_time}', settings.EMAIL_HOST_USER,
