@@ -27,11 +27,6 @@ class ColumnSerializer(serializers.ModelSerializer):
                   'hidden_params', 'is_active')
         extra_kwargs = {'is_active': {'read_only': True}}
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['template_default'] = self.context.get('request').session.get(instance.content_type.model)
-        return data
-
 
 class SearchSerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,11 +44,6 @@ class SearchSerializer(serializers.ModelSerializer):
             return super().update(instance, validated_data)
         except IntegrityError:
             raise serializers.ValidationError({'name': ['Name has been exists']})
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['search_default'] = self.context.get('request').session.get(f'{instance.content_type.model}-search')
-        return data
 
 
 class CustomColumnSerializer(serializers.Serializer):
