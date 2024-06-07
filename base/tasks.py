@@ -167,9 +167,11 @@ def check_events():
         elif type_time == TypeTime.YEAR:
             rs_time = convert_to_minutes(time_reminder, 0, 0, 0, 0, 0)
 
+        if not rs_time:
+            rs_time = 0
         time_check = now + timedelta(minutes=rs_time)
         if event.start_day >= now and event.start_day <= time_check:
-            for data_assigned_user in event.assigned_user:
+            for data_assigned_user in event.assigned_user.all():
                 recipient_list.append(data_assigned_user.email)
             event.is_reminder = True
             event.save()
