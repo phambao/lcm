@@ -471,3 +471,4 @@ class DataView(BaseModel):
     unit = models.ForeignKey('sales.UnitLibrary', on_delete=models.SET_NULL,
                              blank=True, null=True, related_name='data_views')
     result = models.DecimalField(max_digits=MAX_DIGIT, decimal_places=DECIMAL_PLACE, blank=True, default=0, null=True)
+    original = models.IntegerField(default=0, blank=True, null=True)
