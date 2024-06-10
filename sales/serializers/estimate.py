@@ -11,6 +11,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from api.middleware import get_request
+from api.serializers.auth import UserSerializer
 from base.serializers.base import IDAndNameSerializer
 from base.constants import true, null, false
 from base.tasks import activity_log
@@ -139,6 +140,9 @@ class DataEntrySerializer(ContentTypeSerializerMixin):
 
 
 class NoteSerializer(serializers.ModelSerializer):
+    user_create = UserSerializer(required=False, allow_null=True, read_only=True)
+    user_update = UserSerializer(required=False, allow_null=True, read_only=True)
+
     class Meta:
         model = Note
         fields = ('id', 'description', 'created_date', 'modified_date', 'user_create', 'user_update')
