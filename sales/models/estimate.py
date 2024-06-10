@@ -23,6 +23,12 @@ class UnitLibrary(BaseModel):
         return catalogs
 
 
+class Note(BaseModel):
+    description = models.TextField(blank=True)
+    data_entry = models.ForeignKey('sales.POFormulaToDataEntry', on_delete=models.CASCADE,
+                                   blank=True, null=True, related_name='notes')
+
+
 class DataEntry(BaseModel):
 
     name = models.CharField(max_length=128)
