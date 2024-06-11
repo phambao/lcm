@@ -329,7 +329,7 @@ def view_proposal_formatting(request, formatting_id):
     data_html = data_proposal.element
     return render(request, 'proposal_formatting.html', context={'javascript_code': data_html})
 
-from datetime import datetime
+
 @api_view(['POST'])
 def duplicate_proposal(request):
     """
@@ -358,7 +358,6 @@ def duplicate_proposal(request):
             objs.append(dup.save(lead_id=lead, name=name).id)
     serializer = ProposalWritingCompactSerializer(ProposalWriting.objects.filter(id__in=objs),
                                                   many=True, context={'request': request})
-
     return Response(status=status.HTTP_201_CREATED, data=serializer.data)
 
 
