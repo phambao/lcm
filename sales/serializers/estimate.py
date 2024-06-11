@@ -11,12 +11,13 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from api.middleware import get_request
+from api.serializers.auth import UserSerializer
 from base.serializers.base import IDAndNameSerializer
 from base.constants import true, null, false
 from base.tasks import activity_log
 from base.utils import pop, extra_kwargs_for_base_model
 from sales.models import DataPoint, Catalog
-from sales.models.estimate import POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, RoundUpActionChoice, RoundUpChoice, \
+from sales.models.estimate import Note, POFormula, POFormulaGrouping, DataEntry, POFormulaToDataEntry, RoundUpActionChoice, RoundUpChoice, \
     UnitLibrary, DescriptionLibrary, Assemble, EstimateTemplate, DataView, MaterialView, GroupTemplate
 from sales.serializers import ContentTypeSerializerMixin
 from sales.serializers.catalog import CatalogEstimateSerializer, DataPointForLinkDescription
@@ -138,15 +139,26 @@ class DataEntrySerializer(ContentTypeSerializerMixin):
         return data
 
 
+class NoteSerializer(serializers.ModelSerializer):
+    user_create = UserSerializer(required=False, allow_null=True, read_only=True)
+    user_update = UserSerializer(required=False, allow_null=True, read_only=True)
+
+    class Meta:
+        model = Note
+        fields = ('id', 'description', 'created_date', 'modified_date', 'user_create', 'user_update')
+        read_only_fields = ('created_date', 'modified_date', 'user_create', 'user_update')
+
+
 class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
     data_entry = DataEntrySerializer(allow_null=True, required=False)
+    notes = NoteSerializer(many=True, required=False, allow_null=True)
 
     class Meta:
         model = POFormulaToDataEntry
         fields = ('id', 'value', 'data_entry', 'index', 'dropdown_value', 'material_value', 'nick_name',
                   'copies_from', 'group', 'material_data_entry_link', 'levels', 'is_client_view', 
                   'po_group_index', 'po_index', 'custom_group_name', 'custom_group_index', 'custom_index',
-                  'custom_po_index', 'is_lock_estimate', 'is_lock_proposal', 'is_press_enter',
+                  'custom_po_index', 'is_lock_estimate', 'is_lock_proposal', 'is_press_enter', 'notes',
                   'default_value', 'default_dropdown_value', 'default_material_value', 'original')
 
     def to_representation(self, instance):
@@ -187,10 +199,13 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None, ch
                 unit = pop(data_entry_params, 'unit', {})
                 data_entry_params['unit_id'] = unit.get('id')
                 params["data_entry_id"] = DataEntry.objects.create(**data_entry_params).pk
-            data.append(POFormulaToDataEntry(**params))
+            obj = POFormulaToDataEntry.objects.create(**params)
+            if data_entry.get('notes'):
+                for note in data_entry.get('notes'):
+                    Note.objects.create(**note, data_entry=obj)
         except KeyError:
             pass
-    POFormulaToDataEntry.objects.bulk_create(data)
+    # POFormulaToDataEntry.objects.bulk_create(data)
 
 
 class POFormulaForInvoiceSerializer(serializers.ModelSerializer):
