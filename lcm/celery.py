@@ -23,7 +23,7 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'add-every-30-seconds': {
         'task': 'base.tasks.check_events',
-        'schedule': 10.0
+        'schedule': 30.0
     },
 }
 app.conf.timezone = 'UTC'
