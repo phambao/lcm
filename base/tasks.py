@@ -19,7 +19,7 @@ from api.models import ActivityLog, CompanyBuilder
 from base.models.config import FileBuilder365
 from base.utils import str_to_class
 from base.constants import null, true, false
-from sales.models import Catalog, UnitLibrary, CatalogLevel, DataPoint, ScheduleEvent, ReminderType, TypeTime
+from sales.models import Catalog, UnitLibrary, CatalogLevel, DataPoint, ScheduleEvent, ReminderType, TypeTime, Contact
 
 
 @shared_task()
@@ -170,7 +170,11 @@ def check_events():
         if not rs_time:
             rs_time = 0
         time_check = now + timedelta(minutes=rs_time)
-        if event.start_day >= now and event.start_day <= time_check:
+
+        if event.start_day >= now and event.start_day <= time_check and event.lead_list:
+            contacts = Contact.objects.filter(leads=event.lead_list)
+            for contact in contacts:
+                recipient_list.append(contact.email)
             for data_assigned_user in event.assigned_user.all():
                 recipient_list.append(data_assigned_user.email)
             event.is_reminder = True
