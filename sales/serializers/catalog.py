@@ -225,7 +225,7 @@ class CatalogEstimateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['data_point'] = instance.data_points.values().first()
+        data['data_point'] = instance.data_points.values('value', 'unit', 'linked_description', 'is_linked', 'catalog').first()
         return data
 
 

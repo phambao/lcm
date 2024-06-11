@@ -329,7 +329,7 @@ def view_proposal_formatting(request, formatting_id):
     data_html = data_proposal.element
     return render(request, 'proposal_formatting.html', context={'javascript_code': data_html})
 
-
+from datetime import datetime
 @api_view(['POST'])
 def duplicate_proposal(request):
     """
@@ -339,6 +339,7 @@ def duplicate_proposal(request):
         name = request.data.pop('name')
     except KeyError:
         name = ''
+
     if not name:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"name": ["This field is required"]})
     proposal_ids = request.data.keys()
@@ -346,12 +347,18 @@ def duplicate_proposal(request):
     for proposal_id in proposal_ids:
         for lead in request.data[proposal_id]:
             p = ProposalWriting.objects.get(pk=proposal_id)
-            serializer = ProposalWritingSerializer(p).data
+            serializer = ProposalWritingSerializer(p, context={'request': request}).data
+            temp = []
+            for contact in serializer['proposal_formatting']['contacts']:
+                temp.append(contact['id'])
+
+            serializer['proposal_formatting']['contacts'] = temp
             dup = ProposalWritingSerializer(data=serializer, context={'request': request})
             dup.is_valid(raise_exception=True)
             objs.append(dup.save(lead_id=lead, name=name).id)
     serializer = ProposalWritingCompactSerializer(ProposalWriting.objects.filter(id__in=objs),
                                                   many=True, context={'request': request})
+
     return Response(status=status.HTTP_201_CREATED, data=serializer.data)
 
 
