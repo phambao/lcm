@@ -75,7 +75,7 @@ class GroupFormulaFilter(filters.FilterSet):
                   'user_create', 'user_update')
 
 
-class EstimateTemplateFilter(filters.FilterSet):
+class EstimateTemplateFilter(filters.FilterSet, FilterIDMixin):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
     created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
     modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
