@@ -3,7 +3,7 @@ from django.db import models
 
 from api.models import BaseModel
 from base.models.config import Config
-from sales.models import LeadDetail
+from sales.models import LeadDetail, Job, ProposalWriting
 
 
 class TagSchedule(BaseModel):
@@ -307,6 +307,8 @@ class ScheduleEvent(BaseModel):
     daily_log = models.ForeignKey(DailyLog, on_delete=models.SET_NULL, related_name='schedule_event_daily_log',
                                   blank=True, null=True)
     is_reminder = models.BooleanField(default=False)
+    jobs = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='jobs', blank=True, null=True)
+    proposal = models.ForeignKey(ProposalWriting, on_delete=models.CASCADE, related_name='proposal', blank=True, null=True)
 
 
 class MessageEvent(BaseModel):
