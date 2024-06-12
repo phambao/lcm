@@ -75,7 +75,7 @@ class GroupFormulaFilter(filters.FilterSet):
                   'user_create', 'user_update')
 
 
-class EstimateTemplateFilter(filters.FilterSet, FilterIDMixin):
+class EstimateTemplateFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
     created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
     modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
@@ -129,22 +129,24 @@ class DataEntryFilter(filters.FilterSet):
         fields = ('name', 'created_date', 'modified_date', 'unit', 'is_dropdown', 'is_material_selection')
 
 
-class DescriptionFilter(filters.FilterSet):
+class DescriptionFilter(filters.FilterSet, FilterIDMixin):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
     linked_description = filters.CharFilter(field_name='linked_description', lookup_expr='icontains')
     created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
     modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
+    id = filters.ModelMultipleChoiceFilter(queryset=DescriptionLibrary.objects.all(), method='get_by_id')
 
     class Meta:
         model = DescriptionLibrary
         fields = ('name', 'linked_description', 'created_date', 'modified_date')
 
 
-class UnitFilter(filters.FilterSet):
+class UnitFilter(filters.FilterSet, FilterIDMixin):
     name = filters.CharFilter(field_name='name', lookup_expr='icontains')
     description = filters.CharFilter(field_name='description', lookup_expr='icontains')
     created_date = filters.DateTimeFilter(field_name='created_date', lookup_expr='date')
     modified_date = filters.DateTimeFilter(field_name='modified_date', lookup_expr='date')
+    id = filters.ModelMultipleChoiceFilter(queryset=UnitLibrary.objects.all(), method='get_by_id')
 
     class Meta:
         model = UnitLibrary
