@@ -142,11 +142,12 @@ class DataEntrySerializer(ContentTypeSerializerMixin):
 class NoteSerializer(serializers.ModelSerializer):
     user_create = UserSerializer(required=False, allow_null=True, read_only=True)
     user_update = UserSerializer(required=False, allow_null=True, read_only=True)
+    created_date = serializers.DateTimeField()
 
     class Meta:
         model = Note
         fields = ('id', 'description', 'created_date', 'modified_date', 'user_create', 'user_update')
-        read_only_fields = ('created_date', 'modified_date', 'user_create', 'user_update')
+        read_only_fields = ('modified_date', 'user_create', 'user_update')
 
 
 class POFormulaToDataEntrySerializer(serializers.ModelSerializer):
@@ -202,7 +203,10 @@ def create_po_formula_to_data_entry(instance, data_entries, estimate_id=None, ch
             obj = POFormulaToDataEntry.objects.create(**params)
             if data_entry.get('notes'):
                 for note in data_entry.get('notes'):
-                    Note.objects.create(**note, data_entry=obj)
+                    n = Note.objects.create(**note, data_entry=obj)
+                    #  Update created_date for note, because it is not auto_now_add
+                    n.created_date = note.get('created_date')
+                    n.save()
         except KeyError:
             pass
     # POFormulaToDataEntry.objects.bulk_create(data)
