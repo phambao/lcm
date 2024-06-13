@@ -136,6 +136,7 @@ class DataEntrySerializer(ContentTypeSerializerMixin):
                     level['data_points'] = DataPointForLinkDescription(c.data_points.all(), many=True).data
                 except (Catalog.DoesNotExist, ValueError):
                     level['data_points'] = []
+        data['formulas'] = instance.get_related_formula().values('id', 'name')
         return data
 
 

@@ -56,6 +56,9 @@ class DataEntry(BaseModel):
     def has_relation(self):
         return POFormula.objects.filter(self_data_entries__data_entry=self, is_show=True).exists()
 
+    def get_related_formula(self):
+        return POFormula.objects.filter(is_show=True, self_data_entries__data_entry=self)
+
 
 class RoundUpChoice(models.TextChoices):
     WHOLE_NUMBER = 'whole_number', 'Whole Number'
