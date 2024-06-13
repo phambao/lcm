@@ -776,7 +776,6 @@ def select_checklist_item_template(request, pk_template, pk_todo):
             )
             file_checklist_item_template_create.append(attachment_template)
         FileCheckListItemsTemplate.objects.bulk_create(file_checklist_item_template_create)
-
     rs_checklist = CheckListItems.objects.filter(to_do=pk_todo)
     rs = lead_schedule.ToDoChecklistItemSerializer(
         rs_checklist, many=True, context={'request': request}).data
