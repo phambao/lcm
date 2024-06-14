@@ -266,6 +266,10 @@ class ProposalFormatting(BaseModel):
     active_tab = models.CharField(max_length=128, blank=True, default='')
     is_sent_otp = models.BooleanField(default=True, blank=True)
 
+    def get_primary_contact(self):
+        primary_contact_id = self.proposal_writing.lead.primary_contact_id
+        return primary_contact_id or self.contacts[0] if self.contacts else None
+
 
 class ProposalFormattingConfig(BaseModel):
     class Meta:

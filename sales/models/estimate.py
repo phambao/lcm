@@ -439,7 +439,8 @@ class EstimateTemplate(BaseModel):
                 filtered = formulas.filter(name__exact=name)
                 if filtered:
                     value = filtered.first().quantity
-        return Decimal(value) or Decimal(1)
+        value = 1 if value == None else value
+        return Decimal(value)
 
     def get_info(self):
         self.info = self.get_formula().aggregate(total_charge=Sum('charge'), unit_cost=Sum('cost'),
